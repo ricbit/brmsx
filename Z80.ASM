@@ -1902,10 +1902,12 @@ outemulXX:      ret
 outemul98:      mov     esi,msxvram
                 mov     ecx,vdpaddresse
                 inc     vdpaddress
-                mov     al,ch
                 cmp     imagetype,0
                 je      outemul98_ret
                 
+                mov     eax,ecx
+                shr     eax,6
+                and     eax,0FFh
                 mov     al,[offset vrammapping+eax]
                 jmp     [offset screenselect+eax*4]
                 

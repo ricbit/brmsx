@@ -17,6 +17,7 @@ include saveload.inc
 include blit.inc
 
 include debugsrc.inc
+include helpsrc.inc
 
 extrn msxrom: near
 extrn pentiumfound: dword
@@ -51,8 +52,8 @@ stateon         db      'ON $'
 stateoff        db      'OFF$'
 intdi           db      'DI$'
 intei           db      'EI$'
-imagedynamic    db      ' LINEAR$'
-imagestatic     db      '  BLOCK$'
+imagedynamic    db      ' OFF   $'
+imagestatic     db      ' ON    $'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -692,6 +693,8 @@ debug_loop:
                 je      command_b
                 cmp     al,'P'
                 je      command_p
+                cmp     al,'Z'
+                je      command_z
                 cmp     al,'F'
                 je      command_f
                 cmp     al,'H'
@@ -728,6 +731,18 @@ command_d:
                 call    gethex4
                 and     eax,0FFFFh
                 mov     memdump,eax
+                jmp     debug_loop
+
+command_z:
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset help_screen
+                mov     edi,0b8000h
+                mov     ecx,80*24*2/4
+                rep     movsd
+                pop     es
+                call    getchar
                 jmp     debug_loop
 
 command_g:

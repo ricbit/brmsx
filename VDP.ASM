@@ -57,7 +57,7 @@ stacksave       dd      0
 colorsave       dd      0
 patternsave     dd      0
 spriteenable    dd      0
-imagetype       dd      0
+imagetype       dd      1
 nametable       dd      0
 colortable      dd      0
 patterntable    dd      0
@@ -1045,37 +1045,37 @@ eval_base_address:
 
                 mov     eax,01010101h
                 mov     edi,nametable
-                shr     edi,8
+                shr     edi,6
+                mov     ecx,32*24/4
                 add     edi,offset vrammapping
-                mov     [edi],ax
-                mov     [edi+2],al
+                rep     stosd
 
                 mov     eax,02020202h
-                mov     ecx,32*24*8/256/4
+                mov     ecx,32*24*8/64/4
                 mov     edi,patterntable
-                shr     edi,8
+                shr     edi,6
                 add     edi,offset vrammapping
                 rep     stosd
 
                 mov     eax,03030303h
-                mov     ecx,32*24*8/256/4
+                mov     ecx,32*24*8/64/4
                 mov     edi,colortable
-                shr     edi,8
+                shr     edi,6
                 add     edi,offset vrammapping
                 rep     stosd
 
-                mov     al,04h
+                mov     eax,04040404h
                 mov     edi,sprattrtable
-                shr     edi,8
+                shr     edi,6
                 add     edi,offset vrammapping
-                mov     [edi],al
+                mov     [edi],ax
 
                 mov     eax,05050505h
                 mov     edi,sprpatttable
-                shr     edi,8
+                shr     edi,6
+                mov     ecx,256*8/64/4
                 add     edi,offset vrammapping
-                mov     [edi],eax
-                mov     [edi+4],eax
+                rep     stosd
 
                 mov     eax,offset dirty_screen2_nothing
                 mov     dword ptr [offset screenselect+0*4],eax
@@ -1137,36 +1137,36 @@ eval_base_address0:
 
                 mov     eax,01010101h
                 mov     edi,nametable
-                shr     edi,8
+                shr     edi,6
+                mov     ecx,32*24/64/4
                 add     edi,offset vrammapping
-                mov     [edi],ax
-                mov     [edi+2],al
-
+                rep     stosd
+                
                 mov     eax,02020202h
                 mov     edi,patterntable
-                shr     edi,8
+                shr     edi,6
+                mov     ecx,256*8/64/4
                 add     edi,offset vrammapping
-                mov     [edi],eax
-                mov     [edi+4],eax
+                rep     stosd
 
                 mov     al,03h
                 mov     edi,colortable
-                shr     edi,8
+                shr     edi,6
                 add     edi,offset vrammapping
                 mov     [edi],al
 
-                mov     al,04h
+                mov     eax,04040404h
                 mov     edi,sprattrtable
-                shr     edi,8
+                shr     edi,6
                 add     edi,offset vrammapping
-                mov     [edi],al
+                mov     [edi],ax
 
                 mov     eax,05050505h
                 mov     edi,sprpatttable
-                shr     edi,8
+                shr     edi,6
+                mov     ecx,256*8/64/4
                 add     edi,offset vrammapping
-                mov     [edi],eax
-                mov     [edi+4],eax
+                rep     stosd
                 
                 mov     eax,offset dirty_screen1_nothing
                 mov     dword ptr [offset screenselect+0*4],eax

@@ -1,3 +1,9 @@
+release 1.57:
+
+- fixed yet another bug on new graphics pipeline
+  now the vram is segmented in 64 bytes blocks
+- added a help page
+
 release 1.56:
 
 - fixed bug on new graphics pipeline
