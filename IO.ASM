@@ -25,6 +25,7 @@ include blit.inc
 include psg.inc
 include mouse.inc
 include vesa.inc
+include v9938.inc
 
 public printmsg
 public printnul
@@ -104,6 +105,7 @@ include keyext.inc
 include palette.inc
 include guipal.inc
 include filpal.inc
+include scr8pal.inc
 
 include palgreen.inc
 include guigreen.inc
@@ -152,6 +154,7 @@ fastforward     dd      0
 forwardlock     dd      0
 border_changed  dd      0
 vdplog_now      dd      0
+palette_scr8    dd      0
 
 msg00           db      13,10,'$'
 
@@ -388,7 +391,7 @@ setgraphmode1:
 
 set_correct_palette:
                 cmp     msxmodel,0
-                jne     _ret
+                jne     set_correct_palette_msx2
 
                 cmp     videomode,2
                 jne     set_correct_palette_16
@@ -401,6 +404,54 @@ set_correct_palette_16:
                 mov     ebx,pal_normal
                 mov     ecx,16
                 jmp     fill_palette
+
+set_correct_palette_msx2:
+                cmp     actualscreen,8
+                je      set_correct_palette_scr8
+
+                mov     edi,offset msx2palette
+                mov     esi,offset dirty_palette
+                mov     eax,0
+
+set_correct_palette_msx2_loop:
+                movzx   ecx,word ptr [edi]
+                
+                ; check the border color
+                cmp     eax,0
+                jne     set_correct_palette_msx2_check
+                test    byte ptr [offset vdpregs+8],BIT_5
+                jnz     set_correct_palette_msx2_check
+
+                movzx   ecx,byte ptr [offset vdpregs+7]
+                and     ecx,0Fh
+                movzx   ecx,word ptr [offset msx2palette+ecx*2]
+
+set_correct_palette_msx2_check:
+                cmp     byte ptr [esi],1
+                jne     set_correct_palette_msx2_next
+
+                call    set_palette_color
+
+set_correct_palette_msx2_next:
+                mov     byte ptr [esi],0
+
+                inc     esi
+                add     edi,2
+                inc     eax
+                cmp     eax,16
+                jne     set_correct_palette_msx2_loop
+                mov     palette_scr8,0
+                ret
+
+set_correct_palette_scr8:
+                cmp     palette_scr8,1
+                je      _ret
+
+                mov     ebx,offset palette_screen8
+                mov     ecx,256
+                call    fill_palette
+                mov     palette_scr8,1
+                ret
 
 ; setgraphmode --------------------------------------------------------
 ; set video mode 13h (320x200x256)
@@ -426,7 +477,7 @@ setgraphmode:
                 je      _ret
 
                 cmp     videomode,7
-                je      _ret
+                je      setgraph_msx2
 
                 cmp     videomode,3
                 je      setgraph_256x192
@@ -521,6 +572,13 @@ mov ax,0FF18h
 out dx,ax
 
 ret
+
+setgraph_msx2:
+                mov     eax,01010101h
+                mov     ecx,16/4
+                mov     edi,offset dirty_palette
+                rep     stosd
+                ret
 
 ; set_border_color ----------------------------------------------------
 ; set color 0 of VGA as VDP border color
@@ -1687,7 +1745,8 @@ adjust_clock:
 
 ; set_palette_color ---------------------------------------------------
 ; set one MSX2 palette color
-; enter eax = offset palette color
+; enter eax = palette slot
+;       ecx = palette value
 
 set_palette_color:
                 push    eax edx ecx
@@ -1695,10 +1754,10 @@ set_palette_color:
                 out     dx,al
                 inc     dx
                 and     eax,0Fh
-                lea     ecx,[offset msx2palette+eax*2]
+                ;lea     ecx,[offset msx2palette+eax*2]
                 
                 ; R
-                mov     al,[ecx]
+                mov     al,cl ;[ecx]
                 shr     al,4
                 and     al,7
                 mov     ah,al
@@ -1707,7 +1766,7 @@ set_palette_color:
                 out     dx,al
 
                 ; G
-                mov     al,[ecx+1]
+                mov     al,ch ;[ecx+1]
                 and     al,7
                 mov     ah,al
                 shl     al,3
@@ -1715,7 +1774,7 @@ set_palette_color:
                 out     dx,al
 
                 ; B
-                mov     al,[ecx]
+                mov     al,cl ;[ecx]
                 and     al,7
                 mov     ah,al
                 shl     al,3

@@ -20,6 +20,7 @@ include mouse.inc
 include debug.inc
 include saveload.inc
 include mount.inc
+include v9938.inc
 
 extrn blitbuffer: dword
 extrn filenamelist: dword
@@ -614,6 +615,9 @@ start_gui_exit:
                 mov     eax,01010101h
                 mov     ecx,32*24/4
                 mov     edi,offset dirtyname
+                rep     stosd
+                mov     ecx,16/4
+                mov     edi,offset dirty_palette
                 rep     stosd
                 mov     firstscreen,1
                 mov     enabled,1

@@ -8,4 +8,6 @@ extrn render_screen0_80: near
 extrn render_screen5: near
 extrn render_screen6: near
 extrn render_screen7: near
+extrn render_screen8: near
 extrn sprite_render_msx2: near
+extrn dirty_palette: byte

@@ -31,7 +31,9 @@ public render_screen0_80
 public render_screen5
 public render_screen6
 public render_screen7
+public render_screen8
 public sprite_render_msx2
+public dirty_palette
 
 ; DATA ---------------------------------------------------------------
 
@@ -45,6 +47,8 @@ all0F           dq      0F0F0F0F0F0F0F0Fh
 
 falsesprite     db      32*32*2 dup (0)
 falsemask       db      32 dup (0)
+
+dirty_palette   db      16 dup (1)
 
 save_ebp        dd      0
 save_esi        dd      0
@@ -77,7 +81,7 @@ callback_vdp:
                 dd      _ret                    ; POINT
                 dd      vdp_command_PSET        ; PSET
                 dd      _ret                    ; SEARCH
-                dd      _ret                    ; LINE
+                dd      vdp_command_LINE        ; LINE
                 dd      vdp_command_LMMV        ; LMMV
                 dd      vdp_command_LMMM        ; LMMM
                 dd      _ret                    ; LMCM
@@ -93,17 +97,17 @@ callback_logical:
                 dd      write_pixel_or          ; OR
                 dd      write_pixel_xor         ; XOR
                 dd      write_pixel_not         ; NOT
-                dd      write_pixel_ret         ; RESERVED
-                dd      write_pixel_ret         ; RESERVED
-                dd      write_pixel_ret         ; RESERVED
+                dd      _ret                    ; RESERVED
+                dd      _ret                    ; RESERVED
+                dd      _ret                    ; RESERVED
                 dd      write_pixel_timp        ; TIMP
                 dd      write_pixel_tand        ; TAND
                 dd      write_pixel_tor         ; TOR
                 dd      write_pixel_txor        ; TXOR
                 dd      write_pixel_tnot        ; TNOT
-                dd      write_pixel_ret         ; RESERVED
-                dd      write_pixel_ret         ; RESERVED
-                dd      write_pixel_ret         ; RESERVED
+                dd      _ret                    ; RESERVED
+                dd      _ret                    ; RESERVED
+                dd      _ret                    ; RESERVED
 
 paletteflag     db      0
 vdpindirect     db      0
@@ -203,7 +207,7 @@ outemul99b_msx2:
 
 register_action:
                 cmp     bl,7
-                je      set_border_color
+                je      change_border_color
                 cmp     bl,9
                 je      change_total_lines
                 cmp     bl,1
@@ -267,6 +271,10 @@ outemul99_page_msx2:
                 mov     eax,0
                 ret
 
+change_border_color:
+                mov     byte ptr [offset dirty_palette+0],1
+                ret
+
 outemul99_indirect_msx2:                
                 mov     bl,al
                 shr     bl,7
@@ -309,9 +317,11 @@ outemul9A_msx2:
 outemul9A_msx2_set:
                 movzx   eax,byte ptr [offset vdpregs+16]
                 mov     byte ptr [offset msx2palette+eax*2+1],bl
+                mov     byte ptr [offset dirty_palette+eax],1
                 inc     byte ptr [offset vdpregs+16]
                 mov     paletteflag,0
-                jmp     set_palette_color
+                ;jmp     set_palette_color
+                ret
 
 ; --------------------------------------------------------------------
 ; VDP indirect register write
@@ -419,6 +429,9 @@ eval_screen_mask:
                 cmp     actualscreen,7
                 je      eval_screen_mask_7
 
+                cmp     actualscreen,8
+                je      eval_screen_mask_8
+
                 ret
 
 eval_screen_mask_5:
@@ -461,6 +474,20 @@ eval_screen_mask_7:
                 mov     pixel_mask,0Fh
                 mov     shift_mask,1
                 mov     shift_factor,2
+                ret
+
+eval_screen_mask_8:
+                mov     size_hx,0100h
+                mov     and_hx,0FFh
+                mov     and_x,0FFh
+                mov     max_x,0100h
+                mov     shift_low_x,0
+                mov     and_y,01FFh
+                mov     max_y,0200h
+                mov     shift_high_y,8
+                mov     pixel_mask,0FFh
+                mov     shift_mask,0
+                mov     shift_factor,0
                 ret
 
 ; write_vdplog -------------------------------------------------------
@@ -901,6 +928,52 @@ vdp_command_HMMV_exit:
                 popad
                 ret
 
+; READ_PIXEL ---------------------------------------------------------
+; read one pixel from VRAM
+; enter: edi = vram byte
+;        edx = select pixel
+; exit:  al = pixel
+; destroy edx
+
+READ_PIXEL      macro
+
+                push    ecx
+                mov     ecx,shift_factor
+                xor     edx,0FFFFFFFFh
+                and     edx,shift_mask
+                shl     edx,cl
+                mov     ecx,edx
+                mov     al,[esi]
+                shr     al,cl
+                pop     ecx
+
+                endm
+
+; WRITE_PIXEL --------------------------------------------------------
+; write one pixel to VRAM
+; enter: edi = vram byte
+;        edx = select pixel
+;        al = pixel
+; destroy edx,ah
+
+WRITE_PIXEL     macro
+
+                push    ecx
+                mov     ah,pixel_mask
+                and     al,ah
+                mov     ecx,shift_factor
+                xor     edx,0FFFFFFFFh
+                and     edx,shift_mask
+                shl     edx,cl
+                mov     ecx,edx
+                shl     ah,cl
+                xor     ah,255
+                shl     al,cl
+                mov     ecx,logical_op
+                call    dword ptr [offset callback_logical+ecx*4]
+                pop     ecx
+                endm
+
 ; vdp_command_PSET ---------------------------------------------------
 
 vdp_command_PSET:
@@ -930,84 +1003,38 @@ vdp_command_PSET:
                 mov     al,byte ptr [offset vdpregs+44]
                 mov     edx,pDX
                 
-                call    write_pixel
+                WRITE_PIXEL 
 
                 popad
                 ret
 
-                
-; read_pixel ---------------------------------------------------------
-; read one pixel from VRAM
-; enter: edi = vram byte
-;        edx = select pixel
-; exit:  al = pixel
-; destroy edx
-
-read_pixel:                
-                push    ecx
-                mov     ecx,shift_factor
-                xor     edx,0FFFFFFFFh
-                and     edx,shift_mask
-                shl     edx,cl
-                mov     ecx,edx
-                mov     al,[esi]
-                shr     al,cl
-                pop     ecx
-                ret
-
-; write_pixel --------------------------------------------------------
-; write one pixel to VRAM
-; enter: edi = vram byte
-;        edx = select pixel
-;        al = pixel
-; destroy edx,ah
-
-write_pixel:
-                push    ecx
-                mov     ah,pixel_mask
-                and     al,ah
-                mov     ecx,shift_factor
-                xor     edx,0FFFFFFFFh
-                and     edx,shift_mask
-                shl     edx,cl
-                mov     ecx,edx
-                shl     ah,cl
-                xor     ah,255
-                shl     al,cl
-                mov     ecx,logical_op
-
-                jmp     dword ptr [offset callback_logical+ecx*4]
+; --------------------------------------------------------------------
+; logical operations used in write_pixel
 
 write_pixel_timp:
                 or      al,al
-                jz      write_pixel_ret
+                jz      _ret
                 and     ah,[edi]
                 or      ah,al
                 mov     [edi],ah
-write_pixel_ret:
-                pop     ecx
                 ret
 
 write_pixel_imp:
                 and     ah,[edi]
                 or      ah,al
                 mov     [edi],ah
-                pop     ecx
                 ret
 
 write_pixel_and:
                 and     [edi],al
-                pop     ecx
                 ret
 
 write_pixel_or:
                 or      [edi],al
-                pop     ecx
                 ret
 
 write_pixel_xor:
                 xor     [edi],al
-                pop     ecx
                 ret
 
 write_pixel_not:
@@ -1017,40 +1044,35 @@ write_pixel_not:
                 and     ah,[edi]
                 or      ah,al
                 mov     [edi],ah
-                pop     ecx
                 ret
 
 write_pixel_tand:
                 or      al,al
-                jz      write_pixel_ret
+                jz      _ret 
                 and     [edi],al
-                pop     ecx
                 ret
 
 write_pixel_tor:
                 or      al,al
-                jz      write_pixel_ret
+                jz      _ret 
                 or      [edi],al
-                pop     ecx
                 ret
 
 write_pixel_txor:
                 or      al,al
-                jz      write_pixel_ret
+                jz      _ret 
                 xor     [edi],al
-                pop     ecx
                 ret
 
 write_pixel_tnot:
                 or      al,al
-                jz      write_pixel_ret
+                jz      _ret 
                 xor     ah,255
                 xor     al,ah
                 xor     ah,255
                 and     ah,[edi]
                 or      ah,al
                 mov     [edi],ah
-                pop     ecx
                 ret
 
 ; vdp_command_LMMM ---------------------------------------------------
@@ -1189,21 +1211,22 @@ vdp_command_LMMM_inner:
 
                 push    eax
                 mov     edx,eax
-                call    read_pixel
+                READ_PIXEL 
                 mov     edx,ebp
-                call    write_pixel
+                WRITE_PIXEL
                 pop     eax
 
                 inc     eax
-                test    eax,shift_mask
-                jnz     vdp_command_LMMM_eax
-                inc     esi
-vdp_command_LMMM_eax:
                 inc     ebp
+                xor     edx,edx
+                test    eax,shift_mask
+                setz    dl
+                add     esi,edx
+                xor     edx,edx
                 test    ebp,shift_mask
-                jnz     vdp_command_LMMM_ebp
-                inc     edi
-vdp_command_LMMM_ebp:
+                setz    dl
+                add     edi,edx
+
                 dec     ecx
                 jnz     vdp_command_LMMM_inner
 
@@ -1313,7 +1336,7 @@ vdp_command_LMMV_inner:
 
                 push    eax
                 mov     edx,ebp
-                call    write_pixel
+                WRITE_PIXEL 
                 pop     eax
 
                 inc     ebp
@@ -1336,6 +1359,144 @@ vdp_command_LMMV_ebp:
 vdp_command_LMMV_exit:
                 popad
                 ret
+
+; vdp_command_LINE ---------------------------------------------------
+
+vdp_command_LINE:
+                ; only DIX=0 and DIY=0 are supported by now
+                test    byte ptr [offset vdpregs+45],1100b
+                jnz     _ret
+
+                pushad
+
+                ; load NY (min)
+                movzx   eax,word ptr [offset vdpregs+42]
+                mov     pNY,eax
+                
+                ; only vertical and horizontal lines are supported
+                cmp     eax,0
+                jne     vdp_command_LINE_exit
+
+                ; load DX
+                movzx   eax,word ptr [offset vdpregs+36]
+                and     eax,and_x
+                mov     pDX,eax
+                        
+                ; load DY
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,and_y
+                mov     pDY,eax
+                
+                ; load NX (max)
+                movzx   eax,word ptr [offset vdpregs+40]
+                mov     pNX,eax
+
+                ; only horizontal lines by now
+                test    byte ptr [offset vdpregs+45],BIT_0
+                jnz     vdp_command_vLINE
+
+vdp_command_hLINE:
+                ; check NX consistency
+                cmp     pNX,0
+                je      vdp_command_LINE_exit
+
+                ; bugfix
+                inc     pNX
+
+                ; check DX consistency
+                mov     eax,pDX
+                add     eax,pNX                        
+                cmp     eax,max_x
+                jbe     hLINE_DX_consistent
+
+                mov     eax,max_x
+                sub     eax,pDX
+                mov     pNX,eax
+
+hLINE_DX_consistent:
+
+                ; eval destination start addresses                
+                mov     edi,pDY
+                mov     cl,shift_high_y
+                shl     edi,cl
+                mov     eax,pDX
+                mov     cl,shift_low_x
+                shr     eax,cl
+                add     edi,eax
+                add     edi,msxvram
+
+                ; adjust the pixel counters
+                mov     al,byte ptr [offset vdpregs+44]
+                mov     ebp,pDX
+
+                mov     ecx,pNX
+vdp_command_hLINE_inner:
+
+                push    eax
+                mov     edx,ebp
+                WRITE_PIXEL
+                pop     eax
+
+                inc     ebp
+                test    ebp,shift_mask
+                jnz     vdp_command_hLINE_ebp
+                inc     edi
+vdp_command_hLINE_ebp:
+                dec     ecx
+                jnz     vdp_command_hLINE_inner
+
+vdp_command_LINE_exit:
+                popad
+                ret
+
+vdp_command_vLINE:
+                ; check NX consistency
+                cmp     pNX,0
+                je      vdp_command_LINE_exit
+
+                ; bugfix
+                inc     pNX
+
+                ; check DY consistency
+                mov     eax,pDY
+                add     eax,pNX                        
+                cmp     eax,max_y
+                jbe     vLINE_DY_consistent
+
+                mov     eax,max_y
+                sub     eax,pDY
+                mov     pNX,eax
+
+vLINE_DY_consistent:
+
+                ; eval destination start addresses                
+                mov     edi,pDY
+                mov     cl,shift_high_y
+                shl     edi,cl
+                mov     eax,pDX
+                mov     cl,shift_low_x
+                shr     eax,cl
+                add     edi,eax
+                add     edi,msxvram
+
+                ; adjust the pixel counters
+                mov     al,byte ptr [offset vdpregs+44]
+                mov     ebp,pDX
+
+                mov     ecx,pNX
+vdp_command_vLINE_inner:
+
+                push    eax
+                mov     edx,ebp
+                WRITE_PIXEL 
+                pop     eax
+
+                add     edi,size_hx
+
+                dec     ecx
+                jnz     vdp_command_vLINE_inner
+
+                jmp     vdp_command_LINE_exit
 
 ; render_screen0_80 --------------------------------------------------
 ; render a screen 0 page
@@ -1603,7 +1764,7 @@ render_screen6_inner:
                 dec     ecx
                 jnz     render_screen6_outer
 
-                mov     spriteenable,2
+                mov     spriteenable,0
 
                 ret
 
@@ -1759,6 +1920,47 @@ render_screen7_mmx_inner:
 
                 dec     ecx
                 jnz     render_screen7_mmx_outer
+
+                mov     spriteenable,0
+
+                ret
+
+; render_screen8 -----------------------------------------------------
+; render the SCREEN 8
+
+render_screen8:
+                ;cmp     enginetype,0
+                ;jne     render_screen7_mmx
+
+                mov     edi,blitbuffer
+                mov     esi,nametable
+                movzx   eax,byte ptr [offset vdpregs+23]
+                shl     eax,8
+                add     esi,eax
+                mov     ebp,msxvram
+                mov     ebx,212
+
+render_screen8_outer:
+                mov     ecx,64
+
+render_screen8_inner:
+                mov     eax,dword ptr [esi+ebp]
+                add     esi,4
+                mov     dword ptr [edi],eax
+                add     edi,4
+                dec     ecx
+                jnz     render_screen8_inner
+
+                ; adjust scroll wraparound
+                dec     esi
+                mov     edx,esi
+                inc     esi
+                and     edx,0FFFF0000h
+                and     esi,00000FFFFh
+                or      esi,edx
+
+                dec     ebx
+                jnz     render_screen8_outer
 
                 mov     spriteenable,0
 

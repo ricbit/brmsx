@@ -19,6 +19,7 @@ extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
 extrn collisionfield: dword
+extrn msxmodel: dword
 
 public render_screen0
 public render_screen1
@@ -1718,6 +1719,12 @@ render_check_first:
                 call    set_border_color
 
 render_draw:
+                cmp     msxmodel,0
+                je      render_msx1
+
+                call    set_correct_palette
+
+render_msx1:
                 mov     bl,actualscreen
 
                 cmp     bl,0
@@ -1747,6 +1754,9 @@ render_draw:
 
                 cmp     bl,7
                 je      render_screen7
+
+                cmp     bl,8
+                je      render_screen8
 
                 ret
 
@@ -2167,6 +2177,9 @@ eval_base_address_begin_msx2:
                 
                 cmp     al,00101b
                 je      eval_screen7
+                
+                cmp     al,00111b
+                je      eval_screen8
                 
                 jmp     eval_screen0_msx2
 
@@ -2976,8 +2989,66 @@ eval_screen7:
                 mov     actualscreen,7
 
                 movzx   eax,byte ptr [offset vdpregs+2]
-                and     al,01000000b
-                shl     eax,10
+                and     al,00100000b
+                shl     eax,11
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,03Fh
+                shl     eax,11
+                mov     patterntable,eax
+
+                mov     al,byte ptr [offset vdpregs+5]
+                mov     ah,byte ptr [offset vdpregs+11]
+                and     eax,03FCh
+                shl     eax,7
+                ;mov     eax,0F600h
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,03Fh
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen0_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen0_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen0_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen0_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen0_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen0_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen8:
+                ; screen 8
+
+                mov     actualscreen,8
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,00100000b
+                shl     eax,11
                 mov     nametable,eax
 
                 movzx   eax,byte ptr [offset vdpregs+3]
