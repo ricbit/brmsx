@@ -21,6 +21,7 @@ public blitbuffer
 public transf_buffer
 public diskimage
 public cart1
+public spritecache
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -58,6 +59,7 @@ msxrom          dd      ?
 cart1           dd      ?
 transf_buffer   dd      ?
 diskimage       dd      ?
+spritecache     dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -242,6 +244,12 @@ _main2:
                 jc      no_memory
                 mov     blitbuffer,eax
 
+                ; allocate 256*64 to sprite cache
+                mov     eax,256*64
+                call    _getmem
+                jc      no_memory
+                mov     spritecache,eax
+                
                 ; allocate 720kb to disk image
                 mov     eax,720*1024
                 call    _gethimem
@@ -304,7 +312,7 @@ _main_dontmeasure:
                 
                 ; don't ask 
                 db 265 dup (090h)
-
+                
                 call    crlf
                 mov     eax,offset msg10
                 call    printmsg

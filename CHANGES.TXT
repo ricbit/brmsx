@@ -1,3 +1,7 @@
+release 1.56:
+
+- fixed bug on new graphics pipeline
+
 release 1.55:
 
 - new pipeline for block screen updates

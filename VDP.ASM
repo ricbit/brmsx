@@ -1244,13 +1244,21 @@ dirty_screen2_sprattr:
 ; these are the functions to perform dirty operations on screen 1
 
 dirty_screen1_nothing:
-dirty_screen1_name:
 dirty_screen1_pattern:
 dirty_screen1_color:
 dirty_screen1_sprattr:
 dirty_screen1_sprpatt:
                 mov     [ecx+esi],bl
-                mov     firstscreen,1
+                ret
+
+dirty_screen1_name:
+                cmp     [eax+esi],bl
+                je      dirty_screen1_nothing
+                mov     eax,ecx
+                sub     ecx,nametable
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtyname+ecx],1
+                xor     eax,eax
                 ret
 
 code32          ends
