@@ -1,7 +1,21 @@
+release 1.38:
+
+- added a bar graph to display emulator performance
+  1st bar: z80 emulation
+  2nd bar: screen renderer+sprite renderer
+  3rd bar: blitting time
+  4rd bar: overhead of bar graph
+  key "G" turns on/off the bar graph
+
+release 1.37: [*] public version
+
+- put a protection on the options that requires a pentium
+- now brmsx estimate the clock speed of the processor in startup
+
 release 1.36:
 
-- added a tweaked-vga mode to do 256x200 resolution
-  with this, the msx screen uses all the monitor area
+- added a tweaked-vga mode to do 256x200 resolution;
+  with this, the msx screen uses almost all the monitor area,
   and as a bonus we get another 19% in speed gain,
   in all the screens!!
 - added a new debug key: "V" - changes the resolution 

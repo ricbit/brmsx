@@ -98,11 +98,11 @@ render05:
                 
                 irp     i,<0,1,2,3,4,5,6,7>
                 
-                mov     eax,[offset screen0_table+edx*8]
+                mov     eax,[offset screen0_table1+edx*8]
                 mov     [edi+i*256],eax
-                mov     ax,[offset screen0_table+edx*8+4]
+                mov     eax,[offset screen0_table1+edx*8+4]
                 mov     dl,[ebx+ecx*8+i+1]
-                mov     [edi+4+i*256],ax
+                mov     [edi+4+i*256],eax
 
                 endm
 
@@ -111,9 +111,9 @@ render05:
                 
                 irp     i,<0,1,2,3,4,5,6,7>
                 
-                mov     ax,[offset screen0_table+edx*8]
+                mov     eax,[offset screen0_table2+edx*8]
                 mov     [edi+6+i*256],ax
-                mov     eax,[offset screen0_table+edx*8+2]
+                mov     eax,[offset screen0_table2+edx*8+4]
                 mov     dl,[ebx+ecx*8+i+1]
                 mov     [edi+8+i*256],eax
 
@@ -321,7 +321,7 @@ PIPE2_WIN       macro
 
                 ; display the subline
                 mov     dl,[ebx+eax*8+i]
-                mov     [edi+i*320],ebp
+                mov     [edi+i*256],ebp
                 
                 ; do it again for the next four pixels
                 mov     ebp,[offset foregroundmask+edx*8+4]
@@ -331,7 +331,7 @@ PIPE2_WIN       macro
                 and     esi,[offset backgroundcolor+edx*4]
                 or      ebp,esi
                 mov     dl,[ebx+eax*8+(i+1)]
-                mov     [edi+4+i*320],ebp
+                mov     [edi+4+i*256],ebp
 
                 endm
                 endm
@@ -424,6 +424,8 @@ render21:
 
 ; sprite_render ------------------------------------------------------
 ; draw the sprites directly on the pentium video memory
+
+align 4
 
 sprite_render:
 

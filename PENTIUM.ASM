@@ -12,9 +12,17 @@ include z80.inc
 include pentium.inc
 include pmode.inc
 
+public pentiumfound
+
 public detect_cpu
+public start_counter
+public end_counter
 
 ; DATA ---------------------------------------------------------------
+
+align 4
+
+pentiumfound    dd      0
 
 ; detect_cpu ---------------------------------------------------------
 ; this function detect the cpuid instruction
@@ -38,6 +46,41 @@ detect_cpu:
                 cpuid
                 and     eax,0F00h
                 shr     eax,8
+                cmp     eax,5
+                jb      _ret
+                mov     pentiumfound,1
+                ret
+
+; start_counter ------------------------------------------------------
+; this function starts a counter using the tsc
+; enter eax=counter
+
+start_counter:
+                cmp     pentiumfound,1
+                jne     _ret
+                push    esi edx
+                mov     esi,eax
+                rdtsc
+                mov     [esi],eax
+                mov     [esi+4],edx
+                pop     edx esi
+                ret
+
+; end_counter --------------------------------------------------------
+; this function ends a counter using the tsc
+; enter eax=counter
+
+end_counter:
+                cmp     pentiumfound,1
+                jne     _ret
+                push    esi edx
+                mov     esi,eax
+                rdtsc
+                sub     eax,[esi]
+                sbb     edx,[esi+4]
+                mov     [esi],eax
+                mov     [esi+4],edx
+                pop     edx esi
                 ret
 
 code32          ends

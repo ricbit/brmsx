@@ -82,3 +82,4 @@ extrn opaddreg: near
 extrn opcpreg: near
 extrn emulatemode: dword
 extrn megarommode: dword
+extrn z80rate: dword

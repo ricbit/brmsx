@@ -22,10 +22,11 @@ public diskimage
 public cart1
 
 extrn detect_cpu: near
+extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.36',13,10
+msg00           db      'BrMSX 1.38',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -33,6 +34,9 @@ msg03           db      'Disk size not supported',13,10,'$'
 msg04           db      'Low memory free: $'
 msg05           db      'High memory free: $'
 msg06           db      'Processor type: $'
+msg07           db      'Clock: $'
+msg08           db      ' Mhz',13,10,'$'
+msg09           db      ' kb',13,10,'$'
 msgnocpuid      db      '486 or lower',13,10,'$'
 msg386          db      '386',13,10,'$'
 msg486          db      '486',13,10,'$'
@@ -41,6 +45,8 @@ msg686          db      'Pentium Pro or better',13,10,'$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
+
+align 4
 
 msxram          dd      ?
 msxvram         dd      ?
@@ -63,16 +69,18 @@ _main:          sti
                 call    printmsg
                 call    _lomemsize
                 shr     eax,10
-                call    printhex4
-                call    crlf
+                call    printdecimal
+                mov     eax,offset msg09
+                call    printmsg
 
                 ; print info on free high memory
                 mov     eax,offset msg05
                 call    printmsg
                 call    _himemsize
                 shr     eax,10
-                call    printhex4
-                call    crlf
+                call    printdecimal
+                mov     eax,offset msg09
+                call    printmsg
 
                 ; print processor type
                 mov     eax,offset msg06
@@ -272,10 +280,31 @@ _main4:
                 mov     byte ptr [eax+017h],0ffh
 
 _main3:
+                ; if the computer is a pentium
+                ; then measure its speed
+                cmp     pentiumfound,1
+                jne     _main_dontmeasure
+                mov     eax,offset msg07
+                call    printmsg
+                call    measurespeed                
+                xor     edx,edx
+                mov     eax,dword ptr [offset clockrate]
+                mov     ebx,16666
+                div     ebx
+                call    printdecimal
+                mov     eax,offset msg08
+                call    printmsg
+
+_main_dontmeasure:
+
                 ; enter debug mode
+                
+                ; don't ask
+                db 5*3*5 dup (090h)
+
                 call    crlf
                 call    debug
-
+  
                 ; exit to dos
                 jmp     _exit
 

@@ -13,7 +13,8 @@ include z80.inc
 include vdp.inc
 include pentium.inc
 
-extrn msxrom:near
+extrn msxrom: near
+extrn pentiumfound: dword
 
 public debug
 public showreg
@@ -35,6 +36,9 @@ msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 msgvideo00      db      'video mode set to 320x200',13,10,'$'
 msgvideo01      db      'video mode set to 256x200',13,10,'$'
+msggui00        db      'bar graph is now off',13,10,'$'
+msggui01        db      'bar graph is now on',13,10,'$'
+msgpentiumonly  db      'this option requires a pentium',13,10,'$'
 
 ; showreg ------------------------------------------------------------
 ; show the contents of Z80 registers
@@ -160,6 +164,19 @@ changevideomode1:
 
 ; --------------------------------------------------------------------
 
+changebargraph:
+                xor     bargraphmode,1
+                jnz     changebargraph1
+                mov     eax,offset msggui00
+                call    printmsg
+                ret
+changebargraph1:
+                mov     eax,offset msggui01
+                call    printmsg
+                ret
+
+; --------------------------------------------------------------------
+
 change_megamode:
                 xor     megarommode,5
                 cmp     megarommode,0
@@ -182,8 +199,20 @@ change_megamodex:
 
 ; --------------------------------------------------------------------
 
+checkpentium:
+                cmp     pentiumfound,1
+                je      checkpentium1
+                mov     eax,offset msgpentiumonly
+                call    printmsg
+                stc
+                ret
+checkpentium1:
+                or      eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
 debug:          
-                call    showreg
 debug_loop:                
                 mov     eax,offset tabprompt                                
                 call    printmsg
@@ -207,6 +236,8 @@ debug_loop:
                 ;je      command_k
                 cmp     al,'R'
                 je      command_r
+                cmp     al,'G'
+                je      command_g
                 cmp     al,'T'
                 je      command_t
                 cmp     al,'1'
@@ -227,6 +258,12 @@ command_d:
                 call    crlf
                 popad
                 call    dumpmem
+                jmp     debug_loop
+
+command_g:
+                call    checkpentium
+                jc      debug_loop
+                call    changebargraph
                 jmp     debug_loop
 
 command_f:
@@ -260,6 +297,8 @@ command_b:
                 jmp     debug_loop
 
 command_0:
+                call    checkpentium
+                jc      debug_loop
                 call    setgraphmode
                 rdtsc
                 push    eax
@@ -295,6 +334,8 @@ command_k:
                 jmp     debug_loop
 
 command_1:
+                call    checkpentium
+                jc      debug_loop
                 call    setgraphmode
                 call    clear
                 rdtsc
@@ -319,6 +360,8 @@ command_1:
                 jmp     debug_loop
 
 command_2:
+                call    checkpentium
+                jc      debug_loop
                 call    setgraphmode
                 call    clear
                 rdtsc

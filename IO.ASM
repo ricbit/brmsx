@@ -8,7 +8,12 @@
 code32  segment para public use32
         assume cs:code32, ds:code32
 
+extrn blitbuffer: dword
+extrn start_counter: near
+extrn end_counter: near
+
 include pmode.inc
+include pentium.inc
 include vdp.inc
 include z80.inc
 include bit.inc
@@ -36,10 +41,13 @@ public read_size_file
 public blit
 public framerate
 public on_off
-public reset_sb
 public set_border_color
 public palette
 public videomode
+public measurespeed
+public clockrate
+public printdecimal
+public bargraphmode
 
 ; DATA ---------------------------------------------------------------
 
@@ -48,12 +56,12 @@ align 4
 include keyboard.inc
 include palette.inc
 
-extrn blitbuffer: dword
-
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
 tmpasc          equ     tmphex2+1
 tmpspace        db      ' $'
+tmpdecimal      db      20 dup (' ')
+                db      '$'
 
 irq_stub_buf    db      21 dup (0)
 oldpirqvect     dd      0
@@ -64,10 +72,24 @@ oldkbpirqvect   dd      0
 oldkbrirqvect   dd      0
 
 align 4
+
 framerate       dd      1
 exit_now        dd      0
 on_off          dd      1
 videomode       dd      0
+
+clockrate       db      8 dup (0)
+measurestatus   dd      0
+measureend      dd      0
+
+bargraphmode    dd      0
+
+rendercounter   db      8 dup (0)
+renderrate      dd      0
+blitcounter     db      8 dup (0)
+blitrate        dd      0
+guicounter      db      8 dup (0)
+guirate         dd      0
 
 msg00           db      13,10,'$'
 
@@ -197,6 +219,25 @@ SET_VGA_REG     macro   reg,index,value
 
                 endm
 
+; fill_palette --------------------------------------------------------
+; fill the upper palette with the color to make the color bar
+
+fill_palette:
+                mov     ebx,offset palette
+                mov     ecx,48
+fill_palette0:
+                movzx   eax,byte ptr [ebx]
+                add     eax,100
+                cmp     ah,0
+                jz      fill_palette1
+                mov     al,255
+fill_palette1:  
+                mov     [ebx+48],al
+                inc     ebx
+                dec     ecx
+                jnz     fill_palette0
+                ret
+
 ; setgraphmode --------------------------------------------------------
 ; set video mode 13h (320x200x256)
 
@@ -204,6 +245,7 @@ setgraphmode:
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
+                call    fill_palette
                 mov     al,0
                 mov     dx,03C8h
                 out     dx,al
@@ -323,6 +365,32 @@ printhex2:      push    eax
                 pop     eax
                 ret
 
+; printdecimal -------------------------------------------------------
+; print a decimal number
+; eax = decimal 
+
+printdecimal:
+                mov     ebx,eax
+                mov     ecx,20/4
+                mov     eax,20202020h
+                mov     edi,offset tmpdecimal
+                rep     stosd
+                mov     edi,offset tmpdecimal+19
+                mov     eax,ebx
+                mov     ebx,10
+printdecimal1:
+                xor     edx,edx
+                div     ebx
+                add     edx,30h
+                mov     [edi],dl
+                dec     edi
+                cmp     eax,0
+                jnz     printdecimal1
+
+                lea     eax,[edi+1]
+                call    printmsg
+                ret
+
 ; crlf ---------------------------------------------------------------
 ; prints a cr/lf
 
@@ -369,6 +437,48 @@ turnoff_irq:
                 out     040h,al
                 ret
 
+; measurespeed -------------------------------------------------------
+; measure how many clock cycles the computer spends
+; between one one interrupt and another
+
+measurespeed:                
+                cli
+                mov     measurestatus,0
+                mov     measureend,0
+                mov     bl,0
+                call    _getirqvect
+                mov     oldpirqvect,edx
+                mov     edx,offset measure_handler
+                call    _setirqvect
+                mov     edi,offset irq_stub_buf
+                call    _rmpmirqset
+                mov     oldrirqvect,eax
+                mov     al,034h
+                out     043h,al
+                mov     al,0aeh
+                out     040h,al
+                mov     al,04dh
+                out     040h,al
+                sti
+measurespeed0:
+                cmp     measureend,1
+                jne     measurespeed0
+
+                cli
+                mov     bl,0
+                mov     eax,oldrirqvect
+                call    _rmpmirqfree
+                mov     edx,oldpirqvect
+                call    _setirqvect
+                mov     al,034h
+                out     043h,al
+                mov     al,0
+                out     040h,al
+                mov     al,0
+                out     040h,al
+                sti
+                ret
+
 ; turnon_kb_irq ------------------------------------------------------
 ; turn on the keyboard irq handler
 
@@ -394,6 +504,35 @@ turnoff_kb_irq:
                 call    _setirqvect
                 ret
 
+; measure_handler ----------------------------------------------------
+; this handler is used to measure the clock of the processor
+
+measure_handler:
+                pushad
+                push    ds
+                inc     measurestatus
+                cmp     measurestatus,5
+                jb      measure_handler_exit
+                ja      measure_handler1
+                rdtsc
+                mov     dword ptr [offset clockrate],eax
+                mov     dword ptr [offset clockrate+4],edx
+                jmp     measure_handler_exit
+measure_handler1:
+                rdtsc
+                sub     eax,dword ptr [offset clockrate]
+                sbb     edx,dword ptr [offset clockrate+4]
+                mov     dword ptr [offset clockrate],eax
+                mov     dword ptr [offset clockrate+4],edx
+                mov     measureend,1
+measure_handler_exit:
+                mov     al,20h
+                out     20h,al
+                pop     ds
+                popad
+                sti
+                iretd
+
 ; my_irq_handler -----------------------------------------------------
 ; this is the handler of the timer irq
 
@@ -408,8 +547,31 @@ my_irq_handler:
                 mov     eax,framerate
                 mov     on_off,eax
                 cli
+
+                mov     eax,offset rendercounter
+                call    start_counter
                 call    render
+                mov     eax,offset rendercounter
+                call    end_counter
+                mov     eax,dword ptr [offset rendercounter]
+                mov     renderrate,eax
+
+                mov     eax,offset guicounter
+                call    start_counter
+                call    draw_gui
+                mov     eax,offset guicounter
+                call    end_counter
+                mov     eax,dword ptr [offset guicounter]
+                mov     guirate,eax
+
+                mov     eax,offset blitcounter
+                call    start_counter
                 call    blit
+                mov     eax,offset blitcounter
+                call    end_counter
+                mov     eax,dword ptr [offset blitcounter]
+                mov     blitrate,eax
+
 my_irq_handler0:
                 or      vdpstatus,10000000b
                 mov     interrupt,1
@@ -419,6 +581,54 @@ my_irq_handler0:
                 popad
                 sti
                 iretd
+
+; draw_gui -----------------------------------------------------------
+
+draw_gui:
+                cmp     bargraphmode,0
+                je      _ret
+                mov     edi,0
+                mov     eax,z80rate
+                call    drawline
+                mov     edi,5
+                mov     eax,renderrate
+                call    drawline
+                mov     edi,10
+                mov     eax,blitrate
+                call    drawline
+                mov     edi,15
+                mov     eax,guirate
+                call    drawline
+                ret
+
+drawline:
+                mov     ebx,100
+                mul     ebx                
+                xor     edx,edx
+                mov     ebx,dword ptr [offset clockrate]
+                div     ebx
+                mov     ecx,100
+                shl     edi,8
+                add     edi,blitbuffer
+                mov     ebx,0F0Dh
+drawline1:      
+                cmp     ecx,eax
+                jbe     drawline2
+                mov     byte ptr [edi],bh
+                mov     byte ptr [edi+256],bh
+                mov     byte ptr [edi+256*2],bh
+                mov     byte ptr [edi+256*3],bh
+                jmp     drawline_exit
+drawline2:
+                mov     byte ptr [edi],bl
+                mov     byte ptr [edi+256],bl
+                mov     byte ptr [edi+256*2],bl
+                mov     byte ptr [edi+256*3],bl
+drawline_exit:
+                inc     edi
+                dec     ecx
+                jnz     drawline1
+                ret
 
 ; my_kb_irq_handler --------------------------------------------------
 ; this is the handler of the keyboard irq
@@ -560,98 +770,6 @@ blit0_0:
                 dec     edx
                 jnz     blit0_0
                 pop     es
-                ret
-
-; set_sb_reg ---------------------------------------------------------
-; set a sound blaster register
-; al: port number
-; bl: value
-
-set_sb_reg:
-                push    eax
-                push    ebx
-                pushfd
-                cli
-                mov     dx,0330h
-                out     dx,al
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                inc     dx
-                mov     al,bl
-                out     dx,al
-                popfd
-                dec     dx
-                
-                ;1
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;2
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;3
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;4
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;5
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;6
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                ;7
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-                in      al,dx
-
-                pop     ebx
-                pop     eax
-
-                ret
-
-; reset_sb -----------------------------------------------------------
-; reset the sound blaster
-
-reset_sb:
-                mov     al,0
-                mov     bl,0
-reset_sb1:
-                call    set_sb_reg
-                inc     al
-                cmp     al,0f5h
-                jbe     reset_sb1
-
                 ret
 
 code32          ends

@@ -14,6 +14,8 @@ include bit.inc
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
 include isetDD.inc
 include isetDDCB.inc
 public isetDDxx

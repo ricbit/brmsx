@@ -16,6 +16,8 @@ extrn emulEDFF: near
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
 include isetED.inc
 public isetEDxx
 

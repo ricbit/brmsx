@@ -17,6 +17,8 @@ extrn isetDDxx: near
 extrn isetEDxx: near
 extrn isetFDxx: near
 extrn emulEDFF: near
+extrn start_counter: near
+extrn end_counter: near
 
 include io.inc
 include debug.inc
@@ -56,6 +58,7 @@ public rmask
 public regi
 public emulatemode
 public megarommode
+public z80rate
 
 public slot0
 public slot1
@@ -249,6 +252,8 @@ rcounter        dd      0
 clockcounter    dd      0
 emulatemode     dd      0
 megarommode     dd      0
+z80rate         dd      0
+z80counter      db      8 dup (0)
 rmask           db      0
 regi            db      0
 
@@ -534,6 +539,12 @@ EMULABEL        loop,emtype,brtype
                 JUMP    jmp,loop,emtype,brtype
                 endif
 
+                mov     eax,offset z80counter
+                call    end_counter
+                mov     eax,dword ptr [offset z80counter]
+                mov     z80rate,eax
+                xor     eax,eax
+
 EMULABEL        synch,emtype,brtype
                 
                 if      emtype EQ NORMAL
@@ -543,6 +554,9 @@ EMULABEL        synch,emtype,brtype
 
 EMULABEL        interrupt,emtype,brtype
 
+                mov     eax,offset z80counter
+                call    start_counter
+                xor     eax,eax
                 mov     clockcounter,0
                 mov     interrupt,0
                 cmp     error,1

@@ -21,6 +21,9 @@ extrn blit: near
 extrn exit_now: dword
 extrn framerate: dword
 extrn on_off: dword
-extrn reset_sb: near
 extrn set_border_color: near
 extrn videomode: dword
+extrn measurespeed: near
+extrn clockrate: byte
+extrn printdecimal: near
+extrn bargraphmode: dword
