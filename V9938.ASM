@@ -74,6 +74,14 @@ shift_low_x     db      0
 shift_high_y    db      0
 pixel_mask      db      0
 
+save_POS        dd      0
+save_START      dd      0
+save_XSIZE      dd      0
+save_XOFFSET    dd      0
+save_NX         dd      0
+save_NY         dd      0
+callback_44     dd      _ret
+
 callback_vdp:
                 dd      _ret                    ; STOP
                 dd      _ret                    ; RESERVED
@@ -86,11 +94,11 @@ callback_vdp:
                 dd      vdp_command_LMMV        ; LMMV
                 dd      vdp_command_LMMM        ; LMMM
                 dd      _ret                    ; LMCM
-                dd      _ret                    ; LMMC
+                dd      vdp_command_LMMC        ; LMMC
                 dd      vdp_command_HMMV        ; HMMV
                 dd      vdp_command_HMMM        ; HMMM
                 dd      vdp_command_YMMM        ; YMMM
-                dd      _ret                    ; HMMC
+                dd      vdp_command_HMMC        ; HMMC
 
 callback_logical:
                 dd      write_pixel_imp         ; IMP
@@ -219,6 +227,8 @@ register_action:
                 je      outemul99_palette_msx2
                 cmp     bl,14
                 je      outemul99_page_msx2
+                cmp     bl,44
+                je      check_cpu_move 
                 cmp     bl,46
                 je      execute_vdp_command 
 outemul99_update_msx2:
@@ -262,6 +272,9 @@ outemul99_irqexit_msx2:
 
                 xor     eax,eax
                 ret
+
+check_cpu_move:
+                jmp     dword ptr [offset callback_44]
 
 outemul99_page_msx2:
                 ; select page
@@ -423,6 +436,8 @@ inemul99_msx2_generic:
 ; prepare the masks used in VDP command 
 
 eval_screen_mask:
+                mov     callback_44,offset _ret
+
                 cmp     actualscreen,5
                 je      eval_screen_mask_5
 
@@ -883,7 +898,13 @@ HMMV_DY_consistent:
 
                 ; check NY consistency
                 cmp     pNY,0
-                je      vdp_command_HMMV_exit
+                jne     HMMV_NY_consistent
+
+                mov     eax,max_y
+                mov     pNY,eax
+                mov     pDY,0
+
+HMMV_NY_consistent:
 
                 ; eval destination start addresses                
                 mov     edi,pDY
@@ -900,6 +921,9 @@ HMMV_DY_consistent:
                 mov     cl,shift_low_x
                 shr     edx,cl
 
+                mov     ebp,size_hx
+                sub     ebp,edx
+
                 ; load the filling byte
                 mov     al,byte ptr [offset vdpregs+44]
 
@@ -910,16 +934,152 @@ vdp_command_HMMV_outer:
                 mov     ecx,edx
                 rep     stosb
 
-                sub     esi,edx
-                sub     edi,edx
-                add     esi,size_hx
-                add     edi,size_hx
+                ;sub     esi,edx
+                ;sub     edi,edx
+                ;add     esi,size_hx
+                ;add     edi,size_hx
+                add     edi,ebp
 
                 dec     ebx
                 jnz     vdp_command_HMMV_outer
 
 vdp_command_HMMV_exit:
                 popad
+                ret
+
+; vdp_command_HMMC ---------------------------------------------------
+
+vdp_command_HMMC:
+                ; only DIX=0 and DIY=0 are supported by now
+                test    byte ptr [offset vdpregs+45],1100b
+                jnz     _ret
+
+                pushad
+
+                ; load DX
+                movzx   eax,word ptr [offset vdpregs+36]
+                and     eax,and_hx
+                mov     pDX,eax
+                        
+                ; load NX
+                movzx   eax,word ptr [offset vdpregs+40]
+                and     eax,and_hx
+                mov     pNX,eax
+
+                ; check NX consistency
+                cmp     pNX,0
+                jne     HMMC_NX_consistent
+
+                mov     pDX,0
+                mov     pSY,0
+                mov     eax,max_x
+                mov     pNX,eax
+
+HMMC_NX_consistent:
+
+                ; check DX consistency
+                mov     eax,pDX
+                add     eax,pNX                        
+                cmp     eax,max_x
+                jbe     HMMC_DX_consistent
+
+                mov     eax,max_x
+                sub     eax,pDX
+                mov     pNX,eax
+
+HMMC_DX_consistent:
+
+                ; load DY
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,and_y
+                mov     pDY,eax
+                
+                ; load NY
+                movzx   eax,word ptr [offset vdpregs+42]
+                and     eax,and_y
+                mov     pNY,eax
+                
+                ; check DY consistency
+                mov     eax,pDY
+                add     eax,pNY                        
+                cmp     eax,max_y
+                jbe     HMMC_DY_consistent
+
+                mov     eax,max_y
+                sub     eax,pDY
+                mov     pNY,eax
+
+HMMC_DY_consistent:
+
+                ; check NY consistency
+                cmp     pNY,0
+                jne     HMMC_NY_consistent
+
+                mov     eax,max_y
+                mov     pNY,eax
+                mov     pDY,0
+
+HMMC_NY_consistent:
+
+                ; eval destination start addresses                
+                mov     edi,pDY
+                mov     cl,shift_high_y
+                shl     edi,cl
+                mov     eax,pDX
+                mov     cl,shift_low_x
+                shr     eax,cl
+                add     edi,eax
+                add     edi,msxvram
+
+                ; adjust the X size
+                mov     edx,pNX
+                mov     cl,shift_low_x
+                shr     edx,cl
+
+                ; prepare the transfer
+                mov     save_POS,edi
+
+                mov     eax,pNY
+                mov     save_NY,eax
+
+                mov     save_XSIZE,edx
+                mov     save_NX,edx
+
+                mov     eax,size_hx
+                sub     eax,edx
+                mov     save_XOFFSET,eax
+
+                or      byte ptr [offset vdpstatus+2],081h
+
+                mov     callback_44,offset callback_HMMC
+                call    dword ptr [offset callback_44]
+
+vdp_command_HMMC_exit:
+                popad
+                ret
+
+callback_HMMC:
+                mov     al,byte ptr [offset vdpregs+44]
+                mov     ecx,save_POS
+                mov     [ecx],al
+                inc     ecx
+                mov     save_POS,ecx
+
+                dec     save_NX
+                jnz     _ret
+
+                add     ecx,save_XOFFSET
+                mov     save_POS,ecx
+
+                mov     ecx,save_XSIZE
+                mov     save_NX,ecx
+
+                dec     save_NY
+                jnz     _ret
+
+                mov     callback_44,offset _ret
+                and     byte ptr [offset vdpstatus+2],07Eh
+
                 ret
 
 ; READ_PIXEL ---------------------------------------------------------
@@ -1020,6 +1180,7 @@ write_pixel_imp:
                 ret
 
 write_pixel_and:
+                or      al,ah
                 and     [edi],al
                 ret
 
@@ -1043,6 +1204,7 @@ write_pixel_not:
 write_pixel_tand:
                 or      al,al
                 jz      _ret 
+                or      al,ah
                 and     [edi],al
                 ret
 
@@ -1352,6 +1514,148 @@ vdp_command_LMMV_ebp:
 
 vdp_command_LMMV_exit:
                 popad
+                ret
+
+; vdp_command_LMMC ---------------------------------------------------
+
+vdp_command_LMMC:
+                ; only DIX=0 and DIY=0 are supported by now
+                test    byte ptr [offset vdpregs+45],1100b
+                jnz     _ret
+
+                pushad
+
+                ; load DX
+                movzx   eax,word ptr [offset vdpregs+36]
+                and     eax,and_x
+                mov     pDX,eax
+                        
+                ; load NX
+                movzx   eax,word ptr [offset vdpregs+40]
+                and     eax,and_x
+                mov     pNX,eax
+
+                ; check NX consistency
+                cmp     pNX,0
+                jne     LMMC_NX_consistent
+
+                mov     pDX,0
+                mov     pSY,0
+                mov     eax,max_x
+                mov     pNX,eax
+
+LMMC_NX_consistent:
+
+                ; check DX consistency
+                mov     eax,pDX
+                add     eax,pNX                        
+                cmp     eax,max_x
+                jbe     LMMC_DX_consistent
+
+                mov     eax,max_x
+                sub     eax,pDX
+                mov     pNX,eax
+
+LMMC_DX_consistent:
+
+                ; load DY
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,and_y
+                mov     pDY,eax
+                
+                ; load NY
+                movzx   eax,word ptr [offset vdpregs+42]
+                and     eax,and_y
+                mov     pNY,eax
+                
+                ; check DY consistency
+                mov     eax,pDY
+                add     eax,pNY                        
+                cmp     eax,max_y
+                jbe     LMMC_DY_consistent
+
+                mov     eax,max_y
+                sub     eax,pDY
+                mov     pNY,eax
+
+LMMC_DY_consistent:
+
+                ; check NY consistency
+                cmp     pNY,0
+                je      vdp_command_LMMV_exit
+
+                ; eval destination start addresses                
+                mov     edi,pDY
+                mov     cl,shift_high_y
+                shl     edi,cl
+                mov     eax,pDX
+                mov     cl,shift_low_x
+                shr     eax,cl
+                add     edi,eax
+                add     edi,msxvram
+
+                ; adjust the pixel counters
+                mov     al,byte ptr [offset vdpregs+44]
+                mov     ebp,pDX
+
+                ; prepare the transfer
+                mov     save_POS,edi
+                mov     save_START,edi
+
+                mov     eax,pNY
+                mov     save_NY,eax
+
+                mov     ecx,pNX
+                mov     save_XSIZE,ecx
+                mov     save_NX,ecx
+
+                mov     eax,pDX
+                mov     save_XOFFSET,eax
+
+                or      byte ptr [offset vdpstatus+2],081h
+
+                mov     callback_44,offset callback_LMMC
+                call    dword ptr [offset callback_44]
+
+vdp_command_LMMC_exit:
+                popad
+                ret
+
+callback_LMMC:
+                mov     al,byte ptr [offset vdpregs+44]
+                push    edi edx
+                mov     edi,save_POS
+                mov     edx,save_XOFFSET
+                WRITE_PIXEL
+                mov     edx,save_XOFFSET
+                inc     edx
+                mov     save_XOFFSET,edx
+                test    edx,shift_mask
+                jnz     callback_LMMC_edx
+                inc     edi
+                mov     save_POS,edi
+callback_LMMC_edx:
+                pop     edx edi
+
+                mov     eax,0
+
+                dec     save_NX
+                jnz     _ret
+
+                mov     ecx,save_START
+                add     ecx,size_hx
+                mov     save_START,ecx
+                mov     save_POS,ecx
+
+                mov     ecx,save_XSIZE
+                mov     save_NX,ecx
+
+                dec     save_NY
+                jnz     _ret
+
+                mov     callback_44,offset _ret
+                and     byte ptr [offset vdpstatus+2],07Eh
+                
                 ret
 
 ; vdp_command_LINE ---------------------------------------------------

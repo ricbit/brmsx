@@ -1,4 +1,24 @@
 guess_table:
+        dd      0DA05ECD8h
+        dd      5+2
+        dd      offset name_zanac_ex
+        
+        dd      0BA414D43h
+        dd      4+2
+        dd      offset name_outrun
+        
+        dd      06C813EF9h
+        dd      4+2
+        dd      offset name_bubble_bobble
+        
+        dd      0B17626EEh
+        dd      2+2
+        dd      offset name_quarth
+        
+        dd      0B854C8F2h
+        dd      2+2
+        dd      offset name_quarth
+        
         dd      07F551509h
         dd      3+2
         dd      offset name_treasure_usas
@@ -203,6 +223,18 @@ guess_table:
         dd      0
 
 ; name table
+
+name_zanac_ex:
+        db      'Zanac EX$'
+
+name_outrun:
+        db      'Out Run$'
+
+name_bubble_bobble:
+        db      'Bubble Bobble$'
+
+name_quarth:
+        db      'Quarth$'
 
 name_treasure_usas:
         db      'The Treasure of Usas$'
