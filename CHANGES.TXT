@@ -1,3 +1,7 @@
+release 1.67:
+
+- now ALL the opcodes are in new pipe
+
 release 1.66:
 
 - put a lot of opcodes in the new pipe

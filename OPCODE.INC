@@ -414,6 +414,62 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPCPIR - CPIR
+
+OPCPIR          macro   opcode
+
+emul&opcode:
+                inc     edi
+emul&opcode&b:      
+                mov     ecx,regehl
+                call    readmem
+                cmp     dh,al
+                jz      emul&opcode&a
+                sub     ebp,21+2
+                inc     reghl
+                dec     regbc
+                jnz     emul&opcode&b
+                and     dl,10111011b
+                add     ebp,5-2
+                ret
+emul&opcode&a:      
+                inc     reghl
+                dec     regbc
+                or      dl,01000100b
+                add     ebp,5-2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPCPDR - CPDR
+
+OPCPDR          macro   opcode
+
+emul&opcode:
+                inc     edi
+emul&opcode&b:      
+                mov     ecx,regehl
+                call    readmem
+                cmp     dh,al
+                jz      emul&opcode&a
+                sub     ebp,21+2
+                dec     reghl
+                dec     regbc
+                jnz     emul&opcode&b
+                and     dl,10111011b
+                add     ebp,5-2
+                ret
+emul&opcode&a:      
+                dec     reghl
+                dec     regbc
+                or      dl,01000100b
+                add     ebp,5-2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPCPL - CPL
 
 OPCPL           macro   opcode
@@ -520,6 +576,20 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPDI - DI
+
+OPDI            macro   opcode
+
+
+emul&opcode:
+                inc     edi
+                mov     iff1,0
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPDJNZ - DJNZ dd
 
 OPDJNZ          macro   opcode
@@ -540,6 +610,19 @@ emul&opcode&a:
                 endm
 
 ; --------------------------------------------------------------------
+; OPEI - EI
+
+OPEI            macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     iff1,1
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPEXAFAF - EX AF,AF'
 
 OPEXAFAF        macro   opcode
@@ -555,15 +638,31 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
-; OPEXSPHL - EX (SP),HL
+; OPEXDEHL - EX DE,HL
 
-OPEXSPHL        macro   opcode
+OPEXDEHL        macro   opcode
+
+emul&opcode:
+                mov     ebx,regede
+                mov     ecx,regehl
+                mov     regehl,ebx
+                mov     regede,ecx
+                inc     edi
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPEXSPREGW - EX (SP),rr       rr=[hl,ix,iy]
+
+OPEXSPREGW      macro   opcode,reg
 
 emul&opcode:
                 mov     ecx,regesp
                 call    readmemw
-                mov     ebx,regehl
-                mov     regehl,eax
+                mov     ebx,reg
+                mov     reg,eax
                 mov     eax,ebx
                 call    writememw
                 sub     ebp,19+3
@@ -717,6 +816,40 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPINI - INI
+
+OPINI           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                inc     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPIM1 - IM 1 
+
+OPIM1           macro   opcode
+
+emul&opcode:
+                inc     edi
+                sub     ebp,8+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; JPCC - JP cc,dddd
 
 JPCC            macro   opcode,jcc,flagtype
@@ -783,6 +916,18 @@ emul&opcode:
                 mov     edi,eax
                 mov     eax,0
                 sub     ebp,10+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPJPREGW - JP (rr)            rr=[hl,ix,iy]
+
+OPJPREGW        macro   opcode,reg
+
+emul&opcode:    
+                mov     edi,reg
+                sub     ebp,4+1
                 ret
 
                 endm
@@ -900,6 +1045,20 @@ emul&opcode:
                 mov     ecx,regehl
                 sub     ebp,7+2
                 call    writemem
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDSPREGW - LD SP,rr rr=[hl,ix,iy]
+
+LDSPREGW        macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     ebx,reg
+                mov     regesp,ebx
+                sub     ebp,6+1
                 ret
 
                 endm
@@ -1120,6 +1279,28 @@ emul&opcode&a:
                 endm
 
 ; --------------------------------------------------------------------
+; OPLDDR - LDDR
+
+OPLDDR          macro   opcode
+
+emul&opcode:    
+                inc     edi
+emul&opcode&a:      
+                mov     ecx,regehl
+                call    readmem
+                mov     ecx,regede
+                call    writemem
+                sub     ebp,21+2
+                dec     reghl
+                dec     regde
+                dec     regbc
+                jnz     emul&opcode&a
+                add     ebp,5-2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDI
 
 OPLDI           macro   opcode
@@ -1141,6 +1322,28 @@ emul&opcode:
 emul&opcode&a:
                 or      dl,[offset PVN53_table+eax]     ; clock 7 U
                 ret                                     ; clock 7 V
+
+                endm
+
+; --------------------------------------------------------------------
+; OPLDIR - LDIR
+
+OPLDIR          macro   opcode
+
+emul&opcode:    
+                inc     edi
+emul&opcode&a:      
+                mov     ecx,regehl
+                call    readmem
+                mov     ecx,regede
+                call    writemem
+                sub     ebp,21+2
+                inc     reghl
+                inc     regde
+                dec     regbc
+                jnz     emul&opcode&a
+                add     ebp,5-2
+                ret
 
                 endm
 
@@ -1262,6 +1465,28 @@ emul&opcode:    mov     al,regc
                 sub     ebp,12+2
                 mov     bl,reg
                 jmp     [offset outportxx+eax*4]
+
+                endm
+
+; --------------------------------------------------------------------
+; OPOUTI - OUTI
+
+OPOUTI          macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     al,regc
+                call    [offset outportxx+eax*4]
+                inc     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+3
+                ret
 
                 endm
 

@@ -1497,7 +1497,7 @@ POPREGW         E1,regehl
 JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
-OPEXSPHL        E3               
+OPEXSPREGW      E3,regehl
 
 ; E4 - CALL PO,dddd
 CALLCC          E4,PARITY_FLAG,jz
@@ -1515,21 +1515,13 @@ OPRST           E7,020h
 RETCC           E8,PARITY_FLAG,jnz
 
 ; E9 - JP (HL)
-emulE9:         mov     edi,regehl
-                sub     ebp,4+1
-                ret
+OPJPREGW        E9,regehl
 
 ; EA - JP PE,dddd
 JPCC            EA,jz,PARITY_FLAG
 
 ; EB - EX DE,HL
-emulEB:         mov     ebx,regede
-                mov     ecx,regehl
-                mov     regehl,ebx
-                mov     regede,ecx
-                inc     edi
-                sub     ebp,4+1
-                ret
+OPEXDEHL        EB                
 
 ; EC - CALL PE,dddd
 CALLCC          EC,PARITY_FLAG,jnz
@@ -1556,10 +1548,7 @@ POPREGW         F1,edx
 JPCC            F2,jnz,SIGN_FLAG
 
 ; F3 - DI
-emulF3:         inc     edi
-                mov     iff1,0
-                sub     ebp,4+1
-                ret
+OPDI            F3
 
 ; F4 - CALL P,dddd
 CALLCC          F4,SIGN_FLAG,jz
@@ -1577,20 +1566,13 @@ OPRST           F7,030h
 RETCC           F8,SIGN_FLAG,jnz
 
 ; F9 - LD SP,HL
-emulF9:         inc     edi
-                mov     ebx,regehl
-                mov     regesp,ebx
-                sub     ebp,6+1
-                ret
+LDSPREGW        F9,regehl
 
 ; FA - JP M,dddd
 JPCC            FA,jz,SIGN_FLAG
 
 ; FB - EI
-emulFB:         inc     edi
-                mov     iff1,1
-                sub     ebp,4+1
-                ret
+OPEI            FB      
 
 ; FC - CALL M,dddd
 CALLCC          FC,SIGN_FLAG,jnz

@@ -138,36 +138,16 @@ emulDDCB:       inc     edi
 POPREGW         DDE1,regeix
 
 ; DD E3 - EX (SP),IX
-emulDDE3:       inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     bl,regixl
-                mov     regixl,al
-                mov     al,bl
-                call    writemem
-                inc     cx
-                call    readmem
-                mov     bl,regixh
-                mov     regixh,al
-                mov     al,bl
-                call    writemem
-                sub     ebp,23+4
-                ret
+OPEXSPREGW      DDE3,regeix
 
 ; DD E5 - PUSH IX
 PUSHREGW        DDE5,regeix
 
 ; DD E9 - JP (IX)
-emulDDE9:       mov     edi,regeix
-                sub     ebp,8+2
-                ret
+OPJPREGW        DDE9,regeix
 
 ; DD F9 - LD SP,IX
-emulDDF9:       inc     edi
-                mov     ebx,regeix
-                mov     regesp,ebx
-                sub     ebp,10+2
-                ret
+LDSPREGW        DDF9,regeix
 
 ; DD CB 06 - RLC (IX+dd)
 RLCII           DDCB06,regeix

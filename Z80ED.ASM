@@ -53,7 +53,7 @@ ADCREGWREGW     ED4A,regl,regh,regc,regb
 LDREGWDDDD      ED4B,regebc
 
 ; ED 4D - RETI
-emulED4D:       jmp     emulC9
+OPRET           ED4D
 
 ; ED 50 - IN D,(C)
 INREG           ED50,regd
@@ -68,9 +68,7 @@ SBCHLWREG       ED52,rege,regd
 LDDDDDREGW      ED53,regede
 
 ; ED 56 - IM 1
-emulED56:       inc     edi
-                sub     ebp,8+2
-                ret
+OPIM1           ED56
 
 ; ED 57 - LD A,I
 LDAI            ED57
@@ -136,113 +134,25 @@ LDREGWDDDD      ED7B,regesp
 OPLDI           EDA0
 
 ; ED A2 - INI
-emulEDA2:       inc     edi
-                mov     al,regc
-                call    [offset inportxx+eax*4]
-                mov     ecx,regehl
-                mov     al,bl
-                call    writemem
-                inc     reghl
-                dec     regb
-                pushfd
-                pop     ecx
-                and     dl,10111111b
-                and     cl,01000010b ;check
-                or      dl,cl
-                sub     ebp,16+3
-                ret
+OPINI           EDA2
 
 ; ED A3 - OUTI
-emulEDA3:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     bl,al
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                inc     reghl
-                dec     regb
-                pushfd
-                pop     ecx
-                and     dl,10111111b
-                and     cl,01000010b ;check
-                or      dl,cl
-                sub     ebp,16+3
-                ret
+OPOUTI          EDA3
 
 ; ED A8 - LDD
 OPLDD           EDA8
 
 ; ED B0 - LDIR
-emulEDB0:       inc     edi
-                ;mov     ebp,0
-emulEDB0a:      mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                sub     ebp,21+2
-                inc     reghl
-                inc     regde
-                dec     regbc
-                jnz     emulEDB0a
-                add     ebp,5-2
-                ret
+OPLDIR          EDB0
 
 ; ED B1 - CPIR
-emulEDB1:       inc     edi
-                ;mov     ebp,0
-emulEDB1b:      mov     ecx,regehl
-                call    readmem
-                cmp     dh,al
-                jz      emulEDB1a
-                sub     ebp,21+2
-                inc     reghl
-                dec     regbc
-                jnz     emulEDB1b
-                and     dl,10111011b
-                add     ebp,5-2
-                ret
-emulEDB1a:      
-                inc     reghl
-                dec     regbc
-                or      dl,01000100b
-                add     ebp,5-2
-                ret
+OPCPIR          EDB1
 
 ; ED B8 - LDDR
-emulEDB8:       inc     edi
-                ;mov     ebp,0
-emulEDB8a:      mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                sub     ebp,21+2
-                dec     reghl
-                dec     regde
-                dec     regbc
-                jnz     emulEDB8a
-                add     ebp,5-2
-                ret
+OPLDDR          EDB8
 
 ; ED B9 - CPDR
-emulEDB9:       inc     edi
-                ;mov     ebp,0
-emulEDB9b:      mov     ecx,regehl
-                call    readmem
-                cmp     dh,al
-                jz      emulEDB9a
-                sub     ebp,21+2
-                dec     reghl
-                dec     regbc
-                jnz     emulEDB9b
-                and     dl,10111011b
-                add     ebp,5-2
-                ret
-emulEDB9a:      
-                dec     reghl
-                dec     regbc
-                or      dl,01000100b
-                add     ebp,5-2
-                ret
+OPCPDR          EDB9
 
 code32          ends
                 end

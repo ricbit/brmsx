@@ -132,16 +132,10 @@ POPREGW         FDE1,regeiy
 PUSHREGW        FDE5,regeiy
 
 ; FD E9 - JP (IY)
-emulFDE9:       mov     edi,regeiy
-                sub     ebp,8+2
-                ret
+OPJPREGW        FDE9,regeiy
 
 ; FD F9 - LD SP,IY
-emulFDF9:       inc     edi
-                mov     ebx,regeiy
-                mov     regesp,ebx
-                sub     ebp,10+2
-                ret
+LDSPREGW        FDF9,regeiy
 
 ; FD CB 06 - RLC (IY+dd)
 RLCII           FDCB06,regeiy
