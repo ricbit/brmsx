@@ -127,46 +127,46 @@ psetCBxx:
 	psetCB7D: dd prinCB7D
 	psetCB7E: dd prinCB7E
 	psetCB7F: dd prinCB7F
-	psetCB80: dd prinXX
-	psetCB81: dd prinXX
-	psetCB82: dd prinXX
-	psetCB83: dd prinXX
-	psetCB84: dd prinXX
-	psetCB85: dd prinXX
+	psetCB80: dd prinCB80
+	psetCB81: dd prinCB81
+	psetCB82: dd prinCB82
+	psetCB83: dd prinCB83
+	psetCB84: dd prinCB84
+	psetCB85: dd prinCB85
 	psetCB86: dd prinCB86
-	psetCB87: dd prinXX
-	psetCB88: dd prinXX
-	psetCB89: dd prinXX
-	psetCB8A: dd prinXX
-	psetCB8B: dd prinXX
-	psetCB8C: dd prinXX
-	psetCB8D: dd prinXX
+	psetCB87: dd prinCB87
+	psetCB88: dd prinCB88
+	psetCB89: dd prinCB89
+	psetCB8A: dd prinCB8A
+	psetCB8B: dd prinCB8B
+	psetCB8C: dd prinCB8C
+	psetCB8D: dd prinCB8D
 	psetCB8E: dd prinCB8E
 	psetCB8F: dd prinCB8F
-	psetCB90: dd prinXX
-	psetCB91: dd prinXX
-	psetCB92: dd prinXX
-	psetCB93: dd prinXX
-	psetCB94: dd prinXX
-	psetCB95: dd prinXX
+	psetCB90: dd prinCB90
+	psetCB91: dd prinCB91
+	psetCB92: dd prinCB92
+	psetCB93: dd prinCB93
+	psetCB94: dd prinCB94
+	psetCB95: dd prinCB95
 	psetCB96: dd prinCB96
-	psetCB97: dd prinXX
-	psetCB98: dd prinXX
-	psetCB99: dd prinXX
-	psetCB9A: dd prinXX
-	psetCB9B: dd prinXX
-	psetCB9C: dd prinXX
-	psetCB9D: dd prinXX
+	psetCB97: dd prinCB97
+	psetCB98: dd prinCB98
+	psetCB99: dd prinCB99
+	psetCB9A: dd prinCB9A
+	psetCB9B: dd prinCB9B
+	psetCB9C: dd prinCB9C
+	psetCB9D: dd prinCB9D
 	psetCB9E: dd prinCB9E
-	psetCB9F: dd prinXX
-	psetCBA0: dd prinXX
-	psetCBA1: dd prinXX
-	psetCBA2: dd prinXX
-	psetCBA3: dd prinXX
-	psetCBA4: dd prinXX
-	psetCBA5: dd prinXX
+	psetCB9F: dd prinCB9F
+	psetCBA0: dd prinCBA0
+	psetCBA1: dd prinCBA1
+	psetCBA2: dd prinCBA2
+	psetCBA3: dd prinCBA3
+	psetCBA4: dd prinCBA4
+	psetCBA5: dd prinCBA5
 	psetCBA6: dd prinCBA6
-	psetCBA7: dd prinXX
+	psetCBA7: dd prinCBA7
 	psetCBA8: dd prinCBA8
 	psetCBA9: dd prinCBA9
 	psetCBAA: dd prinCBAA
@@ -175,20 +175,20 @@ psetCBxx:
 	psetCBAD: dd prinCBAD
 	psetCBAE: dd prinCBAE
 	psetCBAF: dd prinCBAF
-	psetCBB0: dd prinXX
-	psetCBB1: dd prinXX
+	psetCBB0: dd prinCBB0
+	psetCBB1: dd prinCBB1
 	psetCBB2: dd prinCBB2
-	psetCBB3: dd prinXX
-	psetCBB4: dd prinXX
-	psetCBB5: dd prinXX
+	psetCBB3: dd prinCBB3
+	psetCBB4: dd prinCBB4
+	psetCBB5: dd prinCBB5
 	psetCBB6: dd prinCBB6
-	psetCBB7: dd prinXX
+	psetCBB7: dd prinCBB7
 	psetCBB8: dd prinCBB8
-	psetCBB9: dd prinXX
-	psetCBBA: dd prinXX
-	psetCBBB: dd prinXX
-	psetCBBC: dd prinXX
-	psetCBBD: dd prinXX
+	psetCBB9: dd prinCBB9
+	psetCBBA: dd prinCBBA
+	psetCBBB: dd prinCBBB
+	psetCBBC: dd prinCBBC
+	psetCBBD: dd prinCBBD
 	psetCBBE: dd prinCBBE
 	psetCBBF: dd prinCBBF
 	psetCBC0: dd prinXX

@@ -63,7 +63,7 @@ iset:
 	iset3D: dd emul3D
 	iset3E: dd emul3E
 	iset3F: dd emul3F
-	iset40: dd emulXX
+	iset40: dd emul40
 	iset41: dd emul41
 	iset42: dd emul42
 	iset43: dd emul43
@@ -81,16 +81,16 @@ iset:
 	iset4F: dd emul4F
 	iset50: dd emul50
 	iset51: dd emul51
-	iset52: dd emulXX
+	iset52: dd emul52
 	iset53: dd emul53
 	iset54: dd emul54
 	iset55: dd emul55
 	iset56: dd emul56
 	iset57: dd emul57
-	iset58: dd emulXX
+	iset58: dd emul58
 	iset59: dd emul59
 	iset5A: dd emul5A
-	iset5B: dd emulXX
+	iset5B: dd emul5B
 	iset5C: dd emul5C
 	iset5D: dd emul5D
 	iset5E: dd emul5E
@@ -108,7 +108,7 @@ iset:
 	iset6A: dd emul6A
 	iset6B: dd emul6B
 	iset6C: dd emul6C
-	iset6D: dd emulXX
+	iset6D: dd emul6D
 	iset6E: dd emul6E
 	iset6F: dd emul6F
 	iset70: dd emul70

@@ -520,3 +520,30 @@ emul&opcode:
                 ret
 
                 endm
+
+; --------------------------------------------------------------------
+; LDREGREG - LD rr,rr rr=[b,c,d,e,h,l]
+
+LDREGREG        macro   opcode,reg1,reg2
+
+emul&opcode:
+                inc     edi
+                mov     bl,reg2
+                mov     ebp,4
+                mov     reg1,bl
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDREGA - LD rr,A rr=[b,c,d,e,h,l]
+
+LDREGA          macro   opcode,reg1
+
+emul&opcode:
+                inc     edi
+                mov     reg1,dh
+                mov     ebp,4
+                ret
+
+                endm

@@ -1185,35 +1185,23 @@ emul3F:         inc     edi
                 and     dl,11101101b
                 ret
 
+; 40 - LD B,B
+LDREGREG        40,regb,regb
+
 ; 41 - LD B,C
-emul41:         inc     edi
-                mov     bl,regc
-                mov     regb,bl
-                ret
+LDREGREG        41,regb,regc
 
 ; 42 - LD B,D
-emul42:         inc     edi
-                mov     al,regd
-                mov     regb,al
-                ret
+LDREGREG        42,regb,regd
 
 ; 43 - LD B,E
-emul43:         inc     edi
-                mov     bl,rege
-                mov     regb,bl
-                ret
+LDREGREG        43,regb,rege
 
 ; 44 - LD B,H
-emul44:         inc     edi
-                mov     al,regh
-                mov     regb,al
-                ret
+LDREGREG        44,regb,regh
 
 ; 45 - LD B,L
-emul45:         inc     edi
-                mov     bl,regl
-                mov     regb,bl
-                ret
+LDREGREG        45,regb,regl
 
 ; 46 - LD B,(HL)
 emul46:         inc     edi
@@ -1223,43 +1211,25 @@ emul46:         inc     edi
                 ret
 
 ; 47 - LD B,A
-emul47:         inc     edi
-                mov     regb,dh
-                ret
+LDREGA          47,regb
 
 ; 48 - LD C,B
-emul48:         inc     edi
-                mov     bl,regb
-                mov     regc,bl
-                ret
+LDREGREG        48,regc,regb
 
 ; 49 - LD C,C
-emul49:         inc     edi
-                ret
+LDREGREG        49,regc,regc
 
 ; 4A - LD C,D
-emul4A:         inc     edi
-                mov     bl,regd
-                mov     regc,bl
-                ret
+LDREGREG        4A,regc,regd
 
-; 4B - LD C,E   
-emul4B:         inc     edi
-                mov     bl,rege
-                mov     regc,bl
-                ret
+; 4B - LD C,E
+LDREGREG        4B,regc,rege
 
 ; 4C - LD C,H
-emul4C:         inc     edi
-                mov     bl,regh
-                mov     regc,bl
-                ret
+LDREGREG        4C,regc,regh
 
 ; 4D - LD C,L
-emul4D:         inc     edi
-                mov     al,regl
-                mov     regc,al
-                ret
+LDREGREG        4D,regc,regl
 
 ; 4E - LD C,(HL)
 emul4E:         inc     edi
@@ -1269,39 +1239,25 @@ emul4E:         inc     edi
                 ret
 
 ; 4F - LD C,A
-emul4F:         inc     edi
-                mov     regc,dh
-                ret
+LDREGA          4F,regc
 
 ; 50 - LD D,B
-emul50:         inc     edi
-                mov     bl,regb
-                mov     regd,bl
-                ret
+LDREGREG        50,regd,regb
 
 ; 51 - LD D,C
-emul51:         inc     edi
-                mov     bl,regc
-                mov     regd,bl
-                ret
+LDREGREG        51,regd,regc
+
+; 52 - LD D,D
+LDREGREG        52,regd,regd
 
 ; 53 - LD D,E
-emul53:         inc     edi
-                mov     bl,rege
-                mov     regd,bl
-                ret
+LDREGREG        53,regd,rege
 
 ; 54 - LD D,H
-emul54:         inc     edi
-                mov     bl,regh
-                mov     regd,bl
-                ret
+LDREGREG        54,regd,regh
 
 ; 55 - LD D,L
-emul55:         inc     edi
-                mov     bl,regl
-                mov     regd,bl
-                ret
+LDREGREG        55,regd,regl
 
 ; 56 - LD D,(HL)
 emul56:         inc     edi
@@ -1311,33 +1267,25 @@ emul56:         inc     edi
                 ret
 
 ; 57 - LD D,A
-emul57:         inc     edi
-                mov     regd,dh
-                ret
+LDREGA          57,regd
+
+; 58 - LD E,B
+LDREGREG        58,rege,regb
 
 ; 59 - LD E,C
-emul59:         inc     edi
-                mov     bl,regc
-                mov     rege,bl
-                ret
+LDREGREG        59,rege,regc
 
 ; 5A - LD E,D
-emul5A:         inc     edi
-                mov     bl,regd
-                mov     rege,bl
-                ret
+LDREGREG        5A,rege,regd
+
+; 5B - LD E,E
+LDREGREG        5B,rege,rege
 
 ; 5C - LD E,H
-emul5C:         inc     edi
-                mov     bl,regh
-                mov     rege,bl
-                ret
+LDREGREG        5C,rege,regh
 
 ; 5D - LD E,L
-emul5D:         inc     edi
-                mov     bl,regl
-                mov     rege,bl
-                ret
+LDREGREG        5D,rege,regl
 
 ; 5E - LD E,(HL)
 emul5E:         inc     edi
@@ -1347,43 +1295,25 @@ emul5E:         inc     edi
                 ret
 
 ; 5F - LD E,A
-emul5F:         inc     edi
-                mov     rege,dh
-                ret
+LDREGA          5F,rege
 
 ; 60 - LD H,B
-emul60:         inc     edi
-                mov     bl,regb
-                mov     regh,bl
-                ret
+LDREGREG        60,regh,regb
 
 ; 61 - LD H,C
-emul61:         inc     edi
-                mov     bl,regc
-                mov     regh,bl
-                ret
+LDREGREG        61,regh,regc
 
-; 62 - LD H,D  
-emul62:         inc     edi
-                mov     al,regd
-                mov     regh,al
-                ret
+; 62 - LD H,D
+LDREGREG        62,regh,regd
 
 ; 63 - LD H,E
-emul63:         inc     edi
-                mov     al,rege
-                mov     regh,al
-                ret
+LDREGREG        63,regh,rege
 
 ; 64 - LD H,H
-emul64:         inc     edi
-                ret
+LDREGREG        64,regh,regh
 
 ; 65 - LD H,L
-emul65:         inc     edi
-                mov     bl,regl
-                mov     regh,bl
-                ret
+LDREGREG        65,regh,regl
 
 ; 66 - LD H,(HL)
 emul66:         inc     edi
@@ -1393,39 +1323,25 @@ emul66:         inc     edi
                 ret
 
 ; 67 - LD H,A
-emul67:         inc     edi
-                mov     regh,dh
-                ret
+LDREGA          67,regh
 
 ; 68 - LD L,B
-emul68:         inc     edi
-                mov     bl,regb
-                mov     regl,bl
-                ret
+LDREGREG        68,regl,regb
 
-; 69 - LD L,C   
-emul69:         inc     edi
-                mov     bl,regc
-                mov     regl,bl
-                ret
+; 69 - LD L,C
+LDREGREG        69,regl,regc
 
 ; 6A - LD L,D
-emul6A:         inc     edi
-                mov     bl,regd
-                mov     regl,bl
-                ret
+LDREGREG        6A,regl,regd
 
 ; 6B - LD L,E
-emul6B:         inc     edi
-                mov     al,rege
-                mov     regl,al
-                ret
+LDREGREG        6B,regl,rege
 
 ; 6C - LD L,H
-emul6C:         inc     edi
-                mov     al,regh
-                mov     regl,al
-                ret
+LDREGREG        6C,regl,regh
+
+; 6D - LD L,L
+LDREGREG        6D,regl,regl
 
 ; 6E - LD L,(HL)
 emul6E:         inc     edi
@@ -1435,9 +1351,7 @@ emul6E:         inc     edi
                 ret
 
 ; 6F - LD L,A
-emul6F:         inc     edi
-                mov     regl,dh
-                ret
+LDREGA          6F,regl
 
 ; 70 - LD (HL),B
 emul70:         inc     edi
@@ -2675,25 +2589,125 @@ BITHL           CB7E,7
 ; CB 7F - BIT 7,A
 BITREG          CB7F,dh,7
 
+; CB 80 - RES 0,B
+RESREG          CB80,regb,0
+
+; CB 81 - RES 0,C
+RESREG          CB81,regc,0
+
+; CB 82 - RES 0,D
+RESREG          CB82,regd,0
+
+; CB 83 - RES 0,E
+RESREG          CB83,rege,0
+
+; CB 84 - RES 0,H
+RESREG          CB84,regh,0
+
+; CB 85 - RES 0,L
+RESREG          CB85,regl,0
+
 ; CB 86 - RES 0,(HL)
 RESHL           CB86,0
+
+; CB 87 - RES 0,A
+RESREG          CB87,dh,0
+
+; CB 88 - RES 1,B
+RESREG          CB88,regb,1
+
+; CB 89 - RES 1,C
+RESREG          CB89,regc,1
+
+; CB 8A - RES 1,D
+RESREG          CB8A,regd,1
+
+; CB 8B - RES 1,E
+RESREG          CB8B,rege,1
+
+; CB 8C - RES 1,H
+RESREG          CB8C,regh,1
+
+; CB 8D - RES 1,L
+RESREG          CB8D,regl,1
 
 ; CB 8E - RES 1,(HL)
 RESHL           CB8E,1
 
 ; CB 8F - RES 1,A
-emulCB8F:       inc     edi
-                and     dh,NBIT_1
-                ret
+RESREG          CB8F,dh,1
+
+; CB 90 - RES 2,B
+RESREG          CB90,regb,2
+
+; CB 91 - RES 2,C
+RESREG          CB91,regc,2
+
+; CB 92 - RES 2,D
+RESREG          CB92,regd,2
+
+; CB 93 - RES 2,E
+RESREG          CB93,rege,2
+
+; CB 94 - RES 2,H
+RESREG          CB94,regh,2
+
+; CB 95 - RES 2,L
+RESREG          CB95,regl,2
 
 ; CB 96 - RES 2,(HL)
 RESHL           CB96,2
 
+; CB 97 - RES 2,A
+RESREG          CB97,dh,2
+
+; CB 98 - RES 3,B
+RESREG          CB98,regb,3
+
+; CB 99 - RES 3,C
+RESREG          CB99,regc,3
+
+; CB 9A - RES 3,D
+RESREG          CB9A,regd,3
+
+; CB 9B - RES 3,E
+RESREG          CB9B,rege,3
+
+; CB 9C - RES 3,H
+RESREG          CB9C,regh,3
+
+; CB 9D - RES 3,L
+RESREG          CB9D,regl,3
+
 ; CB 9E - RES 3,(HL)
 RESHL           CB9E,3
 
+; CB 9F - RES 3,A
+RESREG          CB9F,dh,3
+
+; CB A0 - RES 4,B
+RESREG          CBA0,regb,4
+
+; CB A1 - RES 4,C
+RESREG          CBA1,regc,4
+
+; CB A2 - RES 4,D
+RESREG          CBA2,regd,4
+
+; CB A3 - RES 4,E
+RESREG          CBA3,rege,4
+
+; CB A4 - RES 4,H
+RESREG          CBA4,regh,4
+
+; CB A5 - RES 4,L
+RESREG          CBA5,regl,4
+
 ; CB A6 - RES 4,(HL)
 RESHL           CBA6,4
+
+; CB A7 - RES 4,A
+RESREG          CBA7,dh,4
 
 ; CB A8 - RES 5,B
 RESREG          CBA8,regb,5
@@ -2719,26 +2733,53 @@ RESHL           CBAE,5
 ; CB AF - RES 5,A
 RESREG          CBAF,dh,5
 
+; CB B0 - RES 6,B
+RESREG          CBB0,regb,6
+
+; CB B1 - RES 6,C
+RESREG          CBB1,regc,6
+
 ; CB B2 - RES 6,D
-emulCBB2:       inc     edi
-                and     regd,NBIT_6
-                ret
+RESREG          CBB2,regd,6
+
+; CB B3 - RES 6,E
+RESREG          CBB3,rege,6
+
+; CB B4 - RES 6,H
+RESREG          CBB4,regh,6
+
+; CB B5 - RES 6,L
+RESREG          CBB5,regl,6
 
 ; CB B6 - RES 6,(HL)
 RESHL           CBB6,6
 
+; CB B7 - RES 6,A
+RESREG          CBB7,dh,6
+
 ; CB B8 - RES 7,B
-emulCBB8:       inc     edi
-                and     regb,NBIT_7
-                ret
+RESREG          CBB8,regb,7
+
+; CB B9 - RES 7,C
+RESREG          CBB9,regc,7
+
+; CB BA - RES 7,D
+RESREG          CBBA,regd,7
+
+; CB BB - RES 7,E
+RESREG          CBBB,rege,7
+
+; CB BC - RES 7,H
+RESREG          CBBC,regh,7
+
+; CB BD - RES 7,L
+RESREG          CBBD,regl,7
 
 ; CB BE - RES 7,(HL)
 RESHL           CBBE,7
 
 ; CB BF - RES 7,A
-emulCBBF:       inc     edi
-                and     dh,NBIT_7
-                ret
+RESREG          CBBF,dh,7
 
 ; CB C1 - SET 0,C
 emulCBC1:       inc     edi
