@@ -20,6 +20,7 @@ public init_vesa
 public search_vesa_mode
 public search_vesa_mode_400
 public search_vesa_mode_512_15
+public search_vesa_mode_640
 public set_vesa_mode
 public vesalinearbuffer
 public set_vesa_bank
@@ -32,6 +33,7 @@ vesalinearbuffer        dd      0
 vesamodenumber512       dd      0
 vesamodenumber400       dd      0
 vesamodenumber512_15    dd      0
+vesamodenumber640       dd      0
 vesaselector            dw      0
 
 ; --------------------------------------------------------------------
@@ -162,6 +164,98 @@ search_vesa_mode_next:
                 jmp     search_vesa_mode_loop
 
 search_vesa_mode_ret:
+                stc
+                ret
+
+; search_vesa_mode_640------------------------------------------------
+; looks for mode 640x480x8 linear
+
+search_vesa_mode_640:
+                ; evaluate linear address of mode list
+                mov     eax,vesaheader
+                movzx   ebx,word ptr [eax+14]
+                movzx   ecx,word ptr [eax+16]
+                shl     ecx,4
+                add     ecx,ebx
+                sub     ecx,_code32a
+
+search_vesa_mode_loop_640:
+                movzx   eax,word ptr [ecx]
+                cmp     eax,0FFFFh
+                je      search_vesa_mode_ret_640
+                
+                ; set the mode number
+                mov     v86r_cx,ax
+
+                ; convert vesamodeinfo to real mode pointer
+                mov     eax,vesamodeinfo
+                add     eax,_code32a
+                mov     ebx,eax
+                shr     ebx,4
+                mov     v86r_es,bx
+                and     eax,15
+                mov     v86r_di,ax
+
+                ; call VESA driver
+                mov     v86r_ax,04F01h
+                mov     al,10h
+                int     33h
+
+                mov     eax,vesamodeinfo
+
+                ; test for color mode
+                test    word ptr [eax],BIT_3
+                jz      search_vesa_mode_next_640
+                
+                ; test for graphics mode
+                test    word ptr [eax],BIT_4
+                jz      search_vesa_mode_next_640
+                
+                ; test for linear frame buffer
+                test    word ptr [eax],BIT_7
+                jz      search_vesa_mode_next_640
+
+                ; X resolution of 640
+                movzx   ebx,word ptr [eax+18]
+                cmp     ebx,640
+                jne     search_vesa_mode_next_640
+
+                ; Y resolution of 480
+                movzx   ebx,word ptr [eax+20]
+                cmp     ebx,480
+                jne     search_vesa_mode_next_640
+
+                ; number of planes: 1
+                movzx   ebx,byte ptr [eax+24]
+                cmp     ebx,1
+                jne     search_vesa_mode_next_640
+
+                ; bits per pixel: 8
+                movzx   ebx,byte ptr [eax+25]
+                cmp     ebx,8
+                jne     search_vesa_mode_next_640
+
+                ; memory model: packed
+                movzx   ebx,byte ptr [eax+27]
+                cmp     ebx,4
+                jne     search_vesa_mode_next_640
+
+                ; found!!
+                ;mov     ebx,dword ptr [eax+40]
+                ;sub     ebx,_code32a
+                ;mov     vesalinearbuffer,ebx
+
+                movzx   ebx,word ptr [ecx]
+                mov     vesamodenumber640,ebx
+               
+                or      eax,eax
+                ret
+                
+search_vesa_mode_next_640:
+                add     ecx,2
+                jmp     search_vesa_mode_loop_640
+
+search_vesa_mode_ret_640:
                 stc
                 ret
 
@@ -362,11 +456,18 @@ set_vesa_mode:
                 cmp     videomode,6
                 je      set_vesa_mode_512_15
 
+                cmp     videomode,11
+                je      set_vesa_mode_640
+
                 mov     ebx,vesamodenumber512
                 jmp     set_vesa_mode_now
 
 set_vesa_mode_400:
                 mov     ebx,vesamodenumber400
+                jmp     set_vesa_mode_now
+
+set_vesa_mode_640:
+                mov     ebx,vesamodenumber640
                 jmp     set_vesa_mode_now
 
 set_vesa_mode_512_15:
@@ -384,7 +485,7 @@ set_vesa_mode_now:
                 int     33h
 
                 ; clear the buffer with "1s"
-                irp     i,<0,1,2>
+                irp     i,<0,1,2,3,4>
 
                 mov     eax,i
                 call    set_vesa_bank

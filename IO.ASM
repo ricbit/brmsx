@@ -476,6 +476,9 @@ setgraphmode:
                 cmp     videomode,9
                 je      setgraphmode_vesa_msx2
 
+                cmp     videomode,11
+                je      setgraphmode_vesa_msx2
+
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h

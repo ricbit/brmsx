@@ -6,3 +6,4 @@ extrn set_vesa_bank: near
 extrn vesaselector: word
 extrn search_vesa_mode_400: near
 extrn search_vesa_mode_512_15: near
+extrn search_vesa_mode_640: near

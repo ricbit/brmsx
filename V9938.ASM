@@ -818,10 +818,6 @@ vdp_command_YMMM_outer:
                 mov     ecx,edx
                 rep     movsb
 
-                ;sub     esi,edx
-                ;sub     edi,edx
-                ;add     esi,size_hx
-                ;add     edi,size_hx
                 add     esi,ebp
                 add     edi,ebp
 

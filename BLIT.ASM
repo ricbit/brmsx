@@ -25,6 +25,9 @@ public clear_bottom_field
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+include blit640.inc
+
 all40           dq      04040404040404040h
 all3DEF         dq      03DEF3DEF3DEF3DEFh
 all0000         dq      00000000000000000h
@@ -68,6 +71,9 @@ blit:
 
                 cmp     videomode,9
                 je      blit9
+
+                cmp     videomode,11
+                je      blit11
 
                 cmp     imagetype,1
                 je      blit_dirty_256
@@ -2231,6 +2237,366 @@ blit9_inner_loop_mmx:
 
                 ret
 
+; linear 640x480 with scanlines --------------------------------------
+; MSX2 VERSION
+
+blit11:
+                cmp     actualscreen,6
+                je      blit11_single
+
+                cmp     actualscreen,7
+                je      blit11_single
+
+                cmp     text_columns,80
+                je      blit11_single
+
+blit11_double:
+                cmp     enginetype,0
+                jne     blit11_double_mmx
+                
+                mov     esi,blitbuffer
+                mov     eax,0
+                call    set_vesa_bank
+                mov     ebp,0
+                mov     edx,0
+
+blit11_outer_loop_double:
+                movzx   edi,word ptr [offset screen_640_table+ebp*4]
+                add     edi,0a0000h
+                sub     edi,_code32a
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                cmp     eax,edx
+                je      blit11_same_bank_double
+                call    set_vesa_bank
+                mov     edx,eax
+blit11_same_bank_double:
+
+                push    eax
+
+                movzx   ecx,byte ptr [offset screen_640_table+ebp*4+3]
+                shr     ecx,1
+                push    edx
+blit11_inner_loop_double:
+                mov     ebx,dword ptr [esi]                
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi],edx
+                shr     ebx,16
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi+4],edx
+
+                add     esi,4
+                add     edi,8
+                dec     ecx
+                jnz     blit11_inner_loop_double
+
+                pop     edx
+
+                cmp     byte ptr [offset screen_640_table+ebp*4+3],128
+                je      blit11_skip_double
+
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                inc     eax
+                call    set_vesa_bank
+                
+                mov     ecx,128
+                sub     cl,byte ptr [offset screen_640_table+ebp*4+3]
+                mov     edi,0A0000h
+                sub     edi,_code32a
+                shr     ecx,1
+                push    edx
+blit11_inner_loop_2_double:
+                mov     ebx,dword ptr [esi]                
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi],edx
+                shr     ebx,16
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi+4],edx
+
+                add     esi,4
+                add     edi,8
+                dec     ecx
+                jnz     blit11_inner_loop_2_double
+                pop     edx
+
+blit11_skip_double:
+                pop     eax
+
+                inc     ebp
+                cmp     ebp,212
+                jnz     blit11_outer_loop_double
+
+                ret
+
+blit11_double_mmx:
+                mov     esi,blitbuffer
+                mov     eax,0
+                call    set_vesa_bank
+                mov     ebp,0
+                mov     edx,0
+
+blit11_outer_loop_double_mmx:
+                movzx   edi,word ptr [offset screen_640_table+ebp*4]
+                add     edi,0a0000h
+                sub     edi,_code32a
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                cmp     eax,edx
+                je      blit11_same_bank_double_mmx
+                call    set_vesa_bank
+                mov     edx,eax
+blit11_same_bank_double_mmx:
+
+                push    eax
+
+                movzx   ecx,byte ptr [offset screen_640_table+ebp*4+3]
+                shr     ecx,2
+blit11_inner_loop_double_mmx:
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+
+                ; movq    MM1,MM0
+                movq
+                db      11001000b
+
+                add     edi,16
+                
+                ; punpckhbw MM0,MM0
+                punpckhbw
+                db      11000000b
+
+                ; punpcklbw MM1,MM1
+                punpcklbw
+                db      11001001b
+
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+
+                ; movq_st [edi-16],MM1
+                movq_st
+                db      10001111b
+                dd      -16
+
+                jnz     blit11_inner_loop_double_mmx
+
+                cmp     byte ptr [offset screen_640_table+ebp*4+3],128
+                je      blit11_skip_double_mmx
+
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                inc     eax
+                call    set_vesa_bank
+                
+                mov     ecx,128
+                sub     cl,byte ptr [offset screen_640_table+ebp*4+3]
+                mov     edi,0A0000h
+                sub     edi,_code32a
+                shr     ecx,2
+blit11_inner_loop_2_double_mmx:
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+
+                ; movq    MM1,MM0
+                movq
+                db      11001000b
+
+                add     edi,16
+                
+                ; punpckhbw MM0,MM0
+                punpckhbw
+                db      11000000b
+
+                ; punpcklbw MM1,MM1
+                punpcklbw
+                db      11001001b
+
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+
+                ; movq_st [edi-16],MM1
+                movq_st
+                db      10001111b
+                dd      -16
+
+                jnz     blit11_inner_loop_2_double_mmx
+
+blit11_skip_double_mmx:
+                pop     eax
+
+                inc     ebp
+                cmp     ebp,212
+                jnz     blit11_outer_loop_double_mmx
+
+                ret
+
+
+blit11_single:
+                cmp     enginetype,0
+                jne     blit11_mmx
+                
+                mov     esi,blitbuffer
+                mov     eax,0
+                call    set_vesa_bank
+                mov     ebp,0
+                mov     edx,0
+
+blit11_outer_loop:
+                movzx   edi,word ptr [offset screen_640_table+ebp*4]
+                add     edi,0a0000h
+                sub     edi,_code32a
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                cmp     eax,edx
+                je      blit11_same_bank
+                call    set_vesa_bank
+                mov     edx,eax
+blit11_same_bank:
+
+                push    eax
+
+                movzx   ecx,byte ptr [offset screen_640_table+ebp*4+3]
+blit11_inner_loop:
+                mov     eax,dword ptr [esi]
+                mov     dword ptr [edi],eax
+                
+                add     esi,4
+                add     edi,4
+                dec     ecx
+                jnz     blit11_inner_loop
+
+                cmp     byte ptr [offset screen_640_table+ebp*4+3],128
+                je      blit11_skip
+
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                inc     eax
+                call    set_vesa_bank
+                
+                mov     ecx,128
+                sub     cl,byte ptr [offset screen_640_table+ebp*4+3]
+                mov     edi,0A0000h
+                sub     edi,_code32a
+blit11_inner_loop_2:
+                mov     eax,dword ptr [esi]
+                mov     dword ptr [edi],eax
+                
+                add     esi,4
+                add     edi,4
+                dec     ecx
+                jnz     blit11_inner_loop_2
+
+blit11_skip:
+                pop     eax
+
+                inc     ebp
+                cmp     ebp,212
+                jnz     blit11_outer_loop
+
+                ret
+
+blit11_mmx:
+                mov     esi,blitbuffer
+                mov     eax,0
+                call    set_vesa_bank
+                mov     ebp,0
+                mov     edx,0
+
+blit11_outer_loop_mmx:
+                movzx   edi,word ptr [offset screen_640_table+ebp*4]
+                add     edi,0a0000h
+                sub     edi,_code32a
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                cmp     eax,edx
+                je      blit11_same_bank_mmx
+                call    set_vesa_bank
+                mov     edx,eax
+blit11_same_bank_mmx:
+
+                push    eax
+
+                movzx   ecx,byte ptr [offset screen_640_table+ebp*4+3]
+                shr     ecx,1
+blit11_inner_loop_mmx:
+                add     edi,8
+
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+                
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+                
+                jnz     blit11_inner_loop_mmx
+
+                cmp     byte ptr [offset screen_640_table+ebp*4+3],128
+                je      blit11_skip_mmx
+
+                movzx   eax,byte ptr [offset screen_640_table+ebp*4+2]
+                inc     eax
+                call    set_vesa_bank
+                
+                mov     ecx,128
+                sub     cl,byte ptr [offset screen_640_table+ebp*4+3]
+                mov     edi,0A0000h
+                sub     edi,_code32a
+                shr     ecx,1
+blit11_inner_loop_2_mmx:
+                add     edi,8
+
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+                
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+                
+                jnz     blit11_inner_loop_2_mmx
+
+blit11_skip_mmx:
+                pop     eax
+
+                inc     ebp
+                cmp     ebp,212
+                jnz     blit11_outer_loop_mmx
+
+                ret
 
 
 code32          ends

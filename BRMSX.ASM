@@ -78,7 +78,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.172',13,10
+msg00           db      'BrMSX 1.173',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -102,7 +102,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.172',13,10
+msg22           db      'BrMSX 1.173',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -173,19 +173,21 @@ help_message2   db      13
                 db      '               0=64kb 1=128kb 2=256kb 3=512kb '
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-res <mode>    select screen resolution',13,10 
-                db      '               0=320x200x8  MSX-1 default',13,10
-                db      '               1=256x200x8  MSX-1 large screen'
+                db      '               0 =320x200x8  MSX-1 default',13,10
+                db      '               1 =256x200x8  MSX-1 large screen'
                 db      13,10
-                db      '               2=512x384x8  MSX-1 TV emulation '
+                db      '               2 =512x384x8  MSX-1 TV emulation '
                 db      '(interpolation+scanlines)',13,10
-                db      '               3=256x192x8  MSX-1 square pixels'
+                db      '               3 =256x192x8  MSX-1 square pixels'
                 db      13,10
-                db      '               6=512x384x15 MSX-1 Parrot engine'
+                db      '               6 =512x384x15 MSX-1 Parrot engine'
                 db      13,10
-                db      '               7=320x200x8  MSX-2 default',13,10
-                db      '               8=512x384x8  MSX-2 full width '
+                db      '               7 =320x200x8  MSX-2 default',13,10
+                db      '               8 =512x384x8  MSX-2 full width '
                 db      'support',13,10
-                db      '               9=512x384x8  MSX-2 full width '
+                db      '               9 =512x384x8  MSX-2 full width '
+                db      'support with black scanlines',13,10
+                db      '               11=640x480x8  MSX-2 full screen '
                 db      'support with black scanlines',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
@@ -198,9 +200,9 @@ help_message2   db      13
                 db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
-                db      '-cpugraph      enable CPU performance graph',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
@@ -236,9 +238,9 @@ help_message3   db      13
                 db      '(range is 0 to 9, default is 5)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
-                db      '-client        computer is client',13,10
                 db      'Press enter to continue.$'
 help_message4   db      13
+                db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
@@ -1172,6 +1174,10 @@ _main_nosound:
                 cmp     ax,0200h
                 jb      vesa2_not_found
 
+                ; search for mode 640x480x8 linear
+                call    search_vesa_mode_640
+                ;jc      vesa2_640x480_not_found
+
                 ; search for mode 512x384x8 linear
                 call    search_vesa_mode
                 jc      vesa2_512x384_not_found
@@ -1187,8 +1193,6 @@ _main_novesa_512:
 
                 or      vesa2found,4
 _main_novesa_512_15:
-
-
 
 _main_novesa:
                 cmp     videomode,2
@@ -1715,21 +1719,40 @@ callback_res:
                 ret
 
 callback_res_second:
-                mov     bl,byte ptr [offset emptyspace]
-                cmp     bl,'1'
+                mov     eax,0
+                mov     ebx,eax
+                mov     esi,offset emptyspace
+
+callback_res_loop:
+                mov     bl,[esi]
+                cmp     bl,0
+                je      callback_res_set
+
+                lea     eax,[eax+eax*4]
+                lea     eax,[ebx+eax*2]
+                sub     eax,'0'
+                inc     esi
+                jmp     callback_res_loop
+
+callback_res_set:
+                mov     bl,al
+                ;mov     bl,byte ptr [offset emptyspace]
+                cmp     bl,1
                 je      callback_res_256x200
-                cmp     bl,'2'
+                cmp     bl,2
                 je      callback_res_512x384
-                cmp     bl,'3'
+                cmp     bl,3
                 je      callback_res_256x192
-                cmp     bl,'6'
+                cmp     bl,6
                 je      callback_res_512x384_parrot
-                cmp     bl,'7'
+                cmp     bl,7
                 je      callback_res_320x200xmsx2
-                cmp     bl,'8'
+                cmp     bl,8
                 je      callback_res_512x384xmsx2
-                cmp     bl,'9'
+                cmp     bl,9
                 je      callback_res_512x384xmsx2_scanlines
+                cmp     bl,11
+                je      callback_res_640x480xmsx2
                 mov     videomode,0
                 ret
 
@@ -1759,6 +1782,10 @@ callback_res_512x384xmsx2:
 
 callback_res_512x384xmsx2_scanlines:
                 mov     videomode,9
+                ret
+
+callback_res_640x480xmsx2:
+                mov     videomode,11
                 ret
 
 callback_disklow:
