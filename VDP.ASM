@@ -981,8 +981,27 @@ check_sprite_&name&_exit:
 ; enter: eax = offset y ; ecx = offset x (both are signed numbers)
 
 dirty_sprite:
-                sar     ecx,3
                 sar     eax,3
+                js      dirty_sprite_crop_ecx
+                cmp     eax,23-3
+                jg      dirty_sprite_crop_ecx
+                sar     ecx,3
+                js      dirty_sprite_crop_all
+                cmp     ecx,31-3
+                jg      dirty_sprite_crop_all
+
+dirty_sprite_fast:
+                shl     eax,5
+                add     eax,ecx
+                add     eax,dirtyname
+                or      dword ptr [eax],000010101h
+                or      dword ptr [eax+32],000010101h
+                or      dword ptr [eax+64],000010101h
+                ret
+                
+dirty_sprite_crop_ecx:
+                sar     ecx,3
+dirty_sprite_crop_all:
 
                 CHECK   0,0,0
                 CHECK   1,0,1

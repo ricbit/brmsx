@@ -34,8 +34,11 @@ include gui.inc
 public fetch
 public fetch1
 public fetchw
+public fetchw1
 public readmem
+public readmemw
 public writemem
+public writememw
 public trace
 public print
 public emulate
@@ -426,29 +429,48 @@ fetch1:
                 FETCHMACRO 1
                 ret
 
+; FETCHWMACRO --------------------------------------------------------
+; fetch a word from Z80 memory (MACRO VERSION)
+; in, edi: address
+; out, ax: word
+; affect: esi,ebx
+
+FETCHWMACRO     macro   skip
+
+                lea     esi,[edi+skip]                  ; clock 1 U
+                lea     ebx,[edi+skip]                  ; clock 1 V
+                shr     esi,13                          ; clock 2 U
+                and     ebx,01fffh                      ; clock 2 V
+                cmp     ebx,01fffh                      ; clock 3 U
+                je      fetchw_slow_&skip               ; clock 3 V
+                mov     esi,[offset mem+esi*4]          ; clock 4 U 
+                mov     ax,word ptr [esi+ebx]           ; clock 6 U [AGI]
+                ret
+fetchw_slow_&skip:  
+                FETCHMACRO skip
+                mov     ah,al
+                FETCHMACRO skip+1
+                ret
+
+                endm
+
 ; fetchw -------------------------------------------------------------
 ; fetch a word from Z80 memory
 ; in, edi: address
 ; out, ax: word
 ; affect: esi,ebx
 
-fetchw:         mov     esi,edi                         ; clock 1 U
-                mov     ebx,edi                         ; clock 1 V
-                shr     esi,13                          ; clock 2 U
-                and     ebx,01fffh                      ; clock 2 V
-                cmp     ebx,01fffh                      ; clock 3 U
-                je      fetchw_slow                     ; clock 3 V
-                mov     esi,[offset mem+esi*4]          ; clock 4 U 
-                mov     ax,word ptr [esi+ebx]           ; clock 6 U [AGI]
-                ret
-fetchw_slow:  
-                call    fetch
-                inc     di
-                mov     ah,al
-                call    fetch
-                dec     di
-                ret
+fetchw:
+                FETCHWMACRO     0
 
+; fetchw1 ------------------------------------------------------------
+; fetch the next word from Z80 memory
+; in, edi: (address-1)
+; out, ax: word
+; affect: esi,ebx
+
+fetchw1:
+                FETCHWMACRO     1
 
 ; readmem ------------------------------------------------------------
 ; read a byte from Z80 memory
@@ -462,6 +484,31 @@ readmem:        mov     esi,ecx                         ; clock 1 U
                 and     ebx,01fffh                      ; clock 2 V
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
                 mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
+                ret
+
+; readmemw -----------------------------------------------------------
+; read a word from Z80 memory
+; in, ecx: address
+; out, ax: word
+; affect: esi,ebx
+
+readmemw:        
+                mov     ebx,ecx                         ; clock 1 U
+                mov     esi,ecx                         ; clock 1 V
+                and     ebx,01FFFh                      ; clock 2
+                cmp     ebx,01FFFh                      ; clock 3 U
+                je      readmemw_slow                   ; clock 3 V
+                shr     esi,13                          ; clock 4
+                mov     esi,[offset mem+esi*4]          ; clock 6 [AGI]
+                mov     ax,word ptr [esi+ebx]           ; clock 8 [AGI]
+                ret
+
+readmemw_slow:
+                call    readmem
+                mov     ah,al
+                inc     ecx
+                call    readmem
+                dec     ecx
                 ret
 
 ; megarom0_switchbank ------------------------------------------------
@@ -499,12 +546,9 @@ writemem:       mov     esi,ecx                         ; clock 1 U
                 ret
 writemem0:      
                 cmp     ebx,1
-                jz      _ret
+                je      _ret
                 cmp     ebx,2
-                jne     writemem1
-
-                ; megarom mode 0 - konami 8kb
-                jmp     megarom0_switchbank
+                je      megarom0_switchbank
 
 writemem1:
                 cmp     ebx,7
@@ -534,6 +578,36 @@ writemem1:
                 mov     dword ptr [offset mem+esi*8+8],ebx
                 ret
 
+
+; writememw ----------------------------------------------------------
+; write a word to Z80 memory
+; in, ecx: address
+; in, ax: word
+; affect: esi,ebx
+
+writememw:      
+                mov     ebx,ecx
+                mov     esi,ecx                         
+                and     ebx,01FFFh
+                cmp     ebx,01FFFh
+                je      writememw_slow
+                shr     esi,13                          
+                ; lock
+                cmp     dword ptr [offset memlock+esi*4],0
+                jne     writemem0
+                ;
+                mov     esi,[offset mem+esi*4]          
+                mov     word ptr [esi+ebx],ax           
+                ret
+
+writememw_slow:
+                xchg    ah,al
+                call    writemem
+                mov     al,ah
+                inc     ecx
+                call    writemem
+                dec     ecx
+                ret
 
 ; trace --------------------------------------------------------------
 ; executes only the next instruction
@@ -598,8 +672,9 @@ EMULABEL        loop,emtype,brtype
                   JUMP  je,interrupt,emtype,brtype
                   JUMP  jmp,loop,emtype,brtype
                 else
-                  add   clockcounter,ebp
-                  cmp   clockcounter,59659
+                  add   ebp,clockcounter
+                  mov   clockcounter,ebp
+                  cmp   ebp,59659
                   JUMP  jb,loop,emtype,brtype
                 endif
 
@@ -622,6 +697,14 @@ EMULABEL        synch,emtype,brtype
                 endif
 
 EMULABEL        interrupt,emtype,brtype
+
+                if      (emtype EQ FAST)
+;                  mov   eax,offset z80counter
+;                  call  end_counter
+;                  mov   eax,dword ptr [offset z80counter]
+;                  mov   z80rate,eax
+;                  xor   eax,eax
+                endif
 
                 mov     eax,offset z80counter
                 call    start_counter
@@ -702,10 +785,10 @@ emul00:         inc     edi
                 ret
 
 ; 01 - LD BC,dddd
-emul01:         inc     edi
-                call    fetchw
+emul01:         
+                call    fetchw1
                 mov     regebc,eax
-                add     edi,2
+                add     edi,3
                 xor     eax,eax
                 mov     ebp,10+3
                 ret
@@ -783,9 +866,9 @@ emul10a:        mov     ebp,8+2
                 ret
 
 ; 11 - LD DE,dddd
-emul11:         inc     edi
-                call    fetchw
-                add     edi,2
+emul11:         
+                call    fetchw1
+                add     edi,3
                 mov     regede,eax
                 xor     eax,eax
                 mov     ebp,10+3
@@ -857,18 +940,18 @@ OPRRA           1F
 JRCC            20,jnz,ZERO_FLAG
 
 ; 21 - LD HL,dddd
-emul21:         inc     edi
-                call    fetchw
-                add     edi,2
+emul21:         
+                call    fetchw1
+                add     edi,3
                 mov     regehl,eax
                 xor     eax,eax
                 mov     ebp,10+3
                 ret
 
 ; 22 - LD (dddd),HL
-emul22:         inc     edi
-                call    fetchw
-                add     edi,2
+emul22:         
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,regl
                 call    writemem
@@ -901,8 +984,8 @@ JRCC            28,jz,ZERO_FLAG
 ADDREGWREGW     29,regl,regh,regl,regh,11
 
 ; 2A - LD HL,(dddd)
-emul2A:         inc     edi
-                call    fetchw
+emul2A:         
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     regl,al
@@ -910,7 +993,7 @@ emul2A:         inc     edi
                 call    readmem
                 mov     regh,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,16+5
                 ret
 
@@ -937,21 +1020,21 @@ emul2F:         inc     edi
 JRCC            30,jnz,CARRY_FLAG
 
 ; 31 - LD SP,dddd
-emul31:         inc     edi
-                call    fetchw
-                add     edi,2
+emul31:         
+                call    fetchw1
+                add     edi,3
                 mov     regesp,eax
                 xor     eax,eax
                 mov     ebp,10+3
                 ret
 
 ; 32 - LD (dddd),A
-emul32:         inc     edi
-                call    fetchw
+emul32:         
+                call    fetchw1
                 mov     ecx,eax
                 mov     al,dh
                 call    writemem
-                add     edi,2
+                add     edi,3
                 xor     eax,eax
                 mov     ebp,13+4
                 ret
@@ -982,13 +1065,13 @@ JRCC            38,jz,CARRY_FLAG
 ADDREGWREGW     39,regl,regh,regspl,regsph,11
 
 ; 3A - LD A,(dddd)
-emul3A:         inc     edi
-                call    fetchw
+emul3A:         
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     dh,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,13+4
                 ret
 
@@ -1407,24 +1490,14 @@ emulC0:         inc     edi
                 ret
 
 ; C1 - POP BC
-emulC1:         inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     regc,al
-                inc     cx
-                call    readmem
-                mov     regb,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,10+3
-                ret
+POPREGW         C1,regebc
 
 ; C2 - JP NZ,dddd
 JPCC            C2,jnz,ZERO_FLAG
 
 ; C3 - JP dddd
-emulC3:         inc     edi
-                call    fetchw
+emulC3:         
+                call    fetchw1
                 mov     edi,eax
                 xor     eax,eax
                 mov     ebp,10+3
@@ -1438,20 +1511,10 @@ emulC4:         test    dl,ZERO_FLAG
                 ret
 
 ; C5 - PUSH BC
-emulC5:         inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regb
-                call    writemem
-                dec     cx
-                mov     al,regc
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,11+3
-                ret
+PUSHREGW        C5,regebc
 
 ; C6 - ADD A,dd
-ADDIMM         C6
+ADDIMM          C6
 
 ; C8 - RET Z
 emulC8:         inc     edi
@@ -1461,17 +1524,12 @@ emulC8:         inc     edi
                 ret
 
 ; C9 - RET
-emulC9:         mov     ecx,regesp
-                call    readmem
+emulC9:         
+                mov     ecx,regesp
+                call    readmemw
+                add     ecx,2
                 mov     edi,eax
-                and     edi,0ffh
-                inc     cx
-                call    readmem
-                inc     cx
                 mov     regesp,ecx
-                mov     ah,al
-                and     eax,0ff00h
-                or      edi,eax
                 xor     eax,eax
                 mov     ebp,10+3
                 ret
@@ -1493,18 +1551,13 @@ emulCC:         test    dl,ZERO_FLAG
                 ret
 
 ; CD - CALL dddd
-emulCD:         add     edi,3
+emulCD:
                 mov     ecx,regesp
-                mov     eax,edi
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
+                lea     eax,[edi+3]
+                sub     ecx,2
+                call    writememw
                 mov     regesp,ecx
-                sub     edi,2
-                call    fetchw
+                call    fetchw1
                 mov     edi,eax
                 xor     eax,eax
                 mov     ebp,17+5
@@ -1537,17 +1590,7 @@ emulD0:         inc     edi
                 ret
 
 ; D1 - POP DE
-emulD1:         inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     rege,al
-                inc     cx
-                call    readmem
-                mov     regd,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,10+3
-                ret
+POPREGW         D1,regede
 
 ; D2 - JP NC,dddd
 JPCC            D2,jnz,CARRY_FLAG
@@ -1563,17 +1606,7 @@ emulD4:         test    dl,CARRY_FLAG
                 ret
 
 ; D5 - PUSH DE
-emulD5:         inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regd
-                call    writemem
-                dec     cx
-                mov     al,rege
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,11+3
-                ret
+PUSHREGW        D5,regede
 
 ; D6 - SUB dd
 SUBIMM          D6
@@ -1635,7 +1668,6 @@ emulDC:         test    dl,CARRY_FLAG
 emulDD:         inc     edi
                 inc     rcounter
                 call    fetch
-                and     eax,0ffh
                 jmp     [offset isetDDxx+eax*4]
 
 ; DE - SBC A,dd
@@ -1665,17 +1697,7 @@ emulE0:         test    dl,PARITY_FLAG
                 ret
 
 ; E1 - POP HL
-emulE1:         inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     regl,al
-                inc     cx
-                call    readmem
-                mov     regh,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,10+3
-                ret
+POPREGW         E1,regehl
 
 ; E2 - JP PO,dddd
 JPCC            E2,jnz,PARITY_FLAG
@@ -1705,17 +1727,7 @@ emulE4:         test    dl,PARITY_FLAG
                 ret
 
 ; E5 - PUSH HL
-emulE5:         inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regh
-                call    writemem
-                dec     cx
-                mov     al,regl
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,11+3
-                ret
+PUSHREGW        E5,regehl
 
 ; E6 - AND dd
 ANDIMM          E6
@@ -1771,7 +1783,6 @@ emulEC:         test    dl,PARITY_FLAG
 emulED:         inc     edi
                 inc     rcounter
                 call    fetch
-                and     eax,0ffh
                 jmp     [offset isetEDxx+eax*4]
 
 ; EE - XOR dd
@@ -1801,17 +1812,7 @@ emulF0:         inc     edi
                 ret
 
 ; F1 - POP AF
-emulF1:         inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     dl,al
-                inc     cx
-                call    readmem
-                mov     dh,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,10+3
-                ret
+POPREGW         F1,edx
 
 ; F2 - JP P,dddd
 JPCC            F2,jnz,SIGN_FLAG
@@ -1830,17 +1831,7 @@ emulF4:         test    dl,SIGN_FLAG
                 ret
 
 ; F5 - PUSH AF
-emulF5:         inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,dh
-                call    writemem
-                dec     cx
-                mov     al,dl
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,11+3
-                ret
+PUSHREGW        F5,edx
 
 ; F6 - OR dd
 ORIMM           F6
@@ -1894,7 +1885,6 @@ emulFC:         test    dl,SIGN_FLAG
 emulFD:         inc     edi
                 inc     rcounter
                 call    fetch
-                and     eax,0ffh
                 jmp     [offset isetFDxx+eax*4]
 
 ; FE - CP dd

@@ -562,8 +562,7 @@ JPCC            macro   opcode,jcc,flagtype
 emul&opcode:    test    dl,flagtype
                 mov     ebp,10+3
                 jcc     emul&opcode&a
-                inc     edi
-                call    fetchw
+                call    fetchw1
                 mov     edi,eax
                 xor     eax,eax
                 ret
@@ -941,6 +940,42 @@ emul&opcode:    mov     al,regc
                 mov     ebp,12+2
                 mov     bl,reg
                 jmp     [offset outportxx+eax*4]
+
+                endm
+
+; --------------------------------------------------------------------
+; POPREGW - POP rr rr=[bc,de,hl,af,ix,iy]
+
+POPREGW         macro   opcode,reg
+
+emul&opcode:                
+                mov     ecx,regesp
+                call    readmemw
+                add     ecx,2
+                mov     reg,eax
+                mov     regesp,ecx
+                mov     ebp,10+3
+                inc     edi
+                xor     eax,eax
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; PUSHREGW - PUSH rr rr=[bc,de,hl,af,ix,iy]
+
+PUSHREGW        macro   opcode,reg
+
+emul&opcode:                
+                mov     ecx,regesp
+                sub     ecx,2
+                mov     eax,reg
+                call    writememw
+                mov     regesp,ecx
+                xor     eax,eax
+                inc     edi
+                mov     ebp,11+3
+                ret
 
                 endm
 

@@ -29,18 +29,18 @@ ADDREGWREGW     DD09,regixl,regixh,regc,regb,15+1
 ADDREGWREGW     DD19,regixl,regixh,rege,regd,15+1
 
 ; DD 21 - LD IX,dddd
-emulDD21:       inc     edi               
-                call    fetchw
-                add     edi,2
+emulDD21:       
+                call    fetchw1
+                add     edi,3
                 mov     regeix,eax
                 xor     eax,eax
                 mov     ebp,14+4
                 ret
 
 ; DD 22 - LD (dddd),IX
-emulDD22:       inc     edi
-                call    fetchw
-                add     edi,2
+emulDD22:       
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,regixl
                 call    writemem
@@ -58,8 +58,8 @@ INCWREG         DD23,regix,10+1
 ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15+1
 
 ; DD 2A - LD IX,(dddd)
-emulDD2A:       inc     edi
-                call    fetchw
+emulDD2A:       
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     regixl,al
@@ -67,7 +67,7 @@ emulDD2A:       inc     edi
                 call    readmem
                 mov     regixh,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,20+6
                 ret
 
@@ -162,17 +162,7 @@ emulDDCB:       inc     edi
                 jmp     [offset isetDDCBxx+eax*4]
 
 ; DD E1 - POP IX
-emulDDE1:       inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     regixl,al
-                inc     cx
-                call    readmem
-                mov     regixh,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,14+4
-                ret
+POPREGW         DDE1,regeix
 
 ; DD E3 - EX (SP),IX
 emulDDE3:       inc     edi
@@ -192,17 +182,7 @@ emulDDE3:       inc     edi
                 ret
 
 ; DD E5 - PUSH IX
-emulDDE5:       inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regixh
-                call    writemem
-                dec     cx
-                mov     al,regixl
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,15+4
-                ret
+PUSHREGW        DDE5,regeix
 
 ; DD E9 - JP (IX)
 emulDDE9:       mov     edi,regeix

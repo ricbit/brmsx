@@ -33,9 +33,9 @@ OUTCREG         ED41,regb
 SBCHLWREG       ED42,regc,regb
 
 ; ED 43 - LD (dddd),BC
-emulED43:       inc     edi
-                call    fetchw
-                add     edi,2
+emulED43:       
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,regc
                 call    writemem
@@ -59,8 +59,8 @@ OUTCREG         ED49,regc
 ADCREGWREGW     ED4A,regl,regh,regc,regb
 
 ; ED 4B - LD BC,(dddd)
-emulED4B:       inc     edi
-                call    fetchw
+emulED4B:       
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     regc,al
@@ -68,7 +68,7 @@ emulED4B:       inc     edi
                 call    readmem
                 mov     regb,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,20+6
                 ret
 
@@ -85,9 +85,9 @@ OUTCREG         ED51,regd
 SBCHLWREG       ED52,rege,regd
 
 ; ED 53 - LD (dddd),DE
-emulED53:       inc     edi
-                call    fetchw
-                add     edi,2
+emulED53:       
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,rege
                 call    writemem
@@ -116,8 +116,8 @@ OUTCREG         ED59,rege
 ADCREGWREGW     ED5A,regl,regh,rege,regd
 
 ; ED 5B - LD DE,(dddd)
-emulED5B:       inc     edi
-                call    fetchw
+emulED5B:       
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     rege,al
@@ -125,7 +125,7 @@ emulED5B:       inc     edi
                 call    readmem
                 mov     regd,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,20+6
                 ret
 
@@ -160,9 +160,9 @@ OPRLD           ED6F
 SBCHLWREG       ED72,regspl,regsph
 
 ; ED 73 - LD (dddd),SP
-emulED73:       inc     edi
-                call    fetchw
-                add     edi,2
+emulED73:       
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,regspl
                 call    writemem
@@ -183,8 +183,8 @@ OUTCREG         ED79,dh
 ADCREGWREGW     ED7A,regl,regh,regspl,regsph
 
 ; ED 7B - LD SP,(dddd)
-emulED7B:       inc     edi
-                call    fetchw
+emulED7B:       
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     regspl,al
@@ -192,7 +192,7 @@ emulED7B:       inc     edi
                 call    readmem
                 mov     regsph,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,20+6
                 ret
 

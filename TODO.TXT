@@ -2,4 +2,5 @@
 - add combo ex/ex
 - fix ebp/clockcounter optim.
 - fix screen2/sprimage update
+- check the border effect in fetchw/readmemw/writememw
 

@@ -29,18 +29,18 @@ ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15+1
 ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+1
 
 ; FD 21 - LD IY,dddd
-emulFD21:       inc     edi
-                call    fetchw
-                add     edi,2
+emulFD21:       
+                call    fetchw1
+                add     edi,3
                 mov     regeiy,eax
                 xor     eax,eax
                 mov     ebp,14+4
                 ret
 
 ; FD 22 - LD (dddd),IY
-emulFD22:       inc     edi
-                call    fetchw
-                add     edi,2
+emulFD22:       
+                call    fetchw1
+                add     edi,3
                 mov     ecx,eax
                 mov     al,regiyl
                 call    writemem
@@ -58,8 +58,8 @@ INCWREG         FD23,regiy,10+1
 ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15+1
 
 ; FD 2A - LD IY,(dddd)
-emulFD2A:       inc     edi
-                call    fetchw
+emulFD2A:       
+                call    fetchw1
                 mov     ecx,eax
                 call    readmem
                 mov     regiyl,al
@@ -67,7 +67,7 @@ emulFD2A:       inc     edi
                 call    readmem
                 mov     regiyh,al
                 xor     eax,eax
-                add     edi,2
+                add     edi,3
                 mov     ebp,20+6
                 ret
 
@@ -153,30 +153,10 @@ emulFDCB:       inc     edi
                 jmp     [offset isetFDCBxx+eax*4]
 
 ; FD E1 - POP IY
-emulFDE1:       inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     regiyl,al
-                inc     cx
-                call    readmem
-                mov     regiyh,al
-                inc     cx
-                mov     regesp,ecx
-                mov     ebp,14+4
-                ret
+POPREGW         FDE1,regeiy
 
 ; FD E5 - PUSH IY
-emulFDE5:       inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regiyh
-                call    writemem
-                dec     cx
-                mov     al,regiyl
-                call    writemem
-                mov     regesp,ecx
-                mov     ebp,15+4
-                ret
+PUSHREGW        FDE5,regeiy
 
 ; FD E9 - JP (IY)
 emulFDE9:       mov     edi,regeiy

@@ -1,3 +1,10 @@
+release 1.50:
+
+- optimized the sprite check in block mode
+- added new "fetchw1" routine: another clock cycle saved
+- added new "readmemw" and "writememw": a lot of clocks saved!
+- optimized PUSH, CALL, POP and RET
+
 release 1.49:
 
 - fixed bug on ADC and SBC (8-bit): they weren't setting V flag correctly

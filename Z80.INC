@@ -3,6 +3,7 @@ extrn trace: near
 extrn fetch: near
 extrn fetch1: near
 extrn fetchw: near
+extrn fetchw1: near
 extrn emulate: near
 extrn emulate_break: near
 extrn emulate_trap: near
@@ -71,7 +72,9 @@ extrn regepc: dword
 extrn regeix: dword
 extrn regeiy: dword
 extrn readmem: near
+extrn readmemw: near
 extrn writemem: near
+extrn writememw: near
 extrn emulXX: near
 extrn emulC9: near
 extrn outemulXX: near
