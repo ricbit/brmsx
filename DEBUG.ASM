@@ -149,7 +149,10 @@ debug_loop:
                 jmp     debug_loop
 
 command_d:
-                movzx   eax,regpc
+                call    gethex4
+                pushad
+                call    crlf
+                popad
                 call    dumpmem
                 jmp     debug_loop
 

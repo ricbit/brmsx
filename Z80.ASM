@@ -615,11 +615,18 @@ emul07:         inc     edi
                 setflag_rlca
                 ret
 
+; 09 - ADD HL,BC
+emul09:         inc     edi
+                mov     ebx,regebc
+                add     reghl,bx
+                setflag_add
+                ret
+
 ; 10 - DJNZ dd
 emul10:         inc     edi
                 call    fetch
                 inc     edi
-                dec     regbc
+                dec     regb
                 jz      emul10a
                 movsx   ebx,al
                 add     edi,ebx
@@ -692,6 +699,19 @@ emul28:         inc     edi
                 movsx   ebx,al
                 add     edi,ebx
 emul28a:        ret
+
+; 2A - LD HL,(dddd)
+emul2A:         inc     edi
+                call    fetchw
+                mov     ecx,eax
+                call    readmem
+                mov     regl,al
+                inc     cx
+                call    readmem
+                mov     regh,al
+                xor     eax,eax
+                add     edi,2
+                ret
 
 ; 2B - DEC HL
 emul2B:         inc     edi
@@ -770,11 +790,29 @@ emul3C:         inc     edi
                 setflag_inc
                 ret
 
+; 3D - DEC A
+emul3D:         inc     edi
+                dec     dh
+                setflag_dec
+                ret
+
 ; 3E - LD A,dd
 emul3E:         inc     edi
                 call    fetch
                 inc     edi
                 mov     dh,al
+                ret
+
+; 44 - LD B,H
+emul44:         inc     edi
+                mov     al,regh
+                mov     regb,al
+                ret
+
+; 4D - LD C,L
+emul4D:         inc     edi
+                mov     al,regl
+                mov     regc,al
                 ret
 
 ; 4F - LD C,A
@@ -792,9 +830,21 @@ emul5F:         inc     edi
                 mov     rege,dh
                 ret
 
+; 62 - LD H,C   
+emul62:         inc     edi
+                mov     al,regc
+                mov     regh,al
+                ret
+
 ; 67 - LD H,A
 emul67:         inc     edi
                 mov     regh,dh
+                ret
+
+; 6B - LD L,E
+emul6B:         inc     edi
+                mov     al,rege
+                mov     regl,al
                 ret
 
 ; 6F - LD L,A
@@ -836,10 +886,30 @@ emul7E:         mov     ecx,regehl
                 mov     dh,al
                 ret
 
+; 91 - SUB C
+emul91:         inc     edi
+                sub     dh,regc
+                setflag_sub
+                ret
+
+; 92 - SUB D
+emul92:         inc     edi
+                sub     dh,regd
+                setflag_sub
+                ret
+
 ; 93 - SUB E
 emul93:         inc     edi
                 sub     dh,rege
                 setflag_sub
+                ret
+
+; 98 - SBC A,B
+emul98:         inc     edi
+                mov     bl,dl
+                shr     bl,1
+                sbb     dh,regb
+                setflag_sbc
                 ret
 
 ; 9A - SBC A,D
@@ -878,6 +948,12 @@ emulBE:         inc     edi
                 setflag_cp
                 ret
 
+; C0 - RET NZ
+emulC0:         inc     edi
+                test    dl,ZERO_FLAG
+                jz      emulC9
+                ret
+
 ; C3 - JP
 emulC3:         inc     edi
                 call    fetchw
@@ -893,10 +969,54 @@ emulC6:         inc     edi
                 inc     edi
                 ret
 
+; C9 - RET
+emulC9:         mov     ecx,regesp
+                call    readmem
+                mov     edi,eax
+                and     edi,0ffh
+                inc     cx
+                call    readmem
+                inc     cx
+                mov     regesp,ecx
+                mov     ah,al
+                and     eax,0ff00h
+                or      edi,eax
+                xor     eax,eax
+                ret
+
 ; CB - group CB
 emulCB:         inc     edi
                 call    fetch
                 jmp     [offset isetCBxx+eax*4]
+
+; CD - CALL dddd
+emulCD:         add     edi,3
+                mov     eax,edi
+                mov     ecx,regesp
+                dec     cx
+                mov     al,ah
+                call    writemem
+                mov     eax,edi
+                dec     cx
+                call    writemem
+                mov     regesp,ecx
+                sub     edi,2
+                call    fetchw
+                mov     edi,eax
+                xor     eax,eax
+                ret
+
+; D2 - JP NC,dddd
+emulD2:         test    dl,CARRY_FLAG
+                jnz     emulD2a
+                inc     edi
+                call    fetchw
+                mov     edi,eax
+                xor     eax,eax
+                ret
+emulD2a:        add     edi,3
+                ret
+
 
 ; D3 - OUT (dd),A
 emulD3:         inc     edi
@@ -921,6 +1041,18 @@ emulDB:         inc     edi
                 mov     dh,bl
                 ret
 
+; E5 - PUSH HL
+emulE5:         inc     edi
+                mov     ecx,regesp
+                dec     cx
+                mov     al,regh
+                call    writemem
+                dec     cx
+                mov     al,regl
+                call    writemem
+                mov     regesp,ecx
+                ret
+
 ; E6 - AND dd
 emulE6:         inc     edi
                 call    fetch
@@ -929,6 +1061,20 @@ emulE6:         inc     edi
                 setflag_and
                 ret
 
+; E7 - RST 20
+emulE7:         inc     edi
+                mov     eax,edi
+                mov     ecx,regesp
+                dec     cx
+                mov     al,ah
+                call    writemem
+                mov     eax,edi
+                dec     cx
+                call    writemem
+                mov     regesp,ecx
+                mov     edi,020h
+                xor     eax,eax
+                ret
 
 ; EB - EX DE,HL
 emulEB:         mov     ebx,regede
@@ -944,9 +1090,44 @@ emulED:         inc     edi
                 and     eax,0ffh
                 jmp     [offset isetEDxx+eax*4]
 
+; F1 - POP AF
+emulF1:         inc     edi
+                mov     ecx,regesp
+                call    readmem
+                mov     dl,al
+                inc     cx
+                call    readmem
+                mov     dh,al
+                inc     cx
+                mov     regesp,ecx
+                ret
+
+; F2 - JP P,dddd
+emulF2:         test    dl,SIGN_FLAG
+                jnz     emulFAa
+                inc     edi
+                call    fetchw
+                mov     edi,eax
+                xor     eax,eax
+                ret
+emulF2a:        add     edi,3
+                ret
+
 ; F3 - DI
 emulF3:         inc     edi
                 mov     interrupt,0
+                ret
+
+; F5 - PUSH AF
+emulF5:         inc     edi
+                mov     ecx,regesp
+                dec     cx
+                mov     al,dh
+                call    writemem
+                dec     cx
+                mov     al,dl
+                call    writemem
+                mov     regesp,ecx
                 ret
 
 ; F9 - LD SP,HL
@@ -1054,6 +1235,7 @@ PRINTOP312      01,'LD BC,$'
 PRINTOP100      04,'INC B$'
 PRINTOP211      06,'LD B,$'
 PRINTOP100      07,'RLCA$'
+PRINTOP100      09,'ADD HL,BC$'
 PRINTOP211      10,'DJNZ $'
 PRINTOP312      11,'LD DE,$'
 PRINTOP100      19,'ADD HL,DE$'
@@ -1063,6 +1245,7 @@ PRINTOP322      22,'LD ($','),HL$'
 PRINTOP100      24,'INC H$'
 PRINTOP100      25,'DEC H$'
 PRINTOP211      28,'JR Z,$'
+PRINTOP322      2A,'LD HL,($',')$'
 PRINTOP100      2B,'DEC HL$'
 PRINTOP211      2E,'LD L,$'
 PRINTOP100      2F,'CPL$'
@@ -1073,11 +1256,16 @@ PRINTOP211      36,'LD (HL),$'
 PRINTOP100      39,'ADD HL,SP$'
 PRINTOP322      3A,'LD A,($',')$'
 PRINTOP100      3C,'INC A$'
+PRINTOP100      3D,'DEC A$'
 PRINTOP211      3E,'LD A,$'
+PRINTOP100      44,'LD B,H$'
+PRINTOP100      4D,'LD C,L$'
 PRINTOP100      4F,'LD C,A$'                
 PRINTOP100      57,'LD D,A$'
 PRINTOP100      5F,'LD E,A$'
+PRINTOP100      62,'LD H,C$'
 PRINTOP100      67,'LD H,A$'
+PRINTOP100      6B,'LD L,E$'
 PRINTOP100      6F,'LD L,A$'
 PRINTOP100      77,'LD (HL),A$'
 PRINTOP100      78,'LD A,B$'
@@ -1085,20 +1273,32 @@ PRINTOP100      79,'LD A,C$'
 PRINTOP100      7C,'LD A,H$'
 PRINTOP100      7D,'LD A,L$'
 PRINTOP100      7E,'LD A,(HL)$'
+PRINTOP100      91,'SUB C$'
+PRINTOP100      92,'SUB D$'
 PRINTOP100      93,'SUB E$'
+PRINTOP100      98,'SBC A,B$'
 PRINTOP100      9A,'SBC A,D$'
 PRINTOP100      9F,'SBC A,A$'
 PRINTOP100      A7,'AND A$'
 PRINTOP100      AF,'XOR A$'
 PRINTOP100      BE,'CP (HL)$'
+PRINTOP100      C0,'RET NZ$'
 PRINTOP312      C3,'JP $'
 PRINTOP211      C6,'ADD A,$'
+PRINTOP100      C9,'RET$'
+PRINTOP312      CD,'CALL $'
+PRINTOP312      D2,'JP NC,$'
 PRINTOP221      D3,'OUT ($','),A$'
 PRINTOP211      D6,'SUB $'
 PRINTOP221      DB,'IN A,($',')$'
+PRINTOP100      E5,'PUSH HL$'
 PRINTOP211      E6,'AND $'
+PRINTOP100      E7,'RST 20$'
 PRINTOP100      EB,'EX DE,HL$'
+PRINTOP100      F1,'POP AF$'
+PRINTOP312      F2,'JP P,$'
 PRINTOP100      F3,'DI$'
+PRINTOP100      F5,'PUSH AF$'
 PRINTOP100      F9,'LD SP,HL$'
 PRINTOP312      FA,'JP M,$'
 PRINTOP211      FE,'CP $'
