@@ -111,7 +111,7 @@ psetDDxx:
 	psetDD6D: dd prinXX
 	psetDD6E: dd prinDD6E
 	psetDD6F: dd prinXX
-	psetDD70: dd prinXX
+	psetDD70: dd prinDD70
 	psetDD71: dd prinDD71
 	psetDD72: dd prinDD72
 	psetDD73: dd prinDD73

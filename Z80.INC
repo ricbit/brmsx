@@ -17,3 +17,8 @@ extrn iff1: dword
 extrn interrupt: dword
 extrn vdpstatus: byte
 extrn keymatrix: byte
+extrn mem: near
+extrn slot0: near
+extrn slot1: near
+extrn slot2: near
+extrn slot3: near

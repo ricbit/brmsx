@@ -28,6 +28,10 @@ public turnoff_irq
 public turnon_kb_irq
 public turnoff_kb_irq
 public exit_now
+public open_file
+public read_file
+public read_size_file
+public blit
 
 ; DATA ---------------------------------------------------------------
 
@@ -35,6 +39,8 @@ align 4
 
 include keyboard.inc
 include palette.inc
+
+extrn blitbuffer: dword
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
@@ -51,6 +57,7 @@ oldkbrirqvect   dd      0
 
 align 4
 exit_now        dd      0
+on_off          dd      0
 
 msg00           db      13,10,'$'
 
@@ -328,13 +335,13 @@ my_irq_handler:
                 mov     ds,cs:_seldata
                 mov     gs,cs:_selzero
                 
+                xor     on_off,1
+                jnz     my_irq_handler0
                 call    render
+                call    blit
+my_irq_handler0:
                 or      vdpstatus,10000000b
-                cmp     iff1,1                
-                jne     my_irq_handler1
                 mov     interrupt,1
-
-my_irq_handler1:
                 mov     al,20h
                 out     20h,al
                 pop     gs ds
@@ -380,6 +387,90 @@ my_kb_irq_handler3:
                 popad
                 sti
                 iretd
+                
+; open_file ----------------------------------------------------------
+; open a file
+; in: edx = ASCIIZ filename
+; out: v86r_bx = file handle
+                
+open_file:                
+                add     edx,_code32a
+                mov     eax,edx
+                shr     edx,4
+                and     eax,0fh
+                mov     v86r_dx,ax
+                mov     v86r_ds,dx
+                mov     v86r_ax,03d02h
+                mov     al,21h
+                int     33h
+                mov     ax,v86r_ax
+                mov     v86r_bx,ax
+                ret
+
+; read_file ----------------------------------------------------------
+; read a file
+; in: v86r_bx = file handle
+;     edx = address of read buffer
+;     ecx = number of bytes to read (must be <0ffffh)
+
+read_file:                
+                add     edx,_code32a
+                mov     eax,edx
+                shr     edx,4
+                and     eax,0fh
+                mov     v86r_ds,dx
+                mov     v86r_dx,ax
+                mov     v86r_cx,cx
+                mov     v86r_ax,03f00h
+                mov     al,21h
+                int     33h
+                ret
+
+; read_size_file -----------------------------------------------------
+; read the size of the file
+; in: v86r_bx = file handle
+
+read_size_file:
+                mov     v86r_ax,4201h
+                xor     eax,eax
+                mov     v86r_cx,ax
+                mov     v86r_dx,ax
+                mov     al,21h
+                int     33h
+                push    v86r_dx
+                push    v86r_ax
+                mov     v86r_ax,4202h
+                xor     eax,eax
+                mov     v86r_cx,ax
+                mov     v86r_dx,ax
+                mov     al,21h
+                int     33h
+                mov     ax,v86r_dx
+                shl     eax,16
+                mov     ax,v86r_ax
+                pop     v86r_dx
+                pop     v86r_cx
+                mov     v86r_ax,4200h
+                push    eax
+                mov     al,21h
+                int     33h
+                pop     eax
+                ret
+
+; blit ---------------------------------------------------------------
+; copy the contents of blit buffer to pentium video memory
+
+blit:              
+                push    es
+                mov     ax,cs:_selzero
+                mov     es,ax
+                mov     edi,0a0000h
+                mov     esi,blitbuffer
+                mov     ecx,64000/4
+                rep     movsd
+                pop     es
+                ret
+
 
 code32          ends
                 end

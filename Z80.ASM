@@ -14,6 +14,7 @@ extrn pset:near
 include io.inc
 include debug.inc
 include bit.inc
+include opcode.inc
 
 public fetch
 public fetchw
@@ -29,6 +30,12 @@ public interrupt
 public vdpstatus
 public keymatrix
 
+public slot0
+public slot1
+public slot2
+public slot3
+public mem
+
 public regaf
 public regbc
 public reghl
@@ -39,26 +46,45 @@ public vdpregs
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
 include iset.inc
 include isetCB.inc
 include isetDD.inc
 include isetDDCB.inc
 include isetED.inc
 include isetFD.inc
+
 include outport.inc
 include inport.inc
 
-msxram          db      10000h dup (0)
+include bit0.inc
+include bit1.inc
+include bit2.inc
+include bit3.inc
+include bit4.inc
+include bit5.inc
+include bit6.inc
+include bit7.inc
+include srl.inc
+include overflow.inc
+include logical.inc
+include aritp.inc
+include pvs53.inc
+include pvn53.inc
+include neg.inc
+
+align 4
 
 mem:
-mem00           dd      msxrom
-mem20           dd      msxrom+02000h
-mem40           dd      msxrom+04000h
-mem60           dd      msxrom+06000h
-mem80           dd      msxrom
-memA0           dd      msxrom+02000h
-memC0           dd      msxrom+04000h
-memE0           dd      msxrom+06000h
+mem00           dd      ?
+mem20           dd      ?
+mem40           dd      ?
+mem60           dd      ?
+mem80           dd      ?
+memA0           dd      ?
+memC0           dd      ?
+memE0           dd      ?
 
 memlock:               
 memlock00       dd      1
@@ -72,40 +98,40 @@ memlockE0       dd      1
 
 slot:           
 slot0:
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom+04000h
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
 slot1:
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      cart1
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
 slot2:
-                dd      msxram
+                dd      ?
                 dd      0
-                dd      msxram+04000h
+                dd      ?
                 dd      0
-                dd      msxram+08000h
+                dd      ?
                 dd      0
-                dd      msxram+0C000h
+                dd      ?
                 dd      0
 slot3:
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
-                dd      msxrom
+                dd      ?
                 dd      1
 
 breakpoint      dd      0
@@ -624,7 +650,6 @@ emulate:
                 mov     error,0
                 mov     exit_now,0
                 mov     interrupt,0
-                mov     iff1,0
                 movzx   edi,regpc
                 movzx   edx,regaf
 emulate_loop:
@@ -633,8 +658,6 @@ emulate_loop:
                 call    [offset iset + eax*4]
                 cmp     interrupt,1
                 je      emulate_interrupt
-                cmp     exit_now,1
-                je      emulate_exit
                 cmp     error,1
                 jne     emulate_loop
 emulate_exit:
@@ -642,6 +665,10 @@ emulate_exit:
                 mov     regaf,dx
                 ret
 emulate_interrupt:
+                cmp     exit_now,1
+                je      emulate_exit
+                cmp     iff1,1
+                jne     emulate_loop
                 and     edi,0ffffh
                 dec     edi
                 mov     interrupt,0
@@ -1364,6 +1391,16 @@ emul62:         inc     edi
                 mov     regh,al
                 ret
 
+; 63 - LD H,E
+emul63:         inc     edi
+                mov     al,rege
+                mov     regh,al
+                ret
+
+; 64 - LD H,H
+emul64:         inc     edi
+                ret
+
 ; 65 - LD H,L
 emul65:         inc     edi
                 mov     bl,regl
@@ -1403,6 +1440,12 @@ emul6A:         inc     edi
 ; 6B - LD L,E
 emul6B:         inc     edi
                 mov     al,rege
+                mov     regl,al
+                ret
+
+; 6C - LD L,H
+emul6C:         inc     edi
+                mov     al,regh
                 mov     regl,al
                 ret
 
@@ -1560,11 +1603,23 @@ emul87:         inc     edi
                 setflag_add
                 ret
 
-; 88 - ADD A,B
-emul88:         inc     edi
-                add     dh,regb
-                setflag_add
-                ret
+; 88 - ADC A,B
+ADCREG          88,regb
+
+; 89 - ADC A,C
+ADCREG          89,regc
+
+; 8A - ADC A,D
+ADCREG          8A,regd
+
+; 8B - ADC A,E
+ADCREG          8B,rege
+
+; 8C - ADC A,H
+ADCREG          8C,regh
+
+; 8D - ADC A,L
+ADCREG          8D,regl
 
 ; 8E - ADC A,(HL)
 emul8E:         inc     edi
@@ -1577,12 +1632,7 @@ emul8E:         inc     edi
                 ret
 
 ; 8F - ADC A,A
-emul8F:         inc     edi
-                mov     bl,dl
-                shr     bl,1
-                adc     dh,dh
-                setflag_adc
-                ret
+ADCREG          8F,dh
 
 ; 90 - SUB B
 emul90:         inc     edi
@@ -1717,22 +1767,22 @@ emulA7:         inc     edi
                 ret
 
 ; A8 - XOR B
-emulA8:         inc     edi
-                xor     dh,regb
-                setflag_xor
-                ret
+XORREG          A8,regb
 
 ; A9 - XOR C
-emulA9:         inc     edi
-                xor     dh,regc
-                setflag_xor
-                ret
+XORREG          A9,regc
+
+; AA - XOR D
+XORREG          AA,regd
+
+; AB - XOR E
+XORREG          AB,rege
 
 ; AC - XOR H
-emulAC:         inc     edi
-                xor     dh,regh
-                setflag_xor
-                ret
+XORREG          AC,regh
+
+; AD - XOR L
+XORREG          AD,regl
 
 ; AE - XOR (HL)
 emulAE:         inc     edi
@@ -1743,10 +1793,7 @@ emulAE:         inc     edi
                 ret
 
 ; AF - XOR A
-emulAF:         inc     edi
-                xor     dh,dh
-                setflag_xor
-                ret
+XORREG          AF,dh
                 
 ; B0 - OR B
 emulB0:         inc     edi
@@ -2313,6 +2360,12 @@ emulF3:         inc     edi
                 mov     iff1,0
                 ret
 
+; F4 - CALL P,dddd
+emulF4:         test    dl,SIGN_FLAG
+                jz      emulCD
+                add     edi,3
+                ret
+
 ; F5 - PUSH AF
 emulF5:         inc     edi
                 mov     ecx,regesp
@@ -2508,160 +2561,241 @@ emulCB23:       inc     edi
                 setflag_shift
                 ret
 
+; CB 38 - SRL B
+SRLREG          CB38,regb
+
+; CB 39 - SRL C
+SRLREG          CB39,regc
+
+; CB 3A - SRL D
+SRLREG          CB3A,regd
+
+; CB 3B - SRL E
+SRLREG          CB3B,rege
+
 ; CB 3C - SRL H
-emulCB3C:       inc     edi
-                shr     regh,1
-                setflag_shift
-                ret
+SRLREG          CB3C,regh
+
+; CB 3D - SRL L
+SRLREG          CB3D,regl
 
 ; CB 3F - SRL A
-emulCB3F:       inc     edi
-                shr     dh,1
-                setflag_shift
-                ret
+SRLREG          CB3F,dh
+
+; CB 40 - BIT 0,B
+BITREG          CB40,regb,0
 
 ; CB 41 - BIT 0,C
-emulCB41:       inc     edi
-                test    regc,BIT_0
-                setflag_bit
-                ret
+BITREG          CB41,regc,0
+
+; CB 42 - BIT 0,D
+BITREG          CB42,regd,0
+
+; CB 43 - BIT 0,E
+BITREG          CB43,rege,0
+
+; CB 44 - BIT 0,H
+BITREG          CB44,regh,0
+
+; CB 45 - BIT 0,L
+BITREG          CB45,regl,0
 
 ; CB 46 - BIT 0,(HL)
-emulCB46:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_0
-                setflag_bit
-                ret
+BITHL           CB46,0
 
 ; CB 47 - BIT 0,A
-emulCB47:       inc     edi
-                test    dh,BIT_0
-                setflag_bit
-                ret
+BITREG          CB47,dh,0
+
+; CB 48 - BIT 1,B
+BITREG          CB48,regb,1
 
 ; CB 49 - BIT 1,C
-emulCB49:       inc     edi
-                test    regc,BIT_1
-                setflag_bit
-                ret
+BITREG          CB49,regc,1
+
+; CB 4A - BIT 1,D
+BITREG          CB4A,regd,1
+
+; CB 4B - BIT 1,E
+BITREG          CB4B,rege,1
+
+; CB 4C - BIT 1,H
+BITREG          CB4C,regh,1
+
+; CB 4D - BIT 1,L
+BITREG          CB4D,regl,1
+
+; CB 4E - BIT 1,(HL)
+BITHL           CB4E,1
 
 ; CB 4F - BIT 1,A
-emulCB4F:       inc     edi
-                test    dh,BIT_1
-                setflag_bit
-                ret
+BITREG          CB4F,dh,1
+
+; CB 50 - BIT 2,B
+BITREG          CB50,regb,2
+
+; CB 51 - BIT 2,C
+BITREG          CB51,regc,2
+
+; CB 52 - BIT 2,D
+BITREG          CB52,regd,2
+
+; CB 53 - BIT 2,E
+BITREG          CB53,rege,2
+
+; CB 54 - BIT 2,H
+BITREG          CB54,regh,2
+
+; CB 55 - BIT 2,L
+BITREG          CB55,regl,2
+
+; CB 56 - BIT 2,(HL)
+BITHL           CB56,2
+
+; CB 57 - BIT 3,A
+BITREG          CB57,dh,3
+
+; CB 58 - BIT 3,B
+BITREG          CB58,regb,3
+
+; CB 59 - BIT 3,C
+BITREG          CB59,regc,3
+
+; CB 5A - BIT 3,D
+BITREG          CB5A,regd,3
+
+; CB 5B - BIT 3,E
+BITREG          CB5B,rege,3
+
+; CB 5C - BIT 3,H
+BITREG          CB5C,regh,3
+
+; CB 5D - BIT 3,L
+BITREG          CB5D,regl,3
 
 ; CB 5E - BIT 3,(HL)
-emulCB5E:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_3
-                setflag_bit
-                ret
+BITHL           CB5E,3
 
 ; CB 5F - BIT 3,A
-emulCB5F:       inc     edi
-                test    dh,BIT_3
-                setflag_bit
-                ret
+BITREG          CB5F,dh,3
+
+; CB 60 - BIT 4,B
+BITREG          CB60,regb,4
+
+; CB 61 - BIT 4,C
+BITREG          CB61,regc,4
+
+; CB 62 - BIT 4,D
+BITREG          CB62,regd,4
 
 ; CB 63 - BIT 4,E
-emulCB63:       inc     edi
-                test    rege,BIT_4
-                setflag_bit
-                ret
+BITREG          CB63,rege,4
+
+; CB 64 - BIT 4,H
+BITREG          CB64,regh,4
+
+; CB 65 - BIT 4,L
+BITREG          CB65,regl,4
 
 ; CB 66 - BIT 4,(HL)
-emulCB66:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_4
-                setflag_bit
-                ret
+BITHL           CB66,4
 
 ; CB 67 - BIT 4,A
-emulCB67:       inc     edi
-                test    dh,BIT_4
-                setflag_bit
-                ret
+BITREG          CB67,dh,4
+
+; CB 68 - BIT 5,B
+BITREG          CB68,regb,5
+
+; CB 69 - BIT 5,C
+BITREG          CB69,regc,5
+
+; CB 6A - BIT 5,D
+BITREG          CB6A,regd,5
+
+; CB 6B - BIT 5,E
+BITREG          CB6B,rege,5
 
 ; CB 6C - BIT 5,H
-emulCB6C:       inc     edi
-                test    regh,BIT_5
-                setflag_bit
-                ret
+BITREG          CB6C,regh,5
+
+; CB 6D - BIT 5,L
+BITREG          CB6D,regl,5
 
 ; CB 6E - BIT 5,(HL)
-emulCB6E:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_5
-                setflag_bit
-                ret
+BITHL           CB6E,5
 
 ; CB 6F - BIT 5,A
-emulCB6F:       inc     edi
-                test    dh,BIT_5
-                setflag_bit
-                ret
+BITREG          CB6F,dh,5
+
+; CB 70 - BIT 6,B
+BITREG          CB70,regb,6
+
+; CB 71 - BIT 6,C
+BITREG          CB71,regc,6
+
+; CB 72 - BIT 6,D
+BITREG          CB72,regd,6
+
+; CB 73 - BIT 6,E
+BITREG          CB73,rege,6
+
+; CB 74 - BIT 6,H
+BITREG          CB74,regh,6
+
+; CB 75 - BIT 6,L
+BITREG          CB75,regl,6
 
 ; CB 76 - BIT 6,(HL)
-emulCB76:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_6
-                setflag_bit
-                ret
+BITHL           CB76,6
 
 ; CB 77 - BIT 6,A
-emulCB77:       inc     edi
-                test    dh,BIT_6
-                setflag_bit
-                ret
+BITREG          CB77,dh,6
+
+; CB 78 - BIT 7,B
+BITREG          CB78,regb,7
+
+; CB 79 - BIT 7,C
+BITREG          CB79,regc,7
 
 ; CB 7A - BIT 7,D
-emulCB7A:       inc     edi
-                test    regd,BIT_7
-                setflag_bit
-                ret
+BITREG          CB7A,regd,7
 
 ; CB 7B - BIT 7,E
-emulCB7B:       inc     edi
-                test    rege,BIT_7
-                setflag_bit
-                ret
+BITREG          CB7B,rege,7
 
 ; CB 7C - BIT 7,H
-emulCB7C:       inc     edi
-                test    regh,BIT_7
-                setflag_bit
-                ret
+BITREG          CB7C,regh,7
 
 ; CB 7D - BIT 7,L
-emulCB7D:       inc     edi
-                test    regl,BIT_7
-                setflag_bit
-                ret
+BITREG          CB7D,regl,7
 
 ; CB 7E - BIT 7,(HL)
-emulCB7E:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                test    al,BIT_7
-                setflag_bit
-                ret
+BITHL           CB7E,7
 
 ; CB 7F - BIT 7,A
-emulCB7F:       inc     edi
-                test    dh,BIT_7
-                setflag_bit
-                ret
+BITREG          CB7F,dh,7
 
 ; CB 8F - RES 1,A
 emulCB8F:       inc     edi
                 and     dh,NBIT_1
                 ret
+
+; CB A8 - RES 5,B
+RESREG          CBA8,regb,5
+
+; CB A9 - RES 5,C
+RESREG          CBA9,regc,5
+
+; CB AA - RES 5,D
+RESREG          CBAA,regd,5
+
+; CB AB - RES 5,E
+RESREG          CBAB,rege,5
+
+; CB AC - RES 5,H
+RESREG          CBAC,regh,5
+
+; CB AD - RES 5,L
+RESREG          CBAD,regl,5
 
 ; CB AE - RES 5,(HL)
 emulCBAE:       inc     edi
@@ -2670,6 +2804,9 @@ emulCBAE:       inc     edi
                 and     al,NBIT_5
                 call    writemem
                 ret
+
+; CB AF - RES 5,A
+RESREG          CBAF,dh,5
 
 ; CB B2 - RES 6,D
 emulCBB2:       inc     edi
@@ -2749,6 +2886,24 @@ emulCBE6:       inc     edi
                 call    writemem
                 ret
 
+; CB E8 - SET 5,B
+SETREG          CBE8,regb,5
+
+; CB E9 - SET 5,C
+SETREG          CBE9,regc,5
+
+; CB EA - SET 5,D
+SETREG          CBEA,regd,5
+
+; CB EB - SET 5,E
+SETREG          CBEB,rege,5
+
+; CB EC - SET 5,H
+SETREG          CBEC,regh,5
+
+; CB ED - SET 5,L
+SETREG          CBED,regl,5
+
 ; CB EE - SET 5,(HL)
 emulCBEE:       inc     edi
                 mov     ecx,regehl
@@ -2756,6 +2911,9 @@ emulCBEE:       inc     edi
                 or      al,BIT_5
                 call    writemem
                 ret
+
+; CB EF - SET 5,A
+SETREG          CBEF,dh,5
 
 ; CB F2 - SET 6,D
 emulCBF2:       inc     edi
@@ -2922,65 +3080,26 @@ emulDD6E:       inc     edi
                 mov     regl,al
                 ret
 
+; DD 70 - LD (IX+dd),B
+LDIXDDREG       DD70,regb
+
 ; DD 71 - LD (IX+dd),C
-emulDD71:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,regc
-                call    writemem
-                ret
+LDIXDDREG       DD71,regc
 
 ; DD 72 - LD (IX+dd),D
-emulDD72:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,regd
-                call    writemem
-                ret
+LDIXDDREG       DD72,regd
 
 ; DD 73 - LD (IX+dd),E
-emulDD73:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,rege
-                call    writemem
-                ret
+LDIXDDREG       DD73,rege
 
 ; DD 74 - LD (IX+dd),H
-emulDD74:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,regh
-                call    writemem
-                ret
+LDIXDDREG       DD74,regh
 
 ; DD 75 - LD (IX+dd),L
-emulDD75:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,regl
-                call    writemem
-                ret
+LDIXDDREG       DD75,regl
 
 ; DD 77 - LD (IX+dd),A
-emulDD77:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                mov     al,dh
-                call    writemem
-                ret
+LDIXDDREG       DD77,dh
 
 ; DD 7E - LD A,(IX+dd)
 emulDD7E:       inc     edi
@@ -3172,6 +3291,15 @@ emulED41:       inc     edi
                 call    [offset outportxx+eax*4]
                 ret
 
+; ED 42 - SBC HL,DE
+emulED42:       inc     edi        
+                mov     bl,dl
+                shr     bl,1
+                mov     ecx,regede
+                sbb     reghl,cx
+                setflag_adc
+                ret
+
 ; ED 43 - LD (dddd),BC
 emulED43:       inc     edi
                 call    fetchw
@@ -3184,6 +3312,9 @@ emulED43:       inc     edi
                 call    writemem
                 xor     eax,eax
                 ret
+
+; ED 44 - NEG
+OPNEG           ED44
 
 ; ED 4B - LD BC,(dddd)
 emulED4B:       inc     edi
@@ -3243,6 +3374,20 @@ emulED5B:       inc     edi
                 mov     regd,al
                 xor     eax,eax
                 add     edi,2
+                ret
+
+; ED 5F - LD A,R
+emulED5F:       inc     edi
+                mov     dh,0
+                ret
+
+; ED 62 - SBC HL,HL
+emulED62:       inc     edi
+                mov     bl,dl
+                shr     bl,1
+                mov     ecx,regehl
+                sbb     reghl,cx
+                setflag_adc
                 ret
 
 ; ED 67 - RRD
@@ -3347,6 +3492,9 @@ emulEDA3:       inc     edi
                 setflag_outi
                 ret
 
+; ED A8 - LDD
+OPLDD             EDA8
+
 ; ED B0 - LDIR
 emulEDB0:       inc     edi
 emulEDB0a:      mov     ecx,regehl
@@ -3357,6 +3505,18 @@ emulEDB0a:      mov     ecx,regehl
                 inc     regde
                 dec     regbc
                 jnz     emulEDB0a
+                ret
+
+; ED B8 - LDDR
+emulEDB8:       inc     edi
+emulEDB8a:      mov     ecx,regehl
+                call    readmem
+                mov     ecx,regede
+                call    writemem
+                dec     reghl
+                dec     regde
+                dec     regbc
+                jnz     emulEDB8a
                 ret
 
 ; ED B9 - CPDR

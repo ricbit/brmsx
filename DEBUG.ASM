@@ -193,6 +193,7 @@ command_v:
                 rdtsc
                 push    eax
                 call    render_screen0
+                call    blit
                 pop     ebx
                 rdtsc
                 sub     eax,ebx
@@ -220,6 +221,7 @@ command_s:      call    setgraphmode
 command_1:
                 call    setgraphmode
                 call    render_screen1
+                call    blit
                 call    getchar
                 call    settextmode
                 jmp     debug_loop
@@ -230,6 +232,7 @@ command_2:
                 rdtsc
                 push    eax
                 call    render_screen2
+                call    blit
                 pop     ebx
                 rdtsc
                 sub     eax,ebx

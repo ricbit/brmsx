@@ -10,8 +10,12 @@ extrn testkbd: near
 extrn setgraphmode: near
 extrn settextmode: near
 extrn toupper: near
+extrn open_file: near
+extrn read_file: near
 extrn turnon_irq: near
 extrn turnoff_irq: near
 extrn turnon_kb_irq: near
 extrn turnoff_kb_irq: near
+extrn read_size_file: near
+extrn blit: near
 extrn exit_now: dword

@@ -1,4 +1,4 @@
-OBJECTS = pmode.o brmsx.o io.o debug.o msxrom.o z80.o msxvram.o msx.o
+OBJECTS = pmode.o brmsx.o io.o debug.o z80.o msxvram.o msx.o print.o 
 TASMFLAGS = /ml /m2 /q /la
 
 all : brmsx.exe
@@ -8,6 +8,9 @@ brmsx.exe : $(OBJECTS)
 
 %.o : %.asm
 	tasm $(TASMFLAGS) $^,$@
+
+z80.o : z80.asm opcode.inc
+	tasm $(TASMFLAGS) z80.asm,$@
 
 clean :
 	del *.o

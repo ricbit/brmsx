@@ -111,7 +111,7 @@ isetDDxx:
 	isetDD6D: dd emulXX
 	isetDD6E: dd emulDD6E
 	isetDD6F: dd emulXX
-	isetDD70: dd emulXX
+	isetDD70: dd emulDD70
 	isetDD71: dd emulDD71
 	isetDD72: dd emulDD72
 	isetDD73: dd emulDD73

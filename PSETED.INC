@@ -65,9 +65,9 @@ psetEDxx:
 	psetED3F: dd prinXX
 	psetED40: dd prinXX
 	psetED41: dd prinED41
-	psetED42: dd prinXX
+	psetED42: dd prinED42
 	psetED43: dd prinED43
-	psetED44: dd prinXX
+	psetED44: dd prinED44
 	psetED45: dd prinXX
 	psetED46: dd prinXX
 	psetED47: dd prinXX
@@ -94,10 +94,10 @@ psetEDxx:
 	psetED5C: dd prinXX
 	psetED5D: dd prinXX
 	psetED5E: dd prinXX
-	psetED5F: dd prinXX
+	psetED5F: dd prinED5F
 	psetED60: dd prinXX
 	psetED61: dd prinXX
-	psetED62: dd prinXX
+	psetED62: dd prinED62
 	psetED63: dd prinXX
 	psetED64: dd prinXX
 	psetED65: dd prinXX
@@ -167,7 +167,7 @@ psetEDxx:
 	psetEDA5: dd prinXX
 	psetEDA6: dd prinXX
 	psetEDA7: dd prinXX
-	psetEDA8: dd prinXX
+	psetEDA8: dd prinEDA8
 	psetEDA9: dd prinXX
 	psetEDAA: dd prinXX
 	psetEDAB: dd prinXX
@@ -183,7 +183,7 @@ psetEDxx:
 	psetEDB5: dd prinXX
 	psetEDB6: dd prinXX
 	psetEDB7: dd prinXX
-	psetEDB8: dd prinXX
+	psetEDB8: dd prinEDB8
 	psetEDB9: dd prinEDB9
 	psetEDBA: dd prinXX
 	psetEDBB: dd prinXX

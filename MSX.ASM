@@ -11,6 +11,7 @@ include bit.inc
 
 extrn msxvram: near
 extrn vdpregs: near
+extrn blitbuffer: dword
 
 public render_screen0
 public render_screen1
@@ -46,8 +47,8 @@ render_screen0:
                 out     dx,al
                 mov     esi,offset msxvram                
                 mov     ebx,offset msxvram+0800h
-                mov     edi,0a0000h+40
-                sub     edi,_code32a
+                mov     edi,blitbuffer
+                add     edi,40
                 mov     ecx,0
                 mov     edx,0
                 
@@ -97,25 +98,22 @@ render_screen1:
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
-                mov     eax,1800h ;;
                 lea     esi,[offset msxvram+eax]
 
                 ; ebx = character pattern table
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,07h
                 shl     eax,11
-                mov     eax,0 ;;
                 lea     ebx,[offset msxvram+eax]
 
                 ; ecx = color table
                 movzx   eax,byte ptr [offset vdpregs+3]
                 shl     eax,6
-                mov     eax,2000h ;;
                 lea     ecx,[offset msxvram+eax]
 
                 ; edi = pentium video memory
-                mov     edi,0a0000h+32
-                sub     edi,_code32a
+                mov     edi,blitbuffer
+                add     edi,32
 
                 ; mask the temporary registers
                 xor     edx,edx
@@ -223,8 +221,8 @@ render_screen2:
                 lea     ecx,[offset msxvram+eax]
 
                 ; edi = pentium video memory
-                mov     edi,0a0000h+32
-                sub     edi,_code32a
+                mov     edi,blitbuffer
+                add     edi,32
 
                 ; mask the temporary registers
                 xor     eax,eax
@@ -293,8 +291,7 @@ render22:       push    ebp
                 dec     ebp
                 jnz     render22
 
-                sub     edi,320*8
-                add     edi,8
+                sub     edi,320*8-8
 
                 pop     esi
                 inc     esi
@@ -305,8 +302,7 @@ render22:       push    ebp
                 dec     ebp
                 jnz     render21
 
-                sub     edi,32*8
-                add     edi,320*8
+                sub     edi,32*8-320*8
 
                 pop     ebp
                 dec     ebp
@@ -319,7 +315,7 @@ render22:       push    ebp
                 dec     ebp
                 jnz     render23
 
-                ret
+                jmp     sprite_render
 
 ; sprite_render ------------------------------------------------------
 ; draw the sprites directly on the pentium video memory
@@ -336,12 +332,133 @@ sprite16:
 
                 ; sprites 16x16 without magnification
 
+sprite16N:
                 ; esi = sprite attribute table
                 movzx   eax,byte ptr [offset vdpregs+5]
                 and     eax,07fh
                 shl     eax,7
                 lea     esi,[offset msxvram+eax]
 
+                ; ecx = sprite image table
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     eax,07h
+                shl     eax,11
+                lea     ecx,[offset msxvram+eax]
+
+                ; edi = pentium video memory
+                mov     edi,blitbuffer
+                add     edi,32
+
+                ; mask temporary registers
+                xor     eax,eax
+                xor     ebx,ebx
+
+                ; for each sprite
+                mov     ebp,32
+sprite16N1:     push    ecx
+                ; ah = vertical position of sprite
+                mov     ah,[esi]
+
+                ; check if it is 0D0h, in this case exit
+                cmp     ah,0D0h
+                je      sprite16N2
+
+                ; check if it is bounded
+                inc     ah
+                cmp     ah,191-16
+                ja      sprite16N3
+
+                ; check for horizontal bound
+                mov     al,[esi+1]
+                cmp     al,255-16
+                ja      sprite16N3
+
+                ; load effective initial address in ebx
+                push    edi
+                xor     ebx,ebx
+                mov     bl,ah
+                lea     ebx,[ebx+ebx*4]
+                and     eax,0ffh
+                shl     ebx,6
+                add     ebx,eax
+                add     edi,ebx
+
+                ; load address of sprite image in ecx
+                mov     al,[esi+2]
+                and     al,11111100b
+                lea     ecx,[ecx+eax*8]
+
+                ; for each subline
+                xor     ebx,ebx
+                xor     eax,eax
+                mov     edx,16
+                push    esi
+                push    ebp
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+sprite16N4:
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                ; get the pentium screen
+                mov     esi,[edi]
+
+                ; blend with the sprite image
+                and     esi,[offset backgroundmask+ebx*8]
+
+                ; get the sprite color
+                mov     ebp,eax
+
+                ; blend with the sprite image
+                and     ebp,[offset foregroundmask+ebx*8]
+
+                ; mix the sprite color with the sprite image
+                or      esi,ebp
+
+                ; put back to screen
+                mov     [edi],esi
+
+                ; do it again for the next four pixels
+                mov     esi,[edi+4]
+                and     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                or      esi,ebp
+                mov     [edi+4],esi
+                
+                ; and one more time for the next eight pixels
+                mov     bl,[ecx+16]
+                mov     esi,[edi+8]
+                and     esi,[offset backgroundmask+ebx*8]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8]
+                or      esi,ebp
+                mov     [edi+8],esi
+                mov     esi,[edi+12]
+                and     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                or      esi,ebp
+                mov     [edi+12],esi
+
+                add     edi,320
+                inc     ecx
+                dec     edx
+                jnz     sprite16N4
+
+                pop     ebp
+                pop     esi
+                pop     edi
+
+sprite16N3:
+                pop     ecx
+                add     esi,4
+                dec     ebp
+                jnz     sprite16N1
+                ret
+
+sprite16N2:
+                pop     ecx
                 ret
 
 sprite16M:      ret
@@ -385,10 +502,10 @@ render2:
                 
 clear:
                 push    es
-                mov     ax,gs
+                mov     ax,ds
                 mov     es,ax
                 mov     eax,0
-                mov     edi,0a0000h
+                mov     edi,blitbuffer
                 mov     ecx,16000
                 rep     stosd
                 mov     dx,03C8h
