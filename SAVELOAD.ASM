@@ -18,11 +18,13 @@ extrn writemessage: near
 
 public save_state
 public load_state
+public save_histogram
 
 ; DATA ---------------------------------------------------------------
 
 filename        db      'BRMSX.STA',0
 fileid          db      'MSXSTATE',26,0
+histogrname     db      'HISTOGR.STA',0
 msgfnf          db      'File not found$'
 
 ; WRITE_DWORD --------------------------------------------------------
@@ -374,6 +376,18 @@ load_state:
 file_not_found:
                 mov     eax,offset msgfnf
                 jmp     writemessage
+
+; save_histogram -----------------------------------------------------
+; save the Z80 histogram in a file called "HISTOGR.STA"
+
+save_histogram:                
+                mov     edx,offset histogrname
+                call    create_file
+                mov     edx,offset histogr
+                mov     ecx,256*4
+                call    custom_write
+                call    close_file
+                ret
 
 code32          ends
                 end

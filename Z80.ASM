@@ -44,6 +44,7 @@ public print
 public emulate
 public emulate_break
 public emulate_trap
+public emulate_histogr
 public emulXX
 public emulC9
 public outemulXX
@@ -52,6 +53,7 @@ public outportxx
 public inportxx
 public outemulA8
 public megarom0_switchbank
+public histogr
 
 public opsubreg
 public opsbcreg
@@ -315,6 +317,10 @@ ppic            db      0
 align 4
 
 keymatrix       db      16 dup (0ffh)
+
+align 4
+
+histogr         dd      256 dup (0)
 
 align 4
 
@@ -626,6 +632,7 @@ trace:
 BREAK           EQU     0
 NOBREAK         EQU     1
 TRAP            EQU     2
+HISTOGRAM       EQU     3
 
 NORMAL          EQU     0
 FAST            EQU     1       
@@ -664,6 +671,11 @@ EMULABEL        loop,emtype,brtype
                 endif
 
                 FETCHMACRO 0
+
+                if      brtype EQ HISTOGRAM
+                inc     dword ptr [offset histogr+eax*4]
+                endif
+
                 inc     rcounter
                 call    [offset iset + eax*4]
                 
@@ -765,6 +777,20 @@ emulate1_trap:  cmp     emulatemode,FAST
                 jne     emulate2_trap
                 EMULATE FAST,TRAP
 emulate2_trap:  EMULATE TURBO,TRAP
+
+; emulate_histogr ----------------------------------------------------
+; starts emulation with histogram evaluation, stop with any error
+
+emulate_histogr:        
+                cmp     emulatemode,NORMAL
+                jne     emulate1_trap
+                EMULATE NORMAL,HISTOGRAM
+emulate1_histogr:  
+                cmp     emulatemode,FAST
+                jne     emulate2_trap
+                EMULATE FAST,HISTOGRAM
+emulate2_histogr:  
+                EMULATE TURBO,HISTOGRAM
 
 ; print --------------------------------------------------------------
 ; prints only the next instruction
@@ -974,7 +1000,39 @@ ADDREGWREGW     29,regl,regh,regl,regh,11
 LDREGWDDDD      2A,regehl
 
 ; 2B - DEC HL
-DECWREG         2B,reghl,6
+;DECWREG         2B,reghl,6
+emul2B:                
+                cmp     dword ptr [esi+ebx],020B47D2Bh
+                je      emul2Ba
+emul2B_single:
+                inc     edi
+                dec     reghl
+                sub     ebp,6+1
+                ret
+; superscalar extension: DEC HL / LD A,L / OR H / JR NZ,dd
+emul2Ba:        
+                cmp     ebx,01FFBh
+                jae     emul2B_single
+                dec     reghl
+                mov     dh,regl
+                or      dh,regh
+                mov     al,dh
+                or      dh,dh
+                jz      emul2Bb
+                mov     dl,[offset LOGICAL_table+eax]
+                add     edi,4
+                call    fetch
+                movsx   ebx,al
+                sub     ebp,(12+2)+(4+1)+(4+1)+(6+1)
+                lea     edi,[edi+ebx+1]
+                add     rcounter,3
+                ret
+emul2Bb:        
+                mov     dl,[offset LOGICAL_table+eax]
+                sub     ebp,(7+2)+(4+1)+(4+1)+(6+1)
+                add     rcounter,3
+                add     edi,5
+                ret
 
 ; 2C - INC L
 INCREG          2C,regl
@@ -1432,7 +1490,36 @@ ORREG           B5,regl
 ORHL            B6
 
 ; B7 - OR A
-ORREG           B7,dh
+;ORREG           B7,dh
+emulB7:                
+                cmp     word ptr [ebx+esi],028B7h
+                je      emulB7a
+emulB7_single:
+                inc     edi
+                mov     al,dh
+                sub     ebp,4+1
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+emulB7a:
+                cmp     ebx,01FFEh
+                jae     emulB7_single
+                mov     al,dh
+                or      dh,dh
+                jnz     emulB7b    
+                add     edi,2
+                mov     dl,[offset LOGICAL_table+eax]
+                call    fetch
+                movsx   ebx,al
+                sub     ebp,(12+2)+(4+1)
+                inc     rcounter
+                lea     edi,[edi+ebx+1]
+                ret
+emulB7b:  
+                mov     dl,[offset LOGICAL_table+eax]
+                sub     ebp,(7+2)+(4+1)
+                add     edi,3
+                inc     rcounter
+                ret
 
 ; B8 - CP B
 CPREG           B8,regb
@@ -1641,6 +1728,9 @@ JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
 emulE3:         
+                cmp     word ptr [esi+ebx],0E3E3h
+                je      emulE3a
+emulE3_single:
                 mov     ecx,regesp
                 call    readmemw
                 mov     ebx,regehl
@@ -1650,6 +1740,12 @@ emulE3:
                 sub     ebp,19+3
                 inc     edi
                 xor     eax,eax
+                ret
+emulE3a:
+                cmp     ebx,01FFFh
+                je      emulE3_single
+                sub     ebp,(19+3)+(19+3)
+                add     edi,2
                 ret
 
 ; E4 - CALL PO,dddd

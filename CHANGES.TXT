@@ -1,3 +1,8 @@
+release 1.53:
+
+- histogram evaluation
+- superscalar extensions
+
 release 1.52:
 
 - removed the "clockcounter" variable: 

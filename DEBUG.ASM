@@ -694,6 +694,10 @@ debug_loop:
                 je      command_p
                 cmp     al,'F'
                 je      command_f
+                cmp     al,'H'
+                je      command_h
+                cmp     al,'J'
+                je      command_j
                 ;cmp     al,'K'
                 ;je      command_k
                 cmp     al,'A'
@@ -740,6 +744,10 @@ command_f:
                 mov     framerate,eax
                 mov     on_off,eax
                 call    crlf
+                jmp     debug_loop
+
+command_j:
+                call    save_histogram
                 jmp     debug_loop
 
 command_v:      call    changevideomode
@@ -796,6 +804,24 @@ command_p:
                 call    turnon_kb_irq
                 call    setup_profile
                 call    emulate_trap
+                call    end_profile
+                push    edx eax
+                call    turnoff_kb_irq
+                call    turnoff_irq
+                call    settextmode
+                pop     eax
+                call    write8
+                add     messagepointer,2
+                pop     eax
+                call    write8
+                jmp     debug_loop
+
+command_h:
+                call    setgraphmode
+                call    turnon_irq
+                call    turnon_kb_irq
+                call    setup_profile
+                call    emulate_histogr
                 call    end_profile
                 push    edx eax
                 call    turnoff_kb_irq

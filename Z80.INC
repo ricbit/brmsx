@@ -7,6 +7,7 @@ extrn fetchw1: near
 extrn emulate: near
 extrn emulate_break: near
 extrn emulate_trap: near
+extrn emulate_histogr: near
 extrn print: near
 extrn regaf: word
 extrn regbc: word
@@ -98,3 +99,4 @@ extrn megablock: byte
 extrn outemulA8: near
 extrn megarom0_switchbank: near
 extrn z80rate: dword
+extrn histogr: byte
