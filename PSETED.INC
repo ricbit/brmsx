@@ -176,7 +176,7 @@ psetEDxx:
 	psetEDAE: dd prinXX
 	psetEDAF: dd prinXX
 	psetEDB0: dd prinEDB0
-	psetEDB1: dd prinXX
+	psetEDB1: dd prinEDB1
 	psetEDB2: dd prinXX
 	psetEDB3: dd prinXX
 	psetEDB4: dd prinXX

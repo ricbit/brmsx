@@ -176,7 +176,7 @@ isetEDxx:
 	isetEDAE: dd emulXX
 	isetEDAF: dd emulXX
 	isetEDB0: dd emulEDB0
-	isetEDB1: dd emulXX
+	isetEDB1: dd emulEDB1
 	isetEDB2: dd emulXX
 	isetEDB3: dd emulXX
 	isetEDB4: dd emulXX

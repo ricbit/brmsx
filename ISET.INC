@@ -126,7 +126,7 @@ iset:
 	iset7C: dd emul7C
 	iset7D: dd emul7D
 	iset7E: dd emul7E
-	iset7F: dd emulXX
+	iset7F: dd emul7F
 	iset80: dd emul80
 	iset81: dd emul81
 	iset82: dd emul82

@@ -1,12 +1,12 @@
 psetCBxx:
-	psetCB00: dd prinXX
+	psetCB00: dd prinCB00
 	psetCB01: dd prinCB01
-	psetCB02: dd prinXX
-	psetCB03: dd prinXX
-	psetCB04: dd prinXX
-	psetCB05: dd prinXX
-	psetCB06: dd prinXX
-	psetCB07: dd prinXX
+	psetCB02: dd prinCB02
+	psetCB03: dd prinCB03
+	psetCB04: dd prinCB04
+	psetCB05: dd prinCB05
+	psetCB06: dd prinCB06
+	psetCB07: dd prinCB07
 	psetCB08: dd prinXX
 	psetCB09: dd prinXX
 	psetCB0A: dd prinXX

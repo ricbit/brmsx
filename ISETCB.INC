@@ -1,12 +1,12 @@
 isetCBxx:
-	isetCB00: dd emulXX
+	isetCB00: dd emulCB00
 	isetCB01: dd emulCB01
-	isetCB02: dd emulXX
-	isetCB03: dd emulXX
-	isetCB04: dd emulXX
-	isetCB05: dd emulXX
-	isetCB06: dd emulXX
-	isetCB07: dd emulXX
+	isetCB02: dd emulCB02
+	isetCB03: dd emulCB03
+	isetCB04: dd emulCB04
+	isetCB05: dd emulCB05
+	isetCB06: dd emulCB06
+	isetCB07: dd emulCB07
 	isetCB08: dd emulXX
 	isetCB09: dd emulXX
 	isetCB0A: dd emulXX

@@ -126,7 +126,7 @@ pset:
 	pset7C: dd prin7C
 	pset7D: dd prin7D
 	pset7E: dd prin7E
-	pset7F: dd prinXX
+	pset7F: dd prin7F
 	pset80: dd prin80
 	pset81: dd prin81
 	pset82: dd prin82

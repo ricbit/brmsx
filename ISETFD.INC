@@ -52,7 +52,7 @@ isetFDxx:
 	isetFD32: dd emulXX
 	isetFD33: dd emulXX
 	isetFD34: dd emulFD34
-	isetFD35: dd emulXX
+	isetFD35: dd emulFD35
 	isetFD36: dd emulXX
 	isetFD37: dd emulXX
 	isetFD38: dd emulXX

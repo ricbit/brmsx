@@ -80,6 +80,8 @@ include daa3.inc
 include daa4.inc
 include daas.inc
 include inc.inc
+include dec.inc
+include int.inc
 
 align 4
 
@@ -147,6 +149,7 @@ interrupt       dd      0
 error           dd      0
 rcounter        dd      0        
 rmask           db      0
+regi            db      0
 
 align 4
 
@@ -599,7 +602,7 @@ fetchw:         mov     esi,edi                         ; clock 1 U
 fetchw_slow:  
                 mov     ebx,[offset mem+esi*4]          ; clock 4 U
                 inc     esi                             ; clock 4 V
-                mov     al,byte ptr [ebx+0ffffh]        ; clock 6 U [AGI]
+                mov     al,byte ptr [ebx+01fffh]        ; clock 6 U [AGI]
                 mov     ebx,[offset mem+esi*4]          ; clock 6 V
                 mov     ah,byte ptr [ebx]               ; clock 8 U [AGI]
                 ret
@@ -627,7 +630,7 @@ readmem:        mov     esi,ecx                         ; clock 1 U
 
 writemem:       mov     esi,ecx                         ; clock 1 U
                 shr     esi,13                          ; clock 2 U
-                ; coloque aqui o lock
+                ; lock
                 mov     ebx,[offset memlock+esi*4]
                 or      ebx,ebx
                 jnz     writemem0
@@ -654,7 +657,6 @@ trace:
 ; emulate ------------------------------------------------------------
 ; starts emulation, stop with any error
 
-emsg:           db      'starting emulation...$'
 emulate:
                 mov     eax,0
                 mov     ecx,0
@@ -727,8 +729,6 @@ emulate_break_interrupt:
 ; starts emulation with echo, stop with any error
 
 emulate_echo:
-                mov     eax,offset emsg
-                call    printmsg
                 call    crlf
                 mov     eax,0
                 mov     error,0
@@ -790,10 +790,7 @@ INCWREG         03,regbc,6
 INCREG          04,regb
 
 ; 05 - DEC B
-emul05:         inc     edi
-                dec     regb
-                setflag_dec
-                ret
+DECREG          05,regb
 
 ; 06 - LD B,dd
 emul06:         inc     edi
@@ -831,18 +828,13 @@ emul0A:         inc     edi
                 ret
 
 ; 0B - DEC BC
-emul0B:         inc     edi
-                dec     regbc
-                ret
+DECWREG         0B,regbc,6
 
 ; 0C - INC C
 INCREG          0C,regc
 
 ; 0D - DEC C
-emul0D:         inc     edi
-                dec     regc
-                setflag_dec
-                ret
+DECREG          0D,regc
 
 ; 0E - LD C,dd
 emul0E:         inc     edi
@@ -889,10 +881,7 @@ INCWREG         13,regde,6
 INCREG          14,regd
 
 ; 15 - DEC D
-emul15:         inc     edi
-                dec     regd
-                setflag_dec
-                ret
+DECREG          15,regd
 
 ; 16 - LD D,dd
 emul16:         inc     edi
@@ -932,18 +921,13 @@ emul1A:         inc     edi
                 ret
 
 ; 1B - DEC DE
-emul1B:         inc     edi
-                dec     regde
-                ret
+DECWREG         1B,regde,6
 
 ; 1C - INC E
 INCREG          1C,rege
 
 ; 1D - DEC E
-emul1D:         inc     edi
-                dec     rege
-                setflag_dec
-                ret
+DECREG          1D,rege
 
 ; 1E - LD E,dd
 emul1E:         inc     edi
@@ -998,10 +982,7 @@ INCWREG         23,reghl,6
 INCREG          24,regh
 
 ; 25 - DEC H
-emul25:         inc     edi
-                dec     regh
-                setflag_dec
-                ret
+DECREG          25,regh
 
 ; 26 - LD H,dd
 emul26:         inc     edi
@@ -1044,18 +1025,13 @@ emul2A:         inc     edi
                 ret
 
 ; 2B - DEC HL
-emul2B:         inc     edi
-                dec     reghl
-                ret
+DECWREG         2B,reghl,6
 
 ; 2C - INC L
 INCREG          2C,regl
 
 ; 2D - DEC L
-emul2D:         inc     edi
-                dec     regl
-                setflag_dec
-                ret
+DECREG          2D,regl
 
 ; 2E - LD L,dd
 emul2E:         inc     edi
@@ -1105,14 +1081,7 @@ INCWREG         33,regsp,6
 INCHL           34
 
 ; 35 - DEC (HL)
-emul35:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                dec     al
-                setflag_dec
-                mov     ecx,regehl
-                call    writemem
-                ret
+DECHL           35
 
 ; 36 - LD (HL),dd
 emul36:         inc     edi
@@ -1159,18 +1128,13 @@ emul3A:         inc     edi
                 ret
 
 ; 3B - DEC SP
-emul3B:         inc     edi
-                dec     regsp
-                ret
+DECWREG         3B,regsp,6
 
 ; 3C - INC A
 INCREG          3C,dh
 
 ; 3D - DEC A
-emul3D:         inc     edi
-                dec     dh
-                setflag_dec
-                ret
+DECREG          3D,dh
 
 ; 3E - LD A,dd
 emul3E:         inc     edi
@@ -1204,11 +1168,7 @@ LDREGREG        44,regb,regh
 LDREGREG        45,regb,regl
 
 ; 46 - LD B,(HL)
-emul46:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     regb,al
-                ret
+LDREGHL         46,regb
 
 ; 47 - LD B,A
 LDREGA          47,regb
@@ -1232,11 +1192,7 @@ LDREGREG        4C,regc,regh
 LDREGREG        4D,regc,regl
 
 ; 4E - LD C,(HL)
-emul4E:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     regc,al
-                ret
+LDREGHL         4E,regc
 
 ; 4F - LD C,A
 LDREGA          4F,regc
@@ -1260,11 +1216,7 @@ LDREGREG        54,regd,regh
 LDREGREG        55,regd,regl
 
 ; 56 - LD D,(HL)
-emul56:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     regd,al
-                ret
+LDREGHL         56,regd
 
 ; 57 - LD D,A
 LDREGA          57,regd
@@ -1288,11 +1240,7 @@ LDREGREG        5C,rege,regh
 LDREGREG        5D,rege,regl
 
 ; 5E - LD E,(HL)
-emul5E:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     rege,al
-                ret
+LDREGHL         5E,rege
 
 ; 5F - LD E,A
 LDREGA          5F,rege
@@ -1316,11 +1264,7 @@ LDREGREG        64,regh,regh
 LDREGREG        65,regh,regl
 
 ; 66 - LD H,(HL)
-emul66:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     regh,al
-                ret
+LDREGHL         66,regh
 
 ; 67 - LD H,A
 LDREGA          67,regh
@@ -1344,56 +1288,28 @@ LDREGREG        6C,regl,regh
 LDREGREG        6D,regl,regl
 
 ; 6E - LD L,(HL)
-emul6E:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     regl,al
-                ret
+LDREGHL         6E,regl
 
 ; 6F - LD L,A
 LDREGA          6F,regl
 
 ; 70 - LD (HL),B
-emul70:         inc     edi
-                mov     al,regb
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         70,regb
 
 ; 71 - LD (HL),C
-emul71:         inc     edi
-                mov     al,regc
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         71,regc
 
 ; 72 - LD (HL),D
-emul72:         inc     edi
-                mov     al,regd
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         72,regd
 
 ; 73 - LD (HL),E
-emul73:         inc     edi
-                mov     al,rege
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         73,rege
 
 ; 74 - LD (HL),H
-emul74:         inc     edi
-                mov     al,regh
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         74,regh
 
 ; 75 - LD (HL),L
-emul75:         inc     edi
-                mov     al,regl
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         75,regl
 
 ; 76 - HALT
 emul76:         inc     edi
@@ -1402,48 +1318,31 @@ emul76a:        cmp     interrupt,1
                 ret
 
 ; 77 - LD (HL),A
-emul77:         inc     edi
-                mov     al,dh
-                mov     ecx,regehl
-                call    writemem
-                ret
+LDHLREG         77,dh
 
 ; 78 - LD A,B
-emul78:         inc     edi
-                mov     dh,regb
-                ret
+LDAREG          78,regb
 
 ; 79 - LD A,C
-emul79:         inc     edi
-                mov     dh,regc
-                ret
+LDAREG          79,regc
 
 ; 7A - LD A,D
-emul7A:         inc     edi
-                mov     dh,regd
-                ret
+LDAREG          7A,regd
 
 ; 7B - LD A,E
-emul7B:         inc     edi
-                mov     dh,rege
-                ret
+LDAREG          7B,rege
 
 ; 7C - LD A,H
-emul7C:         inc     edi
-                mov     dh,regh
-                ret
+LDAREG          7C,regh
 
 ; 7D - LD A,L
-emul7D:         inc     edi
-                mov     dh,regl
-                ret
+LDAREG          7D,regl
 
 ; 7E - LD A,(HL)
-emul7E:         mov     ecx,regehl
-                call    readmem
-                inc     edi
-                mov     dh,al
-                ret
+LDREGHL         7E,dh
+
+; 7F - LD A,A
+LDAREG          7F,dh
 
 ; 80 - ADD A,B  
 ADDREG          80,regb
@@ -1610,12 +1509,7 @@ XORREG          AC,regh
 XORREG          AD,regl
 
 ; AE - XOR (HL)
-emulAE:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                xor     dh,al
-                setflag_xor
-                ret
+XORHL           AE
 
 ; AF - XOR A
 XORREG          AF,dh
@@ -2278,11 +2172,29 @@ emulFF:         inc     edi
                 xor     eax,eax
                 ret
 
+; CB 00 - RLC B
+RLCREG          CB00,regb
+
 ; CB 01 - RLC C
-emulCB01:       inc     edi
-                rol     regc,1
-                setflag_rlc
-                ret
+RLCREG          CB01,regc
+
+; CB 02 - RLC D
+RLCREG          CB02,regd
+
+; CB 03 - RLC E
+RLCREG          CB03,rege
+
+; CB 04 - RLC H
+RLCREG          CB04,regh
+
+; CB 05 - RLC L
+RLCREG          CB05,regl
+
+; CB 06 - RLC (HL)
+RLCHL           CB06
+
+; CB 07 - RLC A
+RLCREG          CB07,dh
 
 ; CB 10 - RL B
 emulCB10:       inc     edi
@@ -2930,23 +2842,13 @@ emulDD2A:       inc     edi
                 ret
 
 ; DD 2B - DEC IX
-emulDD2B:       inc     edi
-                dec     regix
-                ret
+DECWREG         DD2B,regix,10
+
+; DD 34 - INC (IX+dd)
+INCII           DD34,regeix
 
 ; DD 35 - DEC (IX+dd)
-emulDD35:       inc     edi
-                call    fetch
-                inc     edi
-                mov     ecx,regeix
-                add     cx,ax
-                push    ecx
-                call    readmem
-                dec     al
-                setflag_dec
-                pop     ecx
-                call    writemem
-                ret
+DECII           DD35,regeix
 
 ; DD 36 - LD (IX+dd),dd
 emulDD36:       inc     edi
@@ -3300,9 +3202,7 @@ emulED56:       inc     edi
                 ret
 
 ; ED 57 - LD A,I
-emulED57:       inc     edi
-                mov     dh,0
-                ret
+LDAI            ED57
 
 ; ED 5B - LD DE,(dddd)
 emulED5B:       inc     edi
@@ -3318,11 +3218,7 @@ emulED5B:       inc     edi
                 ret
 
 ; ED 5F - LD A,R
-emulED5F:       inc     edi
-                mov     dh,byte ptr [offset rcounter]
-                and     dh,07fh
-                or      dh,rmask
-                ret
+LDAR            ED5F    
 
 ; ED 62 - SBC HL,HL
 emulED62:       inc     edi
@@ -3437,6 +3333,23 @@ emulEDB0a:      mov     ecx,regehl
                 jnz     emulEDB0a
                 ret
 
+; ED B1 - CPIR
+emulEDB1:       inc     edi
+emulEDB1b:      mov     ecx,regehl
+                call    readmem
+                cmp     dh,al
+                jz      emulEDB1a
+                inc     reghl
+                dec     regbc
+                jnz     emulEDB1b
+                and     dl,10111011b
+                ret
+emulEDB1a:      
+                inc     reghl
+                dec     regbc
+                or      dl,01000100b
+                ret
+
 ; ED B8 - LDDR
 emulEDB8:       inc     edi
 emulEDB8a:      mov     ecx,regehl
@@ -3460,7 +3373,10 @@ emulEDB9b:      mov     ecx,regehl
                 jnz     emulEDB9b
                 and     dl,10111011b
                 ret
-emulEDB9a:      or      dl,01000100b
+emulEDB9a:      
+                dec     reghl
+                dec     regbc
+                or      dl,01000100b
                 ret
 
 ; FD 09 - ADD IY,BC
@@ -3508,12 +3424,13 @@ emulFD2A:       inc     edi
                 ret
 
 ; FD 2B - DEC IY
-emulFD2B:       inc     edi
-                dec     regiy
-                ret
+DECWREG         FD2B,regiy,10
 
 ; FD 34 - INC (IY+dd)
-INCIY           FD34
+INCII           FD34,regeiy
+
+; FD 35 - DEC (IY+dd)
+DECII           FD35,regeiy
 
 ; FD 46 - LD B,(IY+dd)
 emulFD46:       inc     edi

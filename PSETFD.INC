@@ -52,7 +52,7 @@ psetFDxx:
 	psetFD32: dd prinXX
 	psetFD33: dd prinXX
 	psetFD34: dd prinFD34
-	psetFD35: dd prinXX
+	psetFD35: dd prinFD35
 	psetFD36: dd prinXX
 	psetFD37: dd prinXX
 	psetFD38: dd prinXX
