@@ -13,6 +13,7 @@ include pentium.inc
 include pmode.inc
 
 public pentiumfound
+public mmxfound
 
 public detect_cpu
 public start_counter
@@ -25,6 +26,7 @@ public end_profile
 align 4
 
 pentiumfound    dd      0
+mmxfound        dd      0
 counter12       db      8 dup (0)
 counter13       db      8 dup (0)
 
@@ -55,6 +57,9 @@ detect_cpu:
                 cmp     eax,5
                 jb      _ret
                 mov     pentiumfound,1
+                test    edx,(1 SHL 23)
+                jz      _ret
+                mov     mmxfound,1
                 ret
 
 ; start_counter ------------------------------------------------------

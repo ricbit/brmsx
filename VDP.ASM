@@ -9,6 +9,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include pmode.inc
+include pentium.inc
 include bit.inc
 
 extrn msxvram: dword
@@ -48,6 +49,8 @@ include scr2fore.inc
 include scr2back.inc
 include scr2frcl.inc
 include scr2bkcl.inc
+include scr2frmx.inc
+include scr2bkmx.inc
 
 align 4
 
@@ -450,6 +453,116 @@ PIPE2_WIN       macro
                 endm
                 endm
 
+; PIPE2_MMX ----------------------------------------------------------
+; this is the inner loop for render_screen2 function
+; it uses the MMX instructions for better performance
+
+PIPE2_MMX       macro
+
+                push    ebx ecx
+
+                lea     esi,[ebx+eax*8]
+                lea     ebp,[ecx+eax*8]
+                mov     ebx,0
+                mov     ecx,ebx
+                
+                ; pattern
+                mov     dl,[esi]
+                ; color
+                mov     bl,[ebp]
+                
+                ; pattern
+                mov     al,[esi+1]
+                ; color
+                mov     cl,[ebp+1]
+                
+                irp     i,<0,1,2,3>
+
+                ; foreground and background mask
+                ;;movq    MM0,[offset foregroundmask+edx*8]
+                movq
+                db      00000100b
+                db      11010101b
+                dd      offset foregroundmask
+
+                ;;movq    MM2,[offset foregroundmask+eax*8]
+                movq
+                db      00010100b
+                db      11000101b
+                dd      offset foregroundmask
+
+                ;;movq    MM1,[offset backgroundmask+edx*8]
+                movq
+                db      00001100b
+                db      11010101b
+                dd      offset backgroundmask
+
+                ;;movq    MM3,[offset backgroundmask+eax*8]
+                movq
+                db      00011100b
+                db      11000101b
+                dd      offset backgroundmask
+
+                ; blend with the foreground color
+                ;;pand    MM0,[offset foregroundcolor+ebx*8]
+                pand
+                db      00000100b
+                db      11011101b
+                dd      offset foregroundcolor_MMX
+                
+                ; blend with the foreground color
+                ;;pand    MM2,[offset foregroundcolor+ecx*8]
+                pand
+                db      00010100b
+                db      11001101b
+                dd      offset foregroundcolor_MMX
+                
+                ; blend with the background color
+                ;;pand    MM1,[offset backgroundcolor+ebx*8]
+                pand
+                db      00001100b
+                db      11011101b
+                dd      offset backgroundcolor_MMX
+                
+                ; blend with the background color
+                ;;pand    MM3,[offset backgroundcolor+ebx*8]
+                pand
+                db      00011100b
+                db      11001101b
+                dd      offset backgroundcolor_MMX
+                
+                ;;por     MM0,MM1
+                por
+                db      11000001b
+                
+                ;;por     MM2,MM3
+                por
+                db      11010011b
+                
+                mov     dl,[esi+(2*i)+2]
+
+                mov     al,[esi+(2*i)+3]
+
+                ;;movq    [edi+i*256],MM0
+                movq_st
+                db      10000111b
+                dd      (2*i)*256
+                
+                ;;movq    [edi+i*256],MM2
+                movq_st
+                db      10010111b
+                dd      ((2*i)+1)*256
+                
+                mov     bl,[ebp+(2*i)+2]
+                
+                mov     cl,[ebp+(2*i)+3]
+                
+                endm
+
+                pop     ecx ebx
+
+                endm
+
 ; render_screen2_dirty -----------------------------------------------
 ; render a screen 2 page using dirty blocks
 ; WARNING: this function must ALWAYS be 
@@ -529,7 +642,7 @@ render2d_draw:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_WIN
+                  PIPE2_MMX
                 endif
 
                 pop     edx
@@ -621,7 +734,7 @@ render21:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_WIN
+                  PIPE2_MMX
                 endif
 
                 add     edi,8

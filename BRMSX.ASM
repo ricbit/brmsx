@@ -24,10 +24,11 @@ public cart1
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
+extrn mmxfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.61',13,10
+msg00           db      'BrMSX 1.62',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -40,11 +41,12 @@ msg07           db      'Clock: $'
 msg08           db      ' Mhz',13,10,'$'
 msg09           db      ' kb',13,10,'$'
 msg10           db      'Press any key to start... $'
-msgnocpuid      db      '486 or below',13,10,'$'
-msg386          db      '386',13,10,'$'
-msg486          db      '486',13,10,'$'
-msg586          db      'Pentium',13,10,'$'
-msg686          db      'Pentium Pro or better',13,10,'$'
+msgnocpuid      db      '486 or below $'
+msg386          db      '386 $'
+msg486          db      '486 $'
+msg586          db      'Pentium $'
+msg686          db      'Pentium Pro or better $'
+msgMMX          db      '(MMX)$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
@@ -117,6 +119,14 @@ _main_686:
                 call    printmsg
 
 _main_cpuexit:
+                cmp     mmxfound,1
+                jne     _main_cpu_nommx
+                mov     eax,offset msgMMX
+                call    printmsg
+
+_main_cpu_nommx:
+                call    crlf
+
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem
@@ -310,7 +320,12 @@ _main_dontmeasure:
                 call    printmsg
                 call    getchar
                 call    debug
-  
+
+                cmp     mmxfound,1
+                jne     main_exit
+                emms
+
+main_exit:
                 ; exit to dos
                 jmp     _exit
 

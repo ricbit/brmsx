@@ -1,4 +1,8 @@
-release 1.61:
+release 1.62:
+
+- new MMX graphics renderer
+
+release 1.61: [*] public version
 
 - fixed bug on writememw: now the intro of Super Laydock works
 - fixed bug on readmemw
