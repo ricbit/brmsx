@@ -9,13 +9,17 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include z80.inc
+include debug.inc
 include io.inc
 include psetCB.inc
 include psetED.inc
 include print.inc
 
 extrn prinXX: near
-extrn printopcode: near
+extrn isize: dword
+extrn printmsgp: near
+extrn printhex2p: near
+extrn printhex4p: near
 
 public psetCBxx
 public psetEDxx

@@ -21,6 +21,7 @@ public render_screen1
 public render_screen2
 public render
 public clear
+public lastscreen
 
 ; DATA ---------------------------------------------------------------
 

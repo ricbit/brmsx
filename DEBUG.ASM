@@ -17,16 +17,18 @@ include debugsrc.inc
 
 extrn msxrom: near
 extrn pentiumfound: dword
+extrn isize: dword
 
 public debug
+public printmsgd
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
 temp_screen     db      3840 dup (0)
+memdump         dd      0
 tabspace        db      ' $'
-tabprompt       db      '> $'
 msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 msgpentiumonly  db      'this option requires a pentium',13,10,'$'
@@ -37,6 +39,8 @@ modefast        db      'FAST  $'
 modeturbo       db      'TURBO $'
 stateon         db      'ON $'
 stateoff        db      'OFF$'
+intdi           db      'DI$'
+intei           db      'EI$'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -52,13 +56,14 @@ COORD           macro   x,y
 ; clear the text screen
 
 clear_text:
-                push    es
+                push    eax edi ecx es
                 mov     ax,gs
                 mov     es,ax
-                mov     edi,0b8000h
-                mov     ecx,80*25*2/4
+                mov     eax,00070007h
+                mov     edi,0b8000h+80*24*2
+                mov     ecx,80*2/4
                 rep     stosd
-                pop     es
+                pop     es ecx edi eax
                 ret
 
 ; printmsgd ----------------------------------------------------------
@@ -68,6 +73,7 @@ clear_text:
 ;        eax= offset of message
 
 printmsgd:
+                push    eax edi edx
                 movzx   edi,dh
                 lea     edi,[edi+edi*4]
                 shl     edi,5
@@ -77,48 +83,14 @@ printmsgd:
 printmsgd1:
                 mov     dl,[eax]
                 cmp     dl,'$'
-                jz      _ret
+                je      printmsgd2
                 mov     [edi],dl
                 add     edi,2
                 inc     eax
                 jmp     printmsgd1
-
-; dumpmem ------------------------------------------------------------
-; show a dump of a region of memory pointed by eax
-; in    eax=pointer to msx mem
-
-dumpmem:
-                push    eax
-                mov     edi,eax
-                call    printhex4
-                mov     eax,offset tabspace
-                call    printmsg
-
-                mov     ecx,16
-dumpmem1:       call    fetch
-                call    printhex2
-                mov     eax,offset tabspace
-                call    printmsg
-                inc     edi
-                loop    dumpmem1
-
-                pop     edi
-                mov     eax,offset tabspace
-                call    printmsg
-                mov     ecx,16
-dumpmem2:       call    fetch
-                cmp     al,32
-                jb      dumpmem3
-                cmp     al,128
-                jb      dumpmem4
-dumpmem3:       mov     al,'.'
-dumpmem4:       call    printasc
-                inc     edi
-                loop    dumpmem2
-                call    crlf
-
+printmsgd2:
+                pop     edx edi eax
                 ret
-
 
 ; --------------------------------------------------------------------
 
@@ -323,7 +295,198 @@ print_bar0:
 ; --------------------------------------------------------------------
                 
                 ; dump the msx memory
+
+                irp     i,<0,1,2,3>
+                mov     eax,memdump
+                add     eax,i*8
+
+                ; print the address
+                push    eax                
+                call    convhex4
+                COORD   4,16+i
+                mov     eax,offset tmphex4
+                call    printmsgd
+                pop     eax
+
+                ; print the contents in hex format
+                xor     ecx,ecx
+                COORD   9,16+i
+print_dump1&i:
+                push    eax
+                lea     edi,[eax+ecx]
+                call    fetch
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                pop     eax
+                add     edx,3
+                inc     ecx
+                cmp     ecx,8
+                jnz     print_dump1&i
                 
+                ; print the contents in ascii format
+                xor     ecx,ecx
+                COORD   33,16+i
+print_dump2&i:
+                push    eax
+                lea     edi,[eax+ecx]
+                call    fetch
+                cmp     al,32
+                jb      print_dump3&i
+                cmp     al,128
+                jae     print_dump3&i
+                mov     tabspace,al
+                push    edx
+                mov     eax,offset tabspace
+                call    printmsgd
+                pop     edx
+print_dump3&i:
+                pop     eax
+                inc     ecx                
+                inc     edx
+                cmp     ecx,8
+                jnz     print_dump2&i
+
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; print the contents of VDP registers
+
+                mov     ecx,0
+                mov     esi,offset vdpregs
+                COORD   73,2
+print_vdp1:
+                mov     al,[esi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                add     edx,100h
+                inc     esi
+                inc     ecx
+                cmp     ecx,8
+                jnz     print_vdp1
+
+; --------------------------------------------------------------------
+                
+                ; print the contents of PSG registers
+
+                mov     ecx,0
+                mov     esi,offset psgreg
+                COORD   77,2
+print_psg1:
+                mov     al,[esi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                add     edx,100h
+                inc     esi
+                inc     ecx
+                cmp     ecx,16
+                jnz     print_psg1
+
+; --------------------------------------------------------------------
+                
+                ; print the actual screen mode
+
+                cmp     lastscreen,4
+                jne     print_screen1
+                mov     tabspace,'0'
+                jmp     print_screen0
+print_screen1:
+                cmp     lastscreen,0
+                jne     print_screen2
+                mov     tabspace,'1'
+                jmp     print_screen0
+print_screen2:
+                mov     tabspace,'2'
+                cmp     lastscreen,1
+                je      print_screen0
+                mov     tabspace,'X'
+print_screen0:
+                COORD   74,19
+                mov     eax,offset tabspace
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; print contents of Z80 register "I"
+
+                mov     al,regi
+                call    convhex4
+                COORD   48,10
+                mov     eax,offset tmphex2
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; print contents of iff1 flag: DI or EI
+
+                cmp     iff1,0
+                je      print_iff1
+                mov     eax,offset intei
+                jmp     print_iff0
+print_iff1:
+                mov     eax,offset intdi
+print_iff0:
+                COORD   51,10
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; disassemble the program
+
+                mov     ecx,0
+                mov     edi,regepc
+print_dis0:
+                xor     eax,eax
+                COORD   23,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                push    edi
+                call    print
+                pop     edi
+                
+                ; print the address
+                COORD   4,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                mov     eax,edi
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the opcode
+                COORD   10,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                push    ecx
+                mov     ecx,isize
+print_dis1:
+                call    fetch                                
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+                add     edx,3
+                inc     edi
+                and     edi,0FFFFh
+                dec     ecx
+                jnz     print_dis1
+                pop     ecx
+
+                inc     ecx
+                cmp     ecx,11
+                jne     print_dis0
+
 ; --------------------------------------------------------------------
                 
                 ; blit the temp buffer to screen 
@@ -344,12 +507,11 @@ print_bar0:
 debug:          
                 call    clear_text
 debug_loop:                
-                ;mov     eax,offset tabprompt                                
-                ;call    printmsg      
                 call    render_debug
                 COORD   12,23
                 call    set_cursor_position
                 call    getchar
+                call    clear_text
                 call    toupper
                 call    printasc
                 call    crlf
@@ -387,10 +549,8 @@ command_d:
                 COORD   14,23
                 call    set_cursor_position
                 call    gethex4
-                pushad
-                call    crlf
-                popad
-                call    dumpmem
+                and     eax,0FFFFh
+                mov     memdump,eax
                 jmp     debug_loop
 
 command_g:
@@ -437,6 +597,7 @@ command_0:
                 call    checkpentium
                 jc      debug_loop
                 call    setgraphmode
+                call    clear
                 rdtsc
                 push    eax
                 call    render_screen0
@@ -523,10 +684,9 @@ command_2:
                 jmp     debug_loop
 
 command_t:
-                movzx   edi,regpc
-                movzx   edx,regaf
+                mov     edi,regepc
+                mov     edx,regeaf
                 mov     eax,0
-                mov     ecx,0
                 call    trace
                 jmp     debug_loop
 

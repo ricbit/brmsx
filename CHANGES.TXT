@@ -1,9 +1,14 @@
+release 1.40:
+
+- added more extensions to the debugger
+
 release 1.39:
 
 - added a numeric display in the bar graph
 - now only the mode fast check for interrupts before the synch
   with this, emulation get faster in modes normal and turbo
   and mode normal should have no bugs when run in very slow machines
+- added a new, improved debugger
 
 release 1.38: [*] public version
 

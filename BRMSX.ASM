@@ -26,7 +26,7 @@ extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.39',13,10
+msg00           db      'BrMSX 1.40',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -300,8 +300,8 @@ _main_dontmeasure:
 
                 ; enter debug mode
                 
-                ; don't ask
-                db 5*3*5 dup (090h)
+                ; don't ask 
+                db 165 dup (090h)
 
                 call    crlf
                 mov     eax,offset msg10

@@ -51,6 +51,7 @@ public printdecimal
 public bargraphmode
 public set_cursor_position
 public tmphex4
+public tmphex2
 public convhex4
 
 ; DATA ---------------------------------------------------------------

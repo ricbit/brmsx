@@ -8,7 +8,9 @@
 code32  segment para public use32
         assume cs:code32, ds:code32
 
+include pmode.inc
 include z80.inc
+include debug.inc
 include io.inc
 include pset.inc
 include psetDD.inc
@@ -22,7 +24,10 @@ extrn psetEDxx: near
 
 public pset
 public prinXX
-public printopcode
+public isize
+public printmsgp
+public printhex2p
+public printhex4p
 
 ; DATA ---------------------------------------------------------------
 
@@ -32,86 +37,64 @@ isize           dd      0
 
 ; --------------------------------------------------------------------
 
-printopcode:
-                mov     isize,edx
-                mov     ebp,4
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
+printmsgp:
+                call    printmsgd
+printmsgp1:
+                cmp     byte ptr [eax],'$'
+                je      _ret
+                inc     eax
+                inc     edx
+                jmp     printmsgp1
 
-                inc     edi
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
+; --------------------------------------------------------------------
 
-                inc     edi
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
-
-                inc     edi
-                call    fetch
-                call    printhex2
-                call    printspace
+printhex4p:
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+                add     edx,4
                 ret
-printopcode0:
-                push    ebp
-                call    printspace
-                call    printspace
-                call    printspace
-                pop     ebp
-                dec     ebp
-                jnz     printopcode0
+
+printhex2p:
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+                add     edx,2
                 ret
 
 ; --------------------------------------------------------------------
 
-prinCB:         movzx   edi,regpc
+prinCB:         
                 inc     edi
                 call    fetch
                 dec     edi
                 jmp     [offset psetCBxx+eax*4]
 
-prinDD:         movzx   edi,regpc
+prinDD:         
                 inc     edi
                 call    fetch
                 dec     edi
                 jmp     [offset psetDDxx+eax*4]
 
-prinDDCB:       movzx   edi,regpc
+prinDDCB:       
                 add     edi,3
                 call    fetch
                 sub     edi,3
                 jmp     [offset psetDDCBxx+eax*4]
 
-prinED:         movzx   edi,regpc
+prinED:         
                 inc     edi
                 call    fetch
                 dec     edi
                 jmp     [offset psetEDxx+eax*4]
 
-prinFD:         movzx   edi,regpc
+prinFD:         
                 inc     edi
                 call    fetch
                 dec     edi
                 jmp     [offset psetFDxx+eax*4]
 
-prinFDCB:       movzx   edi,regpc
+prinFDCB:       
                 add     edi,3
                 call    fetch
                 sub     edi,3

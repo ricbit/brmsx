@@ -1,4 +1,4 @@
-; print opcodes froutines ---------------------------------------------
+; print opcodes  routines ---------------------------------------------
 ; first number is size of instruction
 ; second number is number of strings
 ; third number is size of argument
@@ -6,10 +6,9 @@
 PRINTOP100      macro number,desc
 
 msg&number:     db      desc
-prin&number:    mov     edx,1
-                call    printopcode
+prin&number:    mov     isize,1
                 mov     eax,offset msg&number
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -17,25 +16,22 @@ prin&number:    mov     edx,1
 PRINTOP200      macro number,desc
 
 msg&number:     db      desc
-prin&number:    mov     edx,2
-                call    printopcode
+prin&number:    mov     isize,2
                 mov     eax,offset msg&number
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
 
-PRINTOP211      macro number,desc        
+PRINTOP211      macro   number,desc        
 
 msg&number:     db      desc
-prin&number:    mov     edx,2
-                call    printopcode
+prin&number:    mov     isize,2
                 mov     eax,offset msg&number
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 inc     edi
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 ret
 
                 endm
@@ -44,16 +40,14 @@ PRINTOP221      macro   number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,2
-                call    printopcode
+prin&number:    mov     isize,2
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 inc     edi
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -61,14 +55,12 @@ prin&number:    mov     edx,2
 PRINTOP312      macro number,desc
 
 msg&number:     db      desc
-prin&number:    mov     edx,3
-                call    printopcode
+prin&number:    mov     isize,3
                 mov     eax,offset msg&number
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 inc     edi
                 call    fetchw
-                call    printhex4
+                call    printhex4p
                 ret
 
                 endm
@@ -77,16 +69,14 @@ PRINTOP322      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,3
-                call    printopcode
+prin&number:    mov     isize,3
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 inc     edi
                 call    fetchw
-                call    printhex4
+                call    printhex4p
                 mov     eax,offset msg&number&b
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -95,16 +85,14 @@ PRINTOP321      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,3
-                call    printopcode
+prin&number:    mov     isize,3
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 add     edi,2
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -113,16 +101,14 @@ PRINTOP422      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,4
-                call    printopcode
+prin&number:    mov     isize,4
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 add     edi,2
                 call    fetchw
-                call    printhex4
+                call    printhex4p
                 mov     eax,offset msg&number&b
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -131,20 +117,17 @@ PRINTOP421      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,4
-                call    printopcode
+prin&number:    mov     isize,4
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 add     edi,2
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsg
-                movzx   edi,regpc
-                add     edi,3
+                call    printmsgp
+                inc     edi
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 ret
 
                 endm
@@ -153,16 +136,14 @@ PRINTOP42X      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     edx,4
-                call    printopcode
+prin&number:    mov     isize,4
                 mov     eax,offset msg&number&a
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 add     edi,2
                 call    fetch
-                call    printhex2
+                call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsg
+                call    printmsgp
                 ret
 
                 endm
@@ -170,14 +151,12 @@ prin&number:    mov     edx,4
 PRINTOP412      macro number,desc
 
 msg&number:     db      desc
-prin&number:    mov     edx,4
-                call    printopcode
+prin&number:    mov     isize,4
                 mov     eax,offset msg&number
-                call    printmsg
-                movzx   edi,regpc
+                call    printmsgp
                 add     edi,2
                 call    fetchw
-                call    printhex4
+                call    printhex4p
                 ret
 
                 endm

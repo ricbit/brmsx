@@ -59,6 +59,7 @@ public regi
 public emulatemode
 public megarommode
 public z80rate
+public psgreg
 
 public slot0
 public slot1
@@ -478,6 +479,7 @@ writemem1:
 
 trace:
                 call    fetch
+                inc     rcounter
                 call    [offset iset + eax*4]
                 mov     regpc,di
                 mov     regaf,dx
