@@ -16,6 +16,7 @@ extrn vdpregs: near
 extrn blitbuffer: dword
 extrn palette: near
 extrn dirtyname: dword
+extrn dirtypattern: dword
 
 public render_screen0
 public render_screen1
@@ -26,6 +27,7 @@ public lastscreen
 public sprite_render
 public imagetype
 public nametable
+public patterntable
 
 ; DATA ---------------------------------------------------------------
 
@@ -46,6 +48,8 @@ colorsave       dd      0
 spriteenable    dd      0
 imagetype       dd      0
 nametable       dd      0
+patterntable    dd      0
+currentsector   dd      0
 firstscreen     dd      1
 spriteline      db      192 dup (0)
 lastscreen      db      0
@@ -141,55 +145,10 @@ render05:
                 mov     spriteenable,0
                 ret
 
-; render_screen1_dirty -----------------------------------------------
-; render a screen 1 page using dirty blocks
+; PIPE1 --------------------------------------------------------------
+; this is the inner loop for render_screen1_* functions
 
-render_screen1_dirty:
-                mov     firstscreen,0
-                
-                ; esi = name table
-                movzx   eax,byte ptr [offset vdpregs+2]
-                and     eax,0fh
-                shl     eax,10
-                mov     nametable,eax
-                mov     esi,msxvram
-                lea     esi,[esi+eax]
-
-                ; ebx = character pattern table
-                movzx   eax,byte ptr [offset vdpregs+4]
-                and     eax,07h
-                shl     eax,11
-                mov     ebx,msxvram
-                lea     ebx,[ebx+eax]
-
-                ; ecx = color table
-                movzx   eax,byte ptr [offset vdpregs+3]
-                shl     eax,6
-                mov     ecx,msxvram
-                lea     ecx,[ecx+eax]
-
-                ; edi = pentium video memory
-                mov     edi,blitbuffer
-
-                ; edx = dirty table
-                mov     edx,dirtyname
-
-                ; mask the temporary registers
-                xor     eax,eax
-
-                ; for each line
-                mov     ebp,24
-render10d:      push    ebp
-
-                ; for each char
-                mov     ebp,32
-render11d:      push    ebp
-
-                mov     al,[edx]
-                or      al,al
-                jz      render12d
-
-                push    edx
+PIPE1           macro
 
                 ; fetch the character
                 mov     al,[esi]
@@ -249,6 +208,59 @@ render11d:      push    ebp
                 pop     eax
                 pop     esi
                 pop     ecx
+                
+                endm
+
+; render_screen1_dirty -----------------------------------------------
+; render a screen 1 page using dirty blocks
+
+render_screen1_dirty:
+                mov     firstscreen,0
+                
+                ; esi = name table
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     eax,0fh
+                shl     eax,10
+                mov     nametable,eax
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
+
+                ; ebx = character pattern table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,07h
+                shl     eax,11
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
+
+                ; ecx = color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
+
+                ; edi = pentium video memory
+                mov     edi,blitbuffer
+
+                ; edx = dirty table
+                mov     edx,dirtyname
+
+                ; mask the temporary registers
+                xor     eax,eax
+
+                ; for each line
+                mov     ebp,24
+render10d:      push    ebp
+
+                ; for each char
+                mov     ebp,32
+render11d:      push    ebp
+
+                mov     al,[edx]
+                or      al,al
+                jz      render12d
+
+                push    edx
+                PIPE1
                 pop     edx
 
 render12d:
@@ -318,63 +330,7 @@ render10:       push    ebp
                 mov     ebp,32
 render11:       push    ebp
 
-                ; fetch the character
-                mov     al,[esi]
-
-                ; fetch the color for that character
-                mov     dl,al
-                shr     dl,3
-                mov     dl,[ecx+edx]
-
-                push    ecx
-                push    esi
-                push    eax
-                push    ebx
-                
-                lea     ebx,[ebx+eax*8]
-                mov     eax,[offset foregroundcolor+edx*4]
-                mov     ecx,[offset backgroundcolor+edx*4]
-
-                ; for each subline
-
-                ; fetch the pattern for that subline
-                mov     dl,[ebx]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-
-                ; get the foreground mask
-                mov     ebp,[offset foregroundmask+edx*8]
-
-                ; get the background mask
-                mov     esi,[offset backgroundmask+edx*8]
-
-                ; blend with the foreground color
-                and     ebp,eax
-
-                ; blend with the background color
-                and     esi,ecx
-
-                ; mix the colors
-                or      ebp,esi
-                mov     esi,[offset backgroundmask+edx*8+4]
-
-                ; display the subline
-                mov     [edi+i*256],ebp
-
-                ; do it again for the next four pixels
-                mov     ebp,[offset foregroundmask+edx*8+4]
-                and     esi,ecx
-                and     ebp,eax
-                or      ebp,esi
-                mov     dl,[ebx+i+1]
-                mov     [edi+4+i*256],ebp
-
-                endm
-
-                pop     ebx
-                pop     eax
-                pop     esi
-                pop     ecx
+                PIPE1
 
                 add     edi,8
                 inc     esi
@@ -485,16 +441,20 @@ PIPE2_WIN       macro
                 endm
                 endm
 
-; render_screen2 -----------------------------------------------------
-; render a screen 2 page
+; render_screen2_dirty -----------------------------------------------
+; render a screen 2 page using dirty blocks
 ; WARNING: this function must ALWAYS be 
 ;          called with interrupts DISABLED
 
-render_screen2:
+render_screen2_dirty:
+
+                mov     firstscreen,0
+
                 ; esi = name table
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
+                mov     nametable,eax
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
@@ -502,6 +462,130 @@ render_screen2:
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,04h
                 shl     eax,11
+                mov     patterntable,eax
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
+
+                ; ecx = color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     eax,080h
+                shl     eax,6
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
+                mov     colorsave,ecx
+
+                ; edi = pentium video memory
+                mov     edi,blitbuffer
+
+                ; edx = dirty table
+                mov     edx,dirtyname
+
+                ; mask the temporary registers
+                xor     eax,eax
+
+                ; for each sector
+                mov     ebp,3
+                mov     currentsector,0
+render23d:      
+                push    ebp
+
+                ifdef   DOS
+                  xor   ecx,ecx
+                else
+                  mov   ecx,colorsave
+                endif
+
+                ; for each line
+                mov     ebp,8
+render20d:      push    ebp
+
+                ; for each char
+                mov     ebp,32
+render21d:       
+                mov     al,[edx]
+                or      al,al
+                jnz     render2d_draw
+
+                mov     al,[esi]
+                push    edx
+                mov     edx,dirtypattern
+                add     edx,currentsector
+                cmp     byte ptr [edx+eax],0
+                pop     edx
+                je      render2d_next
+                mov     byte ptr [edx],1
+
+render2d_draw:
+                ; fetch the character
+                mov     al,[esi]
+                push    ebp
+                push    esi
+
+                push    edx
+                xor     edx,edx
+
+                ifdef   DOS
+                  PIPE2_DOS
+                else
+                  PIPE2_WIN
+                endif
+
+                pop     edx
+
+                pop     esi
+                pop     ebp
+                
+render2d_next:
+
+                inc     esi
+                add     edi,8
+                inc     edx
+                dec     ebp
+                jnz     render21d
+
+                pop     ebp
+                add     edi,256*7
+                dec     ebp
+                jnz     render20d
+
+                add     ebx,256*8
+                add     colorsave,256*8
+
+                pop     ebp
+                add     currentsector,256
+                dec     ebp
+                jnz     render23d
+
+                mov     spriteenable,1
+                ret
+
+; render_screen2 -----------------------------------------------------
+; render a screen 2 page
+; WARNING: this function must ALWAYS be 
+;          called with interrupts DISABLED
+
+render_screen2:
+                cmp     firstscreen,1
+                je      render_screen2_linear
+                cmp     imagetype,1
+                je      render_screen2_dirty
+
+render_screen2_linear:
+                mov     firstscreen,0
+                
+                ; esi = name table
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     eax,0fh
+                shl     eax,10
+                mov     nametable,eax
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
+
+                ; ebx = character pattern table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,04h
+                shl     eax,11
+                mov     patterntable,eax
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
 

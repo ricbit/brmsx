@@ -12,6 +12,7 @@ extrn blitbuffer: dword
 extrn start_counter: near
 extrn end_counter: near
 extrn dirtyname: dword
+extrn dirtypattern: dword
 
 include pmode.inc
 include pentium.inc
@@ -799,8 +800,8 @@ blit0_0:
                 ret
 
 blit_dirty_320:
-                cmp     lastscreen,0
-                jne     blit_linear_320
+                cmp     lastscreen,4
+                je      blit_linear_320
                 mov     ebx,dirtyname
                 mov     esi,blitbuffer
                 mov     edi,0a0000h+32
@@ -838,6 +839,11 @@ blit_dirty_320_next:
                 add     edi,8*320-8*32
                 dec     ecx
                 jnz     blit_dirty_320_line
+
+                mov     eax,0
+                mov     edi,dirtypattern
+                mov     ecx,256*8/4
+                rep     stosd
 
                 ret
 

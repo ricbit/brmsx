@@ -50,8 +50,8 @@ stateon         db      'ON $'
 stateoff        db      'OFF$'
 intdi           db      'DI$'
 intei           db      'EI$'
-imagedynamic    db      'DYNAMIC$'
-imagestatic     db      ' STATIC$'
+imagedynamic    db      ' NORMAL$'
+imagestatic     db      '   FAST$'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -746,6 +746,11 @@ command_v:      call    changevideomode
 
 command_n:
                 mov     eax,nametable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
+                add     messagepointer,2
+                mov     eax,patterntable
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage

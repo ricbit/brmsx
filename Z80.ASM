@@ -20,6 +20,7 @@ extrn emulEDFF: near
 extrn start_counter: near
 extrn end_counter: near
 extrn dirtyname: dword
+extrn dirtypattern: dword
 
 include io.inc
 include vdp.inc
@@ -1897,6 +1898,27 @@ outemul98:      mov     ecx,msxvram
                 inc     vdpaddress
                 cmp     imagetype,0
                 je      _ret
+                cmp     lastscreen,1
+                jne     outemul98_1
+                ; screen 2
+                cmp     esi,nametable
+                js      outemul98_2_pat
+                sub     esi,nametable
+                cmp     esi,32*24
+                jge     outemul98_2_pat
+                add     esi,dirtyname
+                mov     byte ptr [esi],1
+                ret
+outemul98_2_pat:
+                sub     esi,patterntable
+                js      _ret
+                cmp     esi,256*3*8
+                jge     _ret
+                shr     esi,3
+                add     esi,dirtypattern
+                mov     byte ptr [esi],1
+                ret
+outemul98_1:
                 cmp     lastscreen,0
                 jne     _ret
                 ; screen 1

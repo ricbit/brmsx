@@ -1,6 +1,10 @@
+release 1.46:
+
+- added a new, super-fast renderer for screen 2
+
 release 1.45:
 
-- added a new, super-fast STATIC renderer for screen 1
+- added a new, super-fast renderer for screen 1
 
 release 1.44:
 
