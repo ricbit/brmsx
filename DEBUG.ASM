@@ -66,6 +66,7 @@ msgpentiumonly  db      'This option requires a Pentium$'
 res320          db      '320x200$'
 res256          db      '256x200$'
 res512          db      '512x384$'
+res192          db      '256x192$'
 modenormal      db      'NORMAL$'
 modefast        db      'FAST  $'
 modeturbo       db      'TURBO $'
@@ -253,14 +254,14 @@ changevideomode:
                 add     videomode,1
                 cmp     videomode,2
                 je      changevideomode_vesa2
-                cmp     videomode,3
+                cmp     videomode,4
                 jne     _ret
                 mov     videomode,0
                 ret
 changevideomode_vesa2:
                 cmp     vesa2found,0
                 jne     _ret
-                mov     videomode,0
+                mov     videomode,3
                 ret
 
 ; --------------------------------------------------------------------
@@ -908,7 +909,12 @@ print_res1:
                 mov     eax,offset res256
                 jmp     print_res0
 print_res2:
+                cmp     videomode,3
+                jae     print_res3
                 mov     eax,offset res512
+                jmp     print_res0
+print_res3:
+                mov     eax,offset res192
 print_res0:
                 COORD   15,21
                 call    printmsgd
@@ -1322,7 +1328,9 @@ command_b:
                 call    setgraphmode
                 call    turnon_irq
                 call    turnon_kb_irq
+                call    sound_on
                 call    emulate_break
+                call    sound_off
                 call    turnoff_kb_irq
                 call    turnoff_irq
                 call    settextmode

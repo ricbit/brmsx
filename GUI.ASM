@@ -14,6 +14,7 @@ include io.inc
 include bit.inc
 include number.inc
 include vdp.inc
+include psg.inc
 include blit.inc
 include mouse.inc
 include debug.inc
@@ -22,6 +23,7 @@ include saveload.inc
 extrn blitbuffer: dword
 extrn filenamelist: dword
 extrn read_rom: near
+extrn cart1: dword
 
 public rendercounter
 public spritecounter
@@ -144,6 +146,8 @@ psgcolor:
 ; draw the gui in blitbuffer
 
 draw_gui:
+                ;call    draw_wave_graph
+                
                 cmp     bargraphmode,0
                 je      draw_gui_psg
                 call    draw_bar_graph
@@ -152,6 +156,33 @@ draw_gui_psg:
                 je      _ret
                 call    draw_psggraph
 
+                ret
+
+; --------------------------------------------------------------------
+                
+draw_wave_graph:
+                mov     esi,dmastart
+                mov     ecx,252
+                mov     edx,0
+draw_wave_graph_loop:
+                movzx   eax,byte ptr [esi]
+                movzx   ebx,byte ptr [esi+1]
+                add     eax,ebx
+                movzx   ebx,byte ptr [esi+2]
+                add     eax,ebx
+                movzx   ebx,byte ptr [esi+3]
+                add     eax,ebx
+                shr     eax,2
+                shr     eax,1
+                shl     eax,8
+                add     eax,edx
+                add     eax,blitbuffer
+                add     eax,256*100
+                mov     byte ptr [eax],013
+                add     esi,3
+                inc     edx
+                dec     ecx
+                jnz     draw_wave_graph_loop
                 ret
 
 ; --------------------------------------------------------------------
@@ -839,6 +870,8 @@ load_rom_now:
                 
                 ; perform the load
                 mov     edx,offset name_buffer
+                mov     eax,cart1
+                mov     ebp,offset slot1
                 call    read_rom
                 jnc     reset_cpu_now
                 ret

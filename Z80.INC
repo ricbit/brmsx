@@ -118,3 +118,7 @@ extrn sccregs: byte
 extrn sccdetected: dword
 extrn sccenabled: dword
 extrn newleds: byte
+extrn ramslot: dword
+extrn cart2slot: dword
+extrn allram: byte
+extrn fakeirq: dword

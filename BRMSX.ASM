@@ -50,7 +50,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.122',13,10
+msg00           db      'BrMSX 1.126',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -74,7 +74,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.122',13,10
+msg22           db      'BrMSX 1.126',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -96,6 +96,8 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '(default)',13,10
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
+                db      '-ramslot <n>   select slot of RAM, can be 2 '
+                db      '(default) or 3',13,10
                 db      '-win           windows video engine '
                 db      '(slower, default)',13,10
                 db      '-dos           dos video engine (fast but does not '
@@ -103,7 +105,7 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-mmx           MMX video engine (fastest but '
                 db      'requires MMX processor)',13,10
                 db      '-res <mode>    resolution (0=320x200 1=256x200 '
-                db      '2=512x384)',13,10
+                db      '2=512x384 3=256x192)',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
                 db      '-frame <n>     frame skipping (1 means all '
@@ -118,9 +120,9 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      'emulation (default)',13,10
                 db      '-diskhigh      high-level, patch-based disk '
                 db      'emulation',13,10
-                db      '-tape <file>   use <file> as cassete image',13,10
                 db      'Press enter to continue.$'
 help_message2   db      13
+                db      '-tape <file>   use <file> as cassete image',13,10
                 db      '-joy           enable joystick emulation',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
@@ -128,6 +130,8 @@ help_message2   db      13
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
+                db      '-nopentium     disable pentium extensions and '
+                db      'cpu autodetect',13,10
                 db      '-noenter       disable enter pressing at '
                 db      'start',13,10
                 db      '-help          show this help page',13,10
@@ -184,6 +188,8 @@ switch_server   db      '-server',0
 switch_client   db      '-client',0
 switch_frame    db      '-frame',0
 switch_tape     db      '-tape',0
+switch_nopent   db      '-nopentium',0
+switch_ramslot  db      '-ramslot',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -213,8 +219,10 @@ switch_table:
                 dd      offset switch_client
                 dd      offset switch_frame
                 dd      offset switch_tape
+                dd      offset switch_nopent
+                dd      offset switch_ramslot
 
-switch_total    dd      27
+switch_total    dd      29
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -244,6 +252,8 @@ switch_callback:
                 dd      offset callback_client
                 dd      offset callback_frame
                 dd      offset callback_tape
+                dd      offset callback_nopent
+                dd      offset callback_ramslot
 
 align 4
 
@@ -275,6 +285,7 @@ nomouse         dd      0
 novesa          dd      0
 noenter         dd      0
 filesize        dd      0
+nopentium       dd      0
 
 ; --------------------------------------------------------------------
 
@@ -285,7 +296,7 @@ _main:          sti
                 call    printmsg
 
                 call    parse_command_line
-
+                                               
                 ; print info on free low memory
                 mov     eax,offset msg04
                 call    printmsg
@@ -304,6 +315,9 @@ _main:          sti
                 mov     eax,offset msg09
                 call    printmsg
 
+                cmp     nopentium,1
+                je      _main_nopentium
+                
                 ; print processor type
                 mov     eax,offset msg06
                 call    printmsg
@@ -348,6 +362,7 @@ _main_cpu_nommx:
                 jne     _main_nocpugraph
                 call    changebargraph
 _main_nocpugraph:
+_main_nopentium:
 
                 ; allocate 757+ bytes of low memory to sound DMA transfer
                 ; these bytes must not cross a 64kb boundary
@@ -374,7 +389,7 @@ _main_nocpugraph:
 main_getdma2:
                 ; second dma buffer can be on any memory
                 mov     eax,DMABUFFERSIZE
-                call    _getmem
+                call    _getlomem
                 jc      no_memory
                 mov     dmatemp,eax
 
@@ -440,10 +455,14 @@ _main_idlerom:
                 call    read_size_file
                 cmp     eax,08000h
                 jne     msx_rom_error
-                mov     edx,msxrom
+                mov     edx,transf_buffer
                 mov     ecx,32768
                 call    read_file
                 call    close_file
+                mov     edi,msxrom
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
                 
                 ; allocate 16kb to msx vram
                 mov     eax,16384
@@ -463,18 +482,31 @@ _main_idlerom:
                 mov     ecx,8192/4
                 rep     stosd
 
-                ; allocate 64kb to msx ram
-                mov     eax,65536
+                ; allocate 128kb to msx ram
+                mov     eax,128*1024
                 call    _getmem
                 jc      no_memory
                 mov     msxram,eax
-                irp     i,<0,1,2,3,4,5,6,7>
-                mov     dword ptr [offset slot2+i*8],eax
+                mov     edi,ramslot
+                irp     i,<3,2,1,0>
+                mov     dword ptr [edi+i*16],eax
+                add     eax,2000h
+                mov     dword ptr [edi+i*16+8],eax
                 add     eax,2000h
                 endm
 
+                ; select RAM slot as pure RAM
+                ; and cartridge 2 as pure ROM
+                mov     eax,0
+                mov     ebx,1
+                mov     esi,cart2slot
+                irp     i,<0,1,2,3,4,5,6,7>
+                mov     dword ptr [edi+i*8+4],eax
+                mov     dword ptr [esi+i*8+4],ebx
+                endm
+
                 ; clear msx ram
-                mov     ecx,65536/4
+                mov     ecx,128*1024/4
                 mov     edi,msxram
                 mov     eax,0
                 rep     stosd
@@ -594,21 +626,27 @@ _main4:
                 call    read_size_file
                 cmp     eax,04000h
                 jne     disk_rom_error
-                mov     edx,diskrom
+                mov     edx,transf_buffer
                 mov     ecx,16*1024
                 call    read_file
                 call    close_file
+                mov     esi,transf_buffer
+                mov     edi,diskrom
+                mov     ecx,16384/4
+                rep     movsd
 
                 mov     eax,diskrom
-                mov     dword ptr [offset slot3+16],eax
+                mov     edi,cart2slot
+                mov     dword ptr [edi+16],eax
                 add     eax,2000h
-                mov     dword ptr [offset slot3+16+8],eax
+                mov     dword ptr [edi+16+8],eax
 
                 cmp     portenabled,1
                 je      _main_noport
 
                 ; patch for PHYDIO
-                mov     eax,dword ptr [offset slot3+16]
+                mov     edi,cart2slot
+                mov     eax,dword ptr [edi+16]
                 mov     byte ptr [eax+010h],0edh
                 mov     byte ptr [eax+011h],0ffh
 
@@ -879,7 +917,7 @@ disk_rom_error:
 tape_not_found:
                 mov     eax,offset msg29
                 call    printmsg
-                jmp     _exit
+                ret
 
 tape_too_large:
                 mov     eax,offset msg30
@@ -1235,6 +1273,8 @@ callback_res_second:
                 je      callback_res_256x200
                 cmp     bl,'2'
                 je      callback_res_512x384
+                cmp     bl,'3'
+                je      callback_res_256x192
                 mov     videomode,0
                 ret
 
@@ -1244,6 +1284,10 @@ callback_res_256x200:
 
 callback_res_512x384:
                 mov     videomode,2
+                ret
+
+callback_res_256x192:
+                mov     videomode,3
                 ret
 
 callback_disklow:
@@ -1324,6 +1368,39 @@ callback_tape_second:
                 rep     movsd
                 ret
 
+callback_nopent:
+                mov     nopentium,1
+                ret
+
+callback_ramslot:
+                mov     secondarg,1
+                mov     eax,offset callback_ramslot_second
+                mov     second_callback,eax
+                ret
+
+callback_ramslot_second:
+                cmp     byte ptr [offset emptyspace],'2'
+                je      callback_ramslot_second_2
+                cmp     byte ptr [offset emptyspace],'3'
+                je      callback_ramslot_second_3
+                ret
+
+callback_ramslot_second_2:
+                mov     eax,offset slot2
+                mov     ramslot,eax
+                mov     eax,offset slot3
+                mov     cart2slot,eax
+                mov     allram,0AAh
+                ret
+
+callback_ramslot_second_3:
+                mov     eax,offset slot3
+                mov     ramslot,eax
+                mov     eax,offset slot2
+                mov     cart2slot,eax
+                mov     allram,0FFh
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -1380,6 +1457,8 @@ read_rom_place_16kb:
                 add     eax,2000h
                 mov     [ebp+edx*8+8],eax
 
+                call    enable_rom
+
                 call    close_file
                 or      eax,eax
                 ret
@@ -1402,7 +1481,9 @@ read_rom_0000:
                 irp     i,<0,1,2,3>
                 mov     [ebp+i*16+8],eax
                 endm
-
+                
+                call    enable_rom    
+                
                 call    close_file
                 or      eax,eax
                 ret
@@ -1429,7 +1510,9 @@ read_rom_not_16kb:
                 mov     dword ptr [ebp+2*8+i*8],eax
                 add     eax,2000h
                 endm
-
+                
+                call    enable_rom    
+                
                 call    close_file
                 or      eax,eax
                 ret
@@ -1484,6 +1567,17 @@ enable_megaram:
                 mov     dword ptr [offset slot1+16+4+24],eax
                 ret
 
+
+; enable_rom ---------------------------------------------------------
+; enable the ROM
+
+enable_rom:                
+                mov     eax,1
+                mov     dword ptr [offset slot1+16+4],eax
+                mov     dword ptr [offset slot1+16+4+8],eax
+                mov     dword ptr [offset slot1+16+4+16],eax
+                mov     dword ptr [offset slot1+16+4+24],eax
+                ret
 
 ; flush_dsk ----------------------------------------------------------
 ; flush the DSK image to the disk

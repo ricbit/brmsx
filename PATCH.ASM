@@ -87,7 +87,7 @@ patch_PHYDIO:
                 
                 mov     al,prim_slotreg
                 mov     saveslot,al
-                mov     bl,0AAh
+                mov     bl,allram
                 call    outemulA8
 
                 ; find initial offset on disk image

@@ -341,6 +341,9 @@ setgraphmode:
                 cmp     videomode,0
                 je      _ret
 
+                cmp     videomode,3
+                je      setgraph_256x192
+
                 mov     edx,03D4h
                 mov     al,11h
                 out     dx,al
@@ -369,6 +372,62 @@ setgraphmode_vesa:
                 call    set_mouse_range
 
                 ret
+
+setgraph_256x192:
+
+mov dx,3C2h
+mov al,0E3h     ; use 63h to stretch the display
+out dx,al
+
+mov dx,3D4h     ; enable CRTC write access
+mov al,11h
+out dx,al
+inc dx
+in al,dx
+and al,7Fh
+out dx,al
+dec dx
+
+mov ax,05F00h
+out dx,ax
+mov ax,03F01h
+out dx,ax
+mov ax,04002h
+out dx,ax
+mov ax,08203h
+out dx,ax
+mov ax,04C04h
+out dx,ax
+mov ax,09805h
+out dx,ax
+mov ax,0BF06h
+out dx,ax
+mov ax,01F07h
+out dx,ax
+mov ax,00008h
+out dx,ax
+mov ax,04109h
+out dx,ax
+mov ax,09410h
+out dx,ax
+mov ax,08611h
+out dx,ax
+mov ax,07F12h
+out dx,ax
+mov ax,02013h
+out dx,ax
+mov ax,04014h
+out dx,ax
+mov ax,08615h
+out dx,ax
+mov ax,0B916h
+out dx,ax
+mov ax,0A317h
+out dx,ax
+mov ax,0FF18h
+out dx,ax
+
+ret
 
 ; set_border_color ----------------------------------------------------
 ; set color 0 of VGA as VDP border color
@@ -1052,7 +1111,7 @@ open_file:
                 and     eax,0fh
                 mov     v86r_dx,ax
                 mov     v86r_ds,dx
-                mov     v86r_ax,03d02h
+                mov     v86r_ax,03d00h
                 mov     al,21h
                 int     33h
                 mov     ax,v86r_ax
@@ -1140,6 +1199,7 @@ close_file:
 ; read_size_file -----------------------------------------------------
 ; read the size of the file
 ; in: v86r_bx = file handle
+; return: eax=file size
 
 read_size_file:
                 mov     v86r_ax,4201h
@@ -1242,56 +1302,58 @@ find_next:
                 pop     edi
                 ret
 
-;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+; setkb --------------------------------------------------------------
+; set the keyboard LEDs
+; enter: BL=leds 00000CNS , C=Caps, N=Num, S=Scroll
 
-waitforkb:                              ; Wait for keyboard ready
-        mov ecx,20000h
+setkb:                         
+                cmp     noled,1
+                je      _ret
+
+                cli
+                mov     al,0edh
+                call    outtokb
+                mov     al,bl
+                call    outtokb
+                mov     al,0f4h
+                call    outtokb
+                sti
+                ret
+
+waitforkb:                              
+                mov     ecx,20000h
 waitforkbl:
-        in al,64h
-        test al,2
-        loopnz waitforkbl
-        ret
+                in      al,64h
+                test    al,2
+                loopnz  waitforkbl
+                ret
 
-;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
-setkb:                                  ; Set KB, LOCKS=BL
-        cmp     noled,1
-        je      _ret
-        cli
-        mov al,0edh
-        call outtokb
-        mov al,bl
-        call outtokb
-        mov al,0f4h
-        call    outtokb
-        sti
-        ret
-;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
 outtokb:
-        mov ah,al
-        mov bh,1 ;3
+                mov     ah,al
+                mov     bh,1 
 outtokbl0:
-        call waitforkb
-        mov al,ah
-        out 60h,al
-        mov ecx,4000h
+                call    waitforkb
+                mov     al,ah
+                out     60h,al
+                mov     ecx,4000h
 outtokbl1:
-        in al,61h
-        test al,10h
-        jz $-4
-        in al,61h
-        test al,10h
-        jnz $-4
-        in al,64h
-        test al,1
-        loopz outtokbl1
-        in al,60h
-        cmp al,0fah
-        je _ret
-        dec bh
-        jnz outtokbl0
-        ret
+                in      al,61h
+                test    al,10h
+                jz      $-4
+                in      al,61h
+                test    al,10h
+                jnz     $-4
+                in      al,64h
+                test    al,1
+                loopz   outtokbl1
+                in      al,60h
+                cmp     al,0fah
+                je      _ret
+                dec     bh
+                jnz     outtokbl0
+                ret
 
-
+; --------------------------------------------------------------------
 
 code32          ends
                 end

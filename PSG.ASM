@@ -30,6 +30,7 @@ public sbdma
 public sounddetected
 public read_master_volume
 public write_master_volume
+public dmastart
 
 ; DATA ---------------------------------------------------------------
 
@@ -69,11 +70,13 @@ PSGcounter              db      4*4 dup (0)
 PSGstate                db      4*4 dup (0)
 actual_channel          dd      0
 localpos                dd      0
+dmastart                dd      0
 
 SCCcounter              db      5*4 dup (0)
 SCCstate                db      5*4 dup (0)
 
 ppiclick                db      0
+ppicassete              db      0
 
 psgregstack             db      (16*(SKIPFACTOR+1)) dup (0)
 PSGreg                  db      16 dup (0)
@@ -313,6 +316,10 @@ turnon_sbirq:
                 and     al,sb_default_pic1
                 mov     dx,021h
                 out     dx,al
+                and     ah,sb_default_pic2
+                mov     dx,0A1h
+                mov     al,ah
+                out     dx,al
 
                 ret
 
@@ -354,6 +361,9 @@ sound_on:
 
                 mov     eax,offset sccregstack
                 mov     sccpointer,eax
+
+                mov     eax,dmatemp
+                mov     dmastart,eax
 
                 mov     eax,SKIPFACTOR
                 mov     irqskip,eax
@@ -436,8 +446,13 @@ compose_soundstream:
                 rep     movsb
                 mov     sccpointer,edi
 
+                add     dmastart,757
+
                 dec     irqskip
                 jnz     compose_soundstream_exit
+
+                mov     eax,dmatemp
+                mov     dmastart,eax
 
                 mov     irqskip,SKIPFACTOR
 
@@ -447,6 +462,9 @@ compose_soundstream:
 
                 mov     localpos,0
                 call    compose_click
+
+                mov     localpos,0
+                call    compose_cassete
 
                 mov     localpos,0
                 mov     actual_channel,0
@@ -552,6 +570,54 @@ compose_channel_notclick:
 compose_click_nextsample:
                 dec     edi
                 jnz     compose_click_loop
+
+                ret
+
+; compose_cassete ----------------------------------------------------
+; compose and mix the cassete output
+
+compose_cassete:
+
+                mov     ecx,0
+                mov     edi,BUFFERSIZE
+                mov     esi,dmatemp
+                mov     ebp,timebuffer
+                mov     ebp,[ebp]
+                shl     ebp,8
+                mov     al,ppicassete
+
+compose_cassete_loop:
+                add     [esi],al
+                inc     esi                
+
+                add     ecx,20159
+                cmp     ecx,ebp
+                jb      compose_cassete_nextsample
+
+                mov     ebp,localpos
+                add     ebp,ebp
+                add     ebp,soundbuffer
+
+                mov     al,byte ptr [ebp]
+                mov     dl,byte ptr [ebp+1]
+                cmp     al,17
+                jne     compose_channel_notcassete
+                mov     ppicassete,dl
+compose_channel_notcassete:
+
+                inc     localpos
+
+                mov     ebp,localpos
+                shl     ebp,2
+                add     ebp,timebuffer
+                mov     ebp,dword ptr [ebp]
+                shl     ebp,8
+
+                mov     al,ppicassete
+
+compose_cassete_nextsample:
+                dec     edi
+                jnz     compose_cassete_loop
 
                 ret
 

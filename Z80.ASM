@@ -149,6 +149,10 @@ public regepc
 public vdpregs
 public vsyncflag
 public reset_cpu
+public ramslot
+public cart2slot
+public allram
+public fakeirq
 
 public BIT0_table
 public BIT1_table
@@ -264,21 +268,21 @@ slot1:
                 dd      1
 slot2:
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
                 dd      ?
-                dd      0
+                dd      1
 slot3:
                 dd      ?
                 dd      1
@@ -323,7 +327,11 @@ z80rate         dd      0
 reset_flag      dd      0
 imtype          dd      1
 iline           dd      0
+fakeirq         dd      0
 clocksleft      dd      59659
+ramslot         dd      offset slot2
+cart2slot       dd      offset slot3
+allram          db      0AAh
 rmask           db      0
 regi            db      0
 
@@ -793,79 +801,36 @@ EMULABEL        loop,emtype,brtype
                 mov     exit_now,1
                 endif
 
+                cmp     fakeirq,1
+                JUMP    je,fakeirq,emtype,brtype
+
                 mov     eax,offset z80counter
                 call    end_counter
                 mov     eax,dword ptr [offset z80counter]
                 mov     z80rate,eax
                 
-                mov     eax,offset psgcounter
-                call    start_counter
-                call    compose_soundstream
-                mov     eax,offset psgcounter
-                call    end_counter
-                mov     eax,dword ptr [offset psgcounter]
-                mov     psgrate,eax
+                call    compose_sound
                 
                 xor     eax,eax
-
-EMULABEL        synch,emtype,brtype
                 
                 if      emtype EQ NORMAL
-                cmp     interrupt,1
-                JUMP    jne,synch,emtype,brtype
+                call    synch_emulation
                 endif
 
 EMULABEL        interrupt,emtype,brtype
 
+                pushad
                 call    check_mouse
-
-                cmp     cpupaused,1
-                JUMP    jne,continue,emtype,brtype
-
                 call    z80paused
-                
-EMULABEL        continue,emtype,brtype
+                call    process_frame
+                popad
 
-                
-                dec     on_off
-                JUMP    jnz,nextint,emtype,brtype
-
-                push    eax edx edi
-
-                mov     eax,framerate
-                mov     on_off,eax
-
-                call    pre_dirty
-
-                call    video_processing
-
-                cmp     vsyncflag,1
-                JUMP    jne,vsyncskip,emtype,brtype
-
-                call    wait_vsync
-
-EMULABEL        vsyncskip,emtype,brtype
-                
-                mov     eax,offset blitcounter
-                call    start_counter
-                call    blit
-                mov     eax,offset blitcounter
-                call    end_counter
-                mov     eax,dword ptr [offset blitcounter]
-                mov     blitrate,eax
-
-                pop     edi edx eax
-
-EMULABEL        nextint,emtype,brtype
-
-                
                 mov     eax,offset z80counter
                 call    start_counter
                 xor     eax,eax
 
-                mov     ebp,clocksleft
+                mov     ebp,59659
                 call    checkpsg
-                mov     clocksleft,59659
                 mov     interrupt,0
                 
                 cmp     error,1
@@ -873,33 +838,78 @@ EMULABEL        nextint,emtype,brtype
                 cmp     exit_now,1
                 JUMP    je,exit,emtype,brtype
                 
+                pushad
                 call    set_keyboard_leds
                 call    check_joystick
                 call    check_client
-                
-                ; not very convinced about this one
-                or      vdpstatus,10000000b
+                popad
                 
                 test    byte ptr [vdpregs+1],00100000b
-                JUMP    jz,loop,emtype,brtype
+                JUMP    jz,vdpdisabled,emtype,brtype
+                
+                test    vdpstatus,BIT_7
+                JUMP    jnz,loop,emtype,brtype
+                
+                call    set_vdp_interrupt
                 
                 mov     iline,1
                 cmp     iff1,1
                 JUMP    jne,loop,emtype,brtype
                 
                 mov     iff1,0 
-                mov     iline,0
+                mov     fakeirq,0
                 inc     rcounter
                 call    z80_interrupt
                 JUMP    jmp,loop,emtype,brtype
 
 EMULABEL        exit,emtype,brtype
-                
+
                 mov     regpc,di
                 mov     regaf,dx
                 ret
 
+EMULABEL        fakeirq,emtype,brtype
+
+                mov     fakeirq,0
+                mov     eax,0
+                mov     ebp,clocksleft
+                mov     iff1,0
+                inc     rcounter
+                call    z80_interrupt
+                JUMP    jmp,loop,emtype,brtype
+
+EMULABEL        vdpdisabled,emtype,brtype
+
+                call    set_vdp_interrupt
+                JUMP    jmp,loop,emtype,brtype
+                
                 endm
+
+; set_vdp_interrupt --------------------------------------------------
+
+set_vdp_interrupt:
+                or      vdpstatus,10000000b
+                ret
+
+; compose_sound ------------------------------------------------------
+
+compose_sound:
+                mov     eax,offset psgcounter
+                call    start_counter
+                call    compose_soundstream
+                mov     eax,offset psgcounter
+                call    end_counter
+                mov     eax,dword ptr [offset psgcounter]
+                mov     psgrate,eax
+                ret
+                
+; synch_emulation ----------------------------------------------------
+
+synch_emulation:
+                cmp     interrupt,1
+                jne     synch_emulation
+                ret
+
 ; checkpsg -----------------------------------------------------------
 
 checkpsg:
@@ -911,6 +921,42 @@ checkpsg:
 checkpsg_clear:
                 mov     psgclocks,0
                 mov     psgclear,0
+                ret
+
+; process_frame ------------------------------------------------------
+; process a frame and blit the result
+
+process_frame:
+
+                dec     on_off
+                jnz     _ret
+                
+                push    eax edx edi ebp
+
+                mov     eax,framerate
+                mov     on_off,eax
+
+                call    pre_dirty
+
+                call    video_processing
+
+                cmp     vsyncflag,1
+                jne     process_frame_vsyncskip
+
+                call    wait_vsync
+
+process_frame_vsyncskip:
+                
+                mov     eax,offset blitcounter
+                call    start_counter
+                call    blit
+                mov     eax,offset blitcounter
+                call    end_counter
+                mov     eax,dword ptr [offset blitcounter]
+                mov     blitrate,eax
+
+                pop     ebp edi edx eax
+
                 ret
 
 ; video_processing ---------------------------------------------------
@@ -1072,6 +1118,9 @@ check_joystick_exit:
 ; must preserve ebp,eax,edx,edi,esp
 
 z80paused:
+                cmp     cpupaused,1
+                jne     _ret
+                
                 push    ebp eax edx edi
 
                 mov     reset_flag,0
@@ -1237,7 +1286,7 @@ sound_buffer:
                 mov     [esi+ecx*2+1],bl
 
                 mov     esi,timebuffer
-                mov     ebx,clocksleft
+                mov     ebx,59659 ;clocksleft
                 sub     ebx,ebp
                 add     ebx,psgclocks
                 mov     [esi+ecx*4],ebx
@@ -1309,13 +1358,25 @@ outemul99a:     mov     vdpcond,0
                 ret
 outemul99b:     and     ebx,00000111b
                 mov     al,vdptemp
-                cmp     byte ptr [offset vdpregs+ebx],al
+                mov     cl,byte ptr [offset vdpregs+ebx]
+                cmp     cl,al
                 je      _ret
                 mov     byte ptr [offset vdpregs+ebx],al
                 cmp     bl,7
                 je      set_border_color
+                cmp     bl,1
+                je      outemul99_checkirq
+outemul99_update:
                 mov     firstscreen,1
                 jmp     eval_base_address
+
+outemul99_checkirq:
+                test    cl,BIT_5
+                jnz     outemul99_update
+                test    al,BIT_5
+                jz      outemul99_update
+                and     vdpstatus,NBIT_7
+                jmp     outemul99_update
 
 outemulA0:      
                 and     bl,0Fh
@@ -1330,56 +1391,21 @@ outemulA1:      mov     al,psgselect
                 jmp     sound_buffer
 
 outemulA8:      mov     prim_slotreg,bl
-                ; frame 0
-                and     ebx,03h
-                shl     ebx,6
-                mov     ecx,dword ptr [offset slot+ebx]
-                mov     mem00,ecx
-                mov     ecx,dword ptr [offset slot+ebx+8]
-                mov     mem20,ecx
-                mov     ecx,dword ptr [offset slot+ebx+4]
-                mov     memlock00,ecx
-                mov     ecx,dword ptr [offset slot+ebx+4+8]
-                mov     memlock20,ecx
-                ; frame 1
+                
+                irp     i,<0,1,2,3>
                 mov     bl,prim_slotreg
-                shr     bl,2
+                shr     bl,i*2
                 and     ebx,03h
                 shl     ebx,6
-                mov     ecx,dword ptr [offset slot+ebx+16]
-                mov     mem40,ecx
-                mov     ecx,dword ptr [offset slot+ebx+16+8]
-                mov     mem60,ecx
-                mov     ecx,dword ptr [offset slot+ebx+16+4]
-                mov     memlock40,ecx
-                mov     ecx,dword ptr [offset slot+ebx+16+4+8]
-                mov     memlock60,ecx
-                ; frame 2
-                mov     bl,prim_slotreg
-                shr     bl,4
-                and     ebx,03h
-                shl     ebx,6
-                mov     ecx,dword ptr [offset slot+ebx+32]
-                mov     mem80,ecx
-                mov     ecx,dword ptr [offset slot+ebx+32+8]
-                mov     memA0,ecx
-                mov     ecx,dword ptr [offset slot+ebx+32+4]
-                mov     memlock80,ecx
-                mov     ecx,dword ptr [offset slot+ebx+32+4+8]
-                mov     memlockA0,ecx
-                ; frame 3
-                mov     bl,prim_slotreg
-                shr     bl,6
-                and     ebx,03h
-                shl     ebx,6
-                mov     ecx,dword ptr [offset slot+ebx+48]
-                mov     memC0,ecx
-                mov     ecx,dword ptr [offset slot+ebx+48+8]
-                mov     memE0,ecx
-                mov     ecx,dword ptr [offset slot+ebx+48+4]
-                mov     memlockC0,ecx
-                mov     ecx,dword ptr [offset slot+ebx+48+4+8]
-                mov     memlockE0,ecx
+                
+                irp     j,<0,1>
+                mov     ecx,dword ptr [offset slot+ebx+16*i+8*j]
+                mov     dword ptr [offset mem+(i*2+j)*4],ecx
+                mov     ecx,dword ptr [offset slot+ebx+16*i+8*j+4]
+                mov     dword ptr [offset memlock+(i*2+j)*4],ecx
+                endm
+                
+                endm
                 ret
 
 outemulAA:      
@@ -1388,6 +1414,7 @@ outemulAA:
                 and     bl,0fh
                 mov     keyboard_line,bl
 
+                ; Caps Lock LED
                 mov     bl,al
                 xor     bl,255
                 and     bl,BIT_6
@@ -1395,11 +1422,17 @@ outemulAA:
                 and     newleds,NBIT_2
                 or      newleds,bl
 
+                ; Keyboard click
                 mov     bl,16
                 and     al,080h
                 shr     al,2
                 xchg    al,bl
+                call    sound_buffer
 
+                ; Cassete output
+                mov     bl,ppic
+                and     bl,020h
+                mov     al,17
                 jmp     sound_buffer
 
 outemulAB:
@@ -1434,14 +1467,14 @@ MAPPER          macro   page
                 cmp     al,2
                 jne     _ret
 
-                and     ebx,3h
-                xor     ebx,3
+                and     ebx,7h
                 shl     ebx,14
                 add     ebx,msxram
-                mov     dword ptr [offset slot2+page*16],ebx
+                mov     esi,ramslot
+                mov     dword ptr [esi+page*16],ebx
                 mov     dword ptr [offset mem+page*8],ebx
                 add     ebx,2000h
-                mov     dword ptr [offset slot2+page*16+8],ebx
+                mov     dword ptr [esi+page*16+8],ebx
                 mov     dword ptr [offset mem+page*8+4],ebx
                 ret
 
@@ -1499,6 +1532,7 @@ inemul98:       mov     ecx,msxvram
 inemul99:       mov     bl,vdpstatus
                 and     vdpstatus,01111111b
                 mov     vdpcond,0
+                mov     iline,0
                 ret
 
 inemulAA:

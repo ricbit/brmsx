@@ -10,3 +10,4 @@ extrn sbdma: dword
 extrn sounddetected: dword
 extrn read_master_volume: near
 extrn write_master_volume: near
+extrn dmastart: dword

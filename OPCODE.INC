@@ -755,11 +755,9 @@ emul&opcode:
                 je      _ret
 
                 mov     clocksleft,ebp
-                ;mov     ebp,59659
-                ;sub     ebp,clocksleft
-                ;add     psgclocks,ebp
-                mov     ebp,1
-                mov     iline,0
+                mov     ebp,0
+                mov     fakeirq,1
+
                 ret
 
                 endm

@@ -1306,10 +1306,10 @@ p_start:                                ; common 32bit start
 ;같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같�
 _getmem:
 	push eax
-	call _getlomem
+	call _gethimem
 	jnc short getmemd
 	pop eax
-	jmp short _gethimem
+	jmp short _getlomem
 getmemd:
 	add esp,4
 _ret:                                   ; generic RET instruction

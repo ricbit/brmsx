@@ -11,6 +11,8 @@ code32  segment para public use32
 include z80.inc
 include io.inc
 include vdp.inc
+include pmode.inc
+include vesa.inc
 
 extrn msxram: dword
 extrn msxvram: dword
@@ -23,8 +25,16 @@ public save_histogram
 
 ; DATA ---------------------------------------------------------------
 
+include pcxhead.inc
+include pcxhead2.inc
+
+align 4
+
+file_handler    dw      0
+
 filename        db      'BRMSX.STA',0
 fileid          db      'MSXSTATE',26,0
+snapshotname    db      'BRMSX.PCX',0
 histogrname     db      'HISTOGR.STA',0
 msgfnf          db      'File not found$'
 
@@ -404,6 +414,136 @@ save_histogram:
                 mov     ecx,256*4
                 call    custom_write
                 call    close_file
+                ret
+
+; save_snapshot_pcx --------------------------------------------------
+; save a snapshot in PCX format in a file called "BRMSX.PCX"
+
+save_snapshot_pcx:               
+                cli
+
+                mov     edx,offset snapshotname
+                call    create_file
+
+                cmp     videomode,2
+                je      save_snapshot_pcx_512
+
+                mov     edx,offset pcx_header
+                mov     ecx,128
+                call    custom_write
+
+                mov     ebp,192
+                mov     esi,0A0000h+32
+                sub     esi,_code32a
+save_snapshot_pcx_outer:
+                mov     edi,transf_buffer
+                mov     ecx,256
+save_snapshot_pcx_inner:
+                mov     al,[esi]
+                mov     byte ptr [edi],11000001b
+                mov     [edi+1],al
+                inc     esi
+                add     edi,2
+                dec     ecx
+                jnz     save_snapshot_pcx_inner
+
+                push    esi ebp
+                mov     edx,transf_buffer
+                mov     ecx,512
+                call    custom_write
+                pop     ebp esi
+
+                add     esi,64
+                dec     ebp
+                jnz     save_snapshot_pcx_outer
+
+                mov     al,12
+                WRITE_IMM
+
+                call    save_snapshot_pcx_palette
+                
+                call    close_file
+                sti
+                ret
+
+save_snapshot_pcx_palette:                
+                mov     ebp,256
+                mov     edx,03C8h
+                mov     al,0
+                out     dx,al
+                inc     dx
+save_snapshot_pcx_palette_loop:
+                in      al,dx
+                shl     al,2
+                WRITE_IMM
+                
+                in      al,dx
+                shl     al,2
+                WRITE_IMM
+                
+                in      al,dx
+                shl     al,2
+                WRITE_IMM
+                
+                dec     ebp
+                jnz     save_snapshot_pcx_palette_loop
+
+                ret
+
+save_snapshot_pcx_512:
+                mov     edx,offset pcx_header_512
+                mov     ecx,128
+                call    custom_write
+                cli
+
+                mov     bx,v86r_bx
+                mov     file_handler,bx
+                
+                mov     eax,0
+save_snapshot_pcx_bank:
+                push    eax
+                call    set_vesa_bank
+                cli
+                mov     ebp,128
+                mov     esi,0A0000h
+                sub     esi,_code32a
+save_snapshot_pcx_outer_512:
+                mov     edi,transf_buffer
+                mov     ecx,512
+save_snapshot_pcx_inner_512:
+                mov     al,[esi]
+                mov     byte ptr [edi],11000001b
+                mov     [edi+1],al
+                inc     esi
+                add     edi,2
+                dec     ecx
+                jnz     save_snapshot_pcx_inner_512
+
+                push    esi ebp
+                mov     edx,transf_buffer
+                mov     ecx,1024
+                mov     bx,file_handler
+                mov     v86r_bx,bx
+                call    custom_write
+                cli
+                pop     ebp esi
+
+                dec     ebp
+                jnz     save_snapshot_pcx_outer_512
+
+                pop     eax
+                inc     eax
+                cmp     eax,3
+                jne     save_snapshot_pcx_bank
+
+                mov     al,12
+                WRITE_IMM       
+                cli
+
+                call    save_snapshot_pcx_palette
+
+                call    close_file
+                sti
                 ret
 
 code32          ends
