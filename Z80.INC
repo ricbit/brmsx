@@ -1,0 +1,14 @@
+extrn mem: near
+extrn trace: near
+extrn fetch: near
+extrn emulate: near
+extrn emulate_echo: near
+extrn emulate_break: near
+extrn print: near
+extrn regaf: word
+extrn regbc: word
+extrn reghl: word
+extrn regde: word
+extrn regsp: word
+extrn regpc: word
+extrn breakpoint: dword

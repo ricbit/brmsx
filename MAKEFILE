@@ -1,0 +1,14 @@
+OBJECTS = pmode.o brmsx.o io.o debug.o msxrom.o z80.o msxvram.o msx.o
+TASMFLAGS = /ml /m2 /q /la
+
+all : brmsx.exe
+
+brmsx.exe : $(OBJECTS)
+	tlink /3 /x $^, $@
+
+%.o : %.asm
+	tasm $(TASMFLAGS) $^,$@
+
+clean :
+	del *.o
+	del *.exe
