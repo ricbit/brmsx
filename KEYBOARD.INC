@@ -26,8 +26,8 @@ keyboardtable:
 	key_17: db 3,BIT_6      ; I
 	key_18: db 4,BIT_4      ; O
 	key_19: db 4,BIT_5      ; P
-	key_1A: db 0,0
-	key_1B: db 0,0
+	key_1A: db 1,BIT_5      ; [
+	key_1B: db 1,BIT_6      ; ]
 	key_1C: db 7,BIT_7      ; ENTER
 	key_1D: db 6,BIT_1      ; CONTROL
 	key_1E: db 2,BIT_6      ; A
@@ -41,9 +41,9 @@ keyboardtable:
 	key_26: db 4,BIT_1      ; L
 	key_27: db 1,BIT_7      ; ;
 	key_28: db 2,BIT_0      ; '
-	key_29: db 0,0
+	key_29: db 2,BIT_5      ; ` ~
 	key_2A: db 6,BIT_0      ; LEFT SHIFT
-	key_2B: db 0,0
+	key_2B: db 1,BIT_4      ; \ |
 	key_2C: db 5,BIT_7      ; Z
 	key_2D: db 5,BIT_5      ; X
 	key_2E: db 3,BIT_0      ; C

@@ -2,6 +2,31 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
+release 1.135: 
+
+- lots of missing MSX keys were added (cedilha,acento,[,],\)
+- fixed a minor bug in the "clocks left" section of debugger
+- support to another undocumented feature of VDP ("LIKE", "Thing BB")
+- support to MegaROM Mapper #4 ("Valis")
+
+release 1.134:
+
+- fixed a minor bug in memory dump of debugger
+- fixed a memory bug that makes "super laydock" works again
+- added new commands F7 and F8 to the debugger
+
+release 1.133:
+
+- fixed a boundary bug on the "read memory" function ("Phantis 2", "Mopir")
+- support for two cartridges at the same time (combo "Nem2"+"PenAdv")
+- "-roma" and "-romb" options to select MegaROM mappers
+- support to MegaROM Mapper #2 (Konami with SCC)
+- support to MegaROM Mapper #3 (Konami without SCC)
+- support to MegaROM Mapper #5 (original "Gall Force", "Eggerland Mystery 2")
+- support to 80t/1s (360kb) disk images ("Elite")
+- TURBO mode is even faster than before
+- new in the debugger: stack dump and advanced info
+
 release 1.128:
 
 - "-ramslot" select slot 2 (expert) or 3 (hotbit)

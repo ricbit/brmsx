@@ -31,6 +31,7 @@ public driveD3
 public driveD4
 
 public portenabled
+public shiftfactor
 
 extrn diskimage: dword
 extrn disksize: dword
@@ -49,6 +50,7 @@ driveD4         db      0
 
 drive_status    db      0
 status_type     db      0
+shiftfactor     db      1
 timeout         dd      0
 
 current_track   db      0
@@ -143,10 +145,11 @@ outemulD0_read_sector:
                 ; disk_image+(track*18+sector+side*9)*512
 
                 mov     esi,disksize
-                mov     cl,0
-                cmp     esi,45
-                jbe     outemulD0_read_sector_180
-                mov     cl,1
+                ;mov     cl,0
+                ;cmp     esi,45
+                ;jbe     outemulD0_read_sector_180
+                ;mov     cl,1
+                mov     cl,shiftfactor
 outemulD0_read_sector_180:
                 movzx   eax,current_track
                 movzx   ebx,current_sector
@@ -174,10 +177,11 @@ outemulD0_write_sector:
                 ; disk_image+(track*18+sector+side*9)*512
 
                 mov     esi,disksize
-                mov     cl,0
-                cmp     esi,45
-                jbe     outemulD0_write_sector_180
-                mov     cl,1
+                ;mov     cl,0
+                ;cmp     esi,45
+                ;jbe     outemulD0_write_sector_180
+                ;mov     cl,1
+                mov     cl,shiftfactor
 outemulD0_write_sector_180:
                 movzx   eax,current_track
                 movzx   ebx,current_sector

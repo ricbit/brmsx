@@ -74,6 +74,8 @@ blit_dirty_320:
                 je      blit_linear_320
                 cmp     lastscreen,3
                 je      blit_linear_320
+                cmp     everyframe,1
+                je      blit_linear_320
                 mov     ebx,offset dirtyname
                 mov     esi,blitbuffer
                 mov     edi,0a0000h+32
@@ -125,6 +127,8 @@ blit_dirty_256:
                 cmp     lastscreen,0
                 je      blit_linear_256
                 cmp     lastscreen,3
+                je      blit_linear_256
+                cmp     everyframe,1
                 je      blit_linear_256
                 mov     ebx,offset dirtyname
                 mov     esi,blitbuffer
@@ -267,6 +271,8 @@ blit2_dirty:
                 cmp     lastscreen,0
                 je      blit2_linear
                 cmp     lastscreen,3
+                je      blit2_linear
+                cmp     everyframe,1
                 je      blit2_linear
 
                 mov     ebx,offset dirtyname

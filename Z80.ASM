@@ -10,7 +10,6 @@ code32  segment para public use32
 
 extrn msxrom: near
 extrn msxvram: dword
-extrn cart1: dword
 extrn pset: near
 extrn isetCBxx: near
 extrn isetDDxx: near
@@ -50,6 +49,18 @@ include joystick.inc
 include drive.inc
 include saveload.inc
 
+public compose_sound
+public synch_emulation
+public check_mouse
+public process_frame
+public z80paused
+public checkpsg
+public check_joystick
+public check_client
+public set_vdp_interrupt
+public z80_interrupt
+public set_keyboard_leds
+
 public fetch
 public fetch1
 public fetchw
@@ -60,16 +71,12 @@ public writemem
 public writememw
 public trace
 public print
-public emulate
-public emulate_break
-public emulate_trap
-public emulate_histogr
 public outemulXX
 public inemulXX
 public outportxx
 public inportxx
 public outemulA8
-public megarom0_switchbank
+public callback_megarom0
 public histogr
 public error
 public imtype
@@ -81,6 +88,7 @@ public psgclear
 public sccdetected
 public sccenabled
 public newleds
+public megadump
 
 public opsubreg
 public opsbcreg
@@ -106,6 +114,7 @@ public z80rate
 public z80counter
 public reset_flag
 public sccregs
+public clockcounter
 
 public slot0
 public slot1
@@ -154,6 +163,9 @@ public ramslot
 public cart2slot
 public allram
 public fakeirq
+public vdpcond
+public vdptemp
+public vdplookahead
 
 public BIT0_table
 public BIT1_table
@@ -213,24 +225,24 @@ include ldi.inc
 align 4
 
 mem:
-mem00           dd      ?
-mem20           dd      ?
-mem40           dd      ?
-mem60           dd      ?
-mem80           dd      ?
-memA0           dd      ?
-memC0           dd      ?
-memE0           dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
+                dd      ?
 
 memlock:               
-memlock00       dd      1
-memlock20       dd      1
-memlock40       dd      1
-memlock60       dd      1
-memlock80       dd      1
-memlockA0       dd      1
-memlockC0       dd      1
-memlockE0       dd      1
+                dd      1
+                dd      1
+                dd      1
+                dd      1
+                dd      1
+                dd      1
+                dd      1
+                dd      1
 
 slot:           
 slot0:
@@ -312,6 +324,22 @@ megablock:
                 dd      0
                 dd      0
 
+megadump:
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+
+megarom_callback:
+                dd      _ret                    ; pure RAM
+                dd      _ret                    ; pure ROM
+                dd      callback_megarom0       ; generic
+                dd      _ret
+                dd      callback_megarom2       ; konami with SCC
+                dd      callback_megarom3       ; konami without SCC
+                dd      callback_megarom4       ; ascii 8kb
+                dd      callback_megarom5       ; ascii 16kb
+
 ; Z80 registers
 align 4
 
@@ -320,7 +348,7 @@ iff1            dd      0
 interrupt       dd      0
 error           dd      0
 rcounter        dd      0        
-clockcounter    dd      0
+clockcounter    dd      TC
 emulatemode     dd      0
 megarommode     dd      0
 z80counter      db      8 dup (0)
@@ -329,7 +357,7 @@ reset_flag      dd      0
 imtype          dd      1
 iline           dd      0
 fakeirq         dd      0
-clocksleft      dd      59659
+clocksleft      dd      TC
 ramslot         dd      offset slot2
 cart2slot       dd      offset slot3
 allram          db      0AAh
@@ -443,23 +471,6 @@ vdpaddressh     equ     byte ptr [offset vdpaddress+1]
 vdpaddressl     equ     byte ptr [offset vdpaddress+0]
 vdpaddresse     equ     dword ptr [offset vdpaddress]
 
-; FETCHMACRO ---------------------------------------------------------
-; fetch a byte from Z80 memory (macro version)
-; in, edi: address
-; out, al: byte
-; affect: esi,ebx
-
-FETCHMACRO      macro   skip
-                
-                lea     esi,[edi+skip]                  ; clock 1 U
-                lea     ebx,[edi+skip]                  ; clock 1 V
-                shr     esi,13                          ; clock 2 U
-                and     ebx,01fffh                      ; clock 2 V
-                mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
-                mov     al,[esi+ebx]                    ; clock 6 U [AGI]
-
-                endm
-
 ; fetch --------------------------------------------------------------
 ; fetch a byte from Z80 memory
 ; in, edi: address
@@ -479,31 +490,6 @@ fetch:
 fetch1:
                 FETCHMACRO 1
                 ret
-
-; FETCHWMACRO --------------------------------------------------------
-; fetch a word from Z80 memory (MACRO VERSION)
-; in, edi: address
-; out, ax: word
-; affect: esi,ebx
-
-FETCHWMACRO     macro   skip
-
-                lea     esi,[edi+skip]                  ; clock 1 U
-                lea     ebx,[edi+skip]                  ; clock 1 V
-                shr     esi,13                          ; clock 2 U
-                and     ebx,01fffh                      ; clock 2 V
-                cmp     ebx,01fffh                      ; clock 3 U
-                je      fetchw_slow_&skip               ; clock 3 V
-                mov     esi,[offset mem+esi*4]          ; clock 4 U 
-                mov     ax,word ptr [esi+ebx]           ; clock 6 U [AGI]
-                ret
-fetchw_slow_&skip:  
-                FETCHMACRO skip
-                mov     ah,al
-                FETCHMACRO skip+1
-                ret
-
-                endm
 
 ; fetchw -------------------------------------------------------------
 ; fetch a word from Z80 memory
@@ -562,12 +548,41 @@ readmemw_slow:
                 call    readmem
                 ret
 
-; megarom0_switchbank ------------------------------------------------
-; switch megarom bank with mode 0 megaroms (konami 8kb)
-; esi = address shr 13
-; eax = block number
+; retrieve_slot_info -------------------------------------------------
+; retrieve information about the slot of a particular address
+; enter ecx = address
+; exit  ecx = megarom dump for this slot
+;       eax = offset of this slot table
 
-megarom0_switchbank:
+retrieve_slot_info:
+                push    ebx
+                mov     ebx,ecx
+                shr     ebx,14
+                movzx   ecx,prim_slotreg
+                xchg    ebx,ecx
+                add     cl,cl
+                shr     ebx,cl
+                and     ebx,3
+                mov     ecx,dword ptr [offset megadump+ebx*4]
+                mov     eax,ebx
+                shl     eax,6
+                add     eax,offset slot0
+                pop     ebx
+                ret
+
+; callback_megarom0 --------------------------------------------------
+; Generic MegaROM with SCC
+; addresses:  0000h-1FFFh block 0000h-1FFFh
+;             2000h-3FFFh block 2000h-3FFFh  
+;             4000h-5FFFh block 4000h-5FFFh  
+;             6000h-7FFFh block 6000h-7FFFh  
+;             8000h-9FFFh block 8000h-9FFFh  
+;             A000h-BFFFh block A000h-BFFFh  
+;             C000h-DFFFh block C000h-DFFFh  
+;             E000h-FFFFh block E000h-FFFFh  
+;             9800h-9FFFh SCC (if block number=3Fh)  
+
+callback_megarom0:
                 cmp     ecx,9000h
                 jb      megarom0_switchbank_doit
                 cmp     ecx,9FFFh
@@ -585,21 +600,24 @@ megarom0_switchbank:
                 mov     sccdetected,1
                 cmp     sccenabled,1
                 jne     _ret
+                call    retrieve_slot_info
                 mov     ebx,sccram
                 mov     dword ptr [offset mem+esi*4],ebx
-                mov     dword ptr [offset slot1+esi*8],ebx
+                mov     dword ptr [eax+esi*8],ebx
 
                 ret
 
 megarom0_switchbank_doit:
                 mov     ebx,eax
                 and     ebx,01Fh ; only 256kb by now
+                call    retrieve_slot_info
                 mov     dword ptr [offset megablock+esi*4],ebx
                 shl     ebx,13
-                add     ebx,cart1
+                add     ebx,ecx
                 mov     dword ptr [offset mem+esi*4],ebx
-                mov     dword ptr [offset slot1+esi*8],ebx
+                mov     dword ptr [eax+esi*8],ebx
                 mov     sccactive,0
+                mov     eax,0
                 ret
 
 megarom0_switchbank_SCC:
@@ -634,6 +652,228 @@ megarom0_switchbank_SCC_write:
                 endm
                 ret
 
+; callback_megarom2 --------------------------------------------------
+; Konami MegaROM with SCC
+; addresses:  5000h-57FFh block 4000h-5FFFh  
+;             7000h-77FFh block 6000h-7FFFh  
+;             9000h-97FFh block 8000h-9FFFh  
+;             B000h-B7FFh block A000h-BFFFh  
+;             9800h-97FFh SCC (if block number=3Fh)  
+
+callback_megarom2:
+                cmp     ecx,9000h
+                jb      megarom2_switchbank_doit
+                cmp     ecx,9FFFh
+                ja      megarom2_switchbank_doit
+
+                cmp     ecx,97FFh
+                ja      megarom2_switchbank_SCC
+
+                and     eax,03Fh
+                cmp     al,03Fh
+                jne     megarom2_switchbank_doit
+
+                ; SCC selection
+                mov     sccactive,1
+                mov     sccdetected,1
+                cmp     sccenabled,1
+                jne     _ret
+                call    retrieve_slot_info
+                mov     ebx,sccram
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [eax+esi*8],ebx
+
+                ret
+
+megarom2_switchbank_doit:
+                cmp     ecx,05000h
+                jb      _ret
+                cmp     ecx,0B800h
+                jae     _ret
+
+                mov     ebx,ecx
+                and     ebx,0FFFh
+                cmp     ebx,800h
+                jae     _ret
+                
+                mov     ebx,eax
+                and     ebx,01Fh ; only 256kb by now
+                call    retrieve_slot_info
+                mov     dword ptr [offset megablock+esi*4],ebx
+                shl     ebx,13
+                add     ebx,ecx
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [eax+esi*8],ebx
+                mov     sccactive,0
+                mov     eax,0
+                ret
+
+megarom2_switchbank_SCC:
+                cmp     sccactive,1
+                jne     megarom2_switchbank_doit
+
+                cmp     sccenabled,1
+                jne     megarom2_switchbank_doit
+
+                ; SCC write
+
+                cmp     cl,80h
+                jb      megarom2_switchbank_SCC_write
+
+                cmp     cl,90h
+                jae     _ret
+
+                sub     ecx,09880h
+                mov     byte ptr [offset sccregs+ecx],al
+                
+                mov     ebx,ecx
+                add     ebx,080h
+                xchg    al,bl
+
+                jmp     sound_buffer
+
+megarom2_switchbank_SCC_write:
+                mov     ch,0
+                mov     esi,sccram
+                irp     i,<8,9,10,11,12,13,14,15>
+                mov     byte ptr [esi+ecx+1000h+i*100h],al
+                endm
+                ret
+
+; callback_megarom3 --------------------------------------------------
+; Konami MegaROM without SCC
+; addresses:  <none>      block 4000h-5FFFh  
+;             6000h       block 6000h-7FFFh  
+;             8000h       block 8000h-9FFFh  
+;             A000h       block A000h-BFFFh  
+
+callback_megarom3:
+                cmp     ecx,06000h
+                je      callback_megarom3_ok
+                cmp     ecx,08000h
+                je      callback_megarom3_ok
+                cmp     ecx,0A000h
+                je      callback_megarom3_ok
+                ret
+
+callback_megarom3_ok:
+                mov     ebx,eax
+                and     ebx,01Fh ; only 256kb by now
+                call    retrieve_slot_info
+                mov     dword ptr [offset megablock+esi*4],ebx
+                shl     ebx,13
+                add     ebx,ecx
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [eax+esi*8],ebx
+                mov     eax,0
+                ret
+
+; callback_megarom4 --------------------------------------------------
+; ASCII 8kb
+; addresses:  6000h-67FFh block 4000h-5FFFh
+;             6800h-6FFFh block 6000h-7FFFh  
+;             7000h-77FFh block 8000h-9FFFh  
+;             7800h-7FFFh block A000h-BFFFh  
+
+callback_megarom4:
+                
+                mov     esi,ecx
+                cmp     esi,6000h
+                jb      _ret
+                cmp     esi,8000h
+                jae     _ret
+                sub     esi,6000h
+                and     esi,1800h
+                shr     esi,11
+                add     esi,2
+
+                ; at this point esi=logical page number                
+                ; remember: the pair push ebx/pop ecx is correct
+
+                mov     ebx,eax
+                and     ebx,0ffh
+                push    ebx
+                shl     ebx,13
+                call    retrieve_slot_info
+                add     ebx,ecx
+                pop     ecx
+                
+                mov     dword ptr [eax+esi*8],ebx
+                mov     dword ptr [offset megablock+esi*4],ecx
+                
+                mov     ecx,esi
+                and     ecx,0FEh
+                push    ebx
+                movzx   ebx,prim_slotreg
+                shr     ebx,cl
+                and     ebx,3
+                ;
+                movzx   ecx,prim_slotreg
+                shr     ecx,2
+                and     ecx,3
+                ;
+                mov     eax,0
+                cmp     ebx,ecx
+                pop     ebx
+                jne     _ret
+                mov     dword ptr [offset mem+esi*4],ebx
+                ret
+
+; callback_megarom5 --------------------------------------------------
+; ASCII 16kb
+; addresses:  6000h-6FFFh block 4000h-7FFFh
+;             7000h-7FFFh block 8000h-BFFFh  
+
+callback_megarom5:
+                
+                mov     esi,ecx
+                cmp     esi,6000h
+                jb      _ret
+                cmp     esi,8000h
+                jae     _ret
+                sub     esi,6000h
+                and     esi,1000h
+                shr     esi,11
+                add     esi,2
+
+                ; at this point esi=logical page number                
+                ; remember: the pair push ebx/pop ecx is correct
+
+                mov     ebx,eax
+                and     ebx,0ffh
+                push    ebx
+                shl     ebx,14
+                call    retrieve_slot_info
+                add     ebx,ecx
+                pop     ecx
+                
+                mov     dword ptr [eax+esi*8],ebx
+                mov     dword ptr [offset megablock+esi*4],ecx
+                add     ebx,2000h
+                inc     ecx
+                mov     dword ptr [eax+esi*8+8],ebx
+                mov     dword ptr [offset megablock+esi*4+4],ecx
+                
+                mov     ecx,esi
+                push    ebx
+                movzx   ebx,prim_slotreg
+                shr     ebx,cl
+                and     ebx,3
+                ;
+                movzx   ecx,prim_slotreg
+                shr     ecx,2
+                and     ecx,3
+                ;
+                mov     eax,0
+                cmp     ebx,ecx
+                pop     ebx
+                jne     _ret
+                sub     ebx,2000h
+                mov     dword ptr [offset mem+esi*4],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset mem+esi*4+4],ebx
+                ret
+
 ; writemem -----------------------------------------------------------
 ; write a byte to Z80 memory
 ; in, ecx: address
@@ -653,40 +893,8 @@ writemem:       mov     esi,ecx                         ; clock 1 U
                 mov     byte ptr [esi+ebx],al           ; clock 6 U [AGI]
                 ret
 writemem0:      
-                cmp     ebx,1
-                je      _ret
-                cmp     ebx,2
-                je      megarom0_switchbank
-
-writemem1:
-                cmp     ebx,7
-                jne     _ret
-
-                ; megarom mode 5 - ascii 16kb
-                mov     esi,ecx
-                cmp     esi,6000h
-                jb      _ret
-                cmp     esi,8000h
-                jae     _ret
-                sub     esi,6000h
-                and     esi,1000h
-                shr     esi,11
-                add     esi,2
-                mov     ebx,eax
-                and     ebx,0ffh
-                shl     ebx,14
-                add     ebx,cart1
-                mov     dword ptr [offset slot1+esi*8],ebx
-                add     ebx,2000h
-                mov     dword ptr [offset slot1+esi*8+8],ebx
-                cmp     dword ptr [offset mem+esi*8+4],7
-                jne     _ret
-                sub     ebx,2000h
-                mov     dword ptr [offset mem+esi*8],ebx
-                add     ebx,2000h
-                mov     dword ptr [offset mem+esi*8+8],ebx
-                ret
-
+                
+                jmp     dword ptr [offset megarom_callback+ebx*4]
 
 ; writememw ----------------------------------------------------------
 ; write a word to Z80 memory
@@ -711,13 +919,14 @@ writememw:
 
 writememw0:
                 mov     ah,0
+                mov     ebx,[offset memlock+esi*4]
                 jmp     writemem0
 
 writememw_slow:
-                push    eax
+                push    eax ecx
                 mov     ah,0
                 call    writemem
-                pop     eax
+                pop     ecx eax
                 shr     eax,8
                 inc     ecx
                 call    writemem
@@ -734,161 +943,12 @@ trace:
                 call    [offset iset + eax*4]
                 mov     regpc,di
                 mov     regaf,dx
+                mov     clockcounter,ebp
+                cmp     ebp,0
+                jge     _ret
+                add     ebp,TC
+                mov     clockcounter,ebp
                 ret
-
-; emulate ------------------------------------------------------------
-
-BREAK           EQU     0
-NOBREAK         EQU     1
-TRAP            EQU     2
-HISTOGRAM       EQU     3
-
-NORMAL          EQU     0
-FAST            EQU     1       
-TURBO           EQU     2       
-
-JUMP            macro   jump,jpoint,emtype,brtype
-
-                jump    emulate_&emtype&_&brtype&_&jpoint
-
-                endm
-
-EMULABEL        macro   point,emtype,brtype
-
-                emulate_&emtype&_&brtype&_&point&:
-
-                endm
-
-EMULATE         macro   emtype,brtype
-
-                xor     eax,eax
-                xor     ecx,ecx
-                mov     error,eax
-                mov     exit_now,eax
-                mov     interrupt,eax
-                mov     firstscreen,1
-                mov     ebp,59659
-                mov     clocksleft,ebp
-                movzx   edi,regpc
-                movzx   edx,regaf
-
-EMULABEL        loop,emtype,brtype
-
-                ;and     edi,0ffffh
-                
-                if      brtype EQ BREAK
-                cmp     edi,breakpoint
-                JUMP    je,exit,emtype,brtype
-                endif
-
-                FETCHMACRO 0
-
-                if      brtype EQ HISTOGRAM
-                inc     dword ptr [offset histogr+eax*4]
-                endif
-
-                inc     rcounter
-                call    [offset iset + eax*4]
-                
-                if      (emtype EQ FAST)
-                  cmp   interrupt,1
-                  JUMP  je,interrupt,emtype,brtype
-                  JUMP  jmp,loop,emtype,brtype
-                else
-                  cmp   ebp,0
-                  JUMP  jg,loop,emtype,brtype
-                endif
-
-                if      (brtype EQ TRAP)
-                mov     interrupt,1
-                mov     exit_now,1
-                endif
-
-                cmp     fakeirq,1
-                JUMP    je,fakeirq,emtype,brtype
-
-                mov     eax,offset z80counter
-                call    end_counter
-                mov     eax,dword ptr [offset z80counter]
-                mov     z80rate,eax
-                
-                call    compose_sound
-                
-                xor     eax,eax
-                
-                if      emtype EQ NORMAL
-                call    synch_emulation
-                endif
-
-EMULABEL        interrupt,emtype,brtype
-
-                pushad
-                call    check_mouse
-                call    process_frame
-                popad
-                
-                ; must be called without pushads
-                call    z80paused
-
-                mov     eax,offset z80counter
-                call    start_counter
-                xor     eax,eax
-
-                mov     ebp,59659
-                call    checkpsg
-                mov     interrupt,0
-                
-                cmp     error,1
-                JUMP    je,exit,emtype,brtype
-                cmp     exit_now,1
-                JUMP    je,exit,emtype,brtype
-                
-                pushad
-                call    set_keyboard_leds
-                call    check_joystick
-                call    check_client
-                popad
-                
-                test    byte ptr [vdpregs+1],00100000b
-                JUMP    jz,vdpdisabled,emtype,brtype
-                
-                test    vdpstatus,BIT_7
-                JUMP    jnz,loop,emtype,brtype
-                
-                call    set_vdp_interrupt
-                
-                mov     iline,1
-                cmp     iff1,1
-                JUMP    jne,loop,emtype,brtype
-                
-                mov     iff1,0 
-                mov     fakeirq,0
-                inc     rcounter
-                call    z80_interrupt
-                JUMP    jmp,loop,emtype,brtype
-
-EMULABEL        exit,emtype,brtype
-
-                mov     regpc,di
-                mov     regaf,dx
-                ret
-
-EMULABEL        fakeirq,emtype,brtype
-
-                mov     fakeirq,0
-                mov     eax,0
-                mov     ebp,clocksleft
-                mov     iff1,0
-                inc     rcounter
-                call    z80_interrupt
-                JUMP    jmp,loop,emtype,brtype
-
-EMULABEL        vdpdisabled,emtype,brtype
-
-                call    set_vdp_interrupt
-                JUMP    jmp,loop,emtype,brtype
-                
-                endm
 
 ; set_vdp_interrupt --------------------------------------------------
 
@@ -920,7 +980,7 @@ synch_emulation:
 checkpsg:
                 cmp     psgclear,1
                 je      checkpsg_clear
-                add     psgclocks,ebp
+                add     psgclocks,TC
                 ret
 
 checkpsg_clear:
@@ -1159,56 +1219,6 @@ z80paused_savesnap:
                 popad
                 ret
 
-; emulate ------------------------------------------------------------
-; starts emulation, stop with any error
-
-emulate:        
-                cmp     emulatemode,NORMAL
-                jne     emulate1
-                EMULATE NORMAL,NOBREAK
-emulate1:       cmp     emulatemode,FAST
-                jne     emulate2
-                EMULATE FAST,NOBREAK
-emulate2:       EMULATE TURBO,NOBREAK
-
-; emulate_break ------------------------------------------------------
-; starts emulation with breakpoint, stop with any error
-
-emulate_break:        
-                cmp     emulatemode,NORMAL
-                jne     emulate1_break
-                EMULATE NORMAL,BREAK
-emulate1_break: cmp     emulatemode,FAST
-                jne     emulate2_break
-                EMULATE FAST,BREAK
-emulate2_break: EMULATE TURBO,BREAK
-
-; emulate_trap -------------------------------------------------------
-; starts emulation with trap, stop with any error
-
-emulate_trap:        
-                cmp     emulatemode,NORMAL
-                jne     emulate1_trap
-                EMULATE NORMAL,TRAP
-emulate1_trap:  cmp     emulatemode,FAST
-                jne     emulate2_trap
-                EMULATE FAST,TRAP
-emulate2_trap:  EMULATE TURBO,TRAP
-
-; emulate_histogr ----------------------------------------------------
-; starts emulation with histogram evaluation, stop with any error
-
-emulate_histogr:        
-                cmp     emulatemode,NORMAL
-                jne     emulate1_histogr
-                EMULATE NORMAL,HISTOGRAM
-emulate1_histogr:  
-                cmp     emulatemode,FAST
-                jne     emulate2_histogr
-                EMULATE FAST,HISTOGRAM
-emulate2_histogr:  
-                EMULATE TURBO,HISTOGRAM
-
 ; reset_cpu ----------------------------------------------------------
 ; reset the MSX
 
@@ -1261,19 +1271,19 @@ reset_cpu:
 
                 mov     esi,(04000h SHR 13)
                 mov     eax,0
-                call    megarom0_switchbank
+                call    callback_megarom0
                 
                 mov     esi,(06000h SHR 13)
                 mov     eax,1
-                call    megarom0_switchbank
+                call    callback_megarom0
 
                 mov     esi,(08000h SHR 13)
                 mov     eax,2
-                call    megarom0_switchbank
+                call    callback_megarom0
 
                 mov     esi,(0A000h SHR 13)
                 mov     eax,3
-                call    megarom0_switchbank
+                call    callback_megarom0
 
 reset_cpu_nomegarom:
 
@@ -1305,7 +1315,7 @@ sound_buffer:
                 mov     [esi+ecx*2+1],bl
 
                 mov     esi,timebuffer
-                mov     ebx,59659 
+                mov     ebx,TC 
                 sub     ebx,ebp
                 add     ebx,psgclocks
                 mov     [esi+ecx*4],ebx
@@ -1618,6 +1628,7 @@ inemulA9:       movzx   ecx,keyboard_line
 
 code32          ends
                 end
+
 
 
 

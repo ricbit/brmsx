@@ -159,7 +159,7 @@ keyboard_ext:
 	; 4E
  db 0,0
 	; 4F
- db 0,0
+ db 2,BIT_1      ; END
 	; 50
  db 8,BIT_6      ; DOWN
 	; 51

@@ -21,3 +21,4 @@ extrn dirtyname: byte
 extrn dirtypattern: byte
 extrn enabled: dword
 extrn enginetype: dword
+extrn everyframe: dword

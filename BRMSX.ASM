@@ -51,7 +51,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.128',13,10
+msg00           db      'BrMSX 1.135',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -75,15 +75,15 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.128',13,10
+msg22           db      'BrMSX 1.135',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
                 db      '~ricardo/brmsx.htm',13,10
                 db      'Send bugs, comments and suggestions to '
                 db      'ricardo@lsi.usp.br',13,10,'$'
-msg23           db      'Cartridge 1: $'
-msg24           db      'Cartridge 2: $'
+msg23           db      'Cartridge A: $'
+msg24           db      'Cartridge B: $'
 msg25           db      'Drive A: $'
 msg26           db      'MSX.ROM invalid or not found',13,10,'$'
 msg27           db      'DISK.ROM invalid or not found',13,10,'$'
@@ -92,12 +92,22 @@ msg29           db      'Tape image not found',13,10,'$'
 msg30           db      'Tape image greater than 64kb',13,10,'$'
 msg31           db      'MSXHAN.ROM invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
-                db      '[cart1.rom]' 
+                db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
                 db      '-normal        normal emulation speed '
                 db      '(default)',13,10
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
+                db      '-roma <n>      select MegaROM Mapper for '
+                db      'cartridge A',13,10
+                db      '-romb <n>      select MegaROM Mapper for '
+                db      'cartridge B',13,10
+                db      '               0=Generic MegaROM with SCC, '
+                db      'default',13,10
+                db      '               2=Konami with SCC',13,10
+                db      '               3=Konami without SCC',13,10
+                db      '               4=ASCII 8kb',13,10
+                db      '               5=ASCII 16kb',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
                 db      '-korean        enable korean memory layout '
@@ -113,6 +123,8 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
                 db      '-green         enable green monitor emulation',13,10
+                db      'Press enter to continue.$'
+help_message2   db      13
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
                 db      '-nocache       disable video cache',13,10
@@ -121,8 +133,6 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
-                db      'Press enter to continue.$'
-help_message2   db      13
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
                 db      '-diskhigh      high-level, patch-based disk '
@@ -201,6 +211,8 @@ switch_ramslot  db      '-ramslot',0
 switch_joysens  db      '-joysens',0
 switch_korean   db      '-korean',0
 switch_green    db      '-green',0
+switch_roma     db      '-roma',0
+switch_romb     db      '-romb',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -235,8 +247,10 @@ switch_table:
                 dd      offset switch_joysens
                 dd      offset switch_korean
                 dd      offset switch_green
+                dd      offset switch_roma
+                dd      offset switch_romb
 
-switch_total    dd      32
+switch_total    dd      34
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -271,6 +285,8 @@ switch_callback:
                 dd      offset callback_joysens
                 dd      offset callback_korean
                 dd      offset callback_green
+                dd      offset callback_roma
+                dd      offset callback_romb
 
 align 4
 
@@ -279,6 +295,7 @@ msxvram         dd      ?
 blitbuffer      dd      ?
 msxrom          dd      ?
 cart1           dd      ?
+cart2           dd      ?
 transf_buffer   dd      ?
 diskimage       dd      ?
 compbuffer      dd      ?
@@ -306,6 +323,9 @@ filesize        dd      0
 nopentium       dd      0
 korean          dd      0
 disksize        dd      0
+rommappera      dd      2
+rommapperb      dd      2
+rommapper       dd      2
 
 ; --------------------------------------------------------------------
 
@@ -571,10 +591,44 @@ main_has_cart1:
                 mov     edx,offset cartridge1
                 mov     eax,cart1
                 mov     ebp,offset slot1
+                mov     ecx,rommappera
+                mov     rommapper,ecx
                 call    read_rom
                 jc      error_in_rom                
 
 main_nocart1:
+
+                ; check for cart B
+                cmp     byte ptr [offset cartridge2],0
+                je      main_nocart2
+                
+                ; print cartridge B name
+                mov     eax,offset msg24
+                call    printmsg
+                mov     al,'"'
+                call    printasc
+                mov     eax,offset cartridge2
+                call    printnul
+                mov     al,'"'
+                call    printasc
+                call    crlf
+
+                ; alloc always 256kb to cart2
+                mov     eax,256*1024
+                call     _getmem
+                jc      no_memory
+                mov     cart2,eax
+
+                ; read cartridge 2 from disk
+                mov     edx,offset cartridge2
+                mov     eax,cart2
+                mov     ebp,cart2slot
+                mov     ecx,rommapperb
+                mov     rommapper,ecx
+                call    read_rom
+                jc      error_in_rom                
+
+main_nocart2:
 
                 ; allocate 64kb to blit buffer
                 mov     eax,65536
@@ -635,6 +689,15 @@ _main4:
                 dec     ebx
                 jnz     _main4
                 call    close_file
+
+                ; adjust shiftfactor as (number of faces - 1)
+                ; discover number of faces by looking into
+                ; the disk ID number
+
+                mov     eax,diskimage
+                mov     al,[eax+15h]
+                and     al,1
+                mov     shiftfactor,al
 
                 ; allocate 16kb for disk.rom
                 mov     eax,16*1024
@@ -1174,6 +1237,7 @@ parse_command_line_out:
                 rep     movsd
                 pop     ecx esi edi
                 inc     argnumber
+                jmp     parse_command_line_out_exit
                 
 parse_command_line_out_1:
                 cmp     argnumber,1
@@ -1187,6 +1251,7 @@ parse_command_line_out_1:
                 inc     argnumber
                 
 parse_command_line_out_2: 
+parse_command_line_out_exit:
                 cmp     ecx,0
                 je      _ret
                 jmp     parse_command_line_next
@@ -1488,6 +1553,85 @@ callback_green:
                 mov     pal_gui,eax
                 ret
 
+callback_roma:
+                mov     secondarg,1
+                mov     eax,offset callback_roma_second
+                mov     second_callback,eax
+                ret
+
+callback_roma_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+
+                cmp     al,0
+                jne     callback_roma_second_2
+                mov     rommappera,2+0
+                ret
+
+callback_roma_second_2:
+                cmp     al,2
+                jne     callback_roma_second_3
+                mov     rommappera,2+2
+                ret
+
+callback_roma_second_3:
+                cmp     al,3
+                jne     callback_roma_second_4
+                mov     rommappera,2+3
+                ret
+
+callback_roma_second_4:
+                cmp     al,4
+                jne     callback_roma_second_5
+                mov     rommappera,2+4
+                ret
+
+callback_roma_second_5:
+                cmp     al,5
+                jne     _ret
+                mov     rommappera,2+5
+                ret
+
+callback_romb:
+                mov     secondarg,1
+                mov     eax,offset callback_romb_second
+                mov     second_callback,eax
+                ret
+
+callback_romb_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                
+                cmp     al,0
+                jne     callback_romb_second_2
+                mov     rommapperb,2+0
+                ret
+
+callback_romb_second_2:
+                cmp     al,2
+                jne     callback_romb_second_3
+                mov     rommapperb,2+2
+                ret
+
+callback_romb_second_3:
+                cmp     al,3
+                jne     callback_romb_second_4
+                mov     rommapperb,2+3
+                ret
+
+callback_romb_second_4:
+                cmp     al,4
+                jne     callback_romb_second_5
+                mov     rommapperb,2+4
+                ret
+
+callback_romb_second_5:
+                cmp     al,5
+                jne     _ret
+                mov     rommapperb,2+5
+                ret
+
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -1627,17 +1771,55 @@ read_rom_megarom_loop:
                 dec     ebx
                 jnz     read_rom_megarom_loop
 
+                ; check for initial position of banks
+                cmp     rommapper,7
+                je      read_rom_megarom_0101
+
+                ; initial 0-1-2-3
+
                 ; place ROM in slot
+                mov     ecx,eax
                 irp     i,<0,1,2,3>
-                mov     dword ptr [ebp+2*8+i*8],eax
-                add     eax,2000h
+                mov     dword ptr [ebp+2*8+i*8],ecx
+                add     ecx,2000h
                 endm
                 
                 ; change ROM status to MegaROM
+                mov     ecx,rommapper
                 irp     i,<0,1,2,3>
-                mov     dword ptr [ebp+2*8+i*8+4],2
+                mov     dword ptr [ebp+2*8+i*8+4],ecx
                 mov     dword ptr [offset megablock+2*4+i*4],i
                 endm
+
+                jmp     read_rom_megarom_finish
+
+read_rom_megarom_0101:
+                
+                ; initial 0-1-0-1
+
+                ; place ROM in slot
+                mov     ecx,eax
+                mov     dword ptr [ebp+2*8+0*8],ecx
+                add     ecx,2000h
+                mov     dword ptr [ebp+2*8+1*8],ecx
+                sub     ecx,2000h
+                mov     dword ptr [ebp+2*8+2*8],ecx
+                add     ecx,2000h
+                mov     dword ptr [ebp+2*8+3*8],ecx
+                
+                ; change ROM status to MegaROM
+                mov     ecx,rommapper
+                irp     i,<0,1,0,1>
+                mov     dword ptr [ebp+2*8+i*8+4],ecx
+                mov     dword ptr [offset megablock+2*4+i*4],i
+                endm
+
+read_rom_megarom_finish:
+
+                ; fill the megadump area
+                sub     ebp,offset slot0
+                shr     ebp,6
+                mov     dword ptr [offset megadump+ebp*4],eax
 
                 call    close_file
                 or      eax,eax
@@ -1660,10 +1842,10 @@ enable_megaram:
 
 enable_rom:                
                 mov     eax,1
-                mov     dword ptr [offset slot1+16+4],eax
-                mov     dword ptr [offset slot1+16+4+8],eax
-                mov     dword ptr [offset slot1+16+4+16],eax
-                mov     dword ptr [offset slot1+16+4+24],eax
+                mov     dword ptr [ebp+16+4],eax
+                mov     dword ptr [ebp+16+4+8],eax
+                mov     dword ptr [ebp+16+4+16],eax
+                mov     dword ptr [ebp+16+4+24],eax
                 ret
 
 ; flush_dsk ----------------------------------------------------------
@@ -1674,14 +1856,14 @@ flush_dsk:
                 mov     edx,offset drivea_name
                 call    create_file
 
-                mov     ebx,disksize ;720/16
+                mov     ebx,disksize 
                 mov     esi,diskimage
 flush_dsk_loop:               
                 mov     edi,transf_buffer
-                mov     ecx,4096/4 ; 16384/4
+                mov     ecx,4096/4 
                 rep     movsd
 
-                mov     ecx,4096 ;16384
+                mov     ecx,4096 
                 mov     edx,transf_buffer
                 push    ebx
                 call    write_file

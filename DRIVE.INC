@@ -17,3 +17,4 @@ extrn driveD3: byte
 extrn driveD4: byte
 
 extrn portenabled: dword
+extrn shiftfactor: byte

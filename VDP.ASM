@@ -41,6 +41,7 @@ public dirtyname
 public dirtypattern
 public enabled
 public enginetype
+public everyframe
 
 ; DATA ---------------------------------------------------------------
 
@@ -69,6 +70,10 @@ patterntable    dd      0
 sprattrtable    dd      0
 sprpatttable    dd      0
 firstscreen     dd      1
+everyframe      dd      0
+scr2inc         dd      offset scr2undoc_table+3*12
+scr2inc_color   dd      offset scr2undoc_table+3*12
+scr2offset      dd      0
 vrammapping     db      256 dup (0)
 screenselect    dd      ? ; nothing
                 dd      ? ; name table
@@ -84,6 +89,27 @@ spriteline      db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
 enginetype      dd      1
+
+scr2undoc_table: 
+                ; 0 (LIKE)
+                dd      0
+                dd      0
+                dd      0
+
+                ; 1 (marujo)
+                dd      0
+                dd      800h
+                dd      -800h
+
+                ; 2 (Thing Bounces Back)
+                dd      0
+                dd      0
+                dd      1000h
+
+                ; 3 (common)
+                dd      0
+                dd      800h
+                dd      800h
 
 DOS_ENGINE      EQU     0
 WIN_ENGINE      EQU     1
@@ -256,8 +282,7 @@ render10d:      push    ebp
 
                 ; for each char
                 mov     ebp,32
-render11d:      push    ebp
-
+render11d:      
                 mov     al,[edx]
                 or      al,al
                 jnz     render1_dirty_draw
@@ -268,9 +293,9 @@ render11d:      push    ebp
                 mov     byte ptr [edx],1
 
 render1_dirty_draw:
-                push    edx
+                push    ebp edx
                 PIPE1
-                pop     edx
+                pop     edx ebp
 
 render1_dirty_next:
 
@@ -278,7 +303,6 @@ render1_dirty_next:
                 inc     esi
                 inc     edx
 
-                pop     ebp
                 dec     ebp
                 jnz     render11d
 
@@ -661,8 +685,13 @@ render_screen2_dirty_mmx:
 
 RENDER_SCREEN2_MACRO macro videoengine                
                 
+                cmp     everyframe,1
+                je      render_screen2_next_&videoengine
+                
                 cmp     imagetype,1
                 je      render_screen2_dirty
+
+render_screen2_next_&videoengine:
 
                 ; esi = name table
                 mov     eax,nametable
@@ -679,6 +708,8 @@ RENDER_SCREEN2_MACRO macro videoengine
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
+
+                mov     scr2offset,0
 
                 ; edi = blit buffer
                 mov     edi,blitbuffer
@@ -741,8 +772,37 @@ EMULABEL        render21,videoengine
                 dec     ebp
                 JUMP    jnz,render20,videoengine
 
-                add     ebx,256*8
-                add     colorsave,256*8
+                ; perform the undocumented correction
+                ; to find increment for image table
+                push    eax
+                mov     eax,scr2offset
+                inc     eax
+                mov     scr2offset,eax
+                push    ebx
+                mov     ebx,scr2inc
+                mov     eax,[ebx+eax*4]
+                pop     ebx
+
+                sub     ebx,msxvram
+                add     ebx,eax
+                and     ebx,03FFFh
+                add     ebx,msxvram
+
+                ; perform the undocumented correction
+                ; to find increment for color table
+
+                mov     eax,scr2offset
+                push    ebx
+                mov     ebx,scr2inc_color
+                mov     eax,[ebx+eax*4]
+                pop     ebx
+
+                add     eax,colorsave
+                sub     eax,msxvram
+                and     eax,03FFFh
+                add     eax,msxvram
+                mov     colorsave,eax
+                pop     eax
 
                 pop     ebp
                 dec     ebp
@@ -811,9 +871,8 @@ render_screen3_innerloop_&i:
                 endm
 
                 add     edi,8
-                inc     ecx
-
                 inc     ebx
+                inc     ecx
                 cmp     ebx,32
                 jne     render_screen3_innerloop_&i
 
@@ -1325,6 +1384,8 @@ dirty_sprite_crop_all:
 
 eval_base_address:
 
+                mov     everyframe,0
+
                 ; first we need to determine the actual screen
 
                 test    byte ptr [offset vdpregs+0],BIT_1
@@ -1412,6 +1473,40 @@ eval_base_address:
                 mov     dword ptr [offset screenselect+4*4],eax
                 mov     eax,offset dirty_screen2_sprpatt
                 mov     dword ptr [offset screenselect+5*4],eax
+
+                mov     eax,offset scr2undoc_table+3*12
+                mov     scr2inc,eax
+                mov     scr2inc_color,eax
+
+                ; check for the undocumented feature in image table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,3
+                cmp     eax,3
+                je      eval_base_address_scr2_check_color
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc,ecx
+
+eval_base_address_scr2_check_color:
+                ; check for the undocumented feature in color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shr     eax,5
+                and     eax,3
+                cmp     eax,3
+                je      eval_base_address_scr2_doc
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc_color,ecx
+
+eval_base_address_scr2_doc:
                 
                 pop     edi ecx eax
 

@@ -352,7 +352,7 @@ load_state:
                 jne     load_state_mega_&i
                 mov     esi,i
                 and     eax,0FFh
-                call    megarom0_switchbank
+                call    callback_megarom0
 load_state_mega_&i:
 
                 endm

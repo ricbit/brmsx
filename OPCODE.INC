@@ -1636,6 +1636,9 @@ emul&opcode&a:
                 dec     regbc                           ; clock 6 U
                 jnz     emul&opcode&a
                 ret
+emul&opcode&b:
+                sub     edi,2
+                ret
 
                 endm
 

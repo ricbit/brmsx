@@ -21,6 +21,7 @@ include psg.inc
 include mouse.inc
 include joystick.inc
 include drive.inc
+include z80core.inc
 
 include debugsrc.inc
 include debugsr2.inc
@@ -59,8 +60,6 @@ memdump         dd      0
 tabspace        db      ' $'
 tabindicator    db      '>$'
 flags           db      '00000000$'
-msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
-msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 msgpentiumonly  db      'This option requires a Pentium$'
 res320          db      '320x200$'
 res256          db      '256x200$'
@@ -88,6 +87,8 @@ imode2          db      'IM2$'
 sessionsingle   db      'SINGLE$'
 sessionserver   db      'SERVER$'
 sessionclient   db      'CLIENT$'
+stateyes        db      'YES$'
+stateno         db      ' NO$'
 
 align 4
 
@@ -95,6 +96,8 @@ quitnow         dd      0
 vesa2found      dd      0
 debugtype       dd      1
 startdebugger   dd      0
+firstone        dd      0
+nextbp          dd      0
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -187,6 +190,21 @@ printmsgd1:
 printmsgd2:
                 pop     edx edi eax
                 ret
+
+; printyesno ---------------------------------------------------------
+; print "yes" or "no" based on contents of eax
+; eax=0 "NO"
+; eax=1 "YES"
+
+printyesno:
+                cmp     eax,0
+                je      printyesno_no
+                mov     eax,offset stateyes
+                jmp     printyesno_go
+printyesno_no:
+                mov     eax,offset stateno
+printyesno_go:
+                jmp     printmsgd
 
 ; --------------------------------------------------------------------
                 
@@ -305,28 +323,6 @@ changesession:
                 cmp     sessionmode,3
                 jne     _ret
                 mov     sessionmode,0
-                ret
-
-; --------------------------------------------------------------------
-
-change_megamode:
-                xor     megarommode,5
-                cmp     megarommode,0
-                je      change_megamode0
-                mov     eax,offset msgmega05
-                jmp     change_megamodex
-
-change_megamode0:       
-                mov     eax,offset msgmega00
-
-change_megamodex:
-                call    printmsg
-                mov     eax,2
-                add     eax,megarommode
-                mov     dword ptr [offset slot1+16+4],eax
-                mov     dword ptr [offset slot1+16+4+8],eax
-                mov     dword ptr [offset slot1+16+4+16],eax
-                mov     dword ptr [offset slot1+16+4+24],eax
                 ret
 
 ; --------------------------------------------------------------------
@@ -457,6 +453,7 @@ render_debug:
 print_dump1&i:
                 push    eax
                 lea     edi,[eax+ecx]
+                and     edi,0FFFFh
                 call    fetch
                 call    convhex4
                 mov     eax,offset tmphex2
@@ -475,6 +472,7 @@ print_dump1&i:
 print_dump2&i:
                 push    eax
                 lea     edi,[eax+ecx]
+                and     edi,0FFFFh
                 call    fetch
                 cmp     al,32
                 jb      print_dump3&i
@@ -613,6 +611,7 @@ print_im_print:
 
                 mov     ecx,0
                 mov     edi,regepc
+                mov     firstone,1
 print_dis0:
                 xor     eax,eax
                 COORD   23,3
@@ -662,6 +661,15 @@ print_dis1:
                 dec     ecx
                 jnz     print_dis1
                 pop     ecx
+
+                cmp     firstone,1
+                jne     print_dis_skip
+                mov     firstone,0
+                mov     ebp,isize
+                add     ebp,regepc
+                and     ebp,0FFFFh
+                mov     nextbp,ebp
+print_dis_skip:
 
                 inc     ecx
                 cmp     ecx,11
@@ -800,6 +808,7 @@ render_debug2:
 print2_dump1&i:
                 push    eax
                 lea     edi,[eax+ecx]
+                and     edi,0FFFFh
                 call    fetch
                 call    convhex4
                 mov     eax,offset tmphex2
@@ -818,6 +827,7 @@ print2_dump1&i:
 print2_dump2&i:
                 push    eax
                 lea     edi,[eax+ecx]
+                and     edi,0FFFFh
                 call    fetch
                 cmp     al,32
                 jb      print2_dump3&i
@@ -877,6 +887,58 @@ print2_dump3&i:
 
                 endm
                 
+; --------------------------------------------------------------------
+
+                ; print the stack dump
+
+                irp     i,<-6,-4,-2,0,2,4,6>
+                mov     ecx,i
+                COORD   62,3+i/2+3
+                mov     eax,regesp                
+                lea     edi,[eax+ecx]
+                and     edi,0FFFFh
+                call    fetchw
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                endm
+                
+; --------------------------------------------------------------------
+
+                ; print the advanced info
+
+                ; print the interrupt pending status
+                COORD   75,13
+                mov     eax,iline
+                call    printyesno
+
+                ; print the vdp waiting status
+                COORD   75,14
+                mov     eax,vdpcond
+                call    printyesno
+
+                ; print the vdp low byte
+                COORD   76,15
+                movzx   eax,vdptemp
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+
+                ; print the vdp lookahead
+                COORD   76,16
+                movzx   eax,vdplookahead
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+
+                ; print the number of clocks left
+                COORD   74,12
+                mov     eax,clockcounter
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
 ; --------------------------------------------------------------------
                 
                 ; blit the temp buffer to screen 
@@ -1088,22 +1150,6 @@ print_scc1:
 
                 ret
 
-; init_compiler ------------------------------------------------------
-; initialize the luts for the compile pipeline
-
-;init_compiler:
-;                mov     ecx,131072 ; 64kb*8 /4
-;                mov     eax,0
-;                mov     edi,dirtycode
-;                rep     stosd
-;                mov     ecx,262144 ;1048576/4
-;                mov     eax,0C3C3C3C3h
-;                mov     edi,compbuffer
-;                rep     stosd
-;                mov     ebx,compbuffer
-;                mov     nextopcode,ebx
-;                ret
-
 ; --------------------------------------------------------------------
 
 debug:          
@@ -1189,6 +1235,10 @@ command_extended:
                 call    crlf
                 cmp     ah,59 ;F1
                 je      command_help
+                cmp     ah,65 ;F7
+                je      command_t
+                cmp     ah,66 ;F8
+                je      command_stepover
                 cmp     ah,73 ;page up
                 je      command_pgup
                 cmp     ah,81 ;page down
@@ -1336,6 +1386,22 @@ command_b:
                 call    crlf
                 jmp     debug_loop
 
+command_stepover:
+                mov     eax,nextbp
+                mov     breakpoint,eax
+                call    crlf
+                call    setgraphmode
+                call    turnon_irq
+                call    turnon_kb_irq
+                call    sound_on
+                call    emulate_break
+                call    sound_off
+                call    turnoff_kb_irq
+                call    turnoff_irq
+                call    settextmode
+                call    crlf
+                jmp     debug_loop
+
 command_p:
                 call    change_sound
                 jmp     debug_loop
@@ -1438,6 +1504,7 @@ command_2:
 command_t:
                 mov     edi,regepc
                 mov     edx,regeaf
+                mov     ebp,clockcounter
                 mov     eax,0
                 call    trace
                 jmp     debug_loop
