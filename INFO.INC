@@ -1,6 +1,4 @@
-FETCHIMM        equ     1
-FETCHSIGNAL     equ     2
-FETCHWIMM       equ     3
+include fetchequ.inc
 
 info_table:
 	; 00

@@ -1259,6 +1259,7 @@ emul&opcode:
 OPLDD           macro   opcode
 
 emul&opcode:    
+                inc     edi
                 mov     ecx,regehl                      ; clock 1 U
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U
@@ -1306,6 +1307,7 @@ emul&opcode&a:
 OPLDI           macro   opcode
 
 emul&opcode:    
+                inc     edi
                 mov     ecx,regehl                      ; clock 1 U
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U

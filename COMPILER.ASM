@@ -20,6 +20,9 @@ extrn dirtycode: dword
 extrn start_counter: near
 extrn end_counter: near
 
+extrn info_table_cb: byte
+extrn info_table_ed: byte
+
 public compile_pipeline
 public nextopcode
 
@@ -66,6 +69,71 @@ compile_loop:
 
                 push    ebx
                 call    fetch
+
+                cmp     al,0CBh
+                je      compile_cb
+
+                cmp     al,0EDh
+                je      compile_ed
+
+                cmp     al,018h
+                je      compile_18
+
+                jmp     compile_single
+
+compile_18:
+                call    fetch1
+                cmp     al,0FEh
+                jne     compile_18a
+                
+                push    edi
+                mov     esi,offset comp18_alt
+                mov     edi,nextopcode
+                mov     ecx,(offset comp18_alt_end)-(offset comp18_alt)
+                rep     movsb
+                mov     byte ptr [edi],0C3h
+                inc     edi
+                mov     nextopcode,edi
+                pop     edi
+                pop     ebx
+                mov     esi,0
+                jmp     compile_done
+
+compile_18a:
+                mov     al,018h
+                jmp     compile_single
+
+compile_cb:                
+                call    fetch1
+                push    edi
+                mov     esi,dword ptr [offset info_table_cb+eax*8]
+                mov     edi,nextopcode
+                movzx   ecx,byte ptr [offset info_table_cb+eax*8+4]
+                rep     movsb
+                mov     byte ptr [edi],0C3h
+                inc     edi
+                mov     nextopcode,edi
+                pop     edi
+                pop     ebx
+                movzx   esi,byte ptr [offset info_table_cb+eax*8+5]
+                jmp     compile_done
+
+compile_ed:                
+                call    fetch1
+                push    edi
+                mov     esi,dword ptr [offset info_table_ed+eax*8]
+                mov     edi,nextopcode
+                movzx   ecx,byte ptr [offset info_table_ed+eax*8+4]
+                rep     movsb
+                mov     byte ptr [edi],0C3h
+                inc     edi
+                mov     nextopcode,edi
+                pop     edi
+                pop     ebx
+                movzx   esi,byte ptr [offset info_table_ed+eax*8+5]
+                jmp     compile_done
+
+compile_single:
                 push    edi
                 mov     esi,dword ptr [offset info_table+eax*8]
                 mov     edi,nextopcode
@@ -79,12 +147,15 @@ compile_loop:
 
                 movzx   esi,byte ptr [offset info_table+eax*8+5]
 
+compile_patch:                
                 cmp     esi,FETCHIMM
                 je      compile_fetchimm
                 cmp     esi,FETCHSIGNAL
                 je      compile_fetchsignal
                 cmp     esi,FETCHWIMM
                 je      compile_fetchwimm
+                cmp     esi,FETCHWIMM2
+                je      compile_fetchwimm2
 
                 jmp     compile_done
 
@@ -109,6 +180,16 @@ compile_fetchsignal:
 compile_fetchwimm:
                 push    ebx
                 call    fetchw1
+                pop     ebx
+                mov     dword ptr [ebx+1],eax
+                mov     eax,0
+                jmp     compile_done
+
+compile_fetchwimm2:
+                push    ebx
+                inc     edi
+                call    fetchw1
+                dec     edi
                 pop     ebx
                 mov     dword ptr [ebx+1],eax
                 mov     eax,0
@@ -1190,6 +1271,10 @@ ENDOPCODE       FE
 ; FF - RST 38
 OPRST           FF,038h
 ENDOPCODE       FF
+
+comp18_alt:
+                mov     ebp,0
+comp18_alt_end:
 
 
 code32          ends

@@ -925,6 +925,7 @@ command_s:      call    setgraphmode
                 jmp     debug_loop
 
 command_c:      
+                mov     firstscreen,1
                 call    setgraphmode
                 call    clear
                 call    turnon_kb_irq

@@ -1,7 +1,6 @@
-- fix screen2/sprimage update
 - check the border effect in fetchw/readmemw/writememw
 - keyboard check
 - fix border color in 256 mode
 - add gui
-- add code cache
-
+- finish the compiler
+- fix sprite cropping

@@ -178,7 +178,7 @@ comp&opcode:
 ADCREGWREGW     macro   opcode,rrlow,rrhigh,reglow,reghigh
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 shr     dl,1
                 mov     bl,reglow
                 adc     rrlow,bl
@@ -202,8 +202,9 @@ comp&opcode:
                 and     dl,NBIT_6
                 mov     al,rrhigh
                 or      al,rrlow
-                jnz     _ret
+                jnz     comp&opcode&a
                 or      dl,BIT_6
+comp&opcode&a:
 
                 endm
 
@@ -368,7 +369,7 @@ BITREG          macro   opcode,reg,bit
 
 comp&opcode:                
                 mov     al,reg
-                inc     edi
+                add     edi,2
                 and     dl,01h
                 sub     ebp,8+2
                 or      dl,[offset BIT&bit&_table+eax]
@@ -381,7 +382,7 @@ comp&opcode:
 BITHL           macro   opcode,bit
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 and     dl,01h
@@ -534,7 +535,7 @@ comp&opcode:
 OPCPIR          macro   opcode
 
 comp&opcode:
-                inc     edi
+                add     edi,2
 comp&opcode&b:      
                 mov     ecx,regehl
                 READMEM
@@ -562,7 +563,7 @@ comp&opcode&c:
 OPCPDR          macro   opcode
 
 comp&opcode:
-                inc     edi
+                add     edi,2
 comp&opcode&b:      
                 mov     ecx,regehl
                 READMEM
@@ -835,7 +836,7 @@ comp&opcode:
 INREG           macro   opcode,reg
 
 comp&opcode:
-                inc     edi
+                add     edi,2
                 mov     al,regc
                 call    [offset inportxx+eax*4]
                 and     ebx,0ffh
@@ -916,7 +917,7 @@ comp&opcode:
 OPINI           macro   opcode
 
 comp&opcode:
-                inc     edi
+                add     edi,2
                 mov     al,regc
                 call    [offset inportxx+eax*4]
                 mov     ecx,regehl
@@ -937,7 +938,7 @@ comp&opcode:
 OPIM1           macro   opcode
 
 comp&opcode:
-                inc     edi
+                add     edi,2
                 sub     ebp,8+2
 
                 endm
@@ -970,7 +971,6 @@ comp&opcode:
                 ;FETCH1S opcode
                 mov     edi,0
                 sub     ebp,12+2
-                ;mov     edi,ecx
 
                 endm
 
@@ -1237,7 +1237,7 @@ comp&opcode:
                 endm
 
 ; --------------------------------------------------------------------
-; LDREGWDDDD - LD rr,(dddd)     rr=[bc,de,hl,ix,iy]
+; LDREGWDDDD - LD rr,(dddd)     rr=[hl]
 
 LDREGWDDDD       macro   opcode,reg
 
@@ -1255,7 +1255,25 @@ comp&opcode:
                 endm
 
 ; --------------------------------------------------------------------
-; LDDDDDREGW - LD (dddd),rr     rr=[bc,de,hl,ix,iy]
+; LDREGWDDDD2 - LD rr,(dddd)     rr=[bc,de,sp,ix,iy]
+
+LDREGWDDDD2      macro   opcode,reg
+
+comp&opcode:
+                ;FETCHW1 opcode
+                ;mov     ecx,eax
+
+                mov     ecx,0
+                READMEMW
+                mov     reg,eax
+                add     edi,4
+                xor     eax,eax
+                sub     ebp,16+5
+
+                endm
+
+; --------------------------------------------------------------------
+; LDDDDDREGW - LD (dddd),rr     rr=[hl]
 
 LDDDDDREGW      macro   opcode,reg
 
@@ -1263,6 +1281,23 @@ comp&opcode:
                 ;FETCHW1 opcode
                 mov     ecx,0
                 add     edi,3
+                ;mov     ecx,eax
+                mov     eax,reg
+                WRITEMEMW
+                xor     eax,eax
+                sub     ebp,16+5
+
+                endm
+
+; --------------------------------------------------------------------
+; LDDDDDREGW2 - LD (dddd),rr     rr=[bc,de,ix,iy,sp]
+
+LDDDDDREGW2     macro   opcode,reg
+
+comp&opcode:
+                ;FETCHW1 opcode
+                mov     ecx,0
+                add     edi,4
                 ;mov     ecx,eax
                 mov     eax,reg
                 WRITEMEMW
@@ -1296,7 +1331,7 @@ comp&opcode:
 LDAI            macro   opcode
 
 comp&opcode:    
-                inc     edi
+                add     edi,2
                 mov     dh,regi
                 sub     ebp,9+2
                 mov     al,dh
@@ -1314,7 +1349,7 @@ comp&opcode:
 LDAR            macro   opcode
 
 comp&opcode:    
-                inc     edi
+                add     edi,2
                 mov     dh,byte ptr [offset rcounter]
                 and     dh,07fh
                 or      dh,rmask
@@ -1334,6 +1369,7 @@ comp&opcode:
 OPLDD           macro   opcode
 
 comp&opcode:    
+                add     edi,2
                 mov     ecx,regehl                      ; clock 1 U
                 READMEM
                 mov     ecx,regede                      ; clock 2 U
@@ -1359,7 +1395,7 @@ comp&opcode&b:
 OPLDDR          macro   opcode
 
 comp&opcode:    
-                inc     edi
+                add     edi,2
 comp&opcode&a:      
                 mov     ecx,regehl
                 READMEM
@@ -1380,6 +1416,7 @@ comp&opcode&a:
 OPLDI           macro   opcode
 
 comp&opcode:    
+                add     edi,2                        
                 mov     ecx,regehl                      ; clock 1 U
                 READMEM
                 mov     ecx,regede                      ; clock 2 U
@@ -1405,7 +1442,7 @@ comp&opcode&b:
 OPLDIR          macro   opcode
 
 comp&opcode:    
-                inc     edi
+                add     edi,2
 comp&opcode&a:      
                 mov     ecx,regehl
                 READMEM
@@ -1427,7 +1464,7 @@ OPNEG           macro   opcode
 
 comp&opcode:    
                 mov     al,dh                           
-                inc     edi
+                add     edi,2
                 sub     ebp,8+2
                 mov     dx,[offset NEG_table+eax*2]
 
@@ -1528,7 +1565,7 @@ comp&opcode:
 OUTCREG         macro   opcode,reg
 
 comp&opcode:    mov     al,regc
-                inc     edi
+                add     edi,2
                 sub     ebp,12+2
                 mov     bl,reg
                 call    [offset outportxx+eax*4]
@@ -1541,7 +1578,7 @@ comp&opcode:    mov     al,regc
 OPOUTI          macro   opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 mov     bl,al
@@ -1596,7 +1633,7 @@ comp&opcode:
 RESREG          macro   opcode,reg,bit
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 and     reg,NBIT_&bit
                 sub     ebp,8+2
 
@@ -1608,7 +1645,7 @@ comp&opcode:
 RESHL           macro   opcode,bit
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 and     al,NBIT_&bit
@@ -1673,7 +1710,7 @@ comp&opcode&b:
 RLREG           macro   opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 shr     dl,1
                 mov     dl,0
                 rcl     reg,1
@@ -1690,7 +1727,7 @@ comp&opcode:
 RLHL            macro   opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 shr     dl,1
@@ -1750,7 +1787,7 @@ comp&opcode:
 RLCREG          macro opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 rol     reg,1
                 mov     dl,reg
                 mov     al,dl
@@ -1766,7 +1803,7 @@ comp&opcode:
 RLCHL           macro opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 rol     al,1
@@ -1822,7 +1859,7 @@ comp&opcode:
 OPRLD           macro   opcode
 
 comp&opcode:
-                inc     edi                            
+                add     edi,2
                 mov     ecx,regehl                    
                 READMEM
                 mov     bl,al                         
@@ -1851,7 +1888,7 @@ comp&opcode:
 RRREG           macro   opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 shr     dl,1
                 mov     dl,reg
                 rcr     reg,1
@@ -1868,7 +1905,7 @@ comp&opcode:
 RRHL            macro   opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 shr     dl,1
@@ -1928,7 +1965,7 @@ comp&opcode:
 RRCREG          macro opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     dl,reg
                 ror     reg,1
                 mov     al,reg
@@ -1944,7 +1981,7 @@ comp&opcode:
 RRCHL           macro opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 mov     dl,al
@@ -1980,7 +2017,7 @@ comp&opcode:
 OPRRD           macro   opcode
 
 comp&opcode:
-                inc     edi                            
+                add     edi,2
                 mov     ecx,regehl                    
                 READMEM
                 mov     bl,al                         
@@ -2087,7 +2124,7 @@ comp&opcode:
 SBCHLWREG       macro   opcode,reglow,reghigh
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 shr     dl,1
                 mov     bl,reglow
                 sbb     regl,bl
@@ -2111,8 +2148,9 @@ comp&opcode:
                 and     dl,NBIT_6
                 mov     al,regh
                 or      al,regl
-                jnz     _ret
+                jnz     comp&opcode&a
                 or      dl,BIT_6
+comp&opcode&a:
 
                 endm
 
@@ -2135,7 +2173,7 @@ comp&opcode:
 SETREG          macro   opcode,reg,bit
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 or      reg,BIT_&bit
                 sub     ebp,8+2
 
@@ -2147,7 +2185,7 @@ comp&opcode:
 SETHL          macro   opcode,bit
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 or      al,BIT_&bit
@@ -2179,7 +2217,7 @@ comp&opcode:
 SLAREG          macro   opcode,reg
 
 comp&opcode:
-                inc     edi
+                add     edi,2
                 mov     dl,0
                 shl     reg,1
                 adc     dl,dl
@@ -2195,7 +2233,7 @@ comp&opcode:
 SLAHL           macro   opcode
 
 comp&opcode:
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 mov     dl,0
@@ -2213,7 +2251,7 @@ comp&opcode:
 SRAREG          macro   opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     dl,reg
                 sar     reg,1
                 and     dl,1
@@ -2229,7 +2267,7 @@ comp&opcode:
 SRAHL           macro   opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 mov     dl,al
@@ -2247,7 +2285,7 @@ comp&opcode:
 SRLREG          macro   opcode,reg
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     dl,reg
                 shr     reg,1
                 and     dl,1
@@ -2263,7 +2301,7 @@ comp&opcode:
 SRLHL           macro   opcode
 
 comp&opcode:                
-                inc     edi
+                add     edi,2
                 mov     ecx,regehl
                 READMEM
                 mov     dl,al

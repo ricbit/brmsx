@@ -1273,6 +1273,16 @@ dirty_screen2_color:
 
 dirty_screen2_sprattr:                
                 mov     eax,ecx
+                and     eax,03h
+                jnz     dirty_screen2_sprattr2
+                cmp     bl,0D0h
+                jne     dirty_screen2_sprattr2
+                mov     firstscreen,1
+                mov     [ecx+esi],bl
+                mov     eax,0
+                ret
+dirty_screen2_sprattr2:
+                mov     eax,ecx
                 and     ecx,0FFFFFFFCh
                 push    esi eax ecx
                 add     esi,ecx
@@ -1328,8 +1338,8 @@ wash_sprite:
                 xor     eax,eax
 
 wash_sprite_loop:
-                cmp     byte ptr [esi],0D0h
-                je      wash_sprite_end
+                ;cmp     byte ptr [esi],0D0h
+                ;je      wash_sprite_end
                 mov     al,[esi+2]
                 shr     al,2
                 cmp     byte ptr [offset dirtysprite+eax],1
