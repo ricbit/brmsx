@@ -11,6 +11,8 @@ extrn msxvram: near
 extrn cart1: near
 extrn pset: near
 extrn isetCBxx: near
+extrn isetDDxx: near
+extrn isetEDxx: near
 extrn emulEDFF: near
 
 include io.inc
@@ -30,12 +32,21 @@ public emulate_break
 public emulate_echo
 public emulXX
 public emulC9
+public outemulXX
+public inemulXX
+public outportxx
+public inportxx
+public opsubreg
+public isetDDCBxx
 
 public breakpoint
 public iff1
 public interrupt
 public vdpstatus
 public keymatrix
+public rcounter
+public rmask
+public regi
 
 public slot0
 public slot1
@@ -49,6 +60,7 @@ public reghl
 public regde
 public regsp
 public regpc
+public regix
 public rega
 public regf
 public regb
@@ -57,10 +69,16 @@ public regd
 public rege
 public regh
 public regl
+public regsph
+public regspl
+public regixh
+public regixl
 public regeaf
 public regebc
 public regede
 public regehl
+public regesp
+public regeix
 public vdpregs
 
 public BIT0_table
@@ -72,15 +90,22 @@ public BIT5_table
 public BIT6_table
 public BIT7_table
 public LOGICAL_table
+public ARITP_table
+public ARITN_table
+public OVERFLOW_table
+public NEG_table
+public INTERRUPT_table
+public PVS53_table
+public PVN53_table
+public INC_table
+public DEC_table
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
 include iset.inc
-include isetDD.inc
 include isetDDCB.inc
-include isetED.inc
 include isetFD.inc
 
 include outport.inc
@@ -2141,253 +2166,6 @@ emulFF:         inc     edi
                 xor     eax,eax
                 ret
 
-; DD 09 - ADD IX,BC
-emulDD09:       inc     edi
-                mov     ebx,regebc
-                add     regix,bx
-                setflag_add2
-                ret
-
-; DD 19 - ADD IX,DE
-emulDD19:       inc     edi
-                mov     ebx,regede
-                add     regix,bx
-                setflag_add2
-                ret
-
-; DD 21 - LD IX,dddd
-emulDD21:       inc     edi               
-                call    fetchw
-                add     edi,2
-                mov     regeix,eax
-                xor     eax,eax
-                ret
-
-; DD 22 - LD (dddd),IX
-emulDD22:       inc     edi
-                call    fetchw
-                add     edi,2
-                mov     ecx,eax
-                mov     al,regixl
-                call    writemem
-                inc     cx
-                mov     al,regixh
-                call    writemem
-                xor     eax,eax
-                ret
-
-; DD 23 - INC IX
-INCWREG         DD23,regix,10
-
-; DD 29 - ADD IX,IX
-emulDD29:       inc     edi
-                mov     ecx,regeix
-                add     regix,cx
-                setflag_add2
-                ret
-
-; DD 2A - LD IX,(dddd)
-emulDD2A:       inc     edi
-                call    fetchw
-                mov     ecx,eax
-                call    readmem
-                mov     regixl,al
-                inc     cx
-                call    readmem
-                mov     regixh,al
-                xor     eax,eax
-                add     edi,2
-                ret
-
-; DD 2B - DEC IX
-DECWREG         DD2B,regix,10
-
-; DD 34 - INC (IX+dd)
-INCII           DD34,regeix
-
-; DD 35 - DEC (IX+dd)
-DECII           DD35,regeix
-
-; DD 36 - LD (IX+dd),dd
-LDIIDDNN        DD36,regeix
-
-; DD 46 - LD B,(IX+dd)
-emulDD46:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regb,al
-                ret
-
-; DD 4E - LD C,(IX+dd)
-emulDD4E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regc,al
-                ret
-
-; DD 56 - LD D,(IX+dd)
-emulDD56:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regd,al
-                ret
-
-; DD 5E - LD E,(IX+dd)
-emulDD5E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     rege,al
-                ret
-
-; DD 66 - LD H,(IX+dd)
-emulDD66:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regh,al
-                ret
-
-; DD 6E - LD L,(IX+dd)
-emulDD6E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regl,al
-                ret
-
-; DD 70 - LD (IX+dd),B
-LDIIDDREG       DD70,regb,regeix
-
-; DD 71 - LD (IX+dd),C
-LDIIDDREG       DD71,regc,regeix
-
-; DD 72 - LD (IX+dd),D
-LDIIDDREG       DD72,regd,regeix
-
-; DD 73 - LD (IX+dd),E
-LDIIDDREG       DD73,rege,regeix
-
-; DD 74 - LD (IX+dd),H
-LDIIDDREG       DD74,regh,regeix
-
-; DD 75 - LD (IX+dd),L
-LDIIDDREG       DD75,regl,regeix
-
-; DD 77 - LD (IX+dd),A
-LDIIDDREG       DD77,dh,regeix
-
-; DD 7E - LD A,(IX+dd)
-emulDD7E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     dh,al
-                ret
-
-; DD 86 - ADD A,(IX+dd)
-emulDD86:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                add     dh,al
-                setflag_add
-                ret
-
-; DD 96 - SUB (IX+dd)
-SUBII           DD96,regeix
-
-; DD A6 - AND (IX+dd)
-emulDDA6:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                and     dh,al
-                setflag_and
-                ret
-
-; DD B6 - OR (IX+dd)
-ORII            DDB6,regeix
-
-; DD BE - CP (IX+dd)
-emulDDBE:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                cmp     dh,al
-                setflag_cp
-                ret
-
-; DD CB - group DD CB
-emulDDCB:       inc     edi
-                inc     rcounter
-                call    fetch
-                mov     cl,al
-                inc     edi
-                call    fetch
-                jmp     [offset isetDDCBxx+eax*4]
-
-; DD E1 - POP IX
-emulDDE1:       inc     edi
-                mov     ecx,regesp
-                call    readmem
-                mov     regixl,al
-                inc     cx
-                call    readmem
-                mov     regixh,al
-                inc     cx
-                mov     regesp,ecx
-                ret
-
-; DD E5 - PUSH IX
-emulDDE5:       inc     edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,regixh
-                call    writemem
-                dec     cx
-                mov     al,regixl
-                call    writemem
-                mov     regesp,ecx
-                ret
-
-; DD E9 - JP (IX)
-emulDDE9:       mov     edi,regeix
-                ret
-
 ; DD CB 06 - RLC (IX+dd)
 emulDDCB06:     inc     edi
                 movsx   ebx,cl
@@ -2494,239 +2272,6 @@ emulDDCBFE:     inc     edi
                 call    readmem
                 or      al,BIT_7
                 call    writemem
-                ret
-
-; ED 41 - OUT (C),B
-emulED41:       inc     edi
-                mov     bl,regb
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                ret
-
-; ED 42 - SBC HL,BC
-SBCHLWREG       ED42,regc,regb
-
-; ED 43 - LD (dddd),BC
-emulED43:       inc     edi
-                call    fetchw
-                add     edi,2
-                mov     ecx,eax
-                mov     al,regc
-                call    writemem
-                inc     cx
-                mov     al,regb
-                call    writemem
-                xor     eax,eax
-                ret
-
-; ED 44 - NEG
-OPNEG           ED44
-
-; ED 4A - ADC HL,BC
-ADCHLWREG       ED4A,regc,regb
-
-; ED 4B - LD BC,(dddd)
-emulED4B:       inc     edi
-                call    fetchw
-                mov     ecx,eax
-                call    readmem
-                mov     regc,al
-                inc     cx
-                call    readmem
-                mov     regb,al
-                xor     eax,eax
-                add     edi,2
-                ret
-
-; ED 4D - RETI
-emulED4D:       mov     iff1,1
-                jmp     emulC9
-
-; ED 52 - SBC HL,DE
-SBCHLWREG       ED52,rege,regd
-
-; ED 53 - LD (dddd),DE
-emulED53:       inc     edi
-                call    fetchw
-                add     edi,2
-                mov     ecx,eax
-                mov     al,rege
-                call    writemem
-                inc     cx
-                mov     al,regd
-                call    writemem
-                xor     eax,eax
-                ret
-
-; ED 56 - IM 1
-emulED56:       inc     edi
-                ret
-
-; ED 57 - LD A,I
-LDAI            ED57
-
-; ED 5A - ADC HL,DE
-ADCHLWREG       ED5A,rege,regd
-
-; ED 5B - LD DE,(dddd)
-emulED5B:       inc     edi
-                call    fetchw
-                mov     ecx,eax
-                call    readmem
-                mov     rege,al
-                inc     cx
-                call    readmem
-                mov     regd,al
-                xor     eax,eax
-                add     edi,2
-                ret
-
-; ED 5F - LD A,R
-LDAR            ED5F    
-
-; ED 62 - SBC HL,HL
-SBCHLWREG       ED62,regl,regh
-
-; ED 67 - RRD
-OPRRD           ED67
-
-; ED 6A - ADC HL,HL
-ADCHLWREG       ED6A,regl,regh
-
-; ED 6F - RLD
-OPRLD           ED6F  
-
-; ED 72 - SBC HL,SP
-SBCHLWREG       ED72,regspl,regsph
-
-; ED 73 - LD (dddd),SP
-emulED73:       inc     edi
-                call    fetchw
-                add     edi,2
-                mov     ecx,eax
-                mov     al,regspl
-                call    writemem
-                inc     cx
-                mov     al,regsph
-                call    writemem
-                xor     eax,eax
-                ret
-
-; ED 78 - IN A,(C)
-emulED78:       inc     edi
-                mov     al,regc
-                call    [offset inportxx+eax*4]
-                mov     dh,bl
-                or      dh,dh
-                setflag_in_c
-                ret
-
-; ED 79 - OUT (C),A
-emulED79:       inc     edi
-                mov     bl,dh
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                ret
-
-; ED 7A - ADC HL,SP
-ADCHLWREG       ED7A,regspl,regsph
-
-; ED 7B - LD SP,(dddd)
-emulED7B:       inc     edi
-                call    fetchw
-                mov     ecx,eax
-                call    readmem
-                mov     regspl,al
-                inc     cx
-                call    readmem
-                mov     regsph,al
-                xor     eax,eax
-                add     edi,2
-                ret
-
-; ED A0 - LDI
-emulEDA0:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                inc     reghl
-                inc     regde
-                dec     regbc
-                setflag_ldi
-                ret
-
-; ED A3 - OUTI
-emulEDA3:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     bl,al
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                inc     reghl
-                dec     regb
-                setflag_outi
-                ret
-
-; ED A8 - LDD
-OPLDD             EDA8
-
-; ED B0 - LDIR
-emulEDB0:       inc     edi
-emulEDB0a:      mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                inc     reghl
-                inc     regde
-                dec     regbc
-                jnz     emulEDB0a
-                ret
-
-; ED B1 - CPIR
-emulEDB1:       inc     edi
-emulEDB1b:      mov     ecx,regehl
-                call    readmem
-                cmp     dh,al
-                jz      emulEDB1a
-                inc     reghl
-                dec     regbc
-                jnz     emulEDB1b
-                and     dl,10111011b
-                ret
-emulEDB1a:      
-                inc     reghl
-                dec     regbc
-                or      dl,01000100b
-                ret
-
-; ED B8 - LDDR
-emulEDB8:       inc     edi
-emulEDB8a:      mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                dec     reghl
-                dec     regde
-                dec     regbc
-                jnz     emulEDB8a
-                ret
-
-; ED B9 - CPDR
-emulEDB9:       inc     edi
-emulEDB9b:      mov     ecx,regehl
-                call    readmem
-                cmp     dh,al
-                jz      emulEDB9a
-                dec     reghl
-                dec     regbc
-                jnz     emulEDB9b
-                and     dl,10111011b
-                ret
-emulEDB9a:      
-                dec     reghl
-                dec     regbc
-                or      dl,01000100b
                 ret
 
 ; FD 09 - ADD IY,BC
