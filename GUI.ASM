@@ -12,9 +12,9 @@ include pmode.inc
 include z80.inc
 include io.inc
 include number.inc
+include vdp.inc
 
 extrn blitbuffer: dword
-extrn dirtyname: dword
 
 public rendercounter
 public spritecounter
@@ -129,7 +129,7 @@ draw_update0:
 
                 mov     eax,001010101h
                 mov     ebx,000010101h
-                mov     edi,dirtyname
+                mov     edi,offset dirtyname
                 irp     j,<0,1,2,3,4>
                 or      [edi+j*32],eax
                 or      [edi+4+j*32],ebx

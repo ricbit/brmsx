@@ -15,8 +15,6 @@ extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
 extrn palette: near
-extrn dirtyname: dword
-extrn dirtypattern: dword
 
 public render_screen0
 public render_screen1
@@ -24,15 +22,22 @@ public render_screen2
 public render
 public clear
 public lastscreen
+public actualscreen
 public sprite_render
 public imagetype
 public nametable
 public patterntable
 public colortable
 public sprattrtable
+public sprpatttable
 public eval_sprite_coords
 public dirty_sprite
 public firstscreen
+public eval_base_address
+public vrammapping
+public screenselect 
+public dirtyname
+public dirtypattern
 
 ; DATA ---------------------------------------------------------------
 
@@ -54,12 +59,23 @@ patternsave     dd      0
 spriteenable    dd      0
 imagetype       dd      0
 nametable       dd      0
+colortable      dd      0
 patterntable    dd      0
 sprattrtable    dd      0
-colortable      dd      0
+sprpatttable    dd      0
 firstscreen     dd      1
+vrammapping     db      256 dup (0)
+screenselect    dd      ? ; nothing
+                dd      ? ; name table
+                dd      ? ; pattern table
+                dd      ? ; color table
+                dd      ? ; sprite attribute table
+                dd      ? ; sprite image table
+dirtyname       db      32*24 dup (0)
+dirtypattern    db      256*3 dup (0)
 spriteline      db      192 dup (0)
 lastscreen      db      0
+actualscreen    db      0
 
 ; render_screen0 -----------------------------------------------------
 ; render a screen 0 page
@@ -222,26 +238,20 @@ PIPE1           macro
 ; render a screen 1 page using dirty blocks
 
 render_screen1_dirty:
-                mov     firstscreen,0
                 
                 ; esi = name table
-                movzx   eax,byte ptr [offset vdpregs+2]
-                and     eax,0fh
-                shl     eax,10
-                mov     nametable,eax
+                mov     eax,nametable
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
-                movzx   eax,byte ptr [offset vdpregs+4]
-                and     eax,07h
-                shl     eax,11
+                
+                mov     eax,patterntable
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
 
                 ; ecx = color table
-                movzx   eax,byte ptr [offset vdpregs+3]
-                shl     eax,6
+                mov     eax,colortable
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
 
@@ -249,7 +259,7 @@ render_screen1_dirty:
                 mov     edi,blitbuffer
 
                 ; edx = dirty table
-                mov     edx,dirtyname
+                mov     edx,offset dirtyname
 
                 ; mask the temporary registers
                 xor     eax,eax
@@ -294,31 +304,22 @@ render12d:
 ; render a screen 1 page
 
 render_screen1:
-                cmp     firstscreen,1
-                je      render_screen1_linear
                 cmp     imagetype,1
                 je      render_screen1_dirty
 
 render_screen1_linear:
-                mov     firstscreen,0
                 ; esi = name table
-                movzx   eax,byte ptr [offset vdpregs+2]
-                and     eax,0fh
-                shl     eax,10
-                mov     nametable,eax
+                mov     eax,nametable
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
-                movzx   eax,byte ptr [offset vdpregs+4]
-                and     eax,07h
-                shl     eax,11
+                mov     eax,patterntable
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
 
                 ; ecx = color table
-                movzx   eax,byte ptr [offset vdpregs+3]
-                shl     eax,6
+                mov     eax,colortable
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
 
@@ -455,30 +456,19 @@ PIPE2_WIN       macro
 
 render_screen2_dirty:
 
-                mov     firstscreen,0
-
                 ; esi = name table
-                movzx   eax,byte ptr [offset vdpregs+2]
-                and     eax,0fh
-                shl     eax,10
-                mov     nametable,eax
+                mov     eax,nametable
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
-                movzx   eax,byte ptr [offset vdpregs+4]
-                and     eax,04h
-                shl     eax,11
-                mov     patterntable,eax
+                mov     eax,patterntable
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
                 mov     patternsave,ebx
 
                 ; ecx = color table
-                movzx   eax,byte ptr [offset vdpregs+3]
-                and     eax,080h
-                shl     eax,6
-                mov     colortable,eax
+                mov     eax,colortable
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
@@ -488,8 +478,8 @@ render_screen2_dirty:
 
                 ; edx = dirty table name
                 ; ebx = dirty table pattern
-                mov     edx,dirtyname
-                mov     ebx,dirtypattern
+                mov     edx,offset dirtyname
+                mov     ebx,offset dirtypattern
 
                 ; mask the temporary registers
                 xor     eax,eax
@@ -575,35 +565,23 @@ render2d_next:
 ;          called with interrupts DISABLED
 
 render_screen2:
-                cmp     firstscreen,1
-                je      render_screen2_linear
                 cmp     imagetype,1
                 je      render_screen2_dirty
 
 render_screen2_linear:
-                mov     firstscreen,0
                 
                 ; esi = name table
-                movzx   eax,byte ptr [offset vdpregs+2]
-                and     eax,0fh
-                shl     eax,10
-                mov     nametable,eax
+                mov     eax,nametable
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
-                movzx   eax,byte ptr [offset vdpregs+4]
-                and     eax,04h
-                shl     eax,11
-                mov     patterntable,eax
+                mov     eax,patterntable
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
 
                 ; ecx = color table
-                movzx   eax,byte ptr [offset vdpregs+3]
-                and     eax,080h
-                shl     eax,6
-                mov     colortable,eax
+                mov     eax,colortable
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
@@ -882,7 +860,7 @@ render:
 render1:
                 cmp     enabled,0
                 jne     render3
-                call    clear
+                mov     firstscreen,1
 render3:
                 mov     enabled,1
                 shr     bh,2
@@ -893,6 +871,15 @@ render3:
                 call    clear
                 mov     lastscreen,bl
 render0:
+                cmp     firstscreen,1
+                jne     render4
+                mov     eax,001010101h
+                mov     edi,offset dirtyname
+                mov     ecx,32*24/4
+                rep     stosd
+                mov     firstscreen,0
+                
+render4:
                 cmp     bl,0
                 je      render_screen1
                 cmp     bl,1
@@ -913,10 +900,6 @@ clear:
                 mov     edi,blitbuffer
                 mov     ecx,320*200/4
                 rep     stosd
-                mov     eax,001010101h
-                mov     edi,dirtyname
-                mov     ecx,32*24/4
-                rep     stosd
                 mov     dx,03C8h
                 mov     al,1
                 out     dx,al
@@ -925,7 +908,6 @@ clear:
                 out     dx,al
                 out     dx,al
                 out     dx,al
-                mov     firstscreen,1
                 pop     es
                 ret
 
@@ -968,7 +950,7 @@ CHECK           macro offx,offy,name
                 jge     check_sprite_&name&_exit
                 shl     eax,5
                 add     eax,ecx
-                add     eax,dirtyname
+                add     eax,offset dirtyname
                 mov     byte ptr [eax],1
 
 check_sprite_&name&_exit:
@@ -993,7 +975,7 @@ dirty_sprite:
 dirty_sprite_fast:
                 shl     eax,5
                 add     eax,ecx
-                add     eax,dirtyname
+                add     eax,offset dirtyname
                 or      dword ptr [eax],000010101h
                 or      dword ptr [eax+32],000010101h
                 or      dword ptr [eax+64],000010101h
@@ -1015,7 +997,261 @@ dirty_sprite_crop_all:
 
                 ret
 
+; eval_base_address --------------------------------------------------
+; evaluate the new bases for vdp tables
+
+eval_base_address:
+
+                ; first we need to determine the actual screen
+
+                test    byte ptr [offset vdpregs+0],BIT_1
+                jz      eval_base_address0
+
+                ; M3 set - screen 2
+
+                mov     actualscreen,2
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,0Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     al,80h
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,04h
+                shl     eax,11
+                mov     patterntable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     al,07Fh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,07h
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    eax ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,01010101h
+                mov     edi,nametable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],ax
+                mov     [edi+2],al
+
+                mov     eax,02020202h
+                mov     ecx,32*24*8/256/4
+                mov     edi,patterntable
+                shr     edi,8
+                add     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,03030303h
+                mov     ecx,32*24*8/256/4
+                mov     edi,colortable
+                shr     edi,8
+                add     edi,offset vrammapping
+                rep     stosd
+
+                mov     al,04h
+                mov     edi,sprattrtable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],al
+
+                mov     eax,05050505h
+                mov     edi,sprpatttable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],eax
+                mov     [edi+4],eax
+
+                mov     eax,offset dirty_screen2_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen2_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen2_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen2_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen2_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen2_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx eax
+
+                xor     eax,eax
+                ret
+
+eval_base_address0:
+
+                test    byte ptr [offset vdpregs+1],(BIT_4 OR BIT_3)
+                jnz     eval_base_address1
+
+                ; M3,M2,M1 reset - screen 1
+
+                mov     actualscreen,1
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,0Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,07h
+                shl     eax,11
+                mov     patterntable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     al,07Fh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,07h
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    eax ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,01010101h
+                mov     edi,nametable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],ax
+                mov     [edi+2],al
+
+                mov     eax,02020202h
+                mov     edi,patterntable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],eax
+                mov     [edi+4],eax
+
+                mov     al,03h
+                mov     edi,colortable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],al
+
+                mov     al,04h
+                mov     edi,sprattrtable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],al
+
+                mov     eax,05050505h
+                mov     edi,sprpatttable
+                shr     edi,8
+                add     edi,offset vrammapping
+                mov     [edi],eax
+                mov     [edi+4],eax
+                
+                mov     eax,offset dirty_screen1_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen1_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen1_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen1_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen1_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen1_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx eax
+
+                xor     eax,eax
+                ret
+
+eval_base_address1:
+
+                ret
+
+; --------------------------------------------------------------------
+; these are the functions to perform dirty operations on screen 2
+
+dirty_screen2_nothing:
+dirty_screen2_sprpatt:
+                mov     [ecx+esi],bl
+                ret
+
+dirty_screen2_name:
+                cmp     [ecx+esi],bl
+                je      dirty_screen2_nothing
+                mov     eax,ecx
+                sub     ecx,nametable
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtyname+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen2_pattern:
+                mov     eax,ecx
+                sub     ecx,patterntable
+                shr     ecx,3
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtypattern+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen2_color:
+                mov     eax,ecx
+                sub     ecx,colortable
+                shr     ecx,3
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtypattern+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen2_sprattr:                
+                mov     eax,ecx
+                and     ecx,0FFFFFFFCh
+                push    esi eax
+                add     esi,ecx
+                call    eval_sprite_coords
+                call    dirty_sprite
+                pop     eax esi
+                mov     [esi+eax],bl
+                call    eval_sprite_coords
+                call    dirty_sprite
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+; these are the functions to perform dirty operations on screen 1
+
+dirty_screen1_nothing:
+dirty_screen1_name:
+dirty_screen1_pattern:
+dirty_screen1_color:
+dirty_screen1_sprattr:
+dirty_screen1_sprpatt:
+                mov     [ecx+esi],bl
+                mov     firstscreen,1
+                ret
+
 code32          ends
                 end
-
-

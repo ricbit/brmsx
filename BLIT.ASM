@@ -14,8 +14,6 @@ include vdp.inc
 include io.inc
 
 extrn blitbuffer: dword
-extrn dirtyname: dword
-extrn dirtypattern: dword
 
 public blit
 
@@ -55,7 +53,7 @@ blit0_0:
 blit_dirty_320:
                 cmp     lastscreen,4
                 je      blit_linear_320
-                mov     ebx,dirtyname
+                mov     ebx,offset dirtyname
                 mov     esi,blitbuffer
                 mov     edi,0a0000h+32
                 sub     edi,_code32a
@@ -94,8 +92,8 @@ blit_dirty_320_next:
                 jnz     blit_dirty_320_line
 
                 mov     eax,0
-                mov     edi,dirtypattern
-                mov     ecx,256*8/4
+                mov     edi,offset dirtypattern
+                mov     ecx,256*3/4
                 rep     stosd
 
                 ret

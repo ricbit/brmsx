@@ -1,3 +1,7 @@
+release 1.55:
+
+- new pipeline for block screen updates
+
 release 1.54:
 
 - new, improved FETCH1 and FETCHW1 macro

@@ -2,6 +2,7 @@
 
 FETCH1          macro   opcode
 
+;                shr     ecx,8
                 cmp     ebx,01FFFh
                 jne     emul&opcode&_fetch
 
@@ -20,6 +21,7 @@ emul&opcode&_continue:
 
 FETCHW1         macro   opcode
 
+                ;shr     ecx,8
                 cmp     ebx,01FFEh
                 jb      emul&opcode&_fetch
 

@@ -19,8 +19,6 @@ extrn isetFDxx: near
 extrn emulEDFF: near
 extrn start_counter: near
 extrn end_counter: near
-extrn dirtyname: dword
-extrn dirtypattern: dword
 
 include io.inc
 include vdp.inc
@@ -414,7 +412,8 @@ FETCHMACRO      macro   skip
                 ;cmp     ebx,3000h
                 ;ja      fetch1
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
-                mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
+                ;mov     ebx,[esi+ebx]
+                mov     al,[esi+ebx]           ; clock 6 U [AGI]
 
                 endm
 
@@ -660,6 +659,7 @@ EMULATE         macro   emtype,brtype
                 mov     error,eax
                 mov     exit_now,eax
                 mov     interrupt,eax
+                mov     firstscreen,1
                 mov     ebp,59659
                 movzx   edi,regpc
                 movzx   edx,regaf
@@ -1899,79 +1899,18 @@ emulXX:         mov     error,1
 
 outemulXX:      ret
 
-outemul98:      mov     ecx,msxvram
-                mov     esi,vdpaddresse
+outemul98:      mov     esi,msxvram
+                mov     ecx,vdpaddresse
                 inc     vdpaddress
-                mov     eax,esi
+                mov     al,ch
                 cmp     imagetype,0
                 je      outemul98_ret
-                cmp     lastscreen,1
-                jne     outemul98_1
-                ; screen 2
-                mov     esi,eax
-                sub     esi,nametable
-                cmp     esi,32*24
-                jae     outemul98_2_pat
-                cmp     [ecx+eax],bl  
-                je      outemul98_ret 
-                add     esi,dirtyname
-                mov     byte ptr [esi],1
-                mov     [ecx+eax],bl
-                xor     eax,eax
-                ret
-outemul98_2_pat:
-                mov     esi,eax
-                sub     esi,patterntable
-                cmp     esi,256*3*8
-                jae     outemul98_2_col
-                shr     esi,3
-                add     esi,dirtypattern
-                mov     byte ptr [esi],1
-                mov     [ecx+eax],bl
-                xor     eax,eax
-                ret
-outemul98_2_col:
-                mov     esi,eax
-                sub     esi,colortable
-                cmp     esi,256*3*8
-                jae     outemul98_2_spr
-                shr     esi,3
-                add     esi,dirtypattern
-                mov     byte ptr [esi],1
-                mov     [ecx+eax],bl
-                xor     eax,eax
-                ret
-outemul98_2_spr:
-                mov     esi,eax
-                sub     esi,sprattrtable
-                cmp     esi,128
-                jae     outemul98_ret
-                mov     esi,eax
-                and     esi,0FFFFFFFCh
-                add     esi,ecx
-                push    ecx eax
-                call    eval_sprite_coords
-                call    dirty_sprite
-                pop     eax ecx
-                mov     [ecx+eax],bl
-                call    eval_sprite_coords
-                call    dirty_sprite
-                xor     eax,eax
-                ret
-
-outemul98_1:
-                cmp     lastscreen,0
-                jne     outemul98_ret
-                ; screen 1
-                mov     eax,esi
-                sub     esi,nametable
-                cmp     esi,32*24
-                jae     outemul98_ret
-                add     esi,dirtyname
-                mov     byte ptr [esi],1
+                
+                mov     al,[offset vrammapping+eax]
+                jmp     [offset screenselect+eax*4]
+                
 outemul98_ret:
-                mov     [ecx+eax],bl
-                xor     eax,eax
+                mov     [ecx+esi],bl
                 ret
 
 outemul99:      cmp     vdpcond,0
@@ -1993,7 +1932,7 @@ outemul99b:     and     ebx,00000111b
                 mov     firstscreen,1
                 cmp     ebx,7
                 je      set_border_color
-                ret
+                jmp     eval_base_address
 
 outemulA0:      mov     psgselect,bl
                 ret

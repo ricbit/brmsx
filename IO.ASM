@@ -11,8 +11,6 @@ code32  segment para public use32
 extrn blitbuffer: dword
 extrn start_counter: near
 extrn end_counter: near
-extrn dirtyname: dword
-extrn dirtypattern: dword
 
 include pmode.inc
 include pentium.inc

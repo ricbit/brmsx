@@ -12,4 +12,10 @@ extrn colortable: dword
 extrn eval_sprite_coords: near
 extrn dirty_sprite: near
 extrn sprattrtable: dword
+extrn sprpatttable: dword
 extrn firstscreen: dword
+extrn eval_base_address: near
+extrn screenselect: dword
+extrn vrammapping: dword
+extrn dirtyname: byte
+extrn dirtypattern: byte
