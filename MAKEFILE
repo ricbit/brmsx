@@ -1,12 +1,21 @@
-OBJECTS = pmode.o brmsx.o io.o debug.o vdp.o patch.o \
+OBJECTS = pmode.o brmsx.o io.o debug.o patch.o \
 	  z80.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o
 TASMFLAGS = /ml /m2 /q /la
 
-all : brmsx.exe
+all : brmsx.exe brmsxwin.exe
 
-brmsx.exe : $(OBJECTS)
+brmsx.exe : $(OBJECTS) vdpdos.o
 	tlink /3 /x $^, $@
+
+brmsxwin.exe : $(OBJECTS) vdpwin.o
+	tlink /3 /x $^, $@
+
+vdpdos.o : vdp.asm
+	tasm $(TASMFLAGS) /dDOS $^,$@
+
+vdpwin.o : vdp.asm
+	tasm $(TASMFLAGS) /dWIN $^,$@
 
 %.o : %.asm
 	tasm $(TASMFLAGS) $^,$@
@@ -18,4 +27,6 @@ clean :
 	del *.o
 	del *.exe
 	del *.lst
+	del *.inn        
+	del *.pro
 	del cart1.rom

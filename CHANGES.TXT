@@ -1,10 +1,27 @@
+release 1.34:
+
+- optimized the screen 0 renderer: speed gain is 1.8%
+- renamed debug command from "V" to "0"
+- added clock counter in command "1"
+- optimized the screen 1 renderer: speed gain is 22%
+
+release 1.33:
+
+- optimized JP cc,dddd
+- optimized AND rr/nn
+- optimized the initialization of "emulate"
+- optimized JR dd
+- optimized OR (HL)
+- optimized ADC A,(II+DD)
+- optimized the screen 2 renderer: speed gain is 21%
+
 release 1.32:
 
 - optimized LDI
-- added 1 waitstate for each instruction
+- added 1 waitstate for each instruction 
   now everything should run at correct speed
 - added SRL (HL)
-- aaargh: clockcounter was not dword-aligned
+- aaargh: "clockcounter" was not dword-aligned
   now the emulation should be faster
 
 release 1.31:

@@ -496,12 +496,12 @@ EMULABEL        macro   point,emtype,brtype
 
 EMULATE         macro   emtype,brtype
 
-                mov     eax,0
-                mov     ecx,0
-                mov     error,0
-                mov     exit_now,0
-                mov     interrupt,0
-                mov     clockcounter,0
+                xor     eax,eax
+                xor     ecx,ecx
+                mov     error,eax
+                mov     exit_now,eax
+                mov     interrupt,eax
+                mov     clockcounter,eax
                 movzx   edi,regpc
                 movzx   edx,regaf
 
@@ -517,11 +517,15 @@ EMULABEL        loop,emtype,brtype
                 call    fetch
                 inc     rcounter
                 call    [offset iset + eax*4]
+                
+                if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
+                add     clockcounter,ebp
+                endif
+                
                 cmp     interrupt,1
                 JUMP    je,interrupt,emtype,brtype
 
                 if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
-                add     clockcounter,ebp
                 cmp     clockcounter,59659
                 JUMP    jb,loop,emtype,brtype
                 endif
@@ -718,10 +722,10 @@ OPRLA           17
 ; 18 - JR dd
 emul18:         inc     edi
                 call    fetch
-                inc     edi
                 movsx   ebx,al
-                add     edi,ebx
+                inc     edi
                 mov     ebp,12+2
+                add     edi,ebx
                 ret
 
 ; 19 - ADD HL,DE
@@ -1317,16 +1321,7 @@ emulC1:         inc     edi
                 ret
 
 ; C2 - JP NZ,dddd
-emulC2:         test    dl,ZERO_FLAG
-                mov     ebp,10+3
-                jnz     emulC2a
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulC2a:        add     edi,3
-                ret
+JPCC            C2,jnz,ZERO_FLAG
 
 ; C3 - JP dddd
 emulC3:         inc     edi
@@ -1383,16 +1378,7 @@ emulC9:         mov     ecx,regesp
                 ret
 
 ; CA - JP Z,dddd
-emulCA:         test    dl,ZERO_FLAG
-                mov     ebp,10+3
-                jz      emulCAa
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulCAa:        add     edi,3
-                ret
+JPCC            CA,jz,ZERO_FLAG
 
 ; CB - group CB
 emulCB:         inc     edi
@@ -1465,17 +1451,7 @@ emulD1:         inc     edi
                 ret
 
 ; D2 - JP NC,dddd
-emulD2:         test    dl,CARRY_FLAG
-                mov     ebp,10+3
-                jnz     emulD2a
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulD2a:        add     edi,3
-                ret
-
+JPCC            D2,jnz,CARRY_FLAG
 
 ; D3 - OUT (dd),A
 OUTIMM          D3
@@ -1544,16 +1520,7 @@ emulD9:         inc     edi
                 ret
 
 ; DA - JP C,dddd
-emulDA:         test    dl,CARRY_FLAG
-                mov     ebp,10+3
-                jz      emulDAa
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulDAa:        add     edi,3
-                ret
+JPCC            DA,jz,CARRY_FLAG
 
 ; DB - IN A,(dd)
 INADD           DB
@@ -1612,16 +1579,7 @@ emulE1:         inc     edi
                 ret
 
 ; E2 - JP PO,dddd
-emulE2:         test    dl,PARITY_FLAG
-                mov     ebp,10+3
-                jnz     emulE2a
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulE2a:        add     edi,3
-                ret
+JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
 emulE3:         inc     edi
@@ -1692,16 +1650,7 @@ emulE9:         mov     edi,regehl
                 ret
 
 ; EA - JP PE,dddd
-emulEA:         test    dl,PARITY_FLAG
-                mov     ebp,10+3
-                jz      emulEAa
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulEAa:        add     edi,3
-                ret
+JPCC            EA,jz,PARITY_FLAG
 
 ; EB - EX DE,HL
 emulEB:         mov     ebx,regede
@@ -1766,16 +1715,7 @@ emulF1:         inc     edi
                 ret
 
 ; F2 - JP P,dddd
-emulF2:         test    dl,SIGN_FLAG
-                mov     ebp,10+3
-                jnz     emulF2a 
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulF2a:        add     edi,3
-                ret
+JPCC            F2,jnz,SIGN_FLAG
 
 ; F3 - DI
 emulF3:         inc     edi
@@ -1836,16 +1776,7 @@ emulF9:         inc     edi
                 ret
 
 ; FA - JP M,dddd
-emulFA:         test    dl,SIGN_FLAG
-                mov     ebp,10+3
-                jz      emulFAa 
-                inc     edi
-                call    fetchw
-                mov     edi,eax
-                xor     eax,eax
-                ret
-emulFAa:        add     edi,3
-                ret
+JPCC            FA,jz,SIGN_FLAG
 
 ; FB - EI
 emulFB:         inc     edi

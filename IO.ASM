@@ -371,6 +371,7 @@ my_irq_handler:
                 jnz     my_irq_handler0
                 mov     eax,framerate
                 mov     on_off,eax
+                cli
                 call    render
                 call    blit
 my_irq_handler0:

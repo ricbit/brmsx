@@ -22,7 +22,7 @@ public cart1
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.32',13,10
+msg00           db      'BrMSX 1.34',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'

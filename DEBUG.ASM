@@ -178,8 +178,8 @@ debug_loop:
                 call    crlf
                 cmp     al,'D'
                 je      command_d      
-                cmp     al,'V'
-                je      command_v
+                cmp     al,'0'
+                je      command_0
                 cmp     al,'M'
                 je      command_m
                 cmp     al,'S'
@@ -239,7 +239,7 @@ command_b:
                 call    crlf
                 jmp     debug_loop
 
-command_v:
+command_0:
                 call    setgraphmode
                 rdtsc
                 push    eax
@@ -275,10 +275,26 @@ command_k:
 
 command_1:
                 call    setgraphmode
+                call    clear
+                rdtsc
+                push    eax
+                cli     
                 call    render_screen1
+                sti
                 call    blit
+                pop     ebx
+                rdtsc
+                sub     eax,ebx
+                push    eax
                 call    getchar
                 call    settextmode
+                pop     eax
+                mov     ebx,eax
+                shr     eax,16
+                call    printhex4
+                mov     eax,ebx
+                call    printhex4
+                call    crlf
                 jmp     debug_loop
 
 command_2:
@@ -286,7 +302,9 @@ command_2:
                 call    clear
                 rdtsc
                 push    eax
+                cli     
                 call    render_screen2
+                sti
                 call    blit
                 pop     ebx
                 rdtsc

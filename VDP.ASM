@@ -36,6 +36,7 @@ align 4
 
 enabled         dd      1
 linenumber      dd      0
+stacksave       dd      0
 lastscreen      db      0
 spriteline      db      192 dup (0)
 
@@ -89,25 +90,24 @@ render06:
                 ; draw a line
 
 render05:
-                push    ebp
                 mov     cl,[esi]
-                mov     ebp,8
+                
                 ; draw a char
-render04:
+                
                 mov     dl,[ebx+ecx*8]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+                
                 mov     ax,[offset screen0_table+edx*8]
-                inc     ebx
-                mov     [edi],ax
+                mov     [edi+i*320],ax
                 mov     eax,[offset screen0_table+edx*8+2]
-                mov     [edi+2],eax
-                add     edi,320
-                dec     ebp
-                jnz     render04                
+                mov     dl,[ebx+ecx*8+i+1]
+                mov     [edi+2+i*320],eax
 
-                sub     ebx,8
-                pop     ebp
+                endm
+
                 inc     esi
-                sub     edi,320*8-6
+                add     edi,6
                 dec     ebp
                 jnz     render05
 
@@ -165,16 +165,22 @@ render11:       push    ebp
                 mov     dl,al
                 shr     dl,3
                 mov     dl,[ecx+edx]
+
                 push    ecx
-                mov     ecx,edx
                 push    esi
+                push    eax
+                push    ebx
+                
+                lea     ebx,[ebx+eax*8]
+                mov     eax,[offset foregroundcolor+edx*4]
+                mov     ecx,[offset backgroundcolor+edx*4]
 
                 ; for each subline
-                mov     ebp,8
-render12:       push    ebp
 
                 ; fetch the pattern for that subline
-                mov     dl,[ebx+eax*8]
+                mov     dl,[ebx]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
 
                 ; get the foreground mask
                 mov     ebp,[offset foregroundmask+edx*8]
@@ -183,38 +189,34 @@ render12:       push    ebp
                 mov     esi,[offset backgroundmask+edx*8]
 
                 ; blend with the foreground color
-                and     ebp,[offset foregroundcolor+ecx*4]
+                and     ebp,eax
 
                 ; blend with the background color
-                and     esi,[offset backgroundcolor+ecx*4]
+                and     esi,ecx
 
                 ; mix the colors
                 or      ebp,esi
+                mov     esi,[offset backgroundmask+edx*8+4]
 
                 ; display the subline
-                mov     [edi],ebp
+                mov     [edi+i*320],ebp
 
                 ; do it again for the next four pixels
                 mov     ebp,[offset foregroundmask+edx*8+4]
-                mov     esi,[offset backgroundmask+edx*8+4]
-                and     ebp,[offset foregroundcolor+ecx*4]
-                and     esi,[offset backgroundcolor+ecx*4]
+                and     esi,ecx
+                and     ebp,eax
                 or      ebp,esi
-                mov     [edi+4],ebp
+                mov     dl,[ebx+i+1]
+                mov     [edi+4+i*320],ebp
 
-                add     edi,320
-                inc     ebx
+                endm
 
-                pop     ebp
-                dec     ebp
-                jnz     render12
-
-                sub     edi,320*8-8
-                sub     ebx,8
-
+                pop     ebx
+                pop     eax
                 pop     esi
                 pop     ecx
 
+                add     edi,8
                 inc     esi
 
                 pop     ebp
@@ -229,8 +231,106 @@ render12:       push    ebp
 
                 jmp     sprite_render
 
+; PIPE2_DOS ----------------------------------------------------------
+; this is the inner loop for render_screen2 function
+; it uses the esp as a general register
+; and because of that, this macro doesn't run under
+; multitasking environments
+
+PIPE2_DOS       macro
+                
+                push    ecx
+                mov     stacksave,esp
+                mov     esp,ecx
+                xor     ecx,ecx
+
+                ; fetch the pattern for that subline
+                mov     dl,[ebx+eax*8]
+                mov     cl,[esp+eax*8]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                mov     ebp,[offset foregroundmask+edx*8]
+                mov     esi,[offset backgroundmask+edx*8]
+
+                and     ebp,[offset foregroundcolor+ecx*4]
+                and     esi,[offset backgroundcolor+ecx*4]
+
+                or      ebp,esi
+                mov     dl,[ebx+eax*8+i]
+
+                mov     cl,[esp+eax*8+i]
+                mov     [edi+i*320],ebp
+                
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                mov     esi,[offset backgroundmask+edx*8+4]
+                
+                and     ebp,[offset foregroundcolor+ecx*4]
+                and     esi,[offset backgroundcolor+ecx*4]
+                
+                or      ebp,esi
+                mov     dl,[ebx+eax*8+(i+1)]
+                
+                mov     cl,[esp+eax*8+(i+1)]
+                mov     [edi+4+i*320],ebp
+
+                endm
+                
+                mov     esp,stacksave
+                pop     ecx
+                
+                endm
+
+; PIPE2_WIN ----------------------------------------------------------
+; this is the inner loop for render_screen2 function
+; it doesn't use the esp as a general register
+; and can run under windows
+
+PIPE2_WIN       macro
+                
+                mov     dl,[ebx+eax*8]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                ; get the foreground mask
+                mov     ebp,[offset foregroundmask+edx*8]
+                
+                ; get the background mask
+                mov     esi,[offset backgroundmask+edx*8]
+
+                ; fetch the color for that subline
+                mov     dl,[ecx+eax*8+i]
+
+                ; blend with the foreground color
+                and     ebp,[offset foregroundcolor+edx*4]
+
+                ; blend with the background color
+                and     esi,[offset backgroundcolor+edx*4]
+
+                ; mix the colors
+                or      ebp,esi
+
+                ; display the subline
+                mov     dl,[ebx+eax*8+i]
+                mov     [edi+i*320],ebp
+                
+                ; do it again for the next four pixels
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                mov     esi,[offset backgroundmask+edx*8+4]
+                mov     dl,[ecx+eax*8+i]
+                and     ebp,[offset foregroundcolor+edx*4]
+                and     esi,[offset backgroundcolor+edx*4]
+                or      ebp,esi
+                mov     dl,[ebx+eax*8+(i+1)]
+                mov     [edi+4+i*320],ebp
+
+                endm
+                endm
+
 ; render_screen2 -----------------------------------------------------
 ; render a screen 2 page
+; WARNING: this function must ALWAYS be 
+;          called with interrupts DISABLED
 
 render_screen2:
                 ; esi = name table
@@ -272,73 +372,29 @@ render20:       push    ebp
 
                 ; for each char
                 mov     ebp,32
-render21:       push    ebp
-
+render21:       
                 ; fetch the character
                 mov     al,[esi]
+                push    ebp
                 push    esi
 
-                ; for each subline
-                mov     ebp,8
-render22:       push    ebp
+                ifdef   DOS
+                  PIPE2_DOS
+                else
+                  PIPE2_WIN
+                endif
 
-                ; fetch the pattern for that subline
-                mov     dl,[ebx+eax*8]
-
-                ; get the foreground mask
-                mov     ebp,[offset foregroundmask+edx*8]
-                
-                ; get the background mask
-                mov     esi,[offset backgroundmask+edx*8]
-
-                ; fetch the color for that subline
-                mov     dl,[ecx+eax*8]
-
-                ; blend with the foreground color
-                and     ebp,[offset foregroundcolor+edx*4]
-
-                ; blend with the background color
-                and     esi,[offset backgroundcolor+edx*4]
-
-                ; mix the colors
-                or      ebp,esi
-
-                ; display the subline
-                mov     [edi],ebp
-                
-                ; do it again for the next four pixels
-                mov     dl,[ebx+eax*8]
-                mov     ebp,[offset foregroundmask+edx*8+4]
-                mov     esi,[offset backgroundmask+edx*8+4]
-                mov     dl,[ecx+eax*8]
-                and     ebp,[offset foregroundcolor+edx*4]
-                and     esi,[offset backgroundcolor+edx*4]
-                or      ebp,esi
-                mov     [edi+4],ebp
-                
-                add     edi,320
-
-                inc     ebx
-                inc     ecx
-
-                pop     ebp
-                dec     ebp
-                jnz     render22
-
-                sub     edi,320*8-8
+                add     edi,8
 
                 pop     esi
-                inc     esi
-                sub     ebx,8
-                sub     ecx,8
-
                 pop     ebp
+                
+                inc     esi
                 dec     ebp
                 jnz     render21
 
-                sub     edi,32*8-320*8
-
                 pop     ebp
+                sub     edi,32*8-320*8
                 dec     ebp
                 jnz     render20
 

@@ -49,9 +49,9 @@ ADCAII          macro   opcode,regii
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 call    fetch
-                inc     edi
                 movsx   ebx,al
                 mov     ecx,regii
+                inc     edi
                 add     cx,bx
                 call    readmem
                 mov     bh,al
@@ -142,9 +142,9 @@ ADDAII          macro   opcode,regii
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 call    fetch
-                inc     edi
                 movsx   ebx,al
                 mov     ecx,regii
+                inc     edi
                 add     cx,bx
                 call    readmem
                 mov     bh,al
@@ -292,9 +292,9 @@ emul&opcode:
 BITII           macro   opcode,bit,regii
 
 emul&opcode:                
-                inc     edi
                 movsx   ebx,cl
                 mov     ecx,regii
+                inc     edi
                 add     cx,bx
                 call    readmem
                 and     dl,01h
@@ -471,8 +471,8 @@ emul&opcode:
                 and     ebx,0ffh
                 and     dl,1
                 mov     dh,bl
-                or      dl,[offset LOGICAL_table+ebx]
                 mov     ebp,11+2
+                or      dl,[offset LOGICAL_table+ebx]
                 ret
 
                 endm
@@ -560,6 +560,24 @@ emul&opcode:
                 inc     edi
                 inc     reg
                 mov     ebp,tcycles+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; JPCC - JP cc,dddd
+
+JPCC            macro   opcode,jcc,flagtype
+
+emul&opcode:    test    dl,flagtype
+                mov     ebp,10+3
+                jcc     emul&opcode&a
+                inc     edi
+                call    fetchw
+                mov     edi,eax
+                xor     eax,eax
+                ret
+emul&opcode&a:  add     edi,3
                 ret
 
                 endm
@@ -871,8 +889,8 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 or      dh,al
-                mov     al,dh
                 mov     ebp,7+2
+                mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
