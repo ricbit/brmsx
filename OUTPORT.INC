@@ -151,8 +151,8 @@ outportxx:
 	outport95: dd outemulXX
 	outport96: dd outemulXX
 	outport97: dd outemulXX
-	outport98: dd outemulXX
-	outport99: dd outemulXX
+	outport98: dd outemul98
+	outport99: dd outemul99
 	outport9A: dd outemulXX
 	outport9B: dd outemulXX
 	outport9C: dd outemulXX

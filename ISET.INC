@@ -10,40 +10,40 @@ iset:
 	iset08: dd emulXX
 	iset09: dd emul09
 	iset0A: dd emulXX
-	iset0B: dd emulXX
-	iset0C: dd emulXX
+	iset0B: dd emul0B
+	iset0C: dd emul0C
 	iset0D: dd emulXX
-	iset0E: dd emulXX
-	iset0F: dd emulXX
+	iset0E: dd emul0E
+	iset0F: dd emul0F
 	iset10: dd emul10
 	iset11: dd emul11
 	iset12: dd emulXX
-	iset13: dd emulXX
+	iset13: dd emul13
 	iset14: dd emulXX
 	iset15: dd emulXX
 	iset16: dd emulXX
 	iset17: dd emulXX
-	iset18: dd emulXX
+	iset18: dd emul18
 	iset19: dd emul19
-	iset1A: dd emulXX
+	iset1A: dd emul1A
 	iset1B: dd emulXX
 	iset1C: dd emulXX
-	iset1D: dd emulXX
-	iset1E: dd emulXX
+	iset1D: dd emul1D
+	iset1E: dd emul1E
 	iset1F: dd emulXX
 	iset20: dd emul20
 	iset21: dd emul21
 	iset22: dd emul22
-	iset23: dd emulXX
+	iset23: dd emul23
 	iset24: dd emul24
 	iset25: dd emul25
-	iset26: dd emulXX
+	iset26: dd emul26
 	iset27: dd emulXX
 	iset28: dd emul28
-	iset29: dd emulXX
+	iset29: dd emul29
 	iset2A: dd emul2A
 	iset2B: dd emul2B
-	iset2C: dd emulXX
+	iset2C: dd emul2C
 	iset2D: dd emulXX
 	iset2E: dd emul2E
 	iset2F: dd emul2F
@@ -55,7 +55,7 @@ iset:
 	iset35: dd emulXX
 	iset36: dd emul36
 	iset37: dd emulXX
-	iset38: dd emulXX
+	iset38: dd emul38
 	iset39: dd emul39
 	iset3A: dd emul3A
 	iset3B: dd emulXX
@@ -70,7 +70,7 @@ iset:
 	iset44: dd emul44
 	iset45: dd emulXX
 	iset46: dd emulXX
-	iset47: dd emulXX
+	iset47: dd emul47
 	iset48: dd emulXX
 	iset49: dd emulXX
 	iset4A: dd emulXX
@@ -79,7 +79,7 @@ iset:
 	iset4D: dd emul4D
 	iset4E: dd emulXX
 	iset4F: dd emul4F
-	iset50: dd emulXX
+	iset50: dd emul50
 	iset51: dd emulXX
 	iset52: dd emulXX
 	iset53: dd emulXX
@@ -93,7 +93,7 @@ iset:
 	iset5B: dd emulXX
 	iset5C: dd emulXX
 	iset5D: dd emulXX
-	iset5E: dd emulXX
+	iset5E: dd emul5E
 	iset5F: dd emul5F
 	iset60: dd emulXX
 	iset61: dd emulXX
@@ -101,7 +101,7 @@ iset:
 	iset63: dd emulXX
 	iset64: dd emulXX
 	iset65: dd emulXX
-	iset66: dd emulXX
+	iset66: dd emul66
 	iset67: dd emul67
 	iset68: dd emulXX
 	iset69: dd emulXX
@@ -111,30 +111,30 @@ iset:
 	iset6D: dd emulXX
 	iset6E: dd emulXX
 	iset6F: dd emul6F
-	iset70: dd emulXX
+	iset70: dd emul70
 	iset71: dd emulXX
-	iset72: dd emulXX
-	iset73: dd emulXX
+	iset72: dd emul72
+	iset73: dd emul73
 	iset74: dd emulXX
 	iset75: dd emulXX
 	iset76: dd emulXX
 	iset77: dd emul77
 	iset78: dd emul78
 	iset79: dd emul79
-	iset7A: dd emulXX
-	iset7B: dd emulXX
+	iset7A: dd emul7A
+	iset7B: dd emul7B
 	iset7C: dd emul7C
 	iset7D: dd emul7D
 	iset7E: dd emul7E
 	iset7F: dd emulXX
-	iset80: dd emulXX
+	iset80: dd emul80
 	iset81: dd emulXX
 	iset82: dd emulXX
 	iset83: dd emulXX
 	iset84: dd emulXX
 	iset85: dd emulXX
-	iset86: dd emulXX
-	iset87: dd emulXX
+	iset86: dd emul86
+	iset87: dd emul87
 	iset88: dd emulXX
 	iset89: dd emulXX
 	iset8A: dd emulXX
@@ -142,7 +142,7 @@ iset:
 	iset8C: dd emulXX
 	iset8D: dd emulXX
 	iset8E: dd emulXX
-	iset8F: dd emulXX
+	iset8F: dd emul8F
 	iset90: dd emulXX
 	iset91: dd emul91
 	iset92: dd emul92
@@ -160,9 +160,9 @@ iset:
 	iset9E: dd emulXX
 	iset9F: dd emul9F
 	isetA0: dd emulXX
-	isetA1: dd emulXX
+	isetA1: dd emulA1
 	isetA2: dd emulXX
-	isetA3: dd emulXX
+	isetA3: dd emulA3
 	isetA4: dd emulXX
 	isetA5: dd emulXX
 	isetA6: dd emulXX
@@ -175,31 +175,31 @@ iset:
 	isetAD: dd emulXX
 	isetAE: dd emulXX
 	isetAF: dd emulAF
-	isetB0: dd emulXX
+	isetB0: dd emulB0
 	isetB1: dd emulXX
 	isetB2: dd emulXX
 	isetB3: dd emulXX
 	isetB4: dd emulXX
-	isetB5: dd emulXX
-	isetB6: dd emulXX
-	isetB7: dd emulXX
+	isetB5: dd emulB5
+	isetB6: dd emulB6
+	isetB7: dd emulB7
 	isetB8: dd emulXX
 	isetB9: dd emulXX
-	isetBA: dd emulXX
+	isetBA: dd emulBA
 	isetBB: dd emulXX
 	isetBC: dd emulXX
-	isetBD: dd emulXX
+	isetBD: dd emulBD
 	isetBE: dd emulBE
 	isetBF: dd emulXX
 	isetC0: dd emulC0
-	isetC1: dd emulXX
-	isetC2: dd emulXX
+	isetC1: dd emulC1
+	isetC2: dd emulC2
 	isetC3: dd emulC3
 	isetC4: dd emulXX
-	isetC5: dd emulXX
+	isetC5: dd emulC5
 	isetC6: dd emulC6
 	isetC7: dd emulXX
-	isetC8: dd emulXX
+	isetC8: dd emulC8
 	isetC9: dd emulC9
 	isetCA: dd emulXX
 	isetCB: dd emulCB
@@ -208,25 +208,25 @@ iset:
 	isetCE: dd emulXX
 	isetCF: dd emulXX
 	isetD0: dd emulXX
-	isetD1: dd emulXX
+	isetD1: dd emulD1
 	isetD2: dd emulD2
 	isetD3: dd emulD3
 	isetD4: dd emulXX
-	isetD5: dd emulXX
+	isetD5: dd emulD5
 	isetD6: dd emulD6
 	isetD7: dd emulXX
 	isetD8: dd emulXX
 	isetD9: dd emulXX
-	isetDA: dd emulXX
+	isetDA: dd emulDA
 	isetDB: dd emulDB
 	isetDC: dd emulXX
 	isetDD: dd emulXX
 	isetDE: dd emulXX
 	isetDF: dd emulXX
 	isetE0: dd emulXX
-	isetE1: dd emulXX
+	isetE1: dd emulE1
 	isetE2: dd emulXX
-	isetE3: dd emulXX
+	isetE3: dd emulE3
 	isetE4: dd emulXX
 	isetE5: dd emulE5
 	isetE6: dd emulE6
@@ -245,12 +245,12 @@ iset:
 	isetF3: dd emulF3
 	isetF4: dd emulXX
 	isetF5: dd emulF5
-	isetF6: dd emulXX
+	isetF6: dd emulF6
 	isetF7: dd emulXX
-	isetF8: dd emulXX
+	isetF8: dd emulF8
 	isetF9: dd emulF9
 	isetFA: dd emulFA
-	isetFB: dd emulXX
+	isetFB: dd emulFB
 	isetFC: dd emulXX
 	isetFD: dd emulXX
 	isetFE: dd emulFE
