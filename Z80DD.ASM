@@ -34,7 +34,7 @@ emulDD21:
                 add     edi,3
                 mov     regeix,eax
                 xor     eax,eax
-                mov     ebp,14+4
+                sub     ebp,14+4
                 ret
 
 ; DD 22 - LD (dddd),IX
@@ -156,7 +156,7 @@ emulDDE3:       inc     edi
                 mov     regixh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,23+4
+                sub     ebp,23+4
                 ret
 
 ; DD E5 - PUSH IX
@@ -164,7 +164,7 @@ PUSHREGW        DDE5,regeix
 
 ; DD E9 - JP (IX)
 emulDDE9:       mov     edi,regeix
-                mov     ebp,8+2
+                sub     ebp,8+2
                 ret
 
 ; DD CB 06 - RLC (IX+dd)

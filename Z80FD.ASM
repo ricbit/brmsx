@@ -34,7 +34,7 @@ emulFD21:
                 add     edi,3
                 mov     regeiy,eax
                 xor     eax,eax
-                mov     ebp,14+4
+                sub     ebp,14+4
                 ret
 
 ; FD 22 - LD (dddd),IY
@@ -138,14 +138,14 @@ PUSHREGW        FDE5,regeiy
 
 ; FD E9 - JP (IY)
 emulFDE9:       mov     edi,regeiy
-                mov     ebp,8+2
+                sub     ebp,8+2
                 ret
 
 ; FD F9 - LD SP,IY
 emulFDF9:       inc     edi
                 mov     ebx,regeiy
                 mov     regesp,ebx
-                mov     ebp,10+2
+                sub     ebp,10+2
                 ret
 
 ; FD CB 06 - RLC (IY+dd)

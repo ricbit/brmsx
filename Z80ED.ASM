@@ -67,7 +67,7 @@ LDDDDDREGW      ED53,regede
 
 ; ED 56 - IM 1
 emulED56:       inc     edi
-                mov     ebp,8+2
+                sub     ebp,8+2
                 ret
 
 ; ED 57 - LD A,I
@@ -147,7 +147,7 @@ emulEDA2:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
-                mov     ebp,16+3
+                sub     ebp,16+3
                 ret
 
 ; ED A3 - OUTI
@@ -164,7 +164,7 @@ emulEDA3:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
-                mov     ebp,16+3
+                sub     ebp,16+3
                 ret
 
 ; ED A8 - LDD
@@ -172,74 +172,74 @@ OPLDD           EDA8
 
 ; ED B0 - LDIR
 emulEDB0:       inc     edi
-                mov     ebp,0
+                ;mov     ebp,0
 emulEDB0a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
-                add     ebp,21+2
+                sub     ebp,21+2
                 inc     reghl
                 inc     regde
                 dec     regbc
                 jnz     emulEDB0a
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 
 ; ED B1 - CPIR
 emulEDB1:       inc     edi
-                mov     ebp,0
+                ;mov     ebp,0
 emulEDB1b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB1a
-                add     ebp,21+2
+                sub     ebp,21+2
                 inc     reghl
                 dec     regbc
                 jnz     emulEDB1b
                 and     dl,10111011b
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 emulEDB1a:      
                 inc     reghl
                 dec     regbc
                 or      dl,01000100b
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 
 ; ED B8 - LDDR
 emulEDB8:       inc     edi
-                mov     ebp,0
+                ;mov     ebp,0
 emulEDB8a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
-                add     ebp,21+2
+                sub     ebp,21+2
                 dec     reghl
                 dec     regde
                 dec     regbc
                 jnz     emulEDB8a
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 
 ; ED B9 - CPDR
 emulEDB9:       inc     edi
-                mov     ebp,0
+                ;mov     ebp,0
 emulEDB9b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB9a
-                add     ebp,21+2
+                sub     ebp,21+2
                 dec     reghl
                 dec     regbc
                 jnz     emulEDB9b
                 and     dl,10111011b
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 emulEDB9a:      
                 dec     reghl
                 dec     regbc
                 or      dl,01000100b
-                sub     ebp,5-2
+                add     ebp,5-2
                 ret
 
 code32          ends

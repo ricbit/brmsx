@@ -1,3 +1,9 @@
+release 1.52:
+
+- removed the "clockcounter" variable: 
+  now ebp decreases instead of increase
+  this saved more than two clocks in all opcodes!
+
 release 1.51:
 
 - optimized a lot of opcodes

@@ -6,7 +6,7 @@ ADCREG          macro   opcode,reg
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     bh,reg                          ; clock 1 V
-                mov     ebp,4+1
+                sub     ebp,4+1
                 jmp     opadcreg
 
                 endm
@@ -21,7 +21,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opadcreg
 
                 endm
@@ -35,7 +35,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opadcreg
 
                 endm
@@ -53,7 +53,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 mov     bh,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 jmp     opadcreg
 
                 endm
@@ -72,8 +72,8 @@ emul&opcode:
                 mov     bl,reghigh
                 mov     cl,0
                 adc     rrhigh,bl
-                mov     ebp,15+2
                 adc     cl,cl
+                sub     ebp,15+2
                 mov     al,rrhigh
                 xor     bl,bh
                 xor     bl,al
@@ -97,7 +97,7 @@ ADDREG          macro   opcode,reg
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     bh,reg                          ; clock 1 V
-                mov     ebp,4+1
+                sub     ebp,4+1
                 jmp     opaddreg
 
                 endm
@@ -112,7 +112,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opaddreg
 
                 endm
@@ -126,7 +126,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opaddreg
 
                 endm
@@ -144,7 +144,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 mov     bh,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 jmp     opaddreg
 
                 endm
@@ -162,8 +162,8 @@ emul&opcode:
                 mov     bl,reghigh
                 mov     cl,0
                 adc     rrhigh,bl
-                mov     ebp,cycles+1
                 adc     cl,cl
+                sub     ebp,cycles+1
                 mov     al,rrhigh
                 xor     bl,bh
                 xor     bl,al
@@ -186,7 +186,7 @@ emul&opcode:
                 inc     edi
                 mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,BIT_4
                 ret
 
@@ -204,7 +204,7 @@ emul&opcode:
                 inc     edi
                 mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
-                mov     ebp,7+3
+                sub     ebp,7+3
                 or      dl,BIT_4
                 ret
 
@@ -221,7 +221,7 @@ emul&opcode:
                 add     edi,2
                 mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
-                mov     ebp,7+2
+                sub     ebp,7+2
                 or      dl,BIT_4
                 ret
 
@@ -241,7 +241,7 @@ emul&opcode:
                 call    readmem
                 and     dh,al
                 mov     al,dh
-                mov     ebp,19+4
+                sub     ebp,19+4
                 mov     dl,[offset LOGICAL_table+eax]
                 or      dl,BIT_4
                 ret
@@ -257,7 +257,7 @@ emul&opcode:
                 mov     al,reg
                 inc     edi
                 and     dl,01h
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset BIT&bit&_table+eax]
                 ret
 
@@ -273,7 +273,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 and     dl,01h
-                mov     ebp,12+3
+                sub     ebp,12+3
                 or      dl,[offset BIT&bit&_table+eax]
                 and     dl,11010111b
                 ret
@@ -292,7 +292,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 and     dl,01h
-                mov     ebp,20+4
+                sub     ebp,20+4
                 or      dl,[offset BIT&bit&_table+eax]
                 and     dl,11010111b
                 ret
@@ -308,7 +308,7 @@ emul&opcode:
                 inc     edi                             ; clock 1 U
                 mov     al,reg                          ; clock 1 V
                 xor     ebx,ebx
-                mov     ebp,4+1
+                sub     ebp,4+1
                 jmp     opcpreg
 
                 endm
@@ -323,7 +323,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 xor     ebx,ebx
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opcpreg
 
                 endm
@@ -337,7 +337,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 xor     ebx,ebx
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opcpreg
 
                 endm
@@ -355,7 +355,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 xor     ebx,ebx
-                mov     ebp,19+3
+                sub     ebp,19+3
                 jmp     opcpreg
 
                 endm
@@ -377,7 +377,7 @@ emul&opcode:
                 mov     cl,dh
                 or      dl,[offset LOGICAL_table+ecx]
                 and     edx,0ffffh
-                mov     ebp,4+1
+                sub     ebp,4+1
                 ret
 
                 endm
@@ -392,7 +392,7 @@ emul&opcode:
                 dec     reg
                 and     dl,1
                 mov     al,reg
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset DEC_table+eax]
                 ret
 
@@ -410,7 +410,7 @@ emul&opcode:
                 dec     al
                 call    writemem
                 and     dl,1
-                mov     ebp,11+3
+                sub     ebp,11+3
                 or      dl,[offset DEC_table+eax]
                 ret
 
@@ -431,7 +431,7 @@ emul&opcode:
                 dec     al
                 call    writemem
                 and     dl,1
-                mov     ebp,23+5
+                sub     ebp,23+5
                 or      dl,[offset DEC_table+eax]
                 ret
 
@@ -445,7 +445,7 @@ DECWREG         macro   opcode,reg,tcycles
 emul&opcode:
                 inc     edi
                 dec     reg
-                mov     ebp,tcycles+1
+                sub     ebp,tcycles+1
                 ret
 
                 endm
@@ -462,7 +462,7 @@ emul&opcode:
                 and     dl,1
                 mov     al,bl
                 mov     dh,bl
-                mov     ebp,11+2
+                sub     ebp,11+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -481,7 +481,7 @@ emul&opcode:
                 and     dl,1
                 mov     reg,bl
                 or      dl,[offset LOGICAL_table+ebx]
-                mov     ebp,12+2
+                sub     ebp,12+2
                 ret
 
                 endm
@@ -496,7 +496,7 @@ emul&opcode:
                 inc     reg
                 and     dl,1
                 mov     al,reg
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset INC_table+eax]
                 ret
 
@@ -514,7 +514,7 @@ emul&opcode:
                 inc     al
                 call    writemem
                 and     dl,1
-                mov     ebp,11+3
+                sub     ebp,11+3
                 or      dl,[offset INC_table+eax]
                 ret
 
@@ -535,7 +535,7 @@ emul&opcode:
                 inc     al
                 call    writemem
                 and     dl,1
-                mov     ebp,23+5
+                sub     ebp,23+5
                 or      dl,[offset INC_table+eax]
                 ret
 
@@ -549,7 +549,7 @@ INCWREG         macro   opcode,reg,tcycles
 emul&opcode:
                 inc     edi
                 inc     reg
-                mov     ebp,tcycles+1
+                sub     ebp,tcycles+1
                 ret
 
                 endm
@@ -559,8 +559,9 @@ emul&opcode:
 
 JPCC            macro   opcode,jcc,flagtype
 
-emul&opcode:    test    dl,flagtype
-                mov     ebp,10+3
+emul&opcode:    
+                sub     ebp,10+3
+                test    dl,flagtype
                 jcc     emul&opcode&a
                 call    fetchw1
                 mov     edi,eax
@@ -581,10 +582,10 @@ emul&opcode:
                 jcc     emul&opcode&a    
                 call    fetch1
                 movsx   ebx,al
-                mov     ebp,12+2
+                sub     ebp,12+2
                 lea     edi,[edi+ebx+2]
                 ret
-emul&opcode&a:  mov     ebp,7+2
+emul&opcode&a:  sub     ebp,7+2
                 add     edi,2
                 ret
 
@@ -598,7 +599,7 @@ LDREGREG        macro   opcode,reg1,reg2
 emul&opcode:
                 inc     edi
                 mov     bl,reg2
-                mov     ebp,4+1
+                sub     ebp,4+1
                 mov     reg1,bl
                 ret
 
@@ -612,7 +613,7 @@ LDREGA          macro   opcode,reg
 emul&opcode:
                 inc     edi
                 mov     reg,dh
-                mov     ebp,4+1
+                sub     ebp,4+1
                 ret
 
                 endm
@@ -625,7 +626,7 @@ LDAREG          macro   opcode,reg
 emul&opcode:
                 inc     edi
                 mov     dh,reg
-                mov     ebp,4+1
+                sub     ebp,4+1
                 ret
 
                 endm
@@ -640,7 +641,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 mov     reg,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 ret
 
                 endm
@@ -654,7 +655,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     reg,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 ret
 
                 endm
@@ -672,7 +673,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 mov     reg,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 ret
 
                 endm
@@ -686,7 +687,7 @@ emul&opcode:
                 inc     edi
                 mov     al,reg
                 mov     ecx,regehl
-                mov     ebp,7+2
+                sub     ebp,7+2
                 call    writemem
                 ret
 
@@ -705,7 +706,7 @@ emul&opcode:
                 add     cx,bx
                 mov     al,reg
                 call    writemem
-                mov     ebp,19+4
+                sub     ebp,19+4
                 ret
 
                 endm
@@ -719,7 +720,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     ecx,regehl
-                mov     ebp,10+3
+                sub     ebp,10+3
                 call    writemem
                 ret
 
@@ -737,7 +738,7 @@ emul&opcode:
                 mov     reg,eax
                 add     edi,3
                 xor     eax,eax
-                mov     ebp,16+5
+                sub     ebp,16+5
                 ret
 
                 endm
@@ -754,7 +755,7 @@ emul&opcode:
                 mov     eax,reg
                 call    writememw
                 xor     eax,eax
-                mov     ebp,16+5
+                sub     ebp,16+5
                 ret
 
                 endm
@@ -773,7 +774,7 @@ emul&opcode:
                 call    fetch
                 inc     edi
                 call    writemem
-                mov     ebp,19+5
+                sub     ebp,19+5
                 ret
 
                 endm
@@ -786,7 +787,7 @@ LDAI            macro   opcode
 emul&opcode:    
                 inc     edi
                 mov     dh,regi
-                mov     ebp,9+2
+                sub     ebp,9+2
                 mov     al,dh
                 and     dl,1
                 mov     bl,byte ptr [offset iff1]
@@ -807,7 +808,7 @@ emul&opcode:
                 mov     dh,byte ptr [offset rcounter]
                 and     dh,07fh
                 or      dh,rmask
-                mov     ebp,9+2
+                sub     ebp,9+2
                 mov     al,dh
                 and     dl,1
                 mov     bl,byte ptr [offset iff1]
@@ -828,7 +829,7 @@ emul&opcode:
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U
                 call    writemem                        ; clock 2 V
-                mov     ebp,16+4                        ; clock 3 U
+                sub     ebp,16+4                        ; clock 3 U
                 dec     regde                           ; clock 3 V
                 dec     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
@@ -853,7 +854,7 @@ emul&opcode:
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U
                 call    writemem                        ; clock 2 V
-                mov     ebp,16+4                        ; clock 3 U
+                sub     ebp,16+4                        ; clock 3 U
                 inc     regde                           ; clock 3 V
                 inc     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
@@ -876,7 +877,7 @@ OPNEG           macro   opcode
 emul&opcode:    
                 mov     al,dh                           
                 inc     edi
-                mov     ebp,8+2
+                sub     ebp,8+2
                 mov     dx,[offset NEG_table+eax*2]
                 ret
 
@@ -891,7 +892,7 @@ emul&opcode:
                 or      dh,reg
                 inc     edi
                 mov     al,dh
-                mov     ebp,4+1
+                sub     ebp,4+1
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -908,7 +909,7 @@ emul&opcode:
                 or      dh,al
                 mov     al,dh
                 inc     edi
-                mov     ebp,7+2
+                sub     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -924,7 +925,7 @@ emul&opcode:
                 or      dh,al
                 add     edi,2
                 mov     al,dh
-                mov     ebp,7+2
+                sub     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -943,7 +944,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 or      dh,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
@@ -959,7 +960,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     bl,dh
-                mov     ebp,11+2
+                sub     ebp,11+2
                 jmp     [offset outportxx+eax*4]
 
                 endm
@@ -971,7 +972,7 @@ OUTCREG         macro   opcode,reg
 
 emul&opcode:    mov     al,regc
                 inc     edi
-                mov     ebp,12+2
+                sub     ebp,12+2
                 mov     bl,reg
                 jmp     [offset outportxx+eax*4]
 
@@ -988,7 +989,7 @@ emul&opcode:
                 add     ecx,2
                 mov     reg,eax
                 mov     regesp,ecx
-                mov     ebp,10+3
+                sub     ebp,10+3
                 inc     edi
                 xor     eax,eax
                 ret
@@ -1008,7 +1009,7 @@ emul&opcode:
                 mov     regesp,ecx
                 xor     eax,eax
                 inc     edi
-                mov     ebp,11+3
+                sub     ebp,11+3
                 ret
 
                 endm
@@ -1021,7 +1022,7 @@ RESREG          macro   opcode,reg,bit
 emul&opcode:                
                 inc     edi
                 and     reg,NBIT_&bit
-                mov     ebp,8+2
+                sub     ebp,8+2
                 ret
 
                 endm
@@ -1037,7 +1038,7 @@ emul&opcode:
                 call    readmem
                 and     al,NBIT_&bit
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 ret
 
                 endm
@@ -1055,7 +1056,7 @@ emul&opcode:
                 call    readmem
                 and     al,NBIT_&bit
                 call    writemem
-                mov     ebp,23+6
+                sub     ebp,23+6
                 ret
 
                 endm
@@ -1072,7 +1073,7 @@ emul&opcode:
                 rcl     reg,1
                 mov     al,reg
                 adc     dl,dl
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1092,7 +1093,7 @@ emul&opcode:
                 rcl     al,1
                 adc     dl,dl
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1114,7 +1115,7 @@ emul&opcode:
                 rcl     al,1
                 adc     dl,dl
                 call    writemem
-                mov     ebp,23+6
+                sub     ebp,23+6
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1135,7 +1136,7 @@ emul&opcode:
                 mov     al,dh
                 adc     bl,bl
                 or      dl,bl
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset PVN53_table+eax]
                 ret
 
@@ -1152,7 +1153,7 @@ emul&opcode:
                 mov     dl,reg
                 mov     al,dl
                 and     dl,1
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1171,7 +1172,7 @@ emul&opcode:
                 call    writemem
                 mov     dl,al
                 and     dl,1
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1192,7 +1193,7 @@ emul&opcode:
                 call    writemem
                 mov     dl,al
                 and     dl,1
-                mov     ebp,23+6
+                sub     ebp,23+6
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1211,7 +1212,7 @@ emul&opcode:
                 mov     al,bl
                 and     bl,1
                 or      dl,bl
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset PVN53_table+eax]
                 ret
 
@@ -1241,7 +1242,7 @@ emul&opcode:
                 call    writemem
                 mov     al,dh
                 and     dl,1
-                mov     ebp,18+4
+                sub     ebp,18+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1259,7 +1260,7 @@ emul&opcode:
                 rcr     reg,1
                 and     dl,1
                 mov     al,reg
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1279,7 +1280,7 @@ emul&opcode:
                 rcr     al,1
                 and     dl,1
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1301,7 +1302,7 @@ emul&opcode:
                 rcr     al,1
                 and     dl,1
                 call    writemem
-                mov     ebp,23+6
+                sub     ebp,23+6
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1322,7 +1323,7 @@ emul&opcode:
                 and     bl,1
                 or      dl,bl
                 mov     al,dh
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset PVN53_table+eax]
                 ret
 
@@ -1339,7 +1340,7 @@ emul&opcode:
                 ror     reg,1
                 mov     al,reg
                 and     dl,1
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1358,7 +1359,7 @@ emul&opcode:
                 ror     al,1
                 call    writemem
                 and     dl,1
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1377,7 +1378,7 @@ emul&opcode:
                 mov     al,dh
                 and     bl,1
                 or      dl,bl
-                mov     ebp,4+1
+                sub     ebp,4+1
                 or      dl,[offset PVN53_table+eax]
                 ret
 
@@ -1408,7 +1409,7 @@ emul&opcode:
                 call    writemem
                 mov     al,dh
                 and     dl,1
-                mov     ebp,18+4
+                sub     ebp,18+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1427,7 +1428,7 @@ emul&opcode:
                 mov     regesp,ecx
                 mov     edi,addr
                 xor     eax,eax
-                mov     ebp,7+3
+                sub     ebp,7+3
                 ret
 
                 endm
@@ -1440,7 +1441,7 @@ SBCREG          macro   opcode,reg
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     bh,reg                          ; clock 1 V
-                mov     ebp,4+1
+                sub     ebp,4+1
                 jmp     opsbcreg
 
                 endm
@@ -1455,7 +1456,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opsbcreg
 
                 endm
@@ -1469,7 +1470,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opsbcreg
 
                 endm
@@ -1487,7 +1488,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 mov     bh,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 jmp     opsbcreg
 
                 endm
@@ -1506,8 +1507,8 @@ emul&opcode:
                 mov     bl,reghigh
                 mov     cl,0
                 sbb     regh,bl
-                mov     ebp,15+1
                 adc     cl,cl
+                sub     ebp,15+1
                 mov     al,regh
                 xor     bl,bh
                 xor     bl,al
@@ -1531,7 +1532,7 @@ SETREG          macro   opcode,reg,bit
 emul&opcode:                
                 inc     edi
                 or      reg,BIT_&bit
-                mov     ebp,8+2
+                sub     ebp,8+2
                 ret
 
                 endm
@@ -1547,7 +1548,7 @@ emul&opcode:
                 call    readmem
                 or      al,BIT_&bit
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 ret
 
                 endm
@@ -1565,7 +1566,7 @@ emul&opcode:
                 call    readmem
                 or      al,BIT_&bit
                 call    writemem
-                mov     ebp,23+6
+                sub     ebp,23+6
                 ret
 
                 endm
@@ -1579,8 +1580,8 @@ emul&opcode:
                 inc     edi
                 mov     dl,0
                 shl     reg,1
-                mov     ebp,8+2
                 adc     dl,dl
+                sub     ebp,8+2
                 mov     al,reg
                 or      dl,[offset LOGICAL_table+eax]
                 ret
@@ -1598,8 +1599,8 @@ emul&opcode:
                 call    readmem
                 mov     dl,0
                 shl     al,1
-                mov     ebp,15+4
                 adc     dl,dl
+                sub     ebp,15+4
                 call    writemem
                 or      dl,[offset LOGICAL_table+eax]
                 ret
@@ -1617,7 +1618,7 @@ emul&opcode:
                 sar     reg,1
                 and     dl,1
                 mov     al,reg
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1636,7 +1637,7 @@ emul&opcode:
                 sar     al,1
                 and     dl,1
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1653,7 +1654,7 @@ emul&opcode:
                 shr     reg,1
                 and     dl,1
                 mov     al,reg
-                mov     ebp,8+2
+                sub     ebp,8+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1672,7 +1673,7 @@ emul&opcode:
                 shr     al,1
                 and     dl,1
                 call    writemem
-                mov     ebp,15+4
+                sub     ebp,15+4
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1686,7 +1687,7 @@ SUBREG          macro   opcode,reg
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     bh,reg                          ; clock 1 V
-                mov     ebp,4+1
+                sub     ebp,4+1
                 jmp     opsubreg
 
                 endm
@@ -1701,7 +1702,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opsubreg
 
                 endm
@@ -1715,7 +1716,7 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 mov     bh,al
-                mov     ebp,7+2
+                sub     ebp,7+2
                 jmp     opsubreg
 
                 endm
@@ -1733,7 +1734,7 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 mov     bh,al
-                mov     ebp,19+4
+                sub     ebp,19+4
                 jmp     opsubreg
 
                 endm
@@ -1747,7 +1748,7 @@ emul&opcode:
                 inc     edi
                 xor     dh,reg
                 mov     al,dh
-                mov     ebp,4+1
+                sub     ebp,4+1
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1764,7 +1765,7 @@ emul&opcode:
                 call    readmem
                 xor     dh,al
                 mov     al,dh
-                mov     ebp,7+2
+                sub     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1780,7 +1781,7 @@ emul&opcode:
                 add     edi,2
                 xor     dh,al
                 mov     al,dh
-                mov     ebp,7+2
+                sub     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -1800,7 +1801,7 @@ emul&opcode:
                 call    readmem
                 xor     dh,al
                 mov     al,dh
-                mov     ebp,19+4
+                sub     ebp,19+4
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
