@@ -25,28 +25,28 @@ public isetFDxx
 ; --------------------------------------------------------------------
 
 ; FD 09 - ADD IY,BC
-ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15+1
+ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15+2
 
 ; FD 19 - ADD IY,DE
-ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+1
+ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+2
 
 ; FD 21 - LD IY,dddd
 LDREGWIMM      FD21,regeiy
 
 ; FD 22 - LD (dddd),IY
-LDDDDDREGW      FD22,regeiy
+LDDDDDREGW      FD22,regeiy,20+2
 
 ; FD 23 - INC IY
-INCWREG         FD23,regiy,10+1
+INCWREG         FD23,regiy,10+2
 
 ; FD 29 - ADD IY,IY
-ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15+1
+ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15+2
 
 ; FD 2A - LD IY,(dddd)
-LDREGWDDDD      FD2A,regeiy
+LDREGWDDDD      FD2A,regeiy,20+2
 
 ; FD 2B - DEC IY
-DECWREG         FD2B,regiy,10+1
+DECWREG         FD2B,regiy,10+2
 
 ; FD 34 - INC (IY+dd)
 INCII           FD34,regeiy
@@ -58,7 +58,7 @@ DECII           FD35,regeiy
 LDIIDDNN        FD36,regeiy
 
 ; FD 39 - ADD IY,SP
-ADDREGWREGW     FD39,regiyl,regiyh,regspl,regsph,15+1
+ADDREGWREGW     FD39,regiyl,regiyh,regspl,regsph,15+2
 
 ; FD 46 - LD B,(IY+dd)
 LDREGIIDD       FD46,regb,regeiy
@@ -127,16 +127,16 @@ emulFDCB:       inc     edi
                 jmp     [offset isetFDCBxx+eax*4]
 
 ; FD E1 - POP IY
-POPREGW         FDE1,regeiy
+POPREGW         FDE1,regeiy,14+2
 
 ; FD E5 - PUSH IY
-PUSHREGW        FDE5,regeiy
+PUSHREGW        FDE5,regeiy,15+2
 
 ; FD E9 - JP (IY)
-OPJPREGW        FDE9,regeiy
+OPJPREGW        FDE9,regeiy,8+2
 
 ; FD F9 - LD SP,IY
-LDSPREGW        FDF9,regeiy
+LDSPREGW        FDF9,regeiy,10+2
 
 ; FD CB 06 - RLC (IY+dd)
 RLCII           FDCB06,regeiy

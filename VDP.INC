@@ -19,3 +19,4 @@ extrn screenselect: dword
 extrn vrammapping: dword
 extrn dirtyname: byte
 extrn dirtypattern: byte
+extrn enabled: dword

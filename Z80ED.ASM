@@ -36,7 +36,7 @@ OUTCREG         ED41,regb
 SBCHLWREG       ED42,regc,regb
 
 ; ED 43 - LD (dddd),BC
-LDDDDDREGW      ED43,regebc
+LDDDDDREGW      ED43,regebc,20+2
 
 ; ED 44 - NEG
 OPNEG           ED44
@@ -51,7 +51,7 @@ OUTCREG         ED49,regc
 ADCREGWREGW     ED4A,regl,regh,regc,regb
 
 ; ED 4B - LD BC,(dddd)
-LDREGWDDDD      ED4B,regebc
+LDREGWDDDD      ED4B,regebc,20+2
 
 ; ED 4D - RETI
 OPRET           ED4D
@@ -66,7 +66,7 @@ OUTCREG         ED51,regd
 SBCHLWREG       ED52,rege,regd
 
 ; ED 53 - LD (dddd),DE
-LDDDDDREGW      ED53,regede
+LDDDDDREGW      ED53,regede,20+2
 
 ; ED 56 - IM 1
 OPIM1           ED56
@@ -84,7 +84,7 @@ OUTCREG         ED59,rege
 ADCREGWREGW     ED5A,regl,regh,rege,regd
 
 ; ED 5B - LD DE,(dddd)
-LDREGWDDDD      ED5B,regede
+LDREGWDDDD      ED5B,regede,20+2
 
 ; ED 5F - LD A,R
 LDAR            ED5F    
@@ -117,7 +117,7 @@ OPRLD           ED6F
 SBCHLWREG       ED72,regspl,regsph
 
 ; ED 73 - LD (dddd),SP
-LDDDDDREGW      ED73,regesp
+LDDDDDREGW      ED73,regesp,20+2
 
 ; ED 78 - IN A,(C)
 INREG           ED78,dh
@@ -129,7 +129,7 @@ OUTCREG         ED79,dh
 ADCREGWREGW     ED7A,regl,regh,regspl,regsph
 
 ; ED 7B - LD SP,(dddd)
-LDREGWDDDD      ED7B,regesp
+LDREGWDDDD      ED7B,regesp,20+2
 
 ; ED A0 - LDI
 OPLDI           EDA0

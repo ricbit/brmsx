@@ -105,3 +105,5 @@ extrn CPL_table: byte
 extrn error: dword
 extrn z80counter: dword
 extrn vsyncflag: dword
+extrn reset_flag: dword
+extrn reset_cpu: near

@@ -14,6 +14,7 @@ include pmode.inc
 public mousedriver
 public mousex
 public mousey
+public mouseleft
 
 public init_mouse
 public read_mouse
@@ -24,6 +25,7 @@ public set_mouse_range
 mousedriver     dd      0
 mousex          dd      0
 mousey          dd      0
+mouseleft       dd      0
 
 ; init_mouse ---------------------------------------------------------
 ; check for mouse driver
@@ -52,8 +54,11 @@ read_mouse:
                 int     33h
                 movzx   ecx,v86r_cx                
                 movzx   edx,v86r_dx
+                movzx   ebx,v86r_bx
                 mov     mousex,ecx
                 mov     mousey,edx
+                and     ebx,1
+                mov     mouseleft,ebx
                 ret
 
 ; set_mouse_range ----------------------------------------------------
@@ -64,9 +69,9 @@ set_mouse_range:
                 cmp     mousedriver,1
                 jne     _ret
                 
-                ; set the horizontal range from 0 to 256-57
+                ; set the horizontal range from 8 to 256-57
                 mov     v86r_ax,7
-                mov     v86r_cx,0
+                mov     v86r_cx,8
                 mov     v86r_dx,256-57
                 mov     al,33h
                 int     33h

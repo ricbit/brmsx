@@ -39,3 +39,6 @@ extrn gui_palette: byte
 extrn palette: byte
 extrn set_border_color_dark: near
 extrn wait_vsync: near
+extrn find_first: near
+extrn find_next: near
+extrn set_correct_palette: near

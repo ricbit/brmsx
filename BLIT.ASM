@@ -13,6 +13,7 @@ include pentium.inc
 include pmode.inc
 include vdp.inc
 include io.inc
+include vesa.inc
 
 extrn blitbuffer: dword
 
@@ -29,8 +30,13 @@ blit:
                 cmp     videomode,0
                 je      blit0
 
+                cmp     videomode,2
+                je      blit2
+
                 cmp     imagetype,1
                 je      blit_dirty_256
+
+; linear 256x192 -----------------------------------------------------
 
 blit_linear_256:
                 ; blit linear 256
@@ -42,8 +48,11 @@ blit_linear_256:
                 ret
 
 blit0:
+
                 cmp     imagetype,1
                 je      blit_dirty_320
+
+; linear 320x192 -----------------------------------------------------
 
 blit_linear_320:
                 mov     esi,blitbuffer
@@ -57,6 +66,8 @@ blit_linear_320_0:
                 dec     edx
                 jnz     blit_linear_320_0
                 ret
+
+; dirty 320x192 ------------------------------------------------------
 
 blit_dirty_320:
                 cmp     lastscreen,4
@@ -106,6 +117,8 @@ blit_dirty_320_next:
 
                 ret
 
+; dirty 256x192 ------------------------------------------------------
+
 blit_dirty_256:
                 cmp     lastscreen,4
                 je      blit_linear_256
@@ -151,6 +164,281 @@ blit_dirty_256_next:
                 mov     edi,offset dirtypattern
                 mov     ecx,256*3/4
                 rep     stosd
+
+                ret
+
+blit2:
+                cmp     cpupaused,1
+                je      blit2_slow
+                
+                cmp     imagetype,1
+                je      blit2_dirty
+
+; linear 512x384 -----------------------------------------------------
+
+blit2_linear:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit2_linear_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit2_linear_loop:
+                mov     ecx,256/2
+                mov     edx,0
+blit2_linear_inner_loop:
+                
+                ; esi = 0A0B0C0D
+
+                mov     ebx,dword ptr [esi]
+                mov     edx,ebx
+                ; ebx=edx=0D0C0B0A
+
+                shl     ebx,8
+                and     ebx,000FF0000h
+                ; ebx = 000B0000
+
+                or      bl,dl
+                mov     eax,ebx
+                ; ebx=eax=000B000A
+
+                shl     ebx,4
+                or      eax,ebx
+                ; ebx=00B000A0
+                ; eax=00BB00AA
+
+                shl     ebx,4
+                or      eax,ebx
+                ; ebx=0B000A00
+                ; eax=0BBB0AAA
+
+                shr     ebx,12
+                or      eax,ebx
+                ; ebx=0000B000
+                ; eax=0BBBBAAA
+
+                shl     edx,12
+                ; edx=C0B0A000
+
+                and     edx,0F0000000h
+                ; edx=C0000000
+
+                or      eax,edx
+                ; eax=CBBBBAAA
+
+                mov     dword ptr [edi],eax
+
+                and     eax,0F0F0F0Fh
+                or      eax,10101010h
+                mov     dword ptr [edi+512],eax
+
+                add     esi,2
+                add     edi,4
+                dec     ecx
+                jnz     blit2_linear_inner_loop
+
+                and     dword ptr [edi-4],00FFFFFFh
+                and     dword ptr [edi-4+512],00FFFFFFh
+                
+                add     edi,512
+
+                dec     ebp
+                jnz     blit2_linear_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit2_linear_outer_loop
+
+                ret
+
+; dirty 512x384 ------------------------------------------------------
+
+blit2_dirty:
+                cmp     lastscreen,4
+                je      blit2_linear
+
+                mov     ebx,offset dirtyname
+                mov     esi,blitbuffer
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                mov     ecx,24
+                mov     eax,0
+                call    set_vesa_bank
+
+blit2_dirty_line:
+                cmp     ecx,16
+                jne     blit2_dirty_line1
+                mov     eax,1
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                jmp     blit2_dirty_line_next
+
+blit2_dirty_line1:
+                cmp     ecx,8
+                jne     blit2_dirty_line_next
+                mov     eax,2
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+blit2_dirty_line_next:
+                mov     edx,32
+
+blit2_dirty_char:
+                mov     al,[ebx]
+                or      al,al
+                jz      blit2_dirty_next
+                mov     byte ptr [ebx],0
+
+                push    ebx edx
+
+                irp     j,<0,1,2,3,4,5,6,7>
+
+                irp     i,<-2,0,2,4,6>
+
+                ; esi = 0A0B0C0D
+
+                mov     ebx,dword ptr [esi+j*256+i]
+                mov     edx,ebx
+                ; ebx=edx=0D0C0B0A
+
+                shl     ebx,8
+                and     ebx,000FF0000h
+                ; ebx = 000B0000
+
+                or      bl,dl
+                mov     eax,ebx
+                ; ebx=eax=000B000A
+
+                shl     ebx,4
+                or      eax,ebx
+                ; ebx=00B000A0
+                ; eax=00BB00AA
+
+                shl     ebx,4
+                or      eax,ebx
+                ; ebx=0B000A00
+                ; eax=0BBB0AAA
+
+                shr     ebx,12
+                or      eax,ebx
+                ; ebx=0000B000
+                ; eax=0BBBBAAA
+
+                shl     edx,12
+                ; edx=C0B0A000
+
+                and     edx,0F0000000h
+                ; edx=C0000000
+
+                or      eax,edx
+                ; eax=CBBBBAAA
+
+                mov     dword ptr [edi+j*512*2+i*2],eax
+
+                and     eax,0F0F0F0Fh
+                or      eax,10101010h
+                mov     dword ptr [edi+j*512*2+i*2+512],eax
+
+                endm
+
+                endm
+
+                pop     edx ebx
+
+blit2_dirty_next:
+
+                inc     ebx
+                add     esi,8
+                add     edi,16
+                dec     edx
+                jnz     blit2_dirty_char
+
+                add     esi,8*256-8*32
+                add     edi,8*512*2-16*32
+
+                irp     i,<0,1,2,3,4,5,6,7>
+                mov     byte ptr [edi-8*512*2-1+i*512*2],0
+                mov     byte ptr [edi-8*512*2+512-1+i*512*2],0
+                endm
+
+                dec     ecx
+                jnz     blit2_dirty_line
+
+                mov     eax,0
+                mov     edi,offset dirtypattern
+                mov     ecx,256*3/4
+                rep     stosd
+
+                ret
+
+; linear 512x384 (without interpolation/scanlines) -------------------
+
+blit2_slow:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit2_slow_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit2_slow_loop:
+                mov     ecx,256/2
+                mov     edx,0
+blit2_slow_inner_loop:
+                
+                ; esi = 0A0B0C0D
+
+                mov     ebx,dword ptr [esi]
+                mov     edx,ebx
+                ; ebx=edx=0D0C0B0A
+
+                shl     ebx,8
+                and     ebx,000FF0000h
+                ; ebx = 000B0000
+
+                or      bl,dl
+                mov     eax,ebx
+                ; ebx=eax=000B000A
+
+                mov     ebx,eax
+                shl     ebx,8
+                ; ebx=0B000A00
+
+                or      eax,ebx
+                ; eax=0B0B0A0A
+
+                mov     dword ptr [edi],eax
+                mov     dword ptr [edi+512],eax
+
+                add     esi,2
+                add     edi,4
+                dec     ecx
+                jnz     blit2_slow_inner_loop
+
+                and     dword ptr [edi-4],00FFFFFFh
+                and     dword ptr [edi-4+512],00FFFFFFh
+                
+                add     edi,512
+
+                dec     ebp
+                jnz     blit2_slow_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit2_slow_outer_loop
 
                 ret
 

@@ -21,6 +21,7 @@ include bit.inc
 include blit.inc
 include psg.inc
 include mouse.inc
+include vesa.inc
 
 public printmsg
 public printasc
@@ -64,6 +65,9 @@ public gui_palette
 public fill_palette
 public palette
 public wait_vsync
+public find_first
+public find_next
+public set_correct_palette
 
 ; DATA ---------------------------------------------------------------
 
@@ -72,6 +76,7 @@ align 4
 include keyboard.inc
 include palette.inc
 include guipal.inc
+include filpal.inc
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
@@ -274,10 +279,29 @@ setgraphmode1:
                 pop     edx eax
                 ret
 
+; set_correct_palette -------------------------------------------------
+; set the correct palette for the selected video mode/screen
+
+set_correct_palette:
+                cmp     videomode,2
+                jne     set_correct_palette_16
+
+                mov     ebx,offset filtered_palette
+                mov     ecx,256
+                jmp     fill_palette
+
+set_correct_palette_16:
+                mov     ebx,offset palette
+                mov     ecx,16
+                jmp     fill_palette
+
 ; setgraphmode --------------------------------------------------------
 ; set video mode 13h (320x200x256)
 
 setgraphmode:
+                cmp     videomode,2
+                je      setgraphmode_vesa
+
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
@@ -309,10 +333,24 @@ setgraphmode:
 
                 ret
 
+setgraphmode_vesa:
+                call    set_vesa_mode
+                
+                mov     ebx,offset filtered_palette
+                mov     ecx,256
+                call    fill_palette
+                
+                call    set_mouse_range
+
+                ret
+
 ; set_border_color ----------------------------------------------------
 ; set color 0 of VGA as VDP border color
 
 set_border_color:
+                cmp     videomode,2
+                je      set_border_color_512x384
+                
                 push    eax ebx edx
                 movzx   eax,byte ptr [offset vdpregs+7]
                 and     eax,0fh
@@ -327,6 +365,245 @@ set_border_color:
                 out     dx,al
                 mov     al,[ebx+2]
                 out     dx,al
+                
+                cmp     lastscreen,4
+                jne     set_border_color_ret
+                
+                ; screen 0
+                ; must also set the color 2
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                lea     ebx,[offset palette+eax+eax*2]
+                
+                dec     edx
+                mov     al,2
+                out     dx,al
+                inc     edx
+                
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+set_border_color_ret:
+                pop     edx ebx eax
+                ret
+
+set_border_color_512x384:
+                cmp     lastscreen,4
+                je      set_border_color_512x384_scr0
+                
+                push    eax ebx edx
+
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+
+                ; set the color 00h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                mov     ebx,eax
+                shl     ebx,4
+                or      eax,ebx
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the first row of combined colors
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                lea     eax,[eax+eax*2]
+                shl     eax,4
+                lea     ebx,[offset filtered_palette+eax+3]
+
+                mov     ecx,15*3
+set_border_color_512x384_loop1:
+                mov     al,[ebx]
+                inc     ebx
+                out     dx,al
+                dec     ecx
+                jnz     set_border_color_512x384_loop1
+                
+                ; set the first column of combined colors
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                lea     eax,[eax+eax*2]
+                shl     eax,4
+                mov     esi,10h
+                lea     ebx,[offset filtered_palette+eax+3]
+
+                dec     edx
+                mov     ecx,15
+set_border_color_512x384_loop2:
+
+                mov     eax,esi
+                out     dx,al
+                inc     edx
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+                add     ebx,3
+                add     esi,10h
+                dec     edx
+                dec     ecx
+                jnz     set_border_color_512x384_loop2
+
+                pop     edx ebx eax
+                ret
+
+set_border_color_512x384_scr0:
+                push    eax ebx edx
+
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+
+                ; set the color 00h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                mov     ebx,eax
+                shl     ebx,4
+                or      eax,ebx
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 01h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                or      eax,10h
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 02h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 10h
+
+                dec     edx
+                mov     al,10h
+                out     dx,al
+                inc     edx
+
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                or      eax,10h
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 12h
+
+                dec     edx
+                mov     al,12h
+                out     dx,al
+                inc     edx
+
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                or      eax,10h
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 20h
+
+                dec     edx
+                mov     al,20h
+                out     dx,al
+                inc     edx
+
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                mov     ebx,eax
+                shl     ebx,4
+                or      eax,ebx
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 21h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                or      eax,10h
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
+                ; set the color 22h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                mov     ebx,eax
+                shl     ebx,4
+                or      eax,ebx
+                lea     eax,[eax+eax*2]
+                lea     ebx,[offset filtered_palette+eax]
+
+                mov     al,[ebx]
+                out     dx,al
+                mov     al,[ebx+1]
+                out     dx,al
+                mov     al,[ebx+2]
+                out     dx,al
+
                 pop     edx ebx eax
                 ret
 
@@ -351,6 +628,34 @@ set_border_color_dark:
                 mov     al,[ebx+2]
                 shr     al,2
                 out     dx,al
+
+                cmp     lastscreen,4
+                jne     set_border_color_dark_ret
+
+                ; screen 0
+                ; must also set the color 2
+
+                dec     edx
+                mov     al,2
+                out     dx,al
+                inc     edx
+
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                lea     ebx,[offset palette+eax+eax*2]
+                mov     al,[ebx]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+1]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+2]
+                shr     al,2
+                out     dx,al
+
+
+set_border_color_dark_ret:
+
                 pop     edx ebx eax
                 ret
 
@@ -775,7 +1080,80 @@ read_size_file:
                 pop     eax
                 ret
 
+; find_first ---------------------------------------------------------
+; find the first file 
+; enter: edi -> path
+;        edx -> buffer
+; exit:  carry flag on error (or not found)
+
+find_first:
+                push    edi
+        
+                ; set up segmented address
+                add     edi,_code32a
+                mov     esi,edi
+                and     esi,0fh
+                shr     edi,4
+                mov     v86r_ds,di
+                mov     v86r_dx,si
+
+                ; perform the call to DOS
+                mov     v86r_ah,04Eh
+                mov     v86r_cx,20h
+                mov     al,21h
+                int     33h
+        
+                ; copy the file name to correct destination
+                mov     esi,_code16a
+                sub     esi,62h
+                sub     esi,_code32a
+                mov     edi,edx
+                mov     ecx,13
+                rep     movsb
+        
+                ; set the carry flag on error
+                bt      v86r_flags,0
+
+                pop     edi
+                ret
+
+; find_next ----------------------------------------------------------
+; find the next file 
+; enter: edi -> path
+;        edx -> buffer
+; exit:  carry flag on error (or not found)
+
+find_next:
+                push    edi
+        
+                ; set up segmented address
+                add     edi,_code32a
+                mov     esi,edi
+                and     esi,0fh
+                shr     edi,4
+                mov     v86r_ds,di
+                mov     v86r_dx,si
+
+                ; perform the call to DOS
+                mov     v86r_ah,04Fh
+                mov     v86r_cx,20h
+                mov     al,21h
+                int     33h
+        
+                ; copy the file name to correct destination
+                mov     esi,_code16a
+                sub     esi,62h
+                sub     esi,_code32a
+                mov     edi,edx
+                mov     ecx,13
+                rep     movsb
+        
+                ; set the carry flag on error
+                bt      v86r_flags,0
+
+                pop     edi
+                ret
+
+
 code32          ends
                 end
-
-

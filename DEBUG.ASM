@@ -38,6 +38,12 @@ public debug
 public printmsgd
 public writemessage
 
+public change_sound
+public changebargraph
+
+public quitnow
+public vesa2found
+
 ; DATA ---------------------------------------------------------------
 
 align 4
@@ -54,6 +60,7 @@ msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 msgpentiumonly  db      'This option requires a Pentium$'
 res320          db      '320x200$'
 res256          db      '256x200$'
+res512          db      '512x384$'
 modenormal      db      'NORMAL$'
 modefast        db      'FAST  $'
 modeturbo       db      'TURBO $'
@@ -70,6 +77,11 @@ com4            db      '4$'
 sessionsingle   db      'SINGLE$'
 sessionserver   db      'SERVER$'
 sessionclient   db      'CLIENT$'
+
+align 4
+
+quitnow         dd      0
+vesa2found      dd      0
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -225,7 +237,17 @@ changemode:
 ; --------------------------------------------------------------------
 
 changevideomode:
-                xor     videomode,1
+                add     videomode,1
+                cmp     videomode,2
+                je      changevideomode_vesa2
+                cmp     videomode,3
+                jne     _ret
+                mov     videomode,0
+                ret
+changevideomode_vesa2:
+                cmp     vesa2found,0
+                jne     _ret
+                mov     videomode,0
                 ret
 
 ; --------------------------------------------------------------------
@@ -307,11 +329,16 @@ render_debug:
                 ; print the resolution
                 
                 cmp     videomode,1
-                je      print_res1
+                jae     print_res1
                 mov     eax,offset res320
                 jmp     print_res0
 print_res1:
+                cmp     videomode,2
+                jae     print_res2
                 mov     eax,offset res256
+                jmp     print_res0
+print_res2:
+                mov     eax,offset res512
 print_res0:
                 COORD   15,21
                 call    printmsgd
@@ -851,13 +878,16 @@ debug:
                 ;call    init_compiler
                 call    set_com_baseaddr
                 call    clear_text
+                jmp     command_s
 debug_loop:                
+                cmp     quitnow,1
+                je      _ret
                 call    render_debug
                 call    printmessage
                 COORD   12,23
                 call    set_cursor_position
                 call    getchar
-                cmp     ah,0
+                or      al,al
                 je      command_extended
                 call    clear_text
                 call    toupper
@@ -918,10 +948,9 @@ debug_loop:
                 jmp     debug_loop
 
 command_extended:
-                call    getchar
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
+                call    crlf
+                cmp     ah,59
+                je      command_help
                 jmp     debug_loop
 
 command_e:
@@ -1162,6 +1191,7 @@ command_2:
                 jc      debug_loop
                 call    setgraphmode
                 call    clear
+                call    set_border_color
                 rdtsc
                 push    eax
                 cli     

@@ -46,7 +46,7 @@ LDREGWIMM       01,regebc
 LDREGWA         02,regebc
 
 ; 03 - INC BC
-INCWREG         03,regbc,6
+INCWREG         03,regbc,6+1
 
 ; 04 - INC B
 INCREG          04,regb
@@ -64,13 +64,13 @@ OPRLCA          07
 OPEXAFAF        08
 
 ; 09 - ADD HL,BC
-ADDREGWREGW     09,regl,regh,regc,regb,11
+ADDREGWREGW     09,regl,regh,regc,regb,11+1
 
 ; 0A - LD A,(BC)
 LDAREGW         0A,regebc
 
 ; 0B - DEC BC
-DECWREG         0B,regbc,6
+DECWREG         0B,regbc,6+1
 
 ; 0C - INC C
 INCREG          0C,regc
@@ -94,7 +94,7 @@ LDREGWIMM       11,regede
 LDREGWA         12,regede
 
 ; 13 - INC DE
-INCWREG         13,regde,6
+INCWREG         13,regde,6+1
 
 ; 14 - INC D
 INCREG          14,regd
@@ -112,13 +112,13 @@ OPRLA           17
 OPJR            18
 
 ; 19 - ADD HL,DE
-ADDREGWREGW     19,regl,regh,rege,regd,11
+ADDREGWREGW     19,regl,regh,rege,regd,11+1
 
 ; 1A - LD A,(DE)
 LDAREGW         1A,regede
 
 ; 1B - DEC DE
-DECWREG         1B,regde,6
+DECWREG         1B,regde,6+1
 
 ; 1C - INC E
 INCREG          1C,rege
@@ -139,10 +139,10 @@ JRCC            20,jnz,ZERO_FLAG
 LDREGWIMM      21,regehl
 
 ; 22 - LD (dddd),HL
-LDDDDDREGW      22,regehl
+LDDDDDREGW      22,regehl,16+1
 
 ; 23 - INC HL
-INCWREG         23,reghl,6
+INCWREG         23,reghl,6+1
 
 ; 24 - INC H
 INCREG          24,regh
@@ -160,13 +160,13 @@ OPDAA           27
 JRCC            28,jz,ZERO_FLAG
 
 ; 29 - ADD HL,HL
-ADDREGWREGW     29,regl,regh,regl,regh,11
+ADDREGWREGW     29,regl,regh,regl,regh,11+1
 
 ; 2A - LD HL,(dddd)
-LDREGWDDDD      2A,regehl
+LDREGWDDDD      2A,regehl,16+1
 
 ; 2B - DEC HL
-DECWREG         2B,reghl,6
+DECWREG         2B,reghl,6+1
 
 ; 2C - INC L
 INCREG          2C,regl
@@ -190,7 +190,7 @@ LDREGWIMM      31,regesp
 LDINDA          32
 
 ; 33 - INC SP
-INCWREG         33,regsp,6
+INCWREG         33,regsp,6+1
 
 ; 34 - INC (HL)
 INCHL           34
@@ -208,13 +208,13 @@ OPSCF           37
 JRCC            38,jz,CARRY_FLAG
 
 ; 39 - ADD HL,SP
-ADDREGWREGW     39,regl,regh,regspl,regsph,11
+ADDREGWREGW     39,regl,regh,regspl,regsph,11+1
 
 ; 3A - LD A,(dddd)
 LDAIND          3A
 
 ; 3B - DEC SP
-DECWREG         3B,regsp,6
+DECWREG         3B,regsp,6+1
 
 ; 3C - INC A
 INCREG          3C,dh
@@ -616,7 +616,7 @@ CPREG           BF,dh
 RETCC           C0,ZERO_FLAG,jz
 
 ; C1 - POP BC
-POPREGW         C1,regebc
+POPREGW         C1,regebc,10+1
 
 ; C2 - JP NZ,dddd
 JPCC            C2,jnz,ZERO_FLAG
@@ -628,7 +628,7 @@ OPJP            C3
 CALLCC          C4,ZERO_FLAG,jz
 
 ; C5 - PUSH BC
-PUSHREGW        C5,regebc
+PUSHREGW        C5,regebc,11+1
 
 ; C6 - ADD A,dd
 ADDIMM          C6
@@ -664,7 +664,7 @@ OPRST           CF,08h
 RETCC           D0,CARRY_FLAG,jz
 
 ; D1 - POP DE
-POPREGW         D1,regede
+POPREGW         D1,regede,10+1
 
 ; D2 - JP NC,dddd
 JPCC            D2,jnz,CARRY_FLAG
@@ -676,7 +676,7 @@ OUTIMM          D3
 CALLCC          D4,CARRY_FLAG,jz
 
 ; D5 - PUSH DE
-PUSHREGW        D5,regede
+PUSHREGW        D5,regede,11+1
 
 ; D6 - SUB dd
 SUBIMM          D6
@@ -715,19 +715,19 @@ OPRST           DF,018h
 RETCC           E0,PARITY_FLAG,jz
 
 ; E1 - POP HL
-POPREGW         E1,regehl
+POPREGW         E1,regehl,10+1
 
 ; E2 - JP PO,dddd
 JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
-OPEXSPREGW      E3,regehl
+OPEXSPREGW      E3,regehl,19+1
 
 ; E4 - CALL PO,dddd
 CALLCC          E4,PARITY_FLAG,jz
 
 ; E5 - PUSH HL
-PUSHREGW        E5,regehl
+PUSHREGW        E5,regehl,11+1
 
 ; E6 - AND dd
 ANDIMM          E6
@@ -739,7 +739,7 @@ OPRST           E7,020h
 RETCC           E8,PARITY_FLAG,jnz
 
 ; E9 - JP (HL)
-OPJPREGW        E9,regehl
+OPJPREGW        E9,regehl,4+1
 
 ; EA - JP PE,dddd
 JPCC            EA,jz,PARITY_FLAG
@@ -766,7 +766,7 @@ OPRST           EF,028h
 RETCC           F0,SIGN_FLAG,jz
 
 ; F1 - POP AF
-POPREGW         F1,edx
+POPREGW         F1,edx,10+1
 
 ; F2 - JP P,dddd
 JPCC            F2,jnz,SIGN_FLAG
@@ -778,7 +778,7 @@ OPDI            F3
 CALLCC          F4,SIGN_FLAG,jz
 
 ; F5 - PUSH AF
-PUSHREGW        F5,edx
+PUSHREGW        F5,edx,11+1
 
 ; F6 - OR dd
 ORIMM           F6
@@ -790,7 +790,7 @@ OPRST           F7,030h
 RETCC           F8,SIGN_FLAG,jnz
 
 ; F9 - LD SP,HL
-LDSPREGW        F9,regehl
+LDSPREGW        F9,regehl,6+1
 
 ; FA - JP M,dddd
 JPCC            FA,jz,SIGN_FLAG

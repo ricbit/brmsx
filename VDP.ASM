@@ -39,6 +39,7 @@ public vrammapping
 public screenselect 
 public dirtyname
 public dirtypattern
+public enabled
 
 ; DATA ---------------------------------------------------------------
 
@@ -86,30 +87,6 @@ actualscreen    db      0
 ; render a screen 0 page
 
 render_screen0:
-                mov     dx,03C8h
-                movzx   eax,byte ptr [offset vdpregs+7]
-                and     eax,0Fh
-                lea     ebx,[offset palette+eax+eax*2]
-                mov     al,0
-                out     dx,al
-                inc     dx
-                mov     al,[ebx]
-                out     dx,al
-                mov     al,[ebx+1]
-                out     dx,al
-                mov     al,[ebx+2]
-                out     dx,al
-                
-                movzx   eax,byte ptr [offset vdpregs+7]
-                shr     eax,4
-                lea     ebx,[offset palette+eax+eax*2]
-                mov     al,[ebx]
-                out     dx,al
-                mov     al,[ebx+1]
-                out     dx,al
-                mov     al,[ebx+2]
-                out     dx,al
-
                 mov     esi,msxvram                
                 lea     ebx,[esi+0800h]
                 mov     edi,blitbuffer
@@ -1030,7 +1007,10 @@ render0:
                 mov     edi,offset dirtyname
                 mov     ecx,32*24/4
                 rep     stosd
+                cmp     cpupaused,1
+                je      render_cpupaused
                 call    set_border_color
+render_cpupaused:
                 mov     firstscreen,0
                 
 render4:
@@ -1054,14 +1034,6 @@ clear:
                 mov     edi,blitbuffer
                 mov     ecx,320*200/4
                 rep     stosd
-                mov     dx,03C8h
-                mov     al,1
-                out     dx,al
-                inc     dx
-                mov     al,0
-                out     dx,al
-                out     dx,al
-                out     dx,al
                 pop     es
                 ret
 

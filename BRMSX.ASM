@@ -15,6 +15,7 @@ include z80.inc
 include debug.inc
 include psg.inc
 include mouse.inc
+include vesa.inc
 
 public _main
 public msxram
@@ -27,6 +28,10 @@ public dirtycode
 public compbuffer
 public dmabuffer
 public dmatemp
+public filenamelist
+public read_rom
+public vesaheader
+public vesamodeinfo
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -57,12 +62,16 @@ msg15           db      'Error in BLASTER environment string',13,10,'$'
 msg16           db      'Sound Blaster at base address $'
 msg17           db      'h, IRQ $'
 msg18           db      ', DMA $'
+msg19           db      'VESA not found',13,10,'$'
+msg20           db      'VESA version: $'
+msg21           db      'VESA2 512x384 not found',13,10,'$'
 msgnocpuid      db      '486 or below $'
 msg386          db      '386 $'
 msg486          db      '486 $'
 msg586          db      'Pentium $'
 msg686          db      'Pentium Pro or better $'
 msgMMX          db      '(MMX)$'
+msgpoint        db      '.$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
@@ -83,6 +92,9 @@ compbuffer      dd      ?
 dirtycode       dd      ?
 dmabuffer       dd      ?
 dmatemp         dd      ?
+filenamelist    dd      ?
+vesaheader      dd      ?
+vesamodeinfo    dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -184,6 +196,18 @@ main_getdma2:
                 call    _getlomem
                 jc      no_memory
                 mov     transf_buffer,eax
+
+                ; alloc 512 bytes to vesa header
+                mov     eax,512
+                call    _getlomem
+                jc      no_memory
+                mov     vesaheader,eax
+                
+                ; alloc 256 bytes to vesa mode info block
+                mov     eax,256
+                call    _getlomem
+                jc      no_memory
+                mov     vesamodeinfo,eax
                 
                 call    parse_command_line
 
@@ -243,68 +267,27 @@ _main0:
                 add     eax,2000h
                 mov     dword ptr [offset slot2+56],eax
 
-                ; read cartridge 1 from disk
-                mov     edx,offset emptyspace
-                call    open_file
-                jc      _main2
-                call    read_size_file
-                push    eax
-                call    _gethimem
+                ; alloc always 256kb to cart1                
+                mov     eax,256*1024
+                call     _getmem
                 jc      no_memory
                 mov     cart1,eax
-                mov     dword ptr [offset slot1+16],eax
-                add     eax,2000h
-                mov     dword ptr [offset slot1+16+8],eax
-                pop     eax
-                cmp     eax,04000h
-                je      _main1
-                cmp     eax,08000h
-                jne     read_megarom
-                mov     ecx,cart1
-                add     ecx,4000h
-                mov     dword ptr [offset slot1+32],ecx
-                add     ecx,2000h
-                mov     dword ptr [offset slot1+32+8],ecx
-_main1:
-                mov     edx,transf_buffer
-                mov     ecx,eax
-                call    read_file
-                mov     ecx,eax
-                mov     esi,transf_buffer
-                mov     edi,cart1
-                rep     movsb
-                jmp     _main2
 
-read_megarom:
-                shr     eax,15
-                mov     edi,cart1
-read_megarom1:
-                mov     edx,transf_buffer
-                mov     ecx,32768
-                call    read_file
-                mov     esi,transf_buffer
-                mov     ecx,32768/4
-                rep     movsd
-                dec     eax
-                or      eax,eax
-                jnz     read_megarom1
-                mov     ecx,cart1
-                add     ecx,4000h
-                mov     dword ptr [offset slot1+32],ecx
-                add     ecx,2000h
-                mov     dword ptr [offset slot1+32+8],ecx
-                mov     eax,2
-                mov     dword ptr [offset slot1+16+4],eax
-                mov     dword ptr [offset slot1+16+4+8],eax
-                mov     dword ptr [offset slot1+16+4+16],eax
-                mov     dword ptr [offset slot1+16+4+24],eax
-
-_main2:
+                ; read cartridge 1 from disk
+                mov     edx,offset emptyspace
+                call    read_rom
+                
                 ; allocate 64kb to blit buffer
                 mov     eax,65536
                 call    _getmem
                 jc      no_memory
                 mov     blitbuffer,eax
+
+                ; allocate 8kb to file name list
+                mov     eax,8192
+                call    _getmem
+                jc      no_memory
+                mov     filenamelist,eax
 
                 ; allocate 1Mb to compile buffer
                 ;mov     eax,1048576
@@ -414,6 +397,35 @@ _main_nomouse:
 
 _main_nosound:
 
+                ; init the VESA driver
+                call    init_vesa
+                jc      no_vesa
+                mov     eax,offset msg20
+                call    printmsg
+                mov     eax,vesaheader
+                mov     eax,[eax+4]
+                push    eax
+                movzx   eax,ah
+                call    printdecimal
+                mov     eax,offset msgpoint
+                call    printmsg
+                pop     eax
+                and     eax,0FFh
+                call    printdecimal
+                call    crlf
+                mov     eax,vesaheader
+                mov     eax,[eax+4]
+                cmp     ax,0200h
+                jb      vesa2_512x384_not_found
+
+                ; search for mode 512x384x8 linear
+                call    search_vesa_mode
+                jc      vesa2_512x384_not_found
+
+                mov     vesa2found,1
+
+_main_novesa:
+
                 ; enter debug mode
                 
                 ; don't ask 
@@ -462,6 +474,17 @@ error_in_blaster:
                 mov     eax,offset msg15
                 call    printmsg
                 jmp     _main_nosound
+
+no_vesa:
+                mov     eax,offset msg19
+                call    printmsg
+                jmp     _main_novesa
+
+vesa2_512x384_not_found:
+                mov     eax,offset msg21
+                call    printmsg
+                jmp     _main_novesa
+
 
 ; search_blaster -----------------------------------------------------
 ; search the environment vars for BLASTER settings
@@ -616,6 +639,70 @@ parse_command_line_arg_loop:
                 ja      parse_command_line_arg_loop
 
 parse_command_line_none:
+                ret
+
+; read_rom -----------------------------------------------------------
+; read a ROM file from the disk and place it on slot 1
+; enter: edx = offset of rom name
+                
+read_rom:
+                call    open_file
+                jc      _ret
+                call    read_size_file
+                push    eax
+                mov     eax,cart1
+                mov     ebx,0
+                mov     dword ptr [offset slot1+16],eax
+                mov     dword ptr [offset slot1+16+4],ebx
+                add     eax,2000h
+                mov     dword ptr [offset slot1+16+8],eax
+                mov     dword ptr [offset slot1+16+8+4],ebx
+                pop     eax
+                cmp     eax,04000h
+                je      read_rom1
+                cmp     eax,08000h
+                jne     read_megarom
+                mov     ecx,cart1
+                add     ecx,4000h
+                mov     dword ptr [offset slot1+32],ecx
+                mov     dword ptr [offset slot1+32+4],ebx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
+                mov     dword ptr [offset slot1+32+8+4],ebx
+read_rom1:
+                mov     edx,transf_buffer
+                mov     ecx,eax
+                call    read_file
+                mov     ecx,eax
+                mov     esi,transf_buffer
+                mov     edi,cart1
+                rep     movsb
+                ret
+
+read_megarom:
+                shr     eax,15
+                mov     edi,cart1
+read_megarom1:
+                mov     edx,transf_buffer
+                mov     ecx,32768
+                call    read_file
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
+                dec     eax
+                or      eax,eax
+                jnz     read_megarom1
+                mov     ecx,cart1
+                add     ecx,4000h
+                mov     dword ptr [offset slot1+32],ecx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
+                mov     eax,2
+                mov     dword ptr [offset slot1+16+4],eax
+                mov     dword ptr [offset slot1+16+4+8],eax
+                mov     dword ptr [offset slot1+16+4+16],eax
+                mov     dword ptr [offset slot1+16+4+24],eax
+
                 ret
                 
 code32          ends

@@ -41,6 +41,7 @@ include gui.inc
 include fetch.inc
 include flags.inc
 include z80sing.inc
+include mouse.inc
 
 public fetch
 public fetch1
@@ -87,6 +88,7 @@ public ppic
 public megablock
 public z80rate
 public z80counter
+public reset_flag
 
 public slot0
 public slot1
@@ -130,6 +132,7 @@ public regeiy
 public regepc
 public vdpregs
 public vsyncflag
+public reset_cpu
 
 public BIT0_table
 public BIT1_table
@@ -303,6 +306,7 @@ emulatemode     dd      0
 megarommode     dd      0
 z80counter      db      8 dup (0)
 z80rate         dd      0
+reset_flag      dd      0
 rmask           db      0
 regi            db      0
 
@@ -724,6 +728,8 @@ EMULABEL        synch,emtype,brtype
 
 EMULABEL        interrupt,emtype,brtype
 
+                call    check_mouse
+
                 cmp     cpupaused,1
                 JUMP    jne,continue,emtype,brtype
 
@@ -819,6 +825,22 @@ EMULABEL        exit,emtype,brtype
 
                 endm
 
+; check_mouse --------------------------------------------------------
+; if the mouse button is pressed, then start the GUI 
+; and pause emulation
+
+check_mouse:
+                pushad
+                call    read_mouse
+                cmp     mouseleft,1
+                jne     check_mouse_end
+
+                mov     cpupaused,1
+
+check_mouse_end:
+                popad
+                ret
+
 ; check_client -------------------------------------------------------
 ; if the emulator is in a SERVER session
 ; then this function call the client to get 
@@ -842,11 +864,23 @@ check_client:
 z80paused:
                 push    ebp eax edx edi
 
+                mov     reset_flag,0
+                mov     regeaf,edx
+                mov     regepc,edi
+
                 call    sound_off
                 call    start_gui
                 call    sound_on
 
                 pop     edi edx eax ebp
+
+                cmp     reset_flag,1
+                jne     _ret
+
+                mov     edx,regeaf
+                mov     edi,regepc
+                mov     reset_flag,0
+
                 ret
 
 ; emulate ------------------------------------------------------------
@@ -898,6 +932,64 @@ emulate1_histogr:
                 EMULATE FAST,HISTOGRAM
 emulate2_histogr:  
                 EMULATE TURBO,HISTOGRAM
+
+; reset_cpu ----------------------------------------------------------
+; reset the MSX
+
+reset_cpu:
+                ; put the pc at address 0
+                mov     regepc,0
+
+                ; enable all ROM
+                mov     bl,0
+                call    outemulA8
+
+                ; disable interrupts
+                mov     iff1,0
+
+                ; clear keyboard matrix
+                mov     edi,offset keymatrix
+                mov     eax,0FFFFFFFFh
+                mov     ecx,16/4
+                rep     stosd
+
+                ; clear vram
+                mov     edi,msxvram
+                mov     ecx,16384/4
+                mov     eax,0
+                rep     stosd
+
+                ; clear psg registers
+                mov     edi,offset psgreg
+                mov     ecx,16/4
+                mov     eax,0
+                rep     stosd
+
+                ; if a megarom is loaded, then init it
+                cmp     dword ptr [offset slot1+16+4],2
+                jne     reset_cpu_nomegarom
+
+                mov     esi,(04000h SHR 13)
+                mov     eax,0
+                call    megarom0_switchbank
+                
+                mov     esi,(06000h SHR 13)
+                mov     eax,1
+                call    megarom0_switchbank
+
+                mov     esi,(08000h SHR 13)
+                mov     eax,2
+                call    megarom0_switchbank
+
+                mov     esi,(0A000h SHR 13)
+                mov     eax,3
+                call    megarom0_switchbank
+
+reset_cpu_nomegarom:
+
+                ; inform to main routine that MSX is reseted
+                mov     reset_flag,1
+                ret
 
 ; print --------------------------------------------------------------
 ; prints only the next instruction

@@ -25,28 +25,28 @@ public isetDDxx
 ; --------------------------------------------------------------------
 
 ; DD 09 - ADD IX,BC
-ADDREGWREGW     DD09,regixl,regixh,regc,regb,15+1
+ADDREGWREGW     DD09,regixl,regixh,regc,regb,15+2
 
 ; DD 19 - ADD IX,DE
-ADDREGWREGW     DD19,regixl,regixh,rege,regd,15+1
+ADDREGWREGW     DD19,regixl,regixh,rege,regd,15+2
 
 ; DD 21 - LD IX,dddd
 LDREGWIMM      DD21,regeix
 
 ; DD 22 - LD (dddd),IX
-LDDDDDREGW      DD22,regeix
+LDDDDDREGW      DD22,regeix,20+2
 
 ; DD 23 - INC IX
-INCWREG         DD23,regix,10+1
+INCWREG         DD23,regix,10+2
 
 ; DD 29 - ADD IX,IX
-ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15+1
+ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15+2
 
 ; DD 2A - LD IX,(dddd)
-LDREGWDDDD      DD2A,regeix
+LDREGWDDDD      DD2A,regeix,20+2
 
 ; DD 2B - DEC IX
-DECWREG         DD2B,regix,10+1
+DECWREG         DD2B,regix,10+2
 
 ; DD 34 - INC (IX+dd)
 INCII           DD34,regeix
@@ -58,7 +58,7 @@ DECII           DD35,regeix
 LDIIDDNN        DD36,regeix
 
 ; DD 39 - ADD IX,SP
-ADDREGWREGW     DD39,regixl,regixh,regspl,regsph,15+1
+ADDREGWREGW     DD39,regixl,regixh,regspl,regsph,15+2
 
 ; DD 46 - LD B,(IX+dd)
 LDREGIIDD       DD46,regb,regeix
@@ -136,19 +136,19 @@ emulDDCB:       inc     edi
                 jmp     [offset isetDDCBxx+eax*4]
 
 ; DD E1 - POP IX
-POPREGW         DDE1,regeix
+POPREGW         DDE1,regeix,14+2
 
 ; DD E3 - EX (SP),IX
-OPEXSPREGW      DDE3,regeix
+OPEXSPREGW      DDE3,regeix,23+2
 
 ; DD E5 - PUSH IX
-PUSHREGW        DDE5,regeix
+PUSHREGW        DDE5,regeix,15+2
 
 ; DD E9 - JP (IX)
-OPJPREGW        DDE9,regeix
+OPJPREGW        DDE9,regeix,8+2
 
 ; DD F9 - LD SP,IX
-LDSPREGW        DDF9,regeix
+LDSPREGW        DDF9,regeix,10+2
 
 ; DD CB 06 - RLC (IX+dd)
 RLCII           DDCB06,regeix
