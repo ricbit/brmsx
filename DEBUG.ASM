@@ -15,6 +15,7 @@ include vdp.inc
 include pentium.inc
 include saveload.inc
 include blit.inc
+include compiler.inc
 
 include debugsrc.inc
 include helpsrc.inc
@@ -24,6 +25,8 @@ extrn pentiumfound: dword
 extrn isize: dword
 extrn setup_profile: near
 extrn end_profile: near
+extrn dirtycode: dword
+extrn compbuffer: dword
 
 public debug
 public printmsgd
@@ -685,6 +688,8 @@ debug_loop:
                 je      command_d      
                 cmp     al,'N'
                 je      command_n
+                cmp     al,'C'
+                je      command_c
                 cmp     al,'0'
                 je      command_0
                 cmp     al,'M'
@@ -721,6 +726,8 @@ debug_loop:
                 je      command_2
                 cmp     al,'V'
                 je      command_v
+                cmp     al,'E'
+                je      command_e
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -732,6 +739,19 @@ command_extended:
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
+                jmp     debug_loop
+
+command_e:
+                mov     ecx,131072 ; 64kb*8 /4
+                mov     eax,0FFFFFFFFh
+                mov     edi,dirtycode
+                rep     stosd
+                mov     ecx,262144 ;1048576/4
+                mov     eax,0C3C3C3C3h
+                mov     edi,compbuffer
+                rep     stosd
+                mov     ebx,compbuffer
+                mov     nextopcode,ebx
                 jmp     debug_loop
 
 command_d:
@@ -894,6 +914,11 @@ command_s:      call    setgraphmode
                 call    turnoff_irq
                 call    turnoff_kb_irq
                 call    settextmode
+                jmp     debug_loop
+
+command_c:      
+                
+                call    compile_pipeline
                 jmp     debug_loop
 
 command_k:

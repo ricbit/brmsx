@@ -1,3 +1,9 @@
+release 1.68:
+
+- optimized MMX renderer one more time
+- added new "compiler" pipeline
+- fixed bug on CALL NC,dddd
+
 release 1.67:
 
 - now ALL the opcodes are in new pipe
@@ -8,7 +14,7 @@ release 1.66:
 
 release 1.65:
 
-- optimized MMX renderer
+- optimized MMX renderer again
 
 release 1.64:
 

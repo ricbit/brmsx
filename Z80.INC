@@ -100,3 +100,15 @@ extrn outemulA8: near
 extrn megarom0_switchbank: near
 extrn z80rate: dword
 extrn histogr: byte
+extrn CP_table: byte
+extrn DAA_table: byte
+extrn DAA_select_table: byte
+extrn CPL_table: byte
+extrn error: dword
+extrn z80counter: dword
+extrn emulFF: near
+extrn emulCB: near
+extrn emulDD: near
+extrn emulED: near
+extrn emulFD: near
+extrn iset: byte

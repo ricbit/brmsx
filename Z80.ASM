@@ -29,6 +29,7 @@ include z80supp.inc
 include pmode.inc
 include gui.inc
 include fetch.inc
+include flags.inc
 
 public fetch
 public fetch1
@@ -46,6 +47,11 @@ public emulate_trap
 public emulate_histogr
 public emulXX
 public emulC9
+public emulFF
+public emulCB
+public emulDD
+public emulED
+public emulFD
 public outemulXX
 public inemulXX
 public outportxx
@@ -53,6 +59,8 @@ public inportxx
 public outemulA8
 public megarom0_switchbank
 public histogr
+public error
+public iset 
 
 public opsubreg
 public opsbcreg
@@ -75,6 +83,7 @@ public prim_slotreg
 public ppic
 public megablock
 public z80rate
+public z80counter
 
 public slot0
 public slot1
@@ -137,6 +146,9 @@ public PVN53_table
 public INC_table
 public DEC_table
 public CP_table
+public CPL_table
+public DAA_table
+public DAA_select_table
 
 ; DATA ---------------------------------------------------------------
 
@@ -380,14 +392,6 @@ regehll         equ     dword ptr [offset reghll]
 vdpaddressh     equ     byte ptr [offset vdpaddress+1]
 vdpaddressl     equ     byte ptr [offset vdpaddress+0]
 vdpaddresse     equ     dword ptr [offset vdpaddress]
-
-SIGN_FLAG       equ     10000000b
-ZERO_FLAG       equ     01000000b
-HALF_FLAG       equ     00010000b
-PARITY_FLAG     equ     00000100b
-OVERFLOW_FLAG   equ     00000100b
-SUBTRACT_FLAG   equ     00000010b
-CARRY_FLAG      equ     00000001b
 
 ; FETCHMACRO ---------------------------------------------------------
 ; fetch a byte from Z80 memory (macro version)
@@ -1449,7 +1453,7 @@ JPCC            D2,jnz,CARRY_FLAG
 OUTIMM          D3
 
 ; D4 - CALL NC,dddd
-CALLCC          D4,PARITY_FLAG,jz
+CALLCC          D4,CARRY_FLAG,jz
 
 ; D5 - PUSH DE
 PUSHREGW        D5,regede

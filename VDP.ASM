@@ -253,7 +253,7 @@ render_screen1_dirty:
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
 
-                ; edi = pentium video memory
+                ; edi = blit buffer
                 mov     edi,blitbuffer
 
                 ; edx = dirty table
@@ -321,7 +321,7 @@ render_screen1_linear:
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
 
-                ; edi = pentium video memory
+                ; edi = blit buffer
                 mov     edi,blitbuffer
 
                 ; mask the temporary registers
@@ -471,25 +471,25 @@ PIPE2_MMX       macro
                 db      11010101b
                 dd      offset foregroundmask
 
+                mov     dl,[esi+i+1]
+                
                 ;;movq    MM1,MM0
                 movq
                 db      11001000b
 
                 ; blend with the foreground color
-                ;;pand    MM0,[offset foregroundcolor_MMX+ebx*8]
+                ;;pand    MM0,[offset foregroundcolor_MMX+eax*8]
                 pand
                 db      00000100b
                 db      11000101b
                 dd      offset foregroundcolor_MMX
                 
                 ; blend with the background color
-                ;;pandn    MM1,[offset backgroundcolor_MMX+ebx*8]
+                ;;pandn    MM1,[offset backgroundcolor_MMX+eax*8]
                 pandn
                 db      00001100b
                 db      11000101b
                 dd      offset backgroundcolor_MMX
-                
-                mov     dl,[esi+i+1]
                 
                 ;;por     MM0,MM1
                 por
@@ -532,7 +532,7 @@ render_screen2_dirty:
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
 
-                ; edi = pentium video memory
+                ; edi = blit buffer
                 mov     edi,blitbuffer
 
                 ; edx = dirty table name
@@ -649,7 +649,7 @@ render_screen2_linear:
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
 
-                ; edi = pentium video memory
+                ; edi = blit buffer
                 mov     edi,blitbuffer
 
                 ; mask the temporary registers
@@ -713,7 +713,7 @@ render21:
                 ret
 
 ; sprite_render ------------------------------------------------------
-; draw the sprites directly on the pentium video memory
+; draw the sprites directly on the blit buffer
 
 align 4
 
@@ -752,7 +752,7 @@ sprite16N:
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
 
-                ; edi = pentium video memory
+                ; edi = blit buffer
                 mov     edi,blitbuffer
 
                 ; mask temporary registers
@@ -814,7 +814,7 @@ sprite16N4:
                 ; fetch the image for the subline
                 mov     bl,[ecx]
 
-                ; get the pentium screen
+                ; get the contents of blit buffer
                 mov     esi,[edi]
 
                 ; blend with the sprite image
