@@ -13,9 +13,17 @@ extrn vdpregs: near
 
 public render_screen0
 public render_screen1
+public render_screen2
 public render
+public clear
 
 ; DATA ---------------------------------------------------------------
+
+include screen0.inc
+include scr2fore.inc
+include scr2back.inc
+include scr2frcl.inc
+include scr2bkcl.inc
 
 enabled         dd      1
 lastscreen      db      0
@@ -24,10 +32,23 @@ lastscreen      db      0
 ; render a screen 0 page
 
 render_screen0:
+                mov     dx,03C8h
+                mov     al,0
+                out     dx,al
+                inc     dx
+                out     dx,al
+                out     dx,al
+                out     dx,al
+                mov     al,32
+                out     dx,al
+                out     dx,al
+                out     dx,al
                 mov     esi,offset msxvram                
                 mov     ebx,offset msxvram+0800h
                 mov     edi,0a0000h+40
+                sub     edi,_code32a
                 mov     ecx,0
+                mov     edx,0
                 
                 mov     ebp,24
                 ; draw a screen
@@ -43,23 +64,14 @@ render05:
                 mov     ebp,8
                 ; draw a char
 render04:
-                push    ebp
                 mov     dl,[ebx+ecx*8]
-                mov     ebp,6
-                ; draw a subline
-render03:                
-                shl     dl,1                    ; clock 1 U
-                mov     al,0                    ; clock 1 V
-                rcl     al,1                    ; clock 2
-                mov     gs:[edi],al             ; clock 3 U
-                inc     edi                     ; clock 3 V
-                dec     ebp                     ; clock 4 U
-                jnz     render03                ; clock 4 V
-
-                pop     ebp                     
-                inc     ebx                     
-                add     edi,320-6               
-                dec     ebp                     
+                mov     ax,[offset screen0_table+edx*8]
+                inc     ebx
+                mov     [edi],ax
+                mov     eax,[offset screen0_table+edx*8+2]
+                mov     [edi+2],eax
+                add     edi,320
+                dec     ebp
                 jnz     render04                
 
                 sub     ebx,8
@@ -80,6 +92,17 @@ render03:
 ; render a screen 1 page
 
 render_screen1:
+                mov     dx,03C8h
+                mov     al,0
+                out     dx,al
+                inc     dx
+                out     dx,al
+                out     dx,al
+                out     dx,al
+                mov     al,32
+                out     dx,al
+                out     dx,al
+                out     dx,al
                 mov     esi,offset msxvram+1800h        ; tabela de nomes
                 mov     ebx,offset msxvram              ; tabela de chars
                 mov     edi,0a0000h+32
@@ -132,6 +155,130 @@ render13:
 
                 ret
 
+; render_screen2 -----------------------------------------------------
+; render a screen 2 page
+
+render_screen2:
+                ; esi = name table
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     eax,0fh
+                shl     eax,10
+                mov     eax,1800h ;;
+                lea     esi,[offset msxvram+eax]
+
+                ; ebx = character pattern table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,04h
+                shl     eax,11
+                mov     eax,0 ;;
+                lea     ebx,[offset msxvram+eax]
+
+                ; ecx = color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     eax,080h
+                shl     eax,6
+                mov     eax,2000h ;;
+                lea     ecx,[offset msxvram+eax]
+
+                ; edi = pentium video memory
+                mov     edi,0a0000h+32
+                sub     edi,_code32a
+
+                ; mask the temporary registers
+                xor     eax,eax
+                xor     edx,edx
+
+                ; for each sector
+                mov     ebp,3
+render23:       push    ebp
+
+                ; for each line
+                mov     ebp,8
+render20:       push    ebp
+
+                ; for each char
+                mov     ebp,32
+render21:       push    ebp
+
+                ; fetch the character
+                mov     al,[esi]
+                push    esi
+
+                ; for each subline
+                mov     ebp,8
+render22:       push    ebp
+
+                ; fetch the pattern for that subline
+                mov     dl,[ebx+eax*8]
+                
+                ; get the foreground mask
+                mov     ebp,[offset foregroundmask+edx*8]
+                
+                ; get the background mask
+                mov     esi,[offset backgroundmask+edx*8]
+
+                ; fetch the color for that subline
+                mov     dl,[ecx+eax*8]
+
+                ; blend with the foreground color
+                and     ebp,[offset foregroundcolor+edx*4]
+
+                ; blend with the background color
+                and     esi,[offset backgroundcolor+edx*4]
+
+                ; mix the colors
+                or      ebp,esi
+
+                ; display the subline
+                mov     [edi],ebp
+                
+                ; do it again for the next four pixels
+                mov     dl,[ebx+eax*8]
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                mov     esi,[offset backgroundmask+edx*8+4]
+                mov     dl,[ecx+eax*8]
+                and     ebp,[offset foregroundcolor+edx*4]
+                and     esi,[offset backgroundcolor+edx*4]
+                or      ebp,esi
+                mov     [edi+4],ebp
+                
+                add     edi,320
+
+                inc     ebx
+                inc     ecx
+
+                pop     ebp
+                dec     ebp
+                jnz     render22
+
+                sub     edi,320*8
+                add     edi,8
+
+                pop     esi
+                inc     esi
+                sub     ebx,8
+                sub     ecx,8
+
+                pop     ebp
+                dec     ebp
+                jnz     render21
+
+                sub     edi,32*8
+                add     edi,320*8
+
+                pop     ebp
+                dec     ebp
+                jnz     render20
+
+                add     ebx,256*8
+                add     ecx,256*8
+
+                pop     ebp
+                dec     ebp
+                jnz     render23
+
+                ret
+
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM
 
@@ -159,6 +306,8 @@ render1:
 render0:
                 cmp     bl,0
                 je      render_screen1
+                cmp     bl,1
+                je      render_screen2
                 cmp     bl,4
                 je      render_screen0
 render2:
@@ -175,6 +324,16 @@ clear:
                 mov     edi,0a0000h
                 mov     ecx,16000
                 rep     stosd
+                mov     dx,03C8h
+                mov     al,0
+                out     dx,al
+                inc     dx
+                out     dx,al
+                out     dx,al
+                out     dx,al
+                out     dx,al
+                out     dx,al
+                out     dx,al
                 pop     es
                 ret
 

@@ -23,7 +23,7 @@ isetCBxx:
 	isetCB15: dd emulXX
 	isetCB16: dd emulXX
 	isetCB17: dd emulXX
-	isetCB18: dd emulXX
+	isetCB18: dd emulCB18
 	isetCB19: dd emulCB19
 	isetCB1A: dd emulXX
 	isetCB1B: dd emulXX
@@ -69,8 +69,8 @@ isetCBxx:
 	isetCB43: dd emulXX
 	isetCB44: dd emulXX
 	isetCB45: dd emulXX
-	isetCB46: dd emulXX
-	isetCB47: dd emulXX
+	isetCB46: dd emulCB46
+	isetCB47: dd emulCB47
 	isetCB48: dd emulXX
 	isetCB49: dd emulXX
 	isetCB4A: dd emulXX
@@ -101,8 +101,8 @@ isetCBxx:
 	isetCB63: dd emulCB63
 	isetCB64: dd emulXX
 	isetCB65: dd emulXX
-	isetCB66: dd emulXX
-	isetCB67: dd emulXX
+	isetCB66: dd emulCB66
+	isetCB67: dd emulCB67
 	isetCB68: dd emulXX
 	isetCB69: dd emulXX
 	isetCB6A: dd emulXX
@@ -118,14 +118,14 @@ isetCBxx:
 	isetCB74: dd emulXX
 	isetCB75: dd emulXX
 	isetCB76: dd emulXX
-	isetCB77: dd emulXX
+	isetCB77: dd emulCB77
 	isetCB78: dd emulXX
 	isetCB79: dd emulXX
 	isetCB7A: dd emulXX
 	isetCB7B: dd emulXX
 	isetCB7C: dd emulXX
 	isetCB7D: dd emulXX
-	isetCB7E: dd emulXX
+	isetCB7E: dd emulCB7E
 	isetCB7F: dd emulXX
 	isetCB80: dd emulXX
 	isetCB81: dd emulXX
@@ -142,7 +142,7 @@ isetCBxx:
 	isetCB8C: dd emulXX
 	isetCB8D: dd emulXX
 	isetCB8E: dd emulXX
-	isetCB8F: dd emulXX
+	isetCB8F: dd emulCB8F
 	isetCB90: dd emulXX
 	isetCB91: dd emulXX
 	isetCB92: dd emulXX
@@ -183,7 +183,7 @@ isetCBxx:
 	isetCBB5: dd emulXX
 	isetCBB6: dd emulXX
 	isetCBB7: dd emulXX
-	isetCBB8: dd emulXX
+	isetCBB8: dd emulCBB8
 	isetCBB9: dd emulXX
 	isetCBBA: dd emulXX
 	isetCBBB: dd emulXX
@@ -206,7 +206,7 @@ isetCBxx:
 	isetCBCC: dd emulXX
 	isetCBCD: dd emulXX
 	isetCBCE: dd emulXX
-	isetCBCF: dd emulXX
+	isetCBCF: dd emulCBCF
 	isetCBD0: dd emulXX
 	isetCBD1: dd emulXX
 	isetCBD2: dd emulXX
@@ -229,7 +229,7 @@ isetCBxx:
 	isetCBE3: dd emulXX
 	isetCBE4: dd emulXX
 	isetCBE5: dd emulXX
-	isetCBE6: dd emulXX
+	isetCBE6: dd emulCBE6
 	isetCBE7: dd emulXX
 	isetCBE8: dd emulXX
 	isetCBE9: dd emulXX

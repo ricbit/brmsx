@@ -7,11 +7,10 @@ void main (void) {
   int file;
   unsigned char buff[32768];
 
-  file=open ("msxbasic.rom",O_BINARY|O_RDONLY);
-  read (file,buff,7);
+  file=open ("gundam.rom",O_BINARY|O_RDONLY);
   read (file,buff,32768/2);
   close (file);
-  printf ("msxrom: \n");
+  printf ("cart1: \n");
   for (i=0; i<32768/2; i++) {
     if (i%8==0)
       printf ("db ");

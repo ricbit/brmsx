@@ -148,6 +148,8 @@ debug_loop:
                 je      command_p
                 cmp     al,'1'
                 je      command_1
+                cmp     al,'2'
+                je      command_2
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -220,6 +222,27 @@ command_1:
                 call    render_screen1
                 call    getchar
                 call    settextmode
+                jmp     debug_loop
+
+command_2:
+                call    setgraphmode
+                call    clear
+                rdtsc
+                push    eax
+                call    render_screen2
+                pop     ebx
+                rdtsc
+                sub     eax,ebx
+                push    eax
+                call    getchar
+                call    settextmode
+                pop     eax
+                mov     ebx,eax
+                shr     eax,16
+                call    printhex4
+                mov     eax,ebx
+                call    printhex4
+                call    crlf
                 jmp     debug_loop
 
 command_r:

@@ -33,6 +33,7 @@ public exit_now
 align 4
 
 include keyboard.inc
+include palette.inc
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
@@ -168,10 +169,22 @@ toupper1:
 ; set video mode 13h (320x200x256)
 
 setgraphmode:
-        mov v86r_ax,13h
-        mov al,10h
-        int 33h
-        ret
+                mov     v86r_ax,13h
+                mov     al,10h
+                int     33h
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+                mov     ebx,offset palette
+                mov     ecx,16*3
+setgraphmode1:  
+                mov     al,[ebx]
+                shr     al,2
+                out     dx,al
+                inc     ebx
+                loop    setgraphmode1
+                ret
 
 ; settextmode ---------------------------------------------------------
 ; set text mode 3h (80x25 color)

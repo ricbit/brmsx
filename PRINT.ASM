@@ -11,6 +11,7 @@ include io.inc
 include pset.inc
 include psetCB.inc
 include psetDD.inc
+include psetDDCB.inc
 include psetED.inc
 include psetFD.inc
 
@@ -109,7 +110,7 @@ prin&number:    mov     edx,3
 
                 endm
 
-PRINTOP422      macro number,desc1,desc2
+PRINTOP321      macro number,desc1,desc2
 
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
@@ -119,10 +120,83 @@ prin&number:    mov     edx,3
                 call    printmsg
                 movzx   edi,regpc
                 add     edi,2
+                call    fetch
+                call    printhex2
+                mov     eax,offset msg&number&b
+                call    printmsg
+                ret
+
+                endm
+
+PRINTOP422      macro number,desc1,desc2
+
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
+prin&number:    mov     edx,4
+                call    printopcode
+                mov     eax,offset msg&number&a
+                call    printmsg
+                movzx   edi,regpc
+                add     edi,2
                 call    fetchw
                 call    printhex4
                 mov     eax,offset msg&number&b
                 call    printmsg
+                ret
+
+                endm
+
+PRINTOP421      macro number,desc1,desc2
+
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
+prin&number:    mov     edx,4
+                call    printopcode
+                mov     eax,offset msg&number&a
+                call    printmsg
+                movzx   edi,regpc
+                add     edi,2
+                call    fetch
+                call    printhex2
+                mov     eax,offset msg&number&b
+                call    printmsg
+                movzx   edi,regpc
+                add     edi,3
+                call    fetch
+                call    printhex2
+                ret
+
+                endm
+
+PRINTOP42X      macro number,desc1,desc2
+
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
+prin&number:    mov     edx,4
+                call    printopcode
+                mov     eax,offset msg&number&a
+                call    printmsg
+                movzx   edi,regpc
+                add     edi,2
+                call    fetch
+                call    printhex2
+                mov     eax,offset msg&number&b
+                call    printmsg
+                ret
+
+                endm
+
+PRINTOP412      macro number,desc
+
+msg&number:     db      desc
+prin&number:    mov     edx,4
+                call    printopcode
+                mov     eax,offset msg&number
+                call    printmsg
+                movzx   edi,regpc
+                add     edi,2
+                call    fetchw
+                call    printhex4
                 ret
 
                 endm
@@ -189,6 +263,12 @@ prinDD:         movzx   edi,regpc
                 dec     edi
                 jmp     [offset psetDDxx+eax*4]
 
+prinDDCB:       movzx   edi,regpc
+                add     edi,3
+                call    fetch
+                sub     edi,3
+                jmp     [offset psetDDCBxx+eax*4]
+
 prinED:         movzx   edi,regpc
                 inc     edi
                 call    fetch
@@ -240,6 +320,7 @@ PRINTOP100      23,'INC HL$'
 PRINTOP100      24,'INC H$'
 PRINTOP100      25,'DEC H$'
 PRINTOP211      26,'LD H,$'
+PRINTOP100      27,'DAA$'
 PRINTOP211      28,'JR Z,$'
 PRINTOP100      29,'ADD HL,HL$'
 PRINTOP322      2A,'LD HL,($',')$'
@@ -251,6 +332,7 @@ PRINTOP100      2F,'CPL$'
 PRINTOP211      30,'JR NC,$'
 PRINTOP312      31,'LD SP,$'
 PRINTOP322      32,'LD ($','),A$'
+PRINTOP100      33,'INC SP$'
 PRINTOP100      34,'INC (HL)$'
 PRINTOP100      35,'DEC (HL)$'
 PRINTOP211      36,'LD (HL),$'
@@ -258,22 +340,30 @@ PRINTOP100      37,'SCF$'
 PRINTOP211      38,'JR C,$'
 PRINTOP100      39,'ADD HL,SP$'
 PRINTOP322      3A,'LD A,($',')$'
+PRINTOP100      3B,'DEC SP$'
 PRINTOP100      3C,'INC A$'
 PRINTOP100      3D,'DEC A$'
 PRINTOP211      3E,'LD A,$'
 PRINTOP100      3F,'CCF$'
+PRINTOP100      41,'LD B,C$'
 PRINTOP100      42,'LD B,D$'
+PRINTOP100      43,'LD B,E$'
 PRINTOP100      44,'LD B,H$'
+PRINTOP100      45,'LD B,L$'
 PRINTOP100      46,'LD B,(HL)$'
 PRINTOP100      47,'LD B,A$'
 PRINTOP100      48,'LD C,B$'
+PRINTOP100      4A,'LD C,D$'
 PRINTOP100      4B,'LD C,E$'
+PRINTOP100      4C,'LD C,H$'    
 PRINTOP100      4D,'LD C,L$'
 PRINTOP100      4E,'LD C,(HL)$'
 PRINTOP100      4F,'LD C,A$'                
 PRINTOP100      50,'LD D,B$'
+PRINTOP100      51,'LD D,C$'
 PRINTOP100      53,'LD D,E$'
 PRINTOP100      54,'LD D,H$'
+PRINTOP100      55,'LD D,L$'
 PRINTOP100      56,'LD D,(HL)$'
 PRINTOP100      57,'LD D,A$'
 PRINTOP100      59,'LD E,C$'
@@ -283,12 +373,15 @@ PRINTOP100      5D,'LD E,L$'
 PRINTOP100      5E,'LD E,(HL)$'
 PRINTOP100      5F,'LD E,A$'
 PRINTOP100      60,'LD H,B$'
+PRINTOP100      61,'LD H,C$'
 PRINTOP100      62,'LD H,D$'
+PRINTOP100      65,'LD H,L$'
 PRINTOP100      66,'LD H,(HL)$'
 PRINTOP100      67,'LD H,A$'
 PRINTOP100      68,'LD L,B$'
 PRINTOP100      69,'LD L,C$'
 PRINTOP100      6B,'LD L,E$'
+PRINTOP100      6E,'LD L,(HL)$'
 PRINTOP100      6F,'LD L,A$'
 PRINTOP100      70,'LD (HL),B$'
 PRINTOP100      71,'LD (HL),C$'
@@ -304,25 +397,33 @@ PRINTOP100      7C,'LD A,H$'
 PRINTOP100      7D,'LD A,L$'
 PRINTOP100      7E,'LD A,(HL)$'
 PRINTOP100      80,'ADD A,B$'
+PRINTOP100      81,'ADD A,C$'
+PRINTOP100      82,'ADD A,D$'
 PRINTOP100      83,'ADD A,E$'
+PRINTOP100      85,'ADD A,L$'
 PRINTOP100      86,'ADD A,(HL)$'
 PRINTOP100      87,'ADD A,A$'
+PRINTOP100      8E,'ADC A,(HL)$'
 PRINTOP100      8F,'ADC A,A$'
 PRINTOP100      90,'SUB B$'
 PRINTOP100      91,'SUB C$'
 PRINTOP100      92,'SUB D$'
 PRINTOP100      93,'SUB E$'
 PRINTOP100      95,'SUB L$'
+PRINTOP100      96,'SUB (HL)$'
 PRINTOP100      98,'SBC A,B$'
 PRINTOP100      9A,'SBC A,D$'
 PRINTOP100      9C,'SBC A,H$'
 PRINTOP100      9F,'SBC A,A$'
+PRINTOP100      A0,'AND B$'
 PRINTOP100      A1,'AND C$'
+PRINTOP100      A2,'AND D$'
 PRINTOP100      A3,'AND E$'
 PRINTOP100      A4,'AND H$'
 PRINTOP100      A5,'AND L$'
 PRINTOP100      A6,'AND (HL)$'
 PRINTOP100      A7,'AND A$'
+PRINTOP100      A9,'XOR C$'
 PRINTOP100      AE,'XOR (HL)$'
 PRINTOP100      AF,'XOR A$'
 PRINTOP100      B0,'OR B$'
@@ -366,12 +467,16 @@ PRINTOP100      D9,'EXX$'
 PRINTOP312      DA,'JP C,$'
 PRINTOP221      DB,'IN A,($',')$'
 PRINTOP312      DC,'CALL C,$'
+PRINTOP211      DE,'SBC A,$'
 PRINTOP100      DF,'RST 18$'
+PRINTOP100      E0,'RET PO$'
 PRINTOP100      E1,'POP HL$'
 PRINTOP100      E3,'EX (SP),HL$'
 PRINTOP100      E5,'PUSH HL$'
 PRINTOP211      E6,'AND $'
 PRINTOP100      E7,'RST 20$'
+PRINTOP100      E8,'RET PE$'
+PRINTOP100      E9,'JP (HL)$'
 PRINTOP100      EB,'EX DE,HL$'
 PRINTOP211      EE,'XOR $'
 PRINTOP100      EF,'RST 28$'
@@ -390,19 +495,60 @@ PRINTOP211      FE,'CP $'
 PRINTOP100      FF,'RST 38$'
 PRINTOP200      CB01,'RLC C$'
 PRINTOP200      CB11,'RL C$'
+PRINTOP200      CB18,'RR B$'
 PRINTOP200      CB19,'RR C$'
 PRINTOP200      CB1C,'RR H$'
 PRINTOP200      CB21,'SLA C$'
+PRINTOP200      CB46,'BIT 0,(HL)$'
+PRINTOP200      CB47,'BIT 0,A$'
 PRINTOP200      CB4F,'BIT 1,A$'
 PRINTOP200      CB63,'BIT 4,E$'
+PRINTOP200      CB66,'BIT 4,(HL)$'
+PRINTOP200      CB67,'BIT 4,A$'
+PRINTOP200      CB77,'BIT 6,A$'
+PRINTOP200      CB7E,'BIT 7,(HL)$'
+PRINTOP200      CB8F,'RES 1,A$'
+PRINTOP200      CBB8,'RES 7,B$'
 PRINTOP200      CBC1,'SET 0,C$'
+PRINTOP200      CBCF,'SET 1,A$'
+PRINTOP200      CBE6,'SET 5,(HL)$'  
+PRINTOP200      DD19,'ADD IX,DE$'
+PRINTOP412      DD21,'LD IX,$'
+PRINTOP321      DD35,'DEC (IX+$',')$'
+PRINTOP421      DD36,'LD (IX+$','),$'
+PRINTOP321      DD46,'LD B,(IX+$',')$'
+PRINTOP321      DD4E,'LD C,(IX+$',')$'
+PRINTOP321      DD56,'LD D,(IX+$',')$'
+PRINTOP321      DD5E,'LD E,(IX+$',')$'
+PRINTOP321      DD66,'LD H,(IX+$',')$'
+PRINTOP321      DD6E,'LD L,(IX+$',')$'
+PRINTOP321      DD77,'LD (IX+$','),A$'
+PRINTOP321      DD7E,'LD A,(IX+$',')$'
+PRINTOP321      DDBE,'CP (IX+$',')$'
 PRINTOP200      DDE1,'POP IX$'
 PRINTOP200      DDE5,'PUSH IX$'
+PRINTOP200      DDE9,'JP (IX)$'
+PRINTOP42X      DDCB4E,'BIT 1,(IX+$',')$'
+PRINTOP42X      DDCB5E,'BIT 3,(IX+$',')$'
+PRINTOP42X      DDCB6E,'BIT 5,(IX+$',')$'
+PRINTOP42X      DDCB7E,'BIT 7,(IX+$',')$'
+PRINTOP200      ED4D,'RETI$'
+PRINTOP200      ED52,'SBC HL,DE$'
 PRINTOP422      ED53,'LD ($','),DE$'
 PRINTOP200      ED56,'IM 1$'
+PRINTOP200      ED57,'LD A,I$'
 PRINTOP422      ED5B,'LD DE,($',')$'
+PRINTOP200      ED67,'RRD$'
+PRINTOP200      ED6F,'RLD$'
 PRINTOP422      ED73,'LD ($','),SP$'
+PRINTOP200      ED78,'IN A,(C)$'
+PRINTOP200      ED79,'OUT (C),A$'
+PRINTOP422      ED7B,'LD SP,($',')$'
 PRINTOP200      EDB0,'LDIR$'
+PRINTOP200      EDB9,'CPDR$'
+PRINTOP321      FD34,'INC (IY+$',')$'
+PRINTOP321      FD4E,'LD C,(IY+$',')$'
+PRINTOP321      FDBE,'CP (IY+$',')$'
 PRINTOP200      FDE1,'POP IY$'
 PRINTOP200      FDE5,'PUSH IY$'
 PRINTOP100      XX,'not emulated yet$'

@@ -8,6 +8,7 @@ code32  segment para public use32
 
 extrn msxrom:near
 extrn msxvram:near
+extrn cart1:near
 extrn pset:near
 
 include io.inc
@@ -40,32 +41,71 @@ public vdpregs
 include iset.inc
 include isetCB.inc
 include isetDD.inc
+include isetDDCB.inc
 include isetED.inc
 include isetFD.inc
 include outport.inc
 include inport.inc
 
-msxram          db      8000h dup (0)
+msxram          db      10000h dup (0)
 
 mem:
 mem00           dd      msxrom
-mem20           dd      msxrom+2000h
-mem40           dd      msxrom+4000h
-mem60           dd      msxrom+6000h
-mem80           dd      msxram
-mema0           dd      msxram+2000h
-memc0           dd      msxram+4000h
-meme0           dd      msxram+6000h
+mem20           dd      msxrom+02000h
+mem40           dd      msxrom+04000h
+mem60           dd      msxrom+06000h
+mem80           dd      msxrom
+memA0           dd      msxrom+02000h
+memC0           dd      msxrom+04000h
+memE0           dd      msxrom+06000h
 
 memlock:               
 memlock00       dd      1
 memlock20       dd      1
 memlock40       dd      1
 memlock60       dd      1
-memlock80       dd      0
-memlocka0       dd      0
-memlockc0       dd      0
-memlocke0       dd      0
+memlock80       dd      1
+memlockA0       dd      1
+memlockC0       dd      1
+memlockE0       dd      1
+
+slot:           
+slot0:
+                dd      msxrom
+                dd      1
+                dd      msxrom+04000h
+                dd      1
+                dd      msxrom
+                dd      1
+                dd      msxrom
+                dd      1
+slot1:
+                dd      msxrom
+                dd      1
+                dd      cart1
+                dd      1
+                dd      msxrom
+                dd      1
+                dd      msxrom
+                dd      1
+slot2:
+                dd      msxram
+                dd      0
+                dd      msxram+04000h
+                dd      0
+                dd      msxram+08000h
+                dd      0
+                dd      msxram+0C000h
+                dd      0
+slot3:
+                dd      msxrom
+                dd      1
+                dd      msxrom
+                dd      1
+                dd      msxrom
+                dd      1
+                dd      msxrom
+                dd      1
 
 breakpoint      dd      0
 iff1            dd      0
@@ -79,7 +119,7 @@ vdpregs         db      8 dup (0)
 vdptemp         db      0
 vdpstatus       db      0
 
-outvalueA8      db      0
+prim_slotreg    db      0
 keyboard_line   db      0
 
 align 4
@@ -150,6 +190,7 @@ ZERO_FLAG       equ     01000000b
 HALF_FLAG       equ     00010000b
 PARITY_FLAG     equ     00000100b
 OVERFLOW_FLAG   equ     00000100b
+SUBTRACT_FLAG   equ     00000010b
 CARRY_FLAG      equ     00000001b
 
 BIT_0           equ     00000001b
@@ -160,6 +201,28 @@ BIT_4           equ     00010000b
 BIT_5           equ     00100000b
 BIT_6           equ     01000000b
 BIT_7           equ     10000000b
+
+NBIT_0          equ     11111110b
+NBIT_1          equ     11111101b
+NBIT_2          equ     11111011b
+NBIT_3          equ     11110111b
+NBIT_4          equ     11101111b
+NBIT_5          equ     11011111b
+NBIT_6          equ     10111111b
+NBIT_7          equ     01111111b
+
+; setflag_in_c -------------------------------------------------------
+; sets the z80 flags after in r,(C) operations
+
+setflag_in_c    macro
+
+                pushfd
+                pop     ecx
+                and     dl,00000001b
+                and     cl,11111100b
+                or      dl,cl
+
+                endm
 
 ; setflag_xor --------------------------------------------------------
 ; sets the z80 flags after xor operations
@@ -245,6 +308,32 @@ setflag_rr      macro
                 pop     ecx
                 mov     dl,cl
                 and     dl,11000101b
+
+                endm
+
+; setflag_rrd --------------------------------------------------------
+; sets the z80 flags after rrd operations
+
+setflag_rrd      macro
+
+                pushfd
+                pop     ecx
+                and     cl,01111111b
+                and     dl,10000000b
+                or      dl,cl
+
+                endm
+
+; setflag_rld --------------------------------------------------------
+; sets the z80 flags after rld operations
+
+setflag_rld      macro
+
+                pushfd
+                pop     ecx
+                and     cl,01111111b
+                and     dl,10000000b
+                or      dl,cl
 
                 endm
 
@@ -890,6 +979,10 @@ emul26:         inc     edi
                 mov     regh,al
                 ret
 
+; 27 - DAA
+emul27:         inc     edi
+                ret
+
 ; 28 - JR Z,dd
 emul28:         inc     edi
                 call    fetch
@@ -978,6 +1071,11 @@ emul32:         inc     edi
                 xor     eax,eax
                 ret
 
+; 33 - INC SP
+emul33:         inc     edi
+                inc     regsp
+                ret
+
 ; 34 - INC (HL)
 emul34:         inc     edi
                 mov     ecx,regehl
@@ -1042,6 +1140,11 @@ emul3A:         inc     edi
                 add     edi,2
                 ret
 
+; 3B - DEC SP
+emul3B:         inc     edi
+                dec     regsp
+                ret
+
 ; 3C - INC A
 emul3C:         inc     edi
                 inc     dh
@@ -1067,16 +1170,34 @@ emul3F:         inc     edi
                 and     dl,11101101b
                 ret
 
+; 41 - LD B,C
+emul41:         inc     edi
+                mov     bl,regc
+                mov     regb,bl
+                ret
+
 ; 42 - LD B,D
 emul42:         inc     edi
                 mov     al,regd
                 mov     regb,al
                 ret
 
+; 43 - LD B,E
+emul43:         inc     edi
+                mov     bl,rege
+                mov     regb,bl
+                ret
+
 ; 44 - LD B,H
 emul44:         inc     edi
                 mov     al,regh
                 mov     regb,al
+                ret
+
+; 45 - LD B,L
+emul45:         inc     edi
+                mov     bl,regl
+                mov     regb,bl
                 ret
 
 ; 46 - LD B,(HL)
@@ -1097,9 +1218,21 @@ emul48:         inc     edi
                 mov     regc,bl
                 ret
 
+; 4A - LD C,D
+emul4A:         inc     edi
+                mov     bl,regd
+                mov     regc,bl
+                ret
+
 ; 4B - LD C,E   
 emul4B:         inc     edi
                 mov     bl,rege
+                mov     regc,bl
+                ret
+
+; 4C - LD C,H
+emul4C:         inc     edi
+                mov     bl,regh
                 mov     regc,bl
                 ret
 
@@ -1127,6 +1260,12 @@ emul50:         inc     edi
                 mov     regd,bl
                 ret
 
+; 51 - LD D,C
+emul51:         inc     edi
+                mov     bl,regc
+                mov     regd,bl
+                ret
+
 ; 53 - LD D,E
 emul53:         inc     edi
                 mov     bl,rege
@@ -1136,6 +1275,12 @@ emul53:         inc     edi
 ; 54 - LD D,H
 emul54:         inc     edi
                 mov     bl,regh
+                mov     regd,bl
+                ret
+
+; 55 - LD D,L
+emul55:         inc     edi
+                mov     bl,regl
                 mov     regd,bl
                 ret
 
@@ -1193,10 +1338,22 @@ emul60:         inc     edi
                 mov     regh,bl
                 ret
 
+; 61 - LD H,C
+emul61:         inc     edi
+                mov     bl,regc
+                mov     regh,bl
+                ret
+
 ; 62 - LD H,D  
 emul62:         inc     edi
                 mov     al,regd
                 mov     regh,al
+                ret
+
+; 65 - LD H,L
+emul65:         inc     edi
+                mov     bl,regl
+                mov     regh,bl
                 ret
 
 ; 66 - LD H,(HL)
@@ -1226,6 +1383,13 @@ emul69:         inc     edi
 ; 6B - LD L,E
 emul6B:         inc     edi
                 mov     al,rege
+                mov     regl,al
+                ret
+
+; 6E - LD L,(HL)
+emul6E:         inc     edi
+                mov     ecx,regehl
+                call    readmem
                 mov     regl,al
                 ret
 
@@ -1319,9 +1483,27 @@ emul80:         inc     edi
                 setflag_add     
                 ret
 
+; 81 - ADD A,C
+emul81:         inc     edi
+                add     dh,regc
+                setflag_add
+                ret
+
+; 82 - ADD A,D
+emul82:         inc     edi
+                add     dh,regd
+                setflag_add
+                ret
+
 ; 83 - ADD A,E
 emul83:         inc     edi
                 add     dh,rege
+                setflag_add
+                ret
+
+; 85 - ADD A,L
+emul85:         inc     edi
+                add     dh,regl
                 setflag_add
                 ret
 
@@ -1337,6 +1519,16 @@ emul86:         inc     edi
 emul87:         inc     edi
                 add     dh,dh
                 setflag_add
+                ret
+
+; 8E - ADC A,(HL)
+emul8E:         inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,dl
+                shr     bl,1
+                adc     dh,al
+                setflag_adc
                 ret
 
 ; 8F - ADC A,A
@@ -1377,6 +1569,14 @@ emul95:         inc     edi
                 setflag_sub
                 ret
 
+; 96 - SUB (HL)
+emul96:         inc     edi
+                mov     ecx,regehl
+                call    readmem
+                sub     dh,al
+                setflag_sub
+                ret
+
 ; 98 - SBC A,B
 emul98:         inc     edi
                 mov     bl,dl
@@ -1409,9 +1609,21 @@ emul9F:         inc     edi
                 setflag_sbc
                 ret
 
+; A0 - AND B
+emulA0:         inc     edi
+                and     dh,regb
+                setflag_and
+                ret
+
 ; A1 - AND C
 emulA1:         inc     edi
                 and     dh,regc
+                setflag_and
+                ret
+
+; A2 - AND D
+emulA2:         inc     edi
+                and     dh,regd
                 setflag_and
                 ret
 
@@ -1445,6 +1657,12 @@ emulA6:         inc     edi
 emulA7:         inc     edi
                 and     dh,dh
                 setflag_and
+                ret
+
+; A9 - XOR C
+emulA9:         inc     edi
+                xor     dh,regc
+                setflag_xor
                 ret
 
 ; AE - XOR (HL)
@@ -1823,6 +2041,16 @@ emulDD:         inc     edi
                 and     eax,0ffh
                 jmp     [offset isetDDxx+eax*4]
 
+; DE - SBC A,dd
+emulDE:         inc     edi
+                call    fetch
+                inc     edi
+                mov     bl,dl
+                shr     bl,1
+                sbb     dh,al
+                setflag_sbc
+                ret
+
 ; DF - RST 18
 emulDF:         inc     edi
                 mov     eax,edi
@@ -1836,6 +2064,12 @@ emulDF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,018h
                 xor     eax,eax
+                ret
+
+; E0 - RET PO
+emulE0:         test    dl,PARITY_FLAG
+                jz      emulC9
+                inc     edi
                 ret
 
 ; E1 - POP HL
@@ -1899,6 +2133,16 @@ emulE7:         inc     edi
                 mov     regesp,ecx
                 mov     edi,020h
                 xor     eax,eax
+                ret
+
+; E8 - RET PE
+emulE8:         test    dl,PARITY_FLAG
+                jnz     emulC9
+                inc     edi
+                ret
+
+; E9 - JP (HL)
+emulE9:         mov     edi,regehl
                 ret
 
 ; EB - EX DE,HL
@@ -2070,6 +2314,14 @@ emulCB11:       inc     edi
                 ret
 
 
+; CB 18 - RR B
+emulCB18:       inc     edi
+                mov     bl,dl
+                shr     bl,1
+                rcr     regb,1
+                setflag_rr
+                ret
+
 ; CB 19 - RR C
 emulCB19:       inc     edi
                 mov     bl,dl
@@ -2092,6 +2344,20 @@ emulCB21:       inc     edi
                 setflag_shift
                 ret
 
+; CB 46 - BIT 0,(HL)
+emulCB46:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                test    al,BIT_0
+                setflag_bit
+                ret
+
+; CB 47 - BIT 0,A
+emulCB47:       inc     edi
+                test    dh,BIT_1
+                setflag_bit
+                ret
+
 ; CB 4F - BIT 1,A
 emulCB4F:       inc     edi
                 test    dh,BIT_1
@@ -2104,10 +2370,201 @@ emulCB63:       inc     edi
                 setflag_bit
                 ret
 
+; CB 66 - BIT 4,(HL)
+emulCB66:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                test    al,BIT_4
+                setflag_bit
+                ret
+
+; CB 67 - BIT 4,A
+emulCB67:       inc     edi
+                test    dh,BIT_4
+                setflag_bit
+                ret
+
+; CB 77 - BIT 6,A
+emulCB77:       inc     edi
+                test    dh,BIT_6
+                setflag_bit
+                ret
+
+; CB 7E - BIT 7,(HL)
+emulCB7E:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                test    al,BIT_7
+                setflag_bit
+                ret
+
+; CB 8F - RES 1,A
+emulCB8F:       inc     edi
+                and     dh,NBIT_1
+                ret
+
+; CB B8 - RES 7,B
+emulCBB8:       inc     edi
+                and     regb,NBIT_7
+                ret
+
 ; CB C1 - SET 0,C
 emulCBC1:       inc     edi
-                or      regc,1
+                or      regc,BIT_0
                 ret
+
+; CB CF - SET 1,A
+emulCBCF:       inc     edi
+                or      dh,BIT_1
+                ret
+
+; CB E6 - SET 5,(HL)
+emulCBE6:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                or      al,BIT_5
+                call    writemem
+                ret
+
+; DD 19 - ADD IX,DE
+emulDD19:       inc     edi
+                mov     ebx,regede
+                add     regix,bx
+                setflag_add2
+                ret
+
+; DD 21 - LD IX,dddd
+emulDD21:       inc     edi               
+                call    fetchw
+                add     edi,2
+                mov     regeix,eax
+                xor     eax,eax
+                ret
+
+; DD 35 - DEC (IX+dd)
+emulDD35:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                push    ecx
+                call    readmem
+                dec     al
+                setflag_dec
+                pop     ecx
+                call    writemem
+                ret
+
+; DD 36 - LD (IX+dd),dd
+emulDD36:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                call    fetch
+                inc     edi
+                call    writemem
+                ret
+
+; DD 46 - LD B,(IX+dd)
+emulDD46:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     regb,al
+                ret
+
+; DD 4E - LD C,(IX+dd)
+emulDD4E:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     regc,al
+                ret
+
+; DD 56 - LD D,(IX+dd)
+emulDD56:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     regd,al
+                ret
+
+; DD 5E - LD E,(IX+dd)
+emulDD5E:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     rege,al
+                ret
+
+; DD 66 - LD H,(IX+dd)
+emulDD66:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     regh,al
+                ret
+
+; DD 6E - LD L,(IX+dd)
+emulDD6E:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     regl,al
+                ret
+
+; DD 77 - LD (IX+dd),A
+emulDD77:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                mov     al,dh
+                call    writemem
+                ret
+
+; DD 7E - LD A,(IX+dd)
+emulDD7E:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                mov     dh,al
+                ret
+
+; DD BE - CP (IX+dd)
+emulDDBE:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeix
+                add     cx,ax
+                call    readmem
+                cmp     dh,al
+                setflag_cp
+                ret
+
+; DD CB - group DD CB
+emulDDCB:       inc     edi
+                call    fetch
+                mov     cl,al
+                inc     edi
+                call    fetch
+                jmp     [offset isetDDCBxx+eax*4]
 
 ; DD E1 - POP IX
 emulDDE1:       inc     edi
@@ -2133,6 +2590,66 @@ emulDDE5:       inc     edi
                 mov     regesp,ecx
                 ret
 
+; DD E9 - JP (IX)
+emulDDE9:       mov     edi,regeix
+                ret
+
+; DD CB 4E - BIT 1,(IX+dd)
+emulDDCB4E:     inc     edi
+                mov     bl,cl
+                xor     bh,bh
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                test    al,BIT_1
+                setflag_bit
+                ret
+
+; DD CB 5E - BIT 3,(IX+dd)
+emulDDCB5E:     inc     edi
+                mov     bl,cl
+                xor     bh,bh
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                test    al,BIT_3
+                setflag_bit
+                ret
+
+; DD CB 6E - BIT 5,(IX+dd)
+emulDDCB6E:     inc     edi
+                mov     bl,cl
+                xor     bh,bh
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                test    al,BIT_5
+                setflag_bit
+                ret
+
+; DD CB 7E - BIT 7,(IX+dd)
+emulDDCB7E:     inc     edi
+                mov     bl,cl
+                xor     bh,bh
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                test    al,BIT_7
+                setflag_bit
+                ret
+
+; ED 4D - RETI
+emulED4D:       jmp     emulC9
+
+; ED 52 - SBC HL,DE
+emulED52:       inc     edi
+                mov     bl,dl
+                shr     bl,1
+                mov     ebx,regede
+                sbb     reghl,bx
+                setflag_sbc
+                ret
+
 ; ED 53 - LD (dddd),DE
 emulED53:       inc     edi
                 call    fetchw
@@ -2150,6 +2667,11 @@ emulED53:       inc     edi
 emulED56:       inc     edi
                 ret
 
+; ED 57 - LD A,I
+emulED57:       inc     edi
+                mov     dh,0
+                ret
+
 ; ED 5B - LD DE,(dddd)
 emulED5B:       inc     edi
                 call    fetchw
@@ -2161,6 +2683,42 @@ emulED5B:       inc     edi
                 mov     regd,al
                 xor     eax,eax
                 add     edi,2
+                ret
+
+; ED 67 - RRD
+emulED67:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     ah,dh
+                shr     eax,4
+                and     bl,0fh
+                and     dh,0f0h
+                or      dh,bl
+                setflag_rrd
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                ret
+
+; ED 6F - RLD
+emulED6F:       inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     ah,dh
+                shl     eax,4
+                mov     bh,dh
+                and     bh,0fh
+                or      al,bh
+                and     ah,0fh
+                and     dh,0f0h
+                or      dh,ah
+                setflag_rld
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                xor     eax,eax
                 ret
 
 ; ED 73 - LD (dddd),SP
@@ -2176,6 +2734,35 @@ emulED73:       inc     edi
                 xor     eax,eax
                 ret
 
+; ED 78 - IN A,(C)
+emulED78:       inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     dh,bl
+                or      dh,dh
+                setflag_in_c
+                ret
+
+; ED 79 - OUT (C),A
+emulED79:       inc     edi
+                mov     bl,dh
+                mov     al,regc
+                call    [offset outportxx+eax*4]
+                ret
+
+; ED 7B - LD SP,(dddd)
+emulED7B:       inc     edi
+                call    fetchw
+                mov     ecx,eax
+                call    readmem
+                mov     regspl,al
+                inc     cx
+                call    readmem
+                mov     regsph,al
+                xor     eax,eax
+                add     edi,2
+                ret
+
 ; ED B0 - LDIR
 emulEDB0:       inc     edi
 emulEDB0a:      mov     ecx,regehl
@@ -2186,6 +2773,55 @@ emulEDB0a:      mov     ecx,regehl
                 inc     regde
                 dec     regbc
                 jnz     emulEDB0a
+                ret
+
+; ED B9 - CPDR
+emulEDB9:       inc     edi
+emulEDB9b:      mov     ecx,regehl
+                call    readmem
+                cmp     dh,al
+                jz      emulEDB9a
+                dec     reghl
+                dec     regbc
+                jnz     emulEDB9b
+                and     dl,10111011b
+                ret
+emulEDB9a:      or      dl,01000100b
+                ret
+
+; FD 34 - INC (IY+dd)
+emulFD34:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,ax
+                push    ecx
+                call    readmem
+                inc     al
+                setflag_inc
+                pop     ecx
+                call    writemem
+                ret
+
+; FD 4E - LD C,(IY+dd)
+emulFD4E:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,ax
+                call    readmem
+                mov     regc,al
+                ret
+
+; FD BE - CP (IY+dd)
+emulFDBE:       inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,ax
+                call    readmem
+                cmp     dh,al
+                setflag_cp
                 ret
 
 ; FD E1 - POP IY
@@ -2245,7 +2881,53 @@ outemul99b:     and     ebx,00000111b
                 mov     byte ptr [offset vdpregs+ebx],al
                 ret
 
-outemulA8:      mov     outvalueA8,bl
+outemulA8:      mov     prim_slotreg,bl
+                ; frame 0
+                and     ebx,03h
+                shl     ebx,5
+                mov     ecx,[offset slot+ebx]
+                mov     mem00,ecx
+                add     ecx,2000h
+                mov     mem20,ecx
+                mov     ecx,[offset slot+ebx]
+                mov     memlock00,ecx
+                mov     memlock20,ecx
+                ; frame 1
+                mov     bl,prim_slotreg
+                shr     bl,2
+                and     ebx,03h
+                shl     ebx,5
+                mov     ecx,[offset slot+ebx+8]
+                mov     mem40,ecx
+                add     ecx,2000h
+                mov     mem60,ecx
+                mov     ecx,[offset slot+ebx+8+4]
+                mov     memlock40,ecx
+                mov     memlock60,ecx
+                ; frame 2
+                mov     bl,prim_slotreg
+                shr     bl,4
+                and     ebx,03h
+                shl     ebx,5
+                mov     ecx,[offset slot+ebx+16]
+                mov     mem80,ecx
+                add     ecx,2000h
+                mov     memA0,ecx
+                mov     ecx,[offset slot+ebx+16+4]
+                mov     memlock80,ecx
+                mov     memlockA0,ecx
+                ; frame 3
+                mov     bl,prim_slotreg
+                shr     bl,6
+                and     ebx,03h
+                shl     ebx,5
+                mov     ecx,[offset slot+ebx+24]
+                mov     memC0,ecx
+                add     ecx,2000h
+                mov     memE0,ecx
+                mov     ecx,[offset slot+ebx+24+4]
+                mov     memlockC0,ecx
+                mov     memlockE0,ecx
                 ret
 
 outemulAA:      and     bl,0fh
@@ -2267,7 +2949,7 @@ inemul99:       mov     bl,vdpstatus
                 and     vdpstatus,01111111b
                 ret
 
-inemulA8:       mov     bl,outvalueA8
+inemulA8:       mov     bl,prim_slotreg
                 ret
 
 inemulA9:       movzx   ecx,keyboard_line
