@@ -2,8 +2,15 @@
 
 FETCH1          macro   opcode
 
-                mov     ebx,offset fetch1
-                call    ebx
+                mov     al,0
+
+                endm
+
+; -------------------------------------------------------------------- 
+
+FETCH1S         macro   opcode
+
+                mov     ecx,0
 
                 endm
 
@@ -11,8 +18,7 @@ FETCH1          macro   opcode
 
 FETCHW1         macro   opcode
 
-                mov     ebx,offset fetchw1
-                call    ebx
+                mov     eax,0
 
                 endm
 

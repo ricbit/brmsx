@@ -1,3 +1,7 @@
+release 1.70:
+
+- automatic fetch
+
 release 1.69:
 
 - fixed last bugs on compiler: now it works!!!

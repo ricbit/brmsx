@@ -1,3 +1,7 @@
+FETCHIMM        equ     1
+FETCHSIGNAL     equ     2
+FETCHWIMM       equ     3
+
 info_table:
 	; 00
 	dd      offset comp00
@@ -6,7 +10,7 @@ info_table:
 	; 01
 	dd      offset comp01
 	db      (offset comp01_end)-(offset comp01)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 02
 	dd      offset comp02
 	db      (offset comp02_end)-(offset comp02)
@@ -26,7 +30,7 @@ info_table:
 	; 06
 	dd      offset comp06
 	db      (offset comp06_end)-(offset comp06)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 07
 	dd      offset comp07
 	db      (offset comp07_end)-(offset comp07)
@@ -58,7 +62,7 @@ info_table:
 	; 0E
 	dd      offset comp0E
 	db      (offset comp0E_end)-(offset comp0E)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 0F
 	dd      offset comp0F
 	db      (offset comp0F_end)-(offset comp0F)
@@ -66,11 +70,11 @@ info_table:
 	; 10
 	dd      offset comp10
 	db      (offset comp10_end)-(offset comp10)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 11
 	dd      offset comp11
 	db      (offset comp11_end)-(offset comp11)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 12
 	dd      offset comp12
 	db      (offset comp12_end)-(offset comp12)
@@ -90,7 +94,7 @@ info_table:
 	; 16
 	dd      offset comp16
 	db      (offset comp16_end)-(offset comp16)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 17
 	dd      offset comp17
 	db      (offset comp17_end)-(offset comp17)
@@ -98,7 +102,7 @@ info_table:
 	; 18
 	dd      offset comp18
 	db      (offset comp18_end)-(offset comp18)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 19
 	dd      offset comp19
 	db      (offset comp19_end)-(offset comp19)
@@ -122,7 +126,7 @@ info_table:
 	; 1E
 	dd      offset comp1E
 	db      (offset comp1E_end)-(offset comp1E)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 1F
 	dd      offset comp1F
 	db      (offset comp1F_end)-(offset comp1F)
@@ -130,15 +134,15 @@ info_table:
 	; 20
 	dd      offset comp20
 	db      (offset comp20_end)-(offset comp20)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 21
 	dd      offset comp21
 	db      (offset comp21_end)-(offset comp21)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 22
 	dd      offset comp22
 	db      (offset comp22_end)-(offset comp22)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 23
 	dd      offset comp23
 	db      (offset comp23_end)-(offset comp23)
@@ -154,7 +158,7 @@ info_table:
 	; 26
 	dd      offset comp26
 	db      (offset comp26_end)-(offset comp26)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 27
 	dd      offset comp27
 	db      (offset comp27_end)-(offset comp27)
@@ -162,7 +166,7 @@ info_table:
 	; 28
 	dd      offset comp28
 	db      (offset comp28_end)-(offset comp28)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 29
 	dd      offset comp29
 	db      (offset comp29_end)-(offset comp29)
@@ -170,7 +174,7 @@ info_table:
 	; 2A
 	dd      offset comp2A
 	db      (offset comp2A_end)-(offset comp2A)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 2B
 	dd      offset comp2B
 	db      (offset comp2B_end)-(offset comp2B)
@@ -186,7 +190,7 @@ info_table:
 	; 2E
 	dd      offset comp2E
 	db      (offset comp2E_end)-(offset comp2E)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 2F
 	dd      offset comp2F
 	db      (offset comp2F_end)-(offset comp2F)
@@ -194,15 +198,15 @@ info_table:
 	; 30
 	dd      offset comp30
 	db      (offset comp30_end)-(offset comp30)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 31
 	dd      offset comp31
 	db      (offset comp31_end)-(offset comp31)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 32
 	dd      offset comp32
 	db      (offset comp32_end)-(offset comp32)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 33
 	dd      offset comp33
 	db      (offset comp33_end)-(offset comp33)
@@ -218,7 +222,7 @@ info_table:
 	; 36
 	dd      offset comp36
 	db      (offset comp36_end)-(offset comp36)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 37
 	dd      offset comp37
 	db      (offset comp37_end)-(offset comp37)
@@ -226,7 +230,7 @@ info_table:
 	; 38
 	dd      offset comp38
 	db      (offset comp38_end)-(offset comp38)
-	db      0,0,0
+	db      FETCHSIGNAL,0,0
 	; 39
 	dd      offset comp39
 	db      (offset comp39_end)-(offset comp39)
@@ -234,7 +238,7 @@ info_table:
 	; 3A
 	dd      offset comp3A
 	db      (offset comp3A_end)-(offset comp3A)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; 3B
 	dd      offset comp3B
 	db      (offset comp3B_end)-(offset comp3B)
@@ -250,7 +254,7 @@ info_table:
 	; 3E
 	dd      offset comp3E
 	db      (offset comp3E_end)-(offset comp3E)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; 3F
 	dd      offset comp3F
 	db      (offset comp3F_end)-(offset comp3F)
@@ -778,15 +782,15 @@ info_table:
 	; C2
 	dd      offset compC2
 	db      (offset compC2_end)-(offset compC2)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; C3
 	dd      offset compC3
 	db      (offset compC3_end)-(offset compC3)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; C4
 	dd      offset compC4
 	db      (offset compC4_end)-(offset compC4)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; C5
 	dd      offset compC5
 	db      (offset compC5_end)-(offset compC5)
@@ -794,7 +798,7 @@ info_table:
 	; C6
 	dd      offset compC6
 	db      (offset compC6_end)-(offset compC6)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; C7
 	dd      0; offset compC7
 	db      0; (offset compC7_end)-(offset compC7)
@@ -810,7 +814,7 @@ info_table:
 	; CA
 	dd      offset compCA
 	db      (offset compCA_end)-(offset compCA)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; CB
 	dd      offset compCB
 	db      (offset compCB_end)-(offset compCB)
@@ -818,15 +822,15 @@ info_table:
 	; CC
 	dd      offset compCC
 	db      (offset compCC_end)-(offset compCC)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; CD
 	dd      offset compCD
 	db      (offset compCD_end)-(offset compCD)
-	db      0,0,0
-	; CE
+	db      FETCHWIMM,0,0
+	; CE    
 	dd      offset compCE
 	db      (offset compCE_end)-(offset compCE)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; CF
 	dd      offset compCF
 	db      (offset compCF_end)-(offset compCF)
@@ -842,15 +846,15 @@ info_table:
 	; D2
 	dd      offset compD2
 	db      (offset compD2_end)-(offset compD2)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; D3
 	dd      offset compD3
 	db      (offset compD3_end)-(offset compD3)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; D4
 	dd      offset compD4
 	db      (offset compD4_end)-(offset compD4)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; D5
 	dd      offset compD5
 	db      (offset compD5_end)-(offset compD5)
@@ -858,7 +862,7 @@ info_table:
 	; D6
 	dd      offset compD6
 	db      (offset compD6_end)-(offset compD6)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; D7
 	dd      offset compD7
 	db      (offset compD7_end)-(offset compD7)
@@ -874,15 +878,15 @@ info_table:
 	; DA
 	dd      offset compDA
 	db      (offset compDA_end)-(offset compDA)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; DB
 	dd      offset compDB
 	db      (offset compDB_end)-(offset compDB)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; DC
 	dd      offset compDC
 	db      (offset compDC_end)-(offset compDC)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; DD
 	dd      offset compDD
 	db      (offset compDD_end)-(offset compDD)
@@ -890,7 +894,7 @@ info_table:
 	; DE
 	dd      offset compDE
 	db      (offset compDE_end)-(offset compDE)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; DF
 	dd      offset compDF
 	db      (offset compDF_end)-(offset compDF)
@@ -906,7 +910,7 @@ info_table:
 	; E2
 	dd      offset compE2
 	db      (offset compE2_end)-(offset compE2)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; E3
 	dd      offset compE3
 	db      (offset compE3_end)-(offset compE3)
@@ -914,7 +918,7 @@ info_table:
 	; E4
 	dd      offset compE4
 	db      (offset compE4_end)-(offset compE4)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; E5
 	dd      offset compE5
 	db      (offset compE5_end)-(offset compE5)
@@ -922,7 +926,7 @@ info_table:
 	; E6
 	dd      offset compE6
 	db      (offset compE6_end)-(offset compE6)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; E7
 	dd      offset compE7
 	db      (offset compE7_end)-(offset compE7)
@@ -938,7 +942,7 @@ info_table:
 	; EA
 	dd      offset compEA
 	db      (offset compEA_end)-(offset compEA)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; EB
 	dd      offset compEB
 	db      (offset compEB_end)-(offset compEB)
@@ -946,7 +950,7 @@ info_table:
 	; EC
 	dd      offset compEC
 	db      (offset compEC_end)-(offset compEC)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; ED
 	dd      offset compED
 	db      (offset compED_end)-(offset compED)
@@ -954,7 +958,7 @@ info_table:
 	; EE
 	dd      offset compEE
 	db      (offset compEE_end)-(offset compEE)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; EF
 	dd      offset compEF
 	db      (offset compEF_end)-(offset compEF)
@@ -970,7 +974,7 @@ info_table:
 	; F2
 	dd      offset compF2
 	db      (offset compF2_end)-(offset compF2)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; F3
 	dd      offset compF3
 	db      (offset compF3_end)-(offset compF3)
@@ -978,7 +982,7 @@ info_table:
 	; F4
 	dd      offset compF4
 	db      (offset compF4_end)-(offset compF4)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; F5
 	dd      offset compF5
 	db      (offset compF5_end)-(offset compF5)
@@ -986,7 +990,7 @@ info_table:
 	; F6
 	dd      offset compF6
 	db      (offset compF6_end)-(offset compF6)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; F7
 	dd      offset compF7
 	db      (offset compF7_end)-(offset compF7)
@@ -1002,7 +1006,7 @@ info_table:
 	; FA
 	dd      offset compFA
 	db      (offset compFA_end)-(offset compFA)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; FB
 	dd      offset compFB
 	db      (offset compFB_end)-(offset compFB)
@@ -1010,7 +1014,7 @@ info_table:
 	; FC
 	dd      offset compFC
 	db      (offset compFC_end)-(offset compFC)
-	db      0,0,0
+	db      FETCHWIMM,0,0
 	; FD
 	dd      offset compFD
 	db      (offset compFD_end)-(offset compFD)
@@ -1018,7 +1022,7 @@ info_table:
 	; FE
 	dd      offset compFE
 	db      (offset compFE_end)-(offset compFE)
-	db      0,0,0
+	db      FETCHIMM,0,0
 	; FF
 	dd      offset compFF
 	db      (offset compFF_end)-(offset compFF)

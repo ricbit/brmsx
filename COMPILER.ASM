@@ -26,9 +26,10 @@ public nextopcode
 ; DATA ---------------------------------------------------------------
 
 include copcode.inc
-include info.inc
 
 align 4
+
+include info.inc
 
 nextopcode      dd      0
 
@@ -48,6 +49,8 @@ compile_pipeline:
                 mov     edi,regepc
                 mov     edx,regeaf
                 mov     eax,0
+                mov     exit_now,eax
+                mov     error,eax
                 mov     ebp,59659
 
 compile_loop:
@@ -61,6 +64,7 @@ compile_loop:
                 mov     ebx,nextopcode
                 mov     dword ptr [esi+edi*8+4],ebx
 
+                push    ebx
                 call    fetch
                 push    edi
                 mov     esi,dword ptr [offset info_table+eax*8]
@@ -71,7 +75,46 @@ compile_loop:
                 inc     edi
                 mov     nextopcode,edi
                 pop     edi
+                pop     ebx
+
+                movzx   esi,byte ptr [offset info_table+eax*8+5]
+
+                cmp     esi,FETCHIMM
+                je      compile_fetchimm
+                cmp     esi,FETCHSIGNAL
+                je      compile_fetchsignal
+                cmp     esi,FETCHWIMM
+                je      compile_fetchwimm
+
+                jmp     compile_done
+
+compile_fetchimm:
+                push    ebx
+                call    fetch1
+                pop     ebx
+                mov     [ebx+1],al
+                jmp     compile_done
+
+compile_fetchsignal:
+                push    ebx
+                call    fetch1
+                pop     ebx
+                movsx   ecx,al
+                add     ecx,edi
+                add     ecx,2
+                and     ecx,0FFFFh
+                mov     dword ptr [ebx+1],ecx
+                jmp     compile_done
                 
+compile_fetchwimm:
+                push    ebx
+                call    fetchw1
+                pop     ebx
+                mov     dword ptr [ebx+1],eax
+                mov     eax,0
+                jmp     compile_done
+
+compile_done:                
                 mov     esi,dirtycode
 compile_already:
                 mov     ebx,dword ptr [esi+edi*8+4]

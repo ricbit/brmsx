@@ -434,14 +434,23 @@ comp&opcode:
 CALLCC          macro   opcode,flagtype,jcc
 
 comp&opcode:                
+                FETCHW1 opcode
                 test    dl,flagtype
                 jcc     comp&opcode&a
                 add     edi,3
                 sub     ebp,10+3
                 jmp     comp&opcode&b
 comp&opcode&a:
-                OPCALL  opcode&XX
+                lea     ebx,[edi+3]
+                mov     edi,eax
+                mov     ecx,regesp
+                mov     eax,ebx
+                sub     ecx,2
+                WRITEMEMW
+                mov     regesp,ecx
+                sub     ebp,17+5
 comp&opcode&b:
+                mov     eax,0
 
                 endm
 
@@ -507,8 +516,8 @@ comp&opcode:
 CPII            macro   opcode,itype
 
 comp&opcode:                
-                mov     ecx,itype
                 FETCH1  opcode
+                mov     ecx,itype
                 movsx   ebx,al
                 add     edi,2
                 add     cx,bx
@@ -694,16 +703,15 @@ comp&opcode:
 OPDJNZ          macro   opcode
 
 comp&opcode:
-                FETCH1  opcode
-                add     edi,2
+                FETCH1S opcode
                 dec     regb
                 jz      comp&opcode&a
-                movsx   ebx,al
                 sub     ebp,13+2
-                add     edi,ebx
+                mov     edi,ecx
                 jmp     comp&opcode&b
 comp&opcode&a:        
                 sub     ebp,8+2
+                add     edi,2
 comp&opcode&b:
 
                 endm
@@ -940,16 +948,16 @@ comp&opcode:
 JPCC            macro   opcode,jcc,flagtype
 
 comp&opcode:    
+                FETCHW1 opcode
                 sub     ebp,10+3
                 test    dl,flagtype
                 jcc     comp&opcode&a
-                FETCHW1 opcode
                 mov     edi,eax
-                xor     eax,eax
                 jmp     comp&opcode&b
 comp&opcode&a:  
                 add     edi,3
 comp&opcode&b:
+                mov     eax,0
 
                 endm
 
@@ -959,17 +967,10 @@ comp&opcode&b:
 OPJR            macro   opcode
 
 comp&opcode:    
-                FETCH1  opcode
-                cmp     al,0FEh
-                je      comp&opcode&a
-                movsx   ebx,al
+                ;FETCH1S opcode
+                mov     edi,0
                 sub     ebp,12+2
-                lea     edi,[edi+ebx+2]
-                jmp     comp&opcode&b
-comp&opcode&a:
-                mov     ebp,0
-                ; remember to implement the R correction
-comp&opcode&b:
+                ;mov     edi,ecx
 
                 endm
 
@@ -979,12 +980,11 @@ comp&opcode&b:
 JRCC            macro   opcode,jcc,flagtype
 
 comp&opcode:    
+                FETCH1S opcode
                 test    dl,flagtype
                 jcc     comp&opcode&a    
-                FETCH1  opcode
-                movsx   ebx,al
                 sub     ebp,12+2
-                lea     edi,[edi+ebx+2]
+                mov     edi,ecx
                 jmp     comp&opcode&b
 comp&opcode&a:  
                 sub     ebp,7+2
@@ -999,9 +999,11 @@ comp&opcode&b:
 OPJP            macro   opcode
 
 comp&opcode:    
-                FETCHW1 opcode
-                mov     edi,eax
-                mov     eax,0
+                ;FETCHW1 opcode
+                ;mov     edi,eax
+                ;mov     eax,0
+
+                mov     edi,0
                 sub     ebp,10+3
 
                 endm
@@ -1159,12 +1161,14 @@ comp&opcode:
 LDINDA          macro   opcode,reg
 
 comp&opcode:
-                FETCHW1 opcode
-                mov     ecx,eax
+                ;FETCHW1 opcode
+                ;mov     ecx,eax
+
+                mov     ecx,0
                 mov     al,dh
                 WRITEMEM
                 add     edi,3
-                mov     eax,0
+                ;mov     eax,0
                 sub     ebp,13+4
 
                 endm
@@ -1175,11 +1179,13 @@ comp&opcode:
 LDAIND          macro   opcode,reg
 
 comp&opcode:
-                FETCHW1 opcode
-                mov     ecx,eax
+                ;FETCHW1 opcode
+                ;mov     ecx,eax
+
+                mov     ecx,0
                 READMEM
                 mov     dh,al
-                xor     eax,eax
+                ;xor     eax,eax
                 add     edi,3
                 sub     ebp,13+4
 
@@ -1236,8 +1242,10 @@ comp&opcode:
 LDREGWDDDD       macro   opcode,reg
 
 comp&opcode:
-                FETCHW1 opcode
-                mov     ecx,eax
+                ;FETCHW1 opcode
+                ;mov     ecx,eax
+
+                mov     ecx,0
                 READMEMW
                 mov     reg,eax
                 add     edi,3
@@ -1252,9 +1260,10 @@ comp&opcode:
 LDDDDDREGW      macro   opcode,reg
 
 comp&opcode:
-                FETCHW1 opcode
+                ;FETCHW1 opcode
+                mov     ecx,0
                 add     edi,3
-                mov     ecx,eax
+                ;mov     ecx,eax
                 mov     eax,reg
                 WRITEMEMW
                 xor     eax,eax
@@ -2314,8 +2323,8 @@ comp&opcode:
 SUBII           macro   opcode,itype
 
 comp&opcode:                
-                mov     ecx,itype
                 FETCH1  opcode
+                mov     ecx,itype
                 movsx   ebx,al
                 add     edi,2
                 add     cx,bx
