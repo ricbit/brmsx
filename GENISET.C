@@ -3,7 +3,7 @@
 void main (void) {
   int i;
 
-  printf ("psetEDxx:\n");
-  for (i=0; i<256; i++)
-    printf ("\tpsetED%02X: dd emulXX\n",i);
+  printf ("keyboardtable:\n");
+  for (i=0; i<128; i++)
+    printf ("\tkey_%02X: db 0,0\n",i);
 }

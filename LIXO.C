@@ -7,12 +7,12 @@ void main (void) {
   int file;
   unsigned char buff[32768];
 
-  file=open ("screen0.grp",O_BINARY|O_RDONLY);
+  file=open ("msxbasic.rom",O_BINARY|O_RDONLY);
   read (file,buff,7);
-  read (file,buff,16384);
+  read (file,buff,32768/2);
   close (file);
-  printf ("msxvram: \n");
-  for (i=0; i<16384; i++) {
+  printf ("msxrom: \n");
+  for (i=0; i<32768/2; i++) {
     if (i%8==0)
       printf ("db ");
     printf ("0%02xh",buff[i]);

@@ -128,8 +128,12 @@ debug_loop:
                 call    crlf
                 cmp     al,'D'
                 je      command_d      
+                cmp     al,'K'
+                je      command_k
                 cmp     al,'V'
                 je      command_v
+                cmp     al,'S'
+                je      command_s
                 cmp     al,'B'
                 je      command_b
                 cmp     al,'R'
@@ -140,8 +144,8 @@ debug_loop:
                 je      command_x
                 cmp     al,'P'
                 je      command_p
-                cmp     al,'K'
-                je      command_k
+                cmp     al,'1'
+                je      command_1
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -156,18 +160,49 @@ command_d:
                 call    dumpmem
                 jmp     debug_loop
 
+command_k:      
+                call    turnon_kb_irq
+                mov exit_now,0
+                loop1:
+                cmp exit_now,1
+                jne loop1
+                call    turnoff_kb_irq
+                jmp     debug_loop
+
 command_b:
                 call    gethex4
                 and     eax,0ffffh
                 mov     breakpoint,eax
                 call    crlf
+                call    setgraphmode
+                call    turnon_irq
+                call    turnon_kb_irq
                 call    emulate_break
+                call    turnoff_kb_irq
+                call    turnoff_irq
+                call    settextmode
                 call    crlf
                 jmp     debug_loop
 
 command_v:
                 call    setgraphmode
                 call    render_screen0
+                call    getchar
+                call    settextmode
+                jmp     debug_loop
+
+command_s:      call    setgraphmode
+                call    turnon_kb_irq
+                call    turnon_irq
+                call    emulate
+                call    turnoff_irq
+                call    turnoff_kb_irq
+                call    settextmode
+                jmp     debug_loop
+
+command_1:
+                call    setgraphmode
+                call    render_screen1
                 call    getchar
                 call    settextmode
                 jmp     debug_loop
@@ -180,7 +215,11 @@ command_x:      call    emulate
                 call    crlf
                 jmp     command_r
 
-command_p:      call    emulate_echo
+command_p:      call    gethex4
+                and     eax,0ffffh
+                mov     breakpoint,eax
+                call    crlf
+                call    emulate_echo
                 jmp     debug_loop
 
 command_t:
@@ -190,12 +229,6 @@ command_t:
                 mov     ecx,0
                 call    trace
                 jmp     command_r
-
-command_k:
-                call    testkbd
-                jnz     command_k
-                call    getchar
-                jmp     debug_loop
 
 command_exit:
                 ret

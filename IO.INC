@@ -10,3 +10,8 @@ extrn testkbd: near
 extrn setgraphmode: near
 extrn settextmode: near
 extrn toupper: near
+extrn turnon_irq: near
+extrn turnoff_irq: near
+extrn turnon_kb_irq: near
+extrn turnoff_kb_irq: near
+extrn exit_now: dword

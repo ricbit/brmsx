@@ -1,36 +1,36 @@
 pset:
 	pset00: dd prin00
 	pset01: dd prin01
-	pset02: dd prinXX
-	pset03: dd prinXX
+	pset02: dd prin02
+	pset03: dd prin03
 	pset04: dd prin04
-	pset05: dd prinXX
+	pset05: dd prin05
 	pset06: dd prin06
 	pset07: dd prin07
-	pset08: dd prinXX
+	pset08: dd prin08
 	pset09: dd prin09
-	pset0A: dd prinXX
+	pset0A: dd prin0A
 	pset0B: dd prin0B
 	pset0C: dd prin0C
-	pset0D: dd prinXX
+	pset0D: dd prin0D
 	pset0E: dd prin0E
 	pset0F: dd prin0F
 	pset10: dd prin10
 	pset11: dd prin11
-	pset12: dd prinXX
+	pset12: dd prin12
 	pset13: dd prin13
-	pset14: dd prinXX
-	pset15: dd prinXX
-	pset16: dd prinXX
-	pset17: dd prinXX
+	pset14: dd prin14
+	pset15: dd prin15
+	pset16: dd prin16
+	pset17: dd prin17
 	pset18: dd prin18
 	pset19: dd prin19
 	pset1A: dd prin1A
-	pset1B: dd prinXX
-	pset1C: dd prinXX
+	pset1B: dd prin1B
+	pset1C: dd prin1C
 	pset1D: dd prin1D
 	pset1E: dd prin1E
-	pset1F: dd prinXX
+	pset1F: dd prin1F
 	pset20: dd prin20
 	pset21: dd prin21
 	pset22: dd prin22
@@ -44,17 +44,17 @@ pset:
 	pset2A: dd prin2A
 	pset2B: dd prin2B
 	pset2C: dd prin2C
-	pset2D: dd prinXX
+	pset2D: dd prin2D
 	pset2E: dd prin2E
 	pset2F: dd prin2F
 	pset30: dd prin30
 	pset31: dd prin31
 	pset32: dd prin32
 	pset33: dd prinXX
-	pset34: dd prinXX
-	pset35: dd prinXX
+	pset34: dd prin34
+	pset35: dd prin35
 	pset36: dd prin36
-	pset37: dd prinXX
+	pset37: dd prin37
 	pset38: dd prin38
 	pset39: dd prin39
 	pset3A: dd prin3A
@@ -62,40 +62,40 @@ pset:
 	pset3C: dd prin3C
 	pset3D: dd prin3D
 	pset3E: dd prin3E
-	pset3F: dd prinXX
+	pset3F: dd prin3F
 	pset40: dd prinXX
 	pset41: dd prinXX
-	pset42: dd prinXX
+	pset42: dd prin42
 	pset43: dd prinXX
 	pset44: dd prin44
 	pset45: dd prinXX
-	pset46: dd prinXX
+	pset46: dd prin46
 	pset47: dd prin47
-	pset48: dd prinXX
+	pset48: dd prin48
 	pset49: dd prinXX
 	pset4A: dd prinXX
-	pset4B: dd prinXX
+	pset4B: dd prin4B
 	pset4C: dd prinXX
 	pset4D: dd prin4D
-	pset4E: dd prinXX
+	pset4E: dd prin4E
 	pset4F: dd prin4F
 	pset50: dd prin50
 	pset51: dd prinXX
 	pset52: dd prinXX
-	pset53: dd prinXX
-	pset54: dd prinXX
+	pset53: dd prin53
+	pset54: dd prin54
 	pset55: dd prinXX
-	pset56: dd prinXX
+	pset56: dd prin56
 	pset57: dd prin57
 	pset58: dd prinXX
-	pset59: dd prinXX
-	pset5A: dd prinXX
+	pset59: dd prin59
+	pset5A: dd prin5A
 	pset5B: dd prinXX
-	pset5C: dd prinXX
-	pset5D: dd prinXX
+	pset5C: dd prin5C
+	pset5D: dd prin5D
 	pset5E: dd prin5E
 	pset5F: dd prin5F
-	pset60: dd prinXX
+	pset60: dd prin60
 	pset61: dd prinXX
 	pset62: dd prin62
 	pset63: dd prinXX
@@ -104,7 +104,7 @@ pset:
 	pset66: dd prin66
 	pset67: dd prin67
 	pset68: dd prinXX
-	pset69: dd prinXX
+	pset69: dd prin69
 	pset6A: dd prinXX
 	pset6B: dd prin6B
 	pset6C: dd prinXX
@@ -112,10 +112,10 @@ pset:
 	pset6E: dd prinXX
 	pset6F: dd prin6F
 	pset70: dd prin70
-	pset71: dd prinXX
+	pset71: dd prin71
 	pset72: dd prin72
 	pset73: dd prin73
-	pset74: dd prinXX
+	pset74: dd prin74
 	pset75: dd prinXX
 	pset76: dd prinXX
 	pset77: dd prin77
@@ -130,7 +130,7 @@ pset:
 	pset80: dd prin80
 	pset81: dd prinXX
 	pset82: dd prinXX
-	pset83: dd prinXX
+	pset83: dd prin83
 	pset84: dd prinXX
 	pset85: dd prinXX
 	pset86: dd prin86
@@ -143,19 +143,19 @@ pset:
 	pset8D: dd prinXX
 	pset8E: dd prinXX
 	pset8F: dd prin8F
-	pset90: dd prinXX
+	pset90: dd prin90
 	pset91: dd prin91
 	pset92: dd prin92
 	pset93: dd prin93
 	pset94: dd prinXX
-	pset95: dd prinXX
+	pset95: dd prin95
 	pset96: dd prinXX
 	pset97: dd prinXX
 	pset98: dd prin98
 	pset99: dd prinXX
 	pset9A: dd prin9A
 	pset9B: dd prinXX
-	pset9C: dd prinXX
+	pset9C: dd prin9C
 	pset9D: dd prinXX
 	pset9E: dd prinXX
 	pset9F: dd prin9F
@@ -163,9 +163,9 @@ pset:
 	psetA1: dd prinA1
 	psetA2: dd prinXX
 	psetA3: dd prinA3
-	psetA4: dd prinXX
-	psetA5: dd prinXX
-	psetA6: dd prinXX
+	psetA4: dd prinA4
+	psetA5: dd prinA5
+	psetA6: dd prinA6
 	psetA7: dd prinA7
 	psetA8: dd prinXX
 	psetA9: dd prinXX
@@ -173,56 +173,56 @@ pset:
 	psetAB: dd prinXX
 	psetAC: dd prinXX
 	psetAD: dd prinXX
-	psetAE: dd prinXX
+	psetAE: dd prinAE
 	psetAF: dd prinAF
 	psetB0: dd prinB0
-	psetB1: dd prinXX
+	psetB1: dd prinB1
 	psetB2: dd prinXX
-	psetB3: dd prinXX
-	psetB4: dd prinXX
+	psetB3: dd prinB3
+	psetB4: dd prinB4
 	psetB5: dd prinB5
 	psetB6: dd prinB6
 	psetB7: dd prinB7
-	psetB8: dd prinXX
-	psetB9: dd prinXX
+	psetB8: dd prinB8
+	psetB9: dd prinB9
 	psetBA: dd prinBA
-	psetBB: dd prinXX
-	psetBC: dd prinXX
+	psetBB: dd prinBB
+	psetBC: dd prinBC
 	psetBD: dd prinBD
 	psetBE: dd prinBE
-	psetBF: dd prinXX
+	psetBF: dd prinBF
 	psetC0: dd prinC0
 	psetC1: dd prinC1
 	psetC2: dd prinC2
 	psetC3: dd prinC3
-	psetC4: dd prinXX
+	psetC4: dd prinC4
 	psetC5: dd prinC5
 	psetC6: dd prinC6
 	psetC7: dd prinXX
 	psetC8: dd prinC8
 	psetC9: dd prinC9
-	psetCA: dd prinXX
+	psetCA: dd prinCA
 	psetCB: dd prinCB
-	psetCC: dd prinXX
+	psetCC: dd prinCC
 	psetCD: dd prinCD
 	psetCE: dd prinXX
-	psetCF: dd prinXX
-	psetD0: dd prinXX
+	psetCF: dd prinCF
+	psetD0: dd prinD0
 	psetD1: dd prinD1
 	psetD2: dd prinD2
 	psetD3: dd prinD3
-	psetD4: dd prinXX
+	psetD4: dd prinD4
 	psetD5: dd prinD5
 	psetD6: dd prinD6
-	psetD7: dd prinXX
-	psetD8: dd prinXX
-	psetD9: dd prinXX
+	psetD7: dd prinD7
+	psetD8: dd prinD8
+	psetD9: dd prinD9
 	psetDA: dd prinDA
 	psetDB: dd prinDB
-	psetDC: dd prinXX
-	psetDD: dd prinXX
+	psetDC: dd prinDC
+	psetDD: dd prinDD
 	psetDE: dd prinXX
-	psetDF: dd prinXX
+	psetDF: dd prinDF
 	psetE0: dd prinXX
 	psetE1: dd prinE1
 	psetE2: dd prinXX
@@ -237,9 +237,9 @@ pset:
 	psetEB: dd prinEB
 	psetEC: dd prinXX
 	psetED: dd prinED
-	psetEE: dd prinXX
-	psetEF: dd prinXX
-	psetF0: dd prinXX
+	psetEE: dd prinEE
+	psetEF: dd prinEF
+	psetF0: dd prinF0
 	psetF1: dd prinF1
 	psetF2: dd prinF2
 	psetF3: dd prinF3
@@ -251,7 +251,7 @@ pset:
 	psetF9: dd prinF9
 	psetFA: dd prinFA
 	psetFB: dd prinFB
-	psetFC: dd prinXX
-	psetFD: dd prinXX
+	psetFC: dd prinFC
+	psetFD: dd prinFD
 	psetFE: dd prinFE
-	psetFF: dd prinXX
+	psetFF: dd prinFF

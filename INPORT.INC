@@ -151,8 +151,8 @@ inportxx:
 	inport95: dd inemulXX
 	inport96: dd inemulXX
 	inport97: dd inemulXX
-	inport98: dd inemulXX
-	inport99: dd inemulXX
+	inport98: dd inemul98
+	inport99: dd inemul99
 	inport9A: dd inemulXX
 	inport9B: dd inemulXX
 	inport9C: dd inemulXX
@@ -168,7 +168,7 @@ inportxx:
 	inportA6: dd inemulXX
 	inportA7: dd inemulXX
 	inportA8: dd inemulA8
-	inportA9: dd inemulXX
+	inportA9: dd inemulA9
 	inportAA: dd inemulXX
 	inportAB: dd inemulXX
 	inportAC: dd inemulXX

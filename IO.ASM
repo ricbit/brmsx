@@ -7,6 +7,8 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include pmode.inc
+include msx.inc
+include z80.inc
 
 public printmsg
 public printasc
@@ -20,13 +22,33 @@ public setgraphmode
 public settextmode
 public crlf
 public testkbd
+public turnon_irq
+public turnoff_irq
+public turnon_kb_irq
+public turnoff_kb_irq
+public exit_now
 
 ; DATA ---------------------------------------------------------------
+
+align 4
+
+include keyboard.inc
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
 tmpasc          equ     tmphex2+1
 tmpspace        db      ' $'
+
+irq_stub_buf    db      21 dup (0)
+oldpirqvect     dd      0
+oldrirqvect     dd      0
+
+kbd_stub_buf    db      21 dup (0)
+oldkbpirqvect   dd      0
+oldkbrirqvect   dd      0
+
+align 4
+exit_now        dd      0
 
 msg00           db      13,10,'$'
 
@@ -220,6 +242,130 @@ crlf:           push    eax
                 call    printmsg
                 pop     eax
                 ret
+
+; turnon_irq ---------------------------------------------------------
+; turn on the irq handler
+
+turnon_irq:
+                mov     bl,0
+                call    _getirqvect
+                mov     oldpirqvect,edx
+                mov     edx,offset my_irq_handler
+                call    _setirqvect
+                mov     edi,offset irq_stub_buf
+                call    _rmpmirqset
+                mov     oldrirqvect,eax
+                mov     al,034h
+                out     043h,al
+                mov     al,0aeh
+                out     040h,al
+                mov     al,04dh
+                out     040h,al
+                ret
+
+; turnoff_irq --------------------------------------------------------
+; turn off the timer irq handler
+
+turnoff_irq:
+                mov     bl,0
+                mov     eax,oldrirqvect
+                call    _rmpmirqfree
+                mov     edx,oldpirqvect
+                call    _setirqvect
+                mov     al,034h
+                out     043h,al
+                mov     al,0
+                out     040h,al
+                mov     al,0
+                out     040h,al
+                ret
+
+; turnon_kb_irq ------------------------------------------------------
+; turn on the keyboard irq handler
+
+turnon_kb_irq:
+                mov     bl,1
+                call    _getirqvect
+                mov     oldkbpirqvect,edx
+                mov     edx,offset my_kb_irq_handler
+                call    _setirqvect
+                mov     edi,offset kbd_stub_buf
+                call    _rmpmirqset
+                mov     oldkbrirqvect,eax
+                ret
+
+; turnoff_kb_irq -----------------------------------------------------
+; turn off the keyboard irq handler
+
+turnoff_kb_irq:
+                mov     bl,1
+                mov     eax,oldkbrirqvect
+                call    _rmpmirqfree
+                mov     edx,oldkbpirqvect
+                call    _setirqvect
+                ret
+
+; my_irq_handler -----------------------------------------------------
+; this is the handler of the timer irq
+
+my_irq_handler:
+                pushad
+                push    ds gs
+                mov     ds,cs:_seldata
+                mov     gs,cs:_selzero
+                
+                call    render
+                or      vdpstatus,10000000b
+                cmp     iff1,1                
+                jne     my_irq_handler1
+                mov     interrupt,1
+
+my_irq_handler1:
+                mov     al,20h
+                out     20h,al
+                pop     gs ds
+                popad
+                sti
+                iretd
+
+; my_kb_irq_handler --------------------------------------------------
+; this is the handler of the keyboard irq
+
+my_kb_irq_handler:
+                pushad
+                push    ds 
+                mov     ds,cs:_seldata
+                
+                in      al,060h                
+                cmp     al,44h
+                jne     my_kb_irq_handler1
+                mov     ds:exit_now,1
+
+my_kb_irq_handler1:
+                
+                test    al,080h
+                jnz     my_kb_irq_handler2
+                and     eax,07fh
+                movzx   ebx,byte ptr [offset keyboardtable+eax*2]
+                mov     cl,byte ptr [offset keyboardtable+eax*2+1]
+                xor     cl,255
+                and     byte ptr [offset keymatrix+ebx],cl
+                jmp     my_kb_irq_handler3
+
+my_kb_irq_handler2:                
+                and     eax,07fh
+                movzx   ebx,byte ptr [offset keyboardtable+eax*2]
+                mov     cl,byte ptr [offset keyboardtable+eax*2+1]
+                or      byte ptr [offset keymatrix+ebx],cl
+
+my_kb_irq_handler3:
+
+                mov     al,20h
+                out     20h,al
+                pop     ds
+                popad
+                sti
+                iretd
 
 code32          ends
                 end

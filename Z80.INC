@@ -1,6 +1,7 @@
 extrn mem: near
 extrn trace: near
 extrn fetch: near
+extrn fetchw: near
 extrn emulate: near
 extrn emulate_echo: near
 extrn emulate_break: near
@@ -12,3 +13,7 @@ extrn regde: word
 extrn regsp: word
 extrn regpc: word
 extrn breakpoint: dword
+extrn iff1: dword
+extrn interrupt: dword
+extrn vdpstatus: byte
+extrn keymatrix: byte

@@ -169,7 +169,7 @@ outportxx:
 	outportA7: dd outemulXX
 	outportA8: dd outemulA8
 	outportA9: dd outemulXX
-	outportAA: dd outemulXX
+	outportAA: dd outemulAA
 	outportAB: dd outemulXX
 	outportAC: dd outemulXX
 	outportAD: dd outemulXX
