@@ -103,7 +103,7 @@ pset:
 	pset65: dd prinXX
 	pset66: dd prin66
 	pset67: dd prin67
-	pset68: dd prinXX
+	pset68: dd prin68
 	pset69: dd prin69
 	pset6A: dd prinXX
 	pset6B: dd prin6B

@@ -1211,6 +1211,12 @@ emul67:         inc     edi
                 mov     regh,dh
                 ret
 
+; 68 - LD L,B
+emul68:         inc     edi
+                mov     bl,regb
+                mov     regl,bl
+                ret
+
 ; 69 - LD L,C   
 emul69:         inc     edi
                 mov     bl,regc

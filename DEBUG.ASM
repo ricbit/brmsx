@@ -10,6 +10,8 @@ code32  segment para public use32
 include io.inc
 include z80.inc
 include msx.inc
+include pentium.inc
+
 extrn msxrom:near
 
 public debug
@@ -186,9 +188,22 @@ command_b:
 
 command_v:
                 call    setgraphmode
+                rdtsc
+                push    eax
                 call    render_screen0
+                pop     ebx
+                rdtsc
+                sub     eax,ebx
+                push    eax
                 call    getchar
                 call    settextmode
+                pop     eax
+                mov     ebx,eax
+                shr     eax,16
+                call    printhex4
+                mov     eax,ebx
+                call    printhex4
+                call    crlf
                 jmp     debug_loop
 
 command_s:      call    setgraphmode

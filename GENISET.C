@@ -1,9 +1,15 @@
 #include <stdio.h>
 
 void main (void) {
-  int i;
+  int i,j;
 
-  printf ("keyboardtable:\n");
-  for (i=0; i<128; i++)
-    printf ("\tkey_%02X: db 0,0\n",i);
+  printf ("screen0_table:\n");
+  for (i=0; i<256; i++) {
+    printf ("\tscr0_%02X: db ",i);
+    for (j=7; j>=0; j--) {
+      printf ("%d",(i>>j)&1);
+      if (j>0) printf (",");
+    }
+    printf ("\n");
+  }
 }

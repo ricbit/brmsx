@@ -103,7 +103,7 @@ iset:
 	iset65: dd emulXX
 	iset66: dd emul66
 	iset67: dd emul67
-	iset68: dd emulXX
+	iset68: dd emul68
 	iset69: dd emul69
 	iset6A: dd emulXX
 	iset6B: dd emul6B
