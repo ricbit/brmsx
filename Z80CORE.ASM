@@ -16,6 +16,7 @@ include fetch.inc
 include flags.inc
 include psg.inc
 include pmode.inc
+include v9938.inc
 
 extrn iset:dword
 extrn isetCBxx: near
@@ -350,6 +351,7 @@ emulate_loop:
                 push    ebx
                 call    render
                 call    sprite_render
+                call    set_adjust_exit
                 pop     ebx
                 mov     first_line,ebx
                 inc     first_line

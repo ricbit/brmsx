@@ -40,6 +40,7 @@ public render_screen8
 public sprite_render_msx2
 public dirty_palette
 public render_msx2
+public set_adjust_exit
 
 ; DATA ---------------------------------------------------------------
 
@@ -62,6 +63,8 @@ save_ebp        dd      0
 save_esi        dd      0
 vdp_page        dd      0
 adjustbuffer    dd      0
+scr2_pat2col    dd      0
+scr2_col2pat    dd      0
 
 size_hx         dd      0
 and_hx          dd      0
@@ -416,7 +419,7 @@ inemul99_msx2_reg1:
 
 inemul99_msx2_reg7:
                 call    callback_07
-                mov     bl,byte ptr [offset vdpregs+7]
+                mov     bl,byte ptr [offset vdpstatus+7]
                 ret
 
 inemul99_msx2_generic:
@@ -696,6 +699,26 @@ inverse:
 direct:
                 endm
 
+; LOAD_X_INCREMENT ---------------------------------------------------
+; add or subtract (edx) from (ebp) depending on DIX flag
+; also sets the h_direction
+
+LOAD_X_INCREMENT macro
+                local   inverse,direct
+
+                test    byte ptr [offset vdpregs+45],100b
+                jz      direct
+
+                mov     h_direction,-1
+                add     ebp,edx
+                jmp     inverse
+direct:
+                mov     h_direction,+1
+                sub     ebp,edx
+inverse:
+
+                endm
+
 ; vdp_command_HMMM ---------------------------------------------------
 
 vdp_command_HMMM:
@@ -770,16 +793,7 @@ vdp_command_HMMM:
                 
                 LOAD_Y_INCREMENT
 
-                test    byte ptr [offset vdpregs+45],100b
-                jz      vdp_command_HMMM_direct_X
-
-                mov     h_direction,-1
-                add     ebp,edx
-                jmp     vdp_command_HMMM_begin_transfer
-vdp_command_HMMM_direct_X:
-                mov     h_direction,+1
-                sub     ebp,edx
-vdp_command_HMMM_begin_transfer:
+                LOAD_X_INCREMENT
 
                 ; begin the transfer
                 mov     ebx,pNY
@@ -1009,9 +1023,9 @@ vdp_command_HMMV_exit:
 ; vdp_command_HMMC ---------------------------------------------------
 
 vdp_command_HMMC:
-                ; only DIX=0 and DIY=0 are supported by now
-                test    byte ptr [offset vdpregs+45],1100b
-                jnz     _ret
+                ; only DIY=0 is supported by now
+                ;test    byte ptr [offset vdpregs+45],1000b
+                ;jnz     _ret
 
                 pushad
 
@@ -1025,28 +1039,32 @@ vdp_command_HMMC:
                 and     eax,and_hx
                 mov     pNX,eax
 
-                ; check NX consistency
-                cmp     pNX,0
-                jne     HMMC_NX_consistent
+;                ; check NX consistency
+;                cmp     pNX,0
+;                jne     HMMC_NX_consistent
+;
+;                mov     pDX,0
+;                mov     pSY,0
+;                mov     eax,max_x
+;                mov     pNX,eax
+;
+;HMMC_NX_consistent:
+;
+;                ; check DX consistency
+;                mov     eax,pDX
+;                add     eax,pNX                        
+;                cmp     eax,max_x
+;                jbe     HMMC_DX_consistent
+;
+;                mov     eax,max_x
+;                sub     eax,pDX
+;                mov     pNX,eax
+;
+;HMMC_DX_consistent:
 
-                mov     pDX,0
-                mov     pSY,0
-                mov     eax,max_x
-                mov     pNX,eax
+                CHECK_HORIZONTAL_SIZE   
 
-HMMC_NX_consistent:
-
-                ; check DX consistency
-                mov     eax,pDX
-                add     eax,pNX                        
-                cmp     eax,max_x
-                jbe     HMMC_DX_consistent
-
-                mov     eax,max_x
-                sub     eax,pDX
-                mov     pNX,eax
-
-HMMC_DX_consistent:
+                CHECK_HORIZONTAL pDX,pNX
 
                 ; load DY
                 movzx   eax,word ptr [offset vdpregs+38]
@@ -1059,26 +1077,27 @@ HMMC_DX_consistent:
                 mov     pNY,eax
                 
                 ; check DY consistency
-                mov     eax,pDY
-                add     eax,pNY                        
-                cmp     eax,max_y
-                jbe     HMMC_DY_consistent
-
-                mov     eax,max_y
-                sub     eax,pDY
-                mov     pNY,eax
-
-HMMC_DY_consistent:
+;                mov     eax,pDY
+;                add     eax,pNY                        
+;                cmp     eax,max_y
+;                jbe     HMMC_DY_consistent
+;
+;                mov     eax,max_y
+;                sub     eax,pDY
+;                mov     pNY,eax
+;
+;HMMC_DY_consistent:
+                CHECK_VERTICAL pDY,pNY
 
                 ; check NY consistency
                 cmp     pNY,0
-                jne     HMMC_NY_consistent
+                je      vdp_command_HMMC_exit
 
-                mov     eax,max_y
-                mov     pNY,eax
-                mov     pDY,0
-
-HMMC_NY_consistent:
+;                mov     eax,max_y
+;                mov     pNY,eax
+;                mov     pDY,0
+;
+;HMMC_NY_consistent:
 
                 ; eval destination start addresses                
                 mov     edi,pDY
@@ -1104,9 +1123,12 @@ HMMC_NY_consistent:
                 mov     save_XSIZE,edx
                 mov     save_NX,edx
 
-                mov     eax,size_hx
-                sub     eax,edx
-                mov     save_XOFFSET,eax
+                ;mov     ebp,size_hx
+                LOAD_Y_INCREMENT
+                
+                LOAD_X_INCREMENT
+
+                mov     save_XOFFSET,ebp
 
                 or      byte ptr [offset vdpstatus+2],081h
 
@@ -1121,7 +1143,7 @@ callback_HMMC:
                 mov     al,byte ptr [offset vdpregs+44]
                 mov     ecx,save_POS
                 mov     [ecx],al
-                inc     ecx
+                add     ecx,h_direction
                 mov     save_POS,ecx
 
                 dec     save_NX
@@ -1778,16 +1800,12 @@ LMCM_DY_consistent:
                 or      byte ptr [offset vdpstatus+2],081h
 
                 mov     callback_07,offset callback_LMCM
-                ;call    dword ptr [offset callback_44]
 
 vdp_command_LMCM_exit:
                 popad
                 ret
 
 callback_LMCM:
-                test    byte ptr [offset vdpstatus+2],080h
-                jz      _ret
-                
                 push    edi edx
                 mov     edi,save_POS
                 mov     edx,save_XOFFSET
@@ -2082,15 +2100,19 @@ render_msx2_clear_512:
 ; in order to apply the set adjust
 
 set_adjust:
+                cmp     videomode,7
+                je      set_adjust_256
                 cmp     text_columns,80
                 je      set_adjust_512
                 cmp     actualscreen,6
                 je      set_adjust_512
                 cmp     actualscreen,7
                 je      set_adjust_512
-                
+
+set_adjust_256:                
                 movzx   ecx,byte ptr [offset vdpregs+18]
-                mov     edx,[offset set_adjust_table_256+ecx*4]
+                mov     edx,[offset set_adjust_table_256+ecx*8]
+                add     edx,[offset set_adjust_table_256+ecx*8+4]
                 mov     eax,blitbuffer
                 sub     eax,edx
                 mov     adjustbuffer,eax
@@ -2098,10 +2120,117 @@ set_adjust:
 
 set_adjust_512:
                 movzx   ecx,byte ptr [offset vdpregs+18]
-                mov     edx,[offset set_adjust_table_512+ecx*4]
+                mov     edx,[offset set_adjust_table_512+ecx*8]
+                add     edx,[offset set_adjust_table_512+ecx*8+4]
                 mov     eax,blitbuffer
                 sub     eax,edx
                 mov     adjustbuffer,eax
+                ret
+
+set_adjust_exit:
+                pushad  
+
+                mov     eax,first_line
+                cmp     eax,last_line
+                ja      set_adjust_exit_ret
+
+                cmp     videomode,7
+                je      set_adjust_exit_256
+                cmp     text_columns,80
+                je      set_adjust_exit_512
+                cmp     actualscreen,6
+                je      set_adjust_exit_512
+                cmp     actualscreen,7
+                je      set_adjust_exit_512
+
+set_adjust_exit_256:
+                movzx   ecx,byte ptr [offset vdpregs+18]
+                mov     edx,[offset set_adjust_table_256+ecx*8]
+                mov     edi,blitbuffer
+                sub     edi,edx
+                ;mov     edi,eax
+                mov     eax,first_line
+                shl     eax,7
+                lea     edi,[edi+eax*2]
+
+                mov     ebp,last_line
+                sub     ebp,first_line
+                inc     ebp
+
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                or      al,10h
+
+                mov     ecx,dword ptr [offset set_adjust_table_256+ecx*8+4]
+                cmp     ecx,0
+                je      set_adjust_exit_ret
+                jl      set_adjust_exit_256_negative
+
+                add     edi,256
+                sub     edi,ecx
+
+                jmp     set_adjust_exit_256_loop
+                
+set_adjust_exit_256_negative:
+                neg     ecx
+                ;mov     ecx,0
+                ;sub     ecx,dword ptr [offset set_adjust_table_256+ecx*8+4]
+
+set_adjust_exit_256_loop:
+                push    ecx edi
+                rep     stosb
+                pop     edi ecx
+                add     edi,256
+
+                dec     ebp
+                jnz     set_adjust_exit_256_loop
+
+set_adjust_exit_ret:
+                popad
+                ret
+
+set_adjust_exit_512:
+                movzx   ecx,byte ptr [offset vdpregs+18]
+                mov     edx,[offset set_adjust_table_512+ecx*8]
+                mov     edi,blitbuffer
+                sub     edi,edx
+                ;mov     edi,eax
+                mov     eax,first_line
+                shl     eax,7
+                lea     edi,[edi+eax*2]
+
+                mov     ebp,last_line
+                sub     ebp,first_line
+                inc     ebp
+
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                or      al,10h
+
+                mov     ecx,dword ptr [offset set_adjust_table_512+ecx*8+4]
+                cmp     ecx,0
+                je      set_adjust_exit_ret
+                jl      set_adjust_exit_512_negative
+
+                add     edi,512
+                sub     edi,ecx
+
+                jmp     set_adjust_exit_512_loop
+                
+set_adjust_exit_512_negative:
+                ;neg     ecx
+                mov     ecx,0
+                sub     ecx,dword ptr [offset set_adjust_table_256+ecx*8+4]
+
+set_adjust_exit_512_loop:
+                push    ecx edi
+                rep     stosb
+                pop     edi ecx
+                add     edi,512
+
+                dec     ebp
+                jnz     set_adjust_exit_512_loop
+                popad
                 ret
 
 ; render_screen0_msx2 ------------------------------------------------
@@ -2303,13 +2432,6 @@ render11:       push    ebp
 render_screen2_msx2:
                 call    set_adjust
 
-;                cmp     enginetype,0
-;                jne     render_screen2_mmx_msx2
-;                RENDER_SCREEN2_MACRO DOS_ENGINE,MSX2_RENDER,adjustbuffer
-;
-;render_screen2_mmx_msx2:
-;                RENDER_SCREEN2_MACRO MMX_ENGINE,MSX2_RENDER,adjustbuffer
-                
                 mov     edi,adjustbuffer
                 mov     eax,first_line
                 shl     eax,7
@@ -2324,6 +2446,14 @@ render_screen2_msx2:
                 mov     ecx,last_line
                 sub     ecx,first_line
                 inc     ecx
+
+                mov     eax,colortable
+                sub     eax,patterntable
+                mov     scr2_pat2col,eax
+
+                mov     eax,patterntable
+                sub     eax,colortable
+                mov     scr2_col2pat,eax
 
 render_screen2_outer:
                 mov     edx,esi
@@ -2341,42 +2471,41 @@ render_screen2_outer:
                 add     esi,eax
                 add     edx,ebp
 
-render_screen2_inner:
-
-                movzx   eax,byte ptr [edx]
-                
                 add     esi,patterntable
+                
+render_screen2_inner:
+                movzx   eax,byte ptr [edx]
+
                 movzx   ebp,byte ptr [esi+eax*8]
-                sub     esi,patterntable
+                add     esi,scr2_pat2col
                 mov     ebx,dword ptr [offset foregroundmask+ebp*8]
                 mov     ebp,dword ptr [offset backgroundmask+ebp*8]
                 
-                add     esi,colortable
                 movzx   eax,byte ptr [esi+eax*8]
-                sub     esi,colortable
+                add     esi,scr2_col2pat
                 and     ebx,dword ptr [offset foregroundcolor+eax*4]
                 and     ebp,dword ptr [offset backgroundcolor+eax*4]
                 
                 or      ebx,ebp
                 or      ebx,10101010h
+                
                 mov     dword ptr [edi],ebx
                 
                 movzx   eax,byte ptr [edx]
                 
-                add     esi,patterntable
                 movzx   ebp,byte ptr [esi+eax*8]
-                sub     esi,patterntable
+                add     esi,scr2_pat2col
                 mov     ebx,dword ptr [offset foregroundmask+ebp*8+4]
                 mov     ebp,dword ptr [offset backgroundmask+ebp*8+4]
                 
-                add     esi,colortable
                 movzx   eax,byte ptr [esi+eax*8]
-                sub     esi,colortable
+                add     esi,scr2_col2pat
                 and     ebx,dword ptr [offset foregroundcolor+eax*4]
                 and     ebp,dword ptr [offset backgroundcolor+eax*4]
                 
                 or      ebx,ebp
                 or      ebx,10101010h
+                
                 mov     dword ptr [edi+4],ebx
                 
                 add     edi,8
@@ -2719,13 +2848,31 @@ render_screen6_inner:
                 ret
 
 render_screen6_sizedown:
+                ;mov     edi,adjustbuffer
+                ;mov     esi,nametable
+                ;movzx   eax,byte ptr [offset vdpregs+23]
+                ;shl     eax,7
+                ;add     esi,eax
+                ;mov     ebp,msxvram
+                ;mov     ecx,212
                 mov     edi,adjustbuffer
-                mov     esi,nametable
+                mov     esi,first_line
+                shl     esi,7
+                lea     edi,[edi+esi*2]
+                add     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
+                mov     edx,esi
                 add     esi,eax
+                and     edx,0FFFF8000h
+                and     esi,000007FFFh
+                or      esi,edx
+
                 mov     ebp,msxvram
-                mov     ecx,212
+                mov     ecx,last_line
+                sub     ecx,first_line
+                inc     ecx
+
 
 render_screen6_outer_sizedown:
                 push    ecx

@@ -35,6 +35,7 @@ extrn cart1: dword
 extrn extendedrom: dword
 extrn smart_print: near
 extrn msxmodel: dword
+extrn set_adjust_exit: near
 
 include io.inc
 include vdp.inc
@@ -468,7 +469,7 @@ vdpaccess       dd      0
 vdptemp         db      0
 vdplookahead    db      0
 vdpregs         db      64 dup (0)
-vdpstatus       db      0,0,080h,0,0,0,0,0,0,0,0,0,0,0,0,0
+vdpstatus       db      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 msx2palette     db      16*2 dup (0)
 
 ; PSG registers
@@ -1629,6 +1630,7 @@ video_processing:
                 mov     eax,offset spritecounter
                 call    start_counter
                 call    sprite_render
+                call    set_adjust_exit
                 mov     eax,offset spritecounter
                 call    end_counter
                 mov     eax,dword ptr [offset spritecounter]

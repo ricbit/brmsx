@@ -1,1027 +1,1539 @@
 set_adjust_table_256:
 	; 00
 	dd      0
+	dd      0
 	; 01
+	dd      0
 	dd      1
 	; 02
+	dd      0
 	dd      2
 	; 03
+	dd      0
 	dd      3
 	; 04
+	dd      0
 	dd      4
 	; 05
+	dd      0
 	dd      5
 	; 06
+	dd      0
 	dd      6
 	; 07
+	dd      0
 	dd      7
 	; 08
+	dd      0
 	dd      -8
 	; 09
+	dd      0
 	dd      -7
 	; 0A
+	dd      0
 	dd      -6
 	; 0B
+	dd      0
 	dd      -5
 	; 0C
+	dd      0
 	dd      -4
 	; 0D
+	dd      0
 	dd      -3
 	; 0E
+	dd      0
 	dd      -2
 	; 0F
+	dd      0
 	dd      -1
 	; 10
 	dd      256
+	dd      0
 	; 11
-	dd      257
+	dd      256
+	dd      1
 	; 12
-	dd      258
+	dd      256
+	dd      2
 	; 13
-	dd      259
+	dd      256
+	dd      3
 	; 14
-	dd      260
+	dd      256
+	dd      4
 	; 15
-	dd      261
+	dd      256
+	dd      5
 	; 16
-	dd      262
+	dd      256
+	dd      6
 	; 17
-	dd      263
+	dd      256
+	dd      7
 	; 18
-	dd      248
+	dd      256
+	dd      -8
 	; 19
-	dd      249
+	dd      256
+	dd      -7
 	; 1A
-	dd      250
+	dd      256
+	dd      -6
 	; 1B
-	dd      251
+	dd      256
+	dd      -5
 	; 1C
-	dd      252
+	dd      256
+	dd      -4
 	; 1D
-	dd      253
+	dd      256
+	dd      -3
 	; 1E
-	dd      254
+	dd      256
+	dd      -2
 	; 1F
-	dd      255
+	dd      256
+	dd      -1
 	; 20
 	dd      512
+	dd      0
 	; 21
-	dd      513
+	dd      512
+	dd      1
 	; 22
-	dd      514
+	dd      512
+	dd      2
 	; 23
-	dd      515
+	dd      512
+	dd      3
 	; 24
-	dd      516
+	dd      512
+	dd      4
 	; 25
-	dd      517
+	dd      512
+	dd      5
 	; 26
-	dd      518
+	dd      512
+	dd      6
 	; 27
-	dd      519
+	dd      512
+	dd      7
 	; 28
-	dd      504
+	dd      512
+	dd      -8
 	; 29
-	dd      505
+	dd      512
+	dd      -7
 	; 2A
-	dd      506
+	dd      512
+	dd      -6
 	; 2B
-	dd      507
+	dd      512
+	dd      -5
 	; 2C
-	dd      508
+	dd      512
+	dd      -4
 	; 2D
-	dd      509
+	dd      512
+	dd      -3
 	; 2E
-	dd      510
+	dd      512
+	dd      -2
 	; 2F
-	dd      511
+	dd      512
+	dd      -1
 	; 30
 	dd      768
+	dd      0
 	; 31
-	dd      769
+	dd      768
+	dd      1
 	; 32
-	dd      770
+	dd      768
+	dd      2
 	; 33
-	dd      771
+	dd      768
+	dd      3
 	; 34
-	dd      772
+	dd      768
+	dd      4
 	; 35
-	dd      773
+	dd      768
+	dd      5
 	; 36
-	dd      774
+	dd      768
+	dd      6
 	; 37
-	dd      775
+	dd      768
+	dd      7
 	; 38
-	dd      760
+	dd      768
+	dd      -8
 	; 39
-	dd      761
+	dd      768
+	dd      -7
 	; 3A
-	dd      762
+	dd      768
+	dd      -6
 	; 3B
-	dd      763
+	dd      768
+	dd      -5
 	; 3C
-	dd      764
+	dd      768
+	dd      -4
 	; 3D
-	dd      765
+	dd      768
+	dd      -3
 	; 3E
-	dd      766
+	dd      768
+	dd      -2
 	; 3F
-	dd      767
+	dd      768
+	dd      -1
 	; 40
 	dd      1024
+	dd      0
 	; 41
-	dd      1025
+	dd      1024
+	dd      1
 	; 42
-	dd      1026
+	dd      1024
+	dd      2
 	; 43
-	dd      1027
+	dd      1024
+	dd      3
 	; 44
-	dd      1028
+	dd      1024
+	dd      4
 	; 45
-	dd      1029
+	dd      1024
+	dd      5
 	; 46
-	dd      1030
+	dd      1024
+	dd      6
 	; 47
-	dd      1031
+	dd      1024
+	dd      7
 	; 48
-	dd      1016
+	dd      1024
+	dd      -8
 	; 49
-	dd      1017
+	dd      1024
+	dd      -7
 	; 4A
-	dd      1018
+	dd      1024
+	dd      -6
 	; 4B
-	dd      1019
+	dd      1024
+	dd      -5
 	; 4C
-	dd      1020
+	dd      1024
+	dd      -4
 	; 4D
-	dd      1021
+	dd      1024
+	dd      -3
 	; 4E
-	dd      1022
+	dd      1024
+	dd      -2
 	; 4F
-	dd      1023
+	dd      1024
+	dd      -1
 	; 50
 	dd      1280
+	dd      0
 	; 51
-	dd      1281
+	dd      1280
+	dd      1
 	; 52
-	dd      1282
+	dd      1280
+	dd      2
 	; 53
-	dd      1283
+	dd      1280
+	dd      3
 	; 54
-	dd      1284
+	dd      1280
+	dd      4
 	; 55
-	dd      1285
+	dd      1280
+	dd      5
 	; 56
-	dd      1286
+	dd      1280
+	dd      6
 	; 57
-	dd      1287
+	dd      1280
+	dd      7
 	; 58
-	dd      1272
+	dd      1280
+	dd      -8
 	; 59
-	dd      1273
+	dd      1280
+	dd      -7
 	; 5A
-	dd      1274
+	dd      1280
+	dd      -6
 	; 5B
-	dd      1275
+	dd      1280
+	dd      -5
 	; 5C
-	dd      1276
+	dd      1280
+	dd      -4
 	; 5D
-	dd      1277
+	dd      1280
+	dd      -3
 	; 5E
-	dd      1278
+	dd      1280
+	dd      -2
 	; 5F
-	dd      1279
+	dd      1280
+	dd      -1
 	; 60
 	dd      1536
+	dd      0
 	; 61
-	dd      1537
+	dd      1536
+	dd      1
 	; 62
-	dd      1538
+	dd      1536
+	dd      2
 	; 63
-	dd      1539
+	dd      1536
+	dd      3
 	; 64
-	dd      1540
+	dd      1536
+	dd      4
 	; 65
-	dd      1541
+	dd      1536
+	dd      5
 	; 66
-	dd      1542
+	dd      1536
+	dd      6
 	; 67
-	dd      1543
+	dd      1536
+	dd      7
 	; 68
-	dd      1528
+	dd      1536
+	dd      -8
 	; 69
-	dd      1529
+	dd      1536
+	dd      -7
 	; 6A
-	dd      1530
+	dd      1536
+	dd      -6
 	; 6B
-	dd      1531
+	dd      1536
+	dd      -5
 	; 6C
-	dd      1532
+	dd      1536
+	dd      -4
 	; 6D
-	dd      1533
+	dd      1536
+	dd      -3
 	; 6E
-	dd      1534
+	dd      1536
+	dd      -2
 	; 6F
-	dd      1535
+	dd      1536
+	dd      -1
 	; 70
 	dd      1792
+	dd      0
 	; 71
-	dd      1793
+	dd      1792
+	dd      1
 	; 72
-	dd      1794
+	dd      1792
+	dd      2
 	; 73
-	dd      1795
+	dd      1792
+	dd      3
 	; 74
-	dd      1796
+	dd      1792
+	dd      4
 	; 75
-	dd      1797
+	dd      1792
+	dd      5
 	; 76
-	dd      1798
+	dd      1792
+	dd      6
 	; 77
-	dd      1799
+	dd      1792
+	dd      7
 	; 78
-	dd      1784
+	dd      1792
+	dd      -8
 	; 79
-	dd      1785
+	dd      1792
+	dd      -7
 	; 7A
-	dd      1786
+	dd      1792
+	dd      -6
 	; 7B
-	dd      1787
+	dd      1792
+	dd      -5
 	; 7C
-	dd      1788
+	dd      1792
+	dd      -4
 	; 7D
-	dd      1789
+	dd      1792
+	dd      -3
 	; 7E
-	dd      1790
+	dd      1792
+	dd      -2
 	; 7F
-	dd      1791
+	dd      1792
+	dd      -1
 	; 80
 	dd      -2048
+	dd      0
 	; 81
-	dd      -2047
+	dd      -2048
+	dd      1
 	; 82
-	dd      -2046
+	dd      -2048
+	dd      2
 	; 83
-	dd      -2045
+	dd      -2048
+	dd      3
 	; 84
-	dd      -2044
+	dd      -2048
+	dd      4
 	; 85
-	dd      -2043
+	dd      -2048
+	dd      5
 	; 86
-	dd      -2042
+	dd      -2048
+	dd      6
 	; 87
-	dd      -2041
+	dd      -2048
+	dd      7
 	; 88
-	dd      -2056
+	dd      -2048
+	dd      -8
 	; 89
-	dd      -2055
+	dd      -2048
+	dd      -7
 	; 8A
-	dd      -2054
+	dd      -2048
+	dd      -6
 	; 8B
-	dd      -2053
+	dd      -2048
+	dd      -5
 	; 8C
-	dd      -2052
+	dd      -2048
+	dd      -4
 	; 8D
-	dd      -2051
+	dd      -2048
+	dd      -3
 	; 8E
-	dd      -2050
+	dd      -2048
+	dd      -2
 	; 8F
-	dd      -2049
+	dd      -2048
+	dd      -1
 	; 90
 	dd      -1792
+	dd      0
 	; 91
-	dd      -1791
+	dd      -1792
+	dd      1
 	; 92
-	dd      -1790
+	dd      -1792
+	dd      2
 	; 93
-	dd      -1789
+	dd      -1792
+	dd      3
 	; 94
-	dd      -1788
+	dd      -1792
+	dd      4
 	; 95
-	dd      -1787
+	dd      -1792
+	dd      5
 	; 96
-	dd      -1786
+	dd      -1792
+	dd      6
 	; 97
-	dd      -1785
+	dd      -1792
+	dd      7
 	; 98
-	dd      -1800
+	dd      -1792
+	dd      -8
 	; 99
-	dd      -1799
+	dd      -1792
+	dd      -7
 	; 9A
-	dd      -1798
+	dd      -1792
+	dd      -6
 	; 9B
-	dd      -1797
+	dd      -1792
+	dd      -5
 	; 9C
-	dd      -1796
+	dd      -1792
+	dd      -4
 	; 9D
-	dd      -1795
+	dd      -1792
+	dd      -3
 	; 9E
-	dd      -1794
+	dd      -1792
+	dd      -2
 	; 9F
-	dd      -1793
+	dd      -1792
+	dd      -1
 	; A0
 	dd      -1536
+	dd      0
 	; A1
-	dd      -1535
+	dd      -1536
+	dd      1
 	; A2
-	dd      -1534
+	dd      -1536
+	dd      2
 	; A3
-	dd      -1533
+	dd      -1536
+	dd      3
 	; A4
-	dd      -1532
+	dd      -1536
+	dd      4
 	; A5
-	dd      -1531
+	dd      -1536
+	dd      5
 	; A6
-	dd      -1530
+	dd      -1536
+	dd      6
 	; A7
-	dd      -1529
+	dd      -1536
+	dd      7
 	; A8
-	dd      -1544
+	dd      -1536
+	dd      -8
 	; A9
-	dd      -1543
+	dd      -1536
+	dd      -7
 	; AA
-	dd      -1542
+	dd      -1536
+	dd      -6
 	; AB
-	dd      -1541
+	dd      -1536
+	dd      -5
 	; AC
-	dd      -1540
+	dd      -1536
+	dd      -4
 	; AD
-	dd      -1539
+	dd      -1536
+	dd      -3
 	; AE
-	dd      -1538
+	dd      -1536
+	dd      -2
 	; AF
-	dd      -1537
+	dd      -1536
+	dd      -1
 	; B0
 	dd      -1280
+	dd      0
 	; B1
-	dd      -1279
+	dd      -1280
+	dd      1
 	; B2
-	dd      -1278
+	dd      -1280
+	dd      2
 	; B3
-	dd      -1277
+	dd      -1280
+	dd      3
 	; B4
-	dd      -1276
+	dd      -1280
+	dd      4
 	; B5
-	dd      -1275
+	dd      -1280
+	dd      5
 	; B6
-	dd      -1274
+	dd      -1280
+	dd      6
 	; B7
-	dd      -1273
+	dd      -1280
+	dd      7
 	; B8
-	dd      -1288
+	dd      -1280
+	dd      -8
 	; B9
-	dd      -1287
+	dd      -1280
+	dd      -7
 	; BA
-	dd      -1286
+	dd      -1280
+	dd      -6
 	; BB
-	dd      -1285
+	dd      -1280
+	dd      -5
 	; BC
-	dd      -1284
+	dd      -1280
+	dd      -4
 	; BD
-	dd      -1283
+	dd      -1280
+	dd      -3
 	; BE
-	dd      -1282
+	dd      -1280
+	dd      -2
 	; BF
-	dd      -1281
+	dd      -1280
+	dd      -1
 	; C0
 	dd      -1024
+	dd      0
 	; C1
-	dd      -1023
+	dd      -1024
+	dd      1
 	; C2
-	dd      -1022
+	dd      -1024
+	dd      2
 	; C3
-	dd      -1021
+	dd      -1024
+	dd      3
 	; C4
-	dd      -1020
+	dd      -1024
+	dd      4
 	; C5
-	dd      -1019
+	dd      -1024
+	dd      5
 	; C6
-	dd      -1018
+	dd      -1024
+	dd      6
 	; C7
-	dd      -1017
+	dd      -1024
+	dd      7
 	; C8
-	dd      -1032
+	dd      -1024
+	dd      -8
 	; C9
-	dd      -1031
+	dd      -1024
+	dd      -7
 	; CA
-	dd      -1030
+	dd      -1024
+	dd      -6
 	; CB
-	dd      -1029
+	dd      -1024
+	dd      -5
 	; CC
-	dd      -1028
+	dd      -1024
+	dd      -4
 	; CD
-	dd      -1027
+	dd      -1024
+	dd      -3
 	; CE
-	dd      -1026
+	dd      -1024
+	dd      -2
 	; CF
-	dd      -1025
+	dd      -1024
+	dd      -1
 	; D0
 	dd      -768
+	dd      0
 	; D1
-	dd      -767
+	dd      -768
+	dd      1
 	; D2
-	dd      -766
+	dd      -768
+	dd      2
 	; D3
-	dd      -765
+	dd      -768
+	dd      3
 	; D4
-	dd      -764
+	dd      -768
+	dd      4
 	; D5
-	dd      -763
+	dd      -768
+	dd      5
 	; D6
-	dd      -762
+	dd      -768
+	dd      6
 	; D7
-	dd      -761
+	dd      -768
+	dd      7
 	; D8
-	dd      -776
+	dd      -768
+	dd      -8
 	; D9
-	dd      -775
+	dd      -768
+	dd      -7
 	; DA
-	dd      -774
+	dd      -768
+	dd      -6
 	; DB
-	dd      -773
+	dd      -768
+	dd      -5
 	; DC
-	dd      -772
+	dd      -768
+	dd      -4
 	; DD
-	dd      -771
+	dd      -768
+	dd      -3
 	; DE
-	dd      -770
+	dd      -768
+	dd      -2
 	; DF
-	dd      -769
+	dd      -768
+	dd      -1
 	; E0
 	dd      -512
+	dd      0
 	; E1
-	dd      -511
+	dd      -512
+	dd      1
 	; E2
-	dd      -510
+	dd      -512
+	dd      2
 	; E3
-	dd      -509
+	dd      -512
+	dd      3
 	; E4
-	dd      -508
+	dd      -512
+	dd      4
 	; E5
-	dd      -507
+	dd      -512
+	dd      5
 	; E6
-	dd      -506
+	dd      -512
+	dd      6
 	; E7
-	dd      -505
+	dd      -512
+	dd      7
 	; E8
-	dd      -520
+	dd      -512
+	dd      -8
 	; E9
-	dd      -519
+	dd      -512
+	dd      -7
 	; EA
-	dd      -518
+	dd      -512
+	dd      -6
 	; EB
-	dd      -517
+	dd      -512
+	dd      -5
 	; EC
-	dd      -516
+	dd      -512
+	dd      -4
 	; ED
-	dd      -515
+	dd      -512
+	dd      -3
 	; EE
-	dd      -514
+	dd      -512
+	dd      -2
 	; EF
-	dd      -513
+	dd      -512
+	dd      -1
 	; F0
 	dd      -256
+	dd      0
 	; F1
-	dd      -255
+	dd      -256
+	dd      1
 	; F2
-	dd      -254
+	dd      -256
+	dd      2
 	; F3
-	dd      -253
+	dd      -256
+	dd      3
 	; F4
-	dd      -252
+	dd      -256
+	dd      4
 	; F5
-	dd      -251
+	dd      -256
+	dd      5
 	; F6
-	dd      -250
+	dd      -256
+	dd      6
 	; F7
-	dd      -249
+	dd      -256
+	dd      7
 	; F8
-	dd      -264
+	dd      -256
+	dd      -8
 	; F9
-	dd      -263
+	dd      -256
+	dd      -7
 	; FA
-	dd      -262
+	dd      -256
+	dd      -6
 	; FB
-	dd      -261
+	dd      -256
+	dd      -5
 	; FC
-	dd      -260
+	dd      -256
+	dd      -4
 	; FD
-	dd      -259
+	dd      -256
+	dd      -3
 	; FE
-	dd      -258
+	dd      -256
+	dd      -2
 	; FF
-	dd      -257
+	dd      -256
+	dd      -1
 
 set_adjust_table_512:
 	; 00
-	dd      1
+	dd      0
+	dd      0
 	; 01
+	dd      0
 	dd      2
 	; 02
-	dd      3
-	; 03
+	dd      0
 	dd      4
-	; 04
-	dd      5
-	; 05
+	; 03
+	dd      0
 	dd      6
-	; 06
-	dd      7
-	; 07
+	; 04
+	dd      0
 	dd      8
+	; 05
+	dd      0
+	dd      10
+	; 06
+	dd      0
+	dd      12
+	; 07
+	dd      0
+	dd      14
 	; 08
-	dd      -7
+	dd      0
+	dd      -16
 	; 09
-	dd      -6
+	dd      0
+	dd      -14
 	; 0A
-	dd      -5
+	dd      0
+	dd      -12
 	; 0B
-	dd      -4
+	dd      0
+	dd      -10
 	; 0C
-	dd      -3
+	dd      0
+	dd      -8
 	; 0D
-	dd      -2
+	dd      0
+	dd      -6
 	; 0E
-	dd      -1
+	dd      0
+	dd      -4
 	; 0F
 	dd      0
+	dd      -2
 	; 10
-	dd      513
+	dd      512
+	dd      0
 	; 11
-	dd      514
+	dd      512
+	dd      2
 	; 12
-	dd      515
+	dd      512
+	dd      4
 	; 13
-	dd      516
+	dd      512
+	dd      6
 	; 14
-	dd      517
+	dd      512
+	dd      8
 	; 15
-	dd      518
+	dd      512
+	dd      10
 	; 16
-	dd      519
+	dd      512
+	dd      12
 	; 17
-	dd      520
+	dd      512
+	dd      14
 	; 18
-	dd      505
+	dd      512
+	dd      -16
 	; 19
-	dd      506
+	dd      512
+	dd      -14
 	; 1A
-	dd      507
+	dd      512
+	dd      -12
 	; 1B
-	dd      508
+	dd      512
+	dd      -10
 	; 1C
-	dd      509
+	dd      512
+	dd      -8
 	; 1D
-	dd      510
+	dd      512
+	dd      -6
 	; 1E
-	dd      511
+	dd      512
+	dd      -4
 	; 1F
 	dd      512
+	dd      -2
 	; 20
-	dd      1025
+	dd      1024
+	dd      0
 	; 21
-	dd      1026
+	dd      1024
+	dd      2
 	; 22
-	dd      1027
+	dd      1024
+	dd      4
 	; 23
-	dd      1028
+	dd      1024
+	dd      6
 	; 24
-	dd      1029
+	dd      1024
+	dd      8
 	; 25
-	dd      1030
+	dd      1024
+	dd      10
 	; 26
-	dd      1031
+	dd      1024
+	dd      12
 	; 27
-	dd      1032
+	dd      1024
+	dd      14
 	; 28
-	dd      1017
+	dd      1024
+	dd      -16
 	; 29
-	dd      1018
+	dd      1024
+	dd      -14
 	; 2A
-	dd      1019
+	dd      1024
+	dd      -12
 	; 2B
-	dd      1020
+	dd      1024
+	dd      -10
 	; 2C
-	dd      1021
+	dd      1024
+	dd      -8
 	; 2D
-	dd      1022
+	dd      1024
+	dd      -6
 	; 2E
-	dd      1023
+	dd      1024
+	dd      -4
 	; 2F
 	dd      1024
+	dd      -2
 	; 30
-	dd      1537
+	dd      1536
+	dd      0
 	; 31
-	dd      1538
+	dd      1536
+	dd      2
 	; 32
-	dd      1539
+	dd      1536
+	dd      4
 	; 33
-	dd      1540
+	dd      1536
+	dd      6
 	; 34
-	dd      1541
+	dd      1536
+	dd      8
 	; 35
-	dd      1542
+	dd      1536
+	dd      10
 	; 36
-	dd      1543
+	dd      1536
+	dd      12
 	; 37
-	dd      1544
+	dd      1536
+	dd      14
 	; 38
-	dd      1529
+	dd      1536
+	dd      -16
 	; 39
-	dd      1530
+	dd      1536
+	dd      -14
 	; 3A
-	dd      1531
+	dd      1536
+	dd      -12
 	; 3B
-	dd      1532
+	dd      1536
+	dd      -10
 	; 3C
-	dd      1533
+	dd      1536
+	dd      -8
 	; 3D
-	dd      1534
+	dd      1536
+	dd      -6
 	; 3E
-	dd      1535
+	dd      1536
+	dd      -4
 	; 3F
 	dd      1536
+	dd      -2
 	; 40
-	dd      2049
+	dd      2048
+	dd      0
 	; 41
-	dd      2050
+	dd      2048
+	dd      2
 	; 42
-	dd      2051
+	dd      2048
+	dd      4
 	; 43
-	dd      2052
+	dd      2048
+	dd      6
 	; 44
-	dd      2053
+	dd      2048
+	dd      8
 	; 45
-	dd      2054
+	dd      2048
+	dd      10
 	; 46
-	dd      2055
+	dd      2048
+	dd      12
 	; 47
-	dd      2056
+	dd      2048
+	dd      14
 	; 48
-	dd      2041
+	dd      2048
+	dd      -16
 	; 49
-	dd      2042
+	dd      2048
+	dd      -14
 	; 4A
-	dd      2043
+	dd      2048
+	dd      -12
 	; 4B
-	dd      2044
+	dd      2048
+	dd      -10
 	; 4C
-	dd      2045
+	dd      2048
+	dd      -8
 	; 4D
-	dd      2046
+	dd      2048
+	dd      -6
 	; 4E
-	dd      2047
+	dd      2048
+	dd      -4
 	; 4F
 	dd      2048
+	dd      -2
 	; 50
-	dd      2561
+	dd      2560
+	dd      0
 	; 51
-	dd      2562
+	dd      2560
+	dd      2
 	; 52
-	dd      2563
+	dd      2560
+	dd      4
 	; 53
-	dd      2564
+	dd      2560
+	dd      6
 	; 54
-	dd      2565
+	dd      2560
+	dd      8
 	; 55
-	dd      2566
+	dd      2560
+	dd      10
 	; 56
-	dd      2567
+	dd      2560
+	dd      12
 	; 57
-	dd      2568
+	dd      2560
+	dd      14
 	; 58
-	dd      2553
+	dd      2560
+	dd      -16
 	; 59
-	dd      2554
+	dd      2560
+	dd      -14
 	; 5A
-	dd      2555
+	dd      2560
+	dd      -12
 	; 5B
-	dd      2556
+	dd      2560
+	dd      -10
 	; 5C
-	dd      2557
+	dd      2560
+	dd      -8
 	; 5D
-	dd      2558
+	dd      2560
+	dd      -6
 	; 5E
-	dd      2559
+	dd      2560
+	dd      -4
 	; 5F
 	dd      2560
+	dd      -2
 	; 60
-	dd      3073
+	dd      3072
+	dd      0
 	; 61
-	dd      3074
+	dd      3072
+	dd      2
 	; 62
-	dd      3075
+	dd      3072
+	dd      4
 	; 63
-	dd      3076
+	dd      3072
+	dd      6
 	; 64
-	dd      3077
+	dd      3072
+	dd      8
 	; 65
-	dd      3078
+	dd      3072
+	dd      10
 	; 66
-	dd      3079
+	dd      3072
+	dd      12
 	; 67
-	dd      3080
+	dd      3072
+	dd      14
 	; 68
-	dd      3065
+	dd      3072
+	dd      -16
 	; 69
-	dd      3066
+	dd      3072
+	dd      -14
 	; 6A
-	dd      3067
+	dd      3072
+	dd      -12
 	; 6B
-	dd      3068
+	dd      3072
+	dd      -10
 	; 6C
-	dd      3069
+	dd      3072
+	dd      -8
 	; 6D
-	dd      3070
+	dd      3072
+	dd      -6
 	; 6E
-	dd      3071
+	dd      3072
+	dd      -4
 	; 6F
 	dd      3072
+	dd      -2
 	; 70
-	dd      3585
+	dd      3584
+	dd      0
 	; 71
-	dd      3586
+	dd      3584
+	dd      2
 	; 72
-	dd      3587
+	dd      3584
+	dd      4
 	; 73
-	dd      3588
+	dd      3584
+	dd      6
 	; 74
-	dd      3589
+	dd      3584
+	dd      8
 	; 75
-	dd      3590
+	dd      3584
+	dd      10
 	; 76
-	dd      3591
+	dd      3584
+	dd      12
 	; 77
-	dd      3592
+	dd      3584
+	dd      14
 	; 78
-	dd      3577
+	dd      3584
+	dd      -16
 	; 79
-	dd      3578
+	dd      3584
+	dd      -14
 	; 7A
-	dd      3579
+	dd      3584
+	dd      -12
 	; 7B
-	dd      3580
+	dd      3584
+	dd      -10
 	; 7C
-	dd      3581
+	dd      3584
+	dd      -8
 	; 7D
-	dd      3582
+	dd      3584
+	dd      -6
 	; 7E
-	dd      3583
+	dd      3584
+	dd      -4
 	; 7F
 	dd      3584
+	dd      -2
 	; 80
-	dd      -4095
+	dd      -4096
+	dd      0
 	; 81
-	dd      -4094
+	dd      -4096
+	dd      2
 	; 82
-	dd      -4093
+	dd      -4096
+	dd      4
 	; 83
-	dd      -4092
+	dd      -4096
+	dd      6
 	; 84
-	dd      -4091
+	dd      -4096
+	dd      8
 	; 85
-	dd      -4090
+	dd      -4096
+	dd      10
 	; 86
-	dd      -4089
+	dd      -4096
+	dd      12
 	; 87
-	dd      -4088
+	dd      -4096
+	dd      14
 	; 88
-	dd      -4103
+	dd      -4096
+	dd      -16
 	; 89
-	dd      -4102
+	dd      -4096
+	dd      -14
 	; 8A
-	dd      -4101
+	dd      -4096
+	dd      -12
 	; 8B
-	dd      -4100
+	dd      -4096
+	dd      -10
 	; 8C
-	dd      -4099
+	dd      -4096
+	dd      -8
 	; 8D
-	dd      -4098
+	dd      -4096
+	dd      -6
 	; 8E
-	dd      -4097
+	dd      -4096
+	dd      -4
 	; 8F
 	dd      -4096
+	dd      -2
 	; 90
-	dd      -3583
+	dd      -3584
+	dd      0
 	; 91
-	dd      -3582
+	dd      -3584
+	dd      2
 	; 92
-	dd      -3581
+	dd      -3584
+	dd      4
 	; 93
-	dd      -3580
+	dd      -3584
+	dd      6
 	; 94
-	dd      -3579
+	dd      -3584
+	dd      8
 	; 95
-	dd      -3578
+	dd      -3584
+	dd      10
 	; 96
-	dd      -3577
+	dd      -3584
+	dd      12
 	; 97
-	dd      -3576
+	dd      -3584
+	dd      14
 	; 98
-	dd      -3591
+	dd      -3584
+	dd      -16
 	; 99
-	dd      -3590
+	dd      -3584
+	dd      -14
 	; 9A
-	dd      -3589
+	dd      -3584
+	dd      -12
 	; 9B
-	dd      -3588
+	dd      -3584
+	dd      -10
 	; 9C
-	dd      -3587
+	dd      -3584
+	dd      -8
 	; 9D
-	dd      -3586
+	dd      -3584
+	dd      -6
 	; 9E
-	dd      -3585
+	dd      -3584
+	dd      -4
 	; 9F
 	dd      -3584
+	dd      -2
 	; A0
-	dd      -3071
+	dd      -3072
+	dd      0
 	; A1
-	dd      -3070
+	dd      -3072
+	dd      2
 	; A2
-	dd      -3069
+	dd      -3072
+	dd      4
 	; A3
-	dd      -3068
+	dd      -3072
+	dd      6
 	; A4
-	dd      -3067
+	dd      -3072
+	dd      8
 	; A5
-	dd      -3066
+	dd      -3072
+	dd      10
 	; A6
-	dd      -3065
+	dd      -3072
+	dd      12
 	; A7
-	dd      -3064
+	dd      -3072
+	dd      14
 	; A8
-	dd      -3079
+	dd      -3072
+	dd      -16
 	; A9
-	dd      -3078
+	dd      -3072
+	dd      -14
 	; AA
-	dd      -3077
+	dd      -3072
+	dd      -12
 	; AB
-	dd      -3076
+	dd      -3072
+	dd      -10
 	; AC
-	dd      -3075
+	dd      -3072
+	dd      -8
 	; AD
-	dd      -3074
+	dd      -3072
+	dd      -6
 	; AE
-	dd      -3073
+	dd      -3072
+	dd      -4
 	; AF
 	dd      -3072
+	dd      -2
 	; B0
-	dd      -2559
+	dd      -2560
+	dd      0
 	; B1
-	dd      -2558
+	dd      -2560
+	dd      2
 	; B2
-	dd      -2557
+	dd      -2560
+	dd      4
 	; B3
-	dd      -2556
+	dd      -2560
+	dd      6
 	; B4
-	dd      -2555
+	dd      -2560
+	dd      8
 	; B5
-	dd      -2554
+	dd      -2560
+	dd      10
 	; B6
-	dd      -2553
+	dd      -2560
+	dd      12
 	; B7
-	dd      -2552
+	dd      -2560
+	dd      14
 	; B8
-	dd      -2567
+	dd      -2560
+	dd      -16
 	; B9
-	dd      -2566
+	dd      -2560
+	dd      -14
 	; BA
-	dd      -2565
+	dd      -2560
+	dd      -12
 	; BB
-	dd      -2564
+	dd      -2560
+	dd      -10
 	; BC
-	dd      -2563
+	dd      -2560
+	dd      -8
 	; BD
-	dd      -2562
+	dd      -2560
+	dd      -6
 	; BE
-	dd      -2561
+	dd      -2560
+	dd      -4
 	; BF
 	dd      -2560
+	dd      -2
 	; C0
-	dd      -2047
+	dd      -2048
+	dd      0
 	; C1
-	dd      -2046
+	dd      -2048
+	dd      2
 	; C2
-	dd      -2045
+	dd      -2048
+	dd      4
 	; C3
-	dd      -2044
+	dd      -2048
+	dd      6
 	; C4
-	dd      -2043
+	dd      -2048
+	dd      8
 	; C5
-	dd      -2042
+	dd      -2048
+	dd      10
 	; C6
-	dd      -2041
+	dd      -2048
+	dd      12
 	; C7
-	dd      -2040
+	dd      -2048
+	dd      14
 	; C8
-	dd      -2055
+	dd      -2048
+	dd      -16
 	; C9
-	dd      -2054
+	dd      -2048
+	dd      -14
 	; CA
-	dd      -2053
+	dd      -2048
+	dd      -12
 	; CB
-	dd      -2052
+	dd      -2048
+	dd      -10
 	; CC
-	dd      -2051
+	dd      -2048
+	dd      -8
 	; CD
-	dd      -2050
+	dd      -2048
+	dd      -6
 	; CE
-	dd      -2049
+	dd      -2048
+	dd      -4
 	; CF
 	dd      -2048
+	dd      -2
 	; D0
-	dd      -1535
+	dd      -1536
+	dd      0
 	; D1
-	dd      -1534
+	dd      -1536
+	dd      2
 	; D2
-	dd      -1533
+	dd      -1536
+	dd      4
 	; D3
-	dd      -1532
+	dd      -1536
+	dd      6
 	; D4
-	dd      -1531
+	dd      -1536
+	dd      8
 	; D5
-	dd      -1530
+	dd      -1536
+	dd      10
 	; D6
-	dd      -1529
+	dd      -1536
+	dd      12
 	; D7
-	dd      -1528
+	dd      -1536
+	dd      14
 	; D8
-	dd      -1543
+	dd      -1536
+	dd      -16
 	; D9
-	dd      -1542
+	dd      -1536
+	dd      -14
 	; DA
-	dd      -1541
+	dd      -1536
+	dd      -12
 	; DB
-	dd      -1540
+	dd      -1536
+	dd      -10
 	; DC
-	dd      -1539
+	dd      -1536
+	dd      -8
 	; DD
-	dd      -1538
+	dd      -1536
+	dd      -6
 	; DE
-	dd      -1537
+	dd      -1536
+	dd      -4
 	; DF
 	dd      -1536
+	dd      -2
 	; E0
-	dd      -1023
+	dd      -1024
+	dd      0
 	; E1
-	dd      -1022
+	dd      -1024
+	dd      2
 	; E2
-	dd      -1021
+	dd      -1024
+	dd      4
 	; E3
-	dd      -1020
+	dd      -1024
+	dd      6
 	; E4
-	dd      -1019
+	dd      -1024
+	dd      8
 	; E5
-	dd      -1018
+	dd      -1024
+	dd      10
 	; E6
-	dd      -1017
+	dd      -1024
+	dd      12
 	; E7
-	dd      -1016
+	dd      -1024
+	dd      14
 	; E8
-	dd      -1031
+	dd      -1024
+	dd      -16
 	; E9
-	dd      -1030
+	dd      -1024
+	dd      -14
 	; EA
-	dd      -1029
+	dd      -1024
+	dd      -12
 	; EB
-	dd      -1028
+	dd      -1024
+	dd      -10
 	; EC
-	dd      -1027
+	dd      -1024
+	dd      -8
 	; ED
-	dd      -1026
+	dd      -1024
+	dd      -6
 	; EE
-	dd      -1025
+	dd      -1024
+	dd      -4
 	; EF
 	dd      -1024
+	dd      -2
 	; F0
-	dd      -511
+	dd      -512
+	dd      0
 	; F1
-	dd      -510
+	dd      -512
+	dd      2
 	; F2
-	dd      -509
+	dd      -512
+	dd      4
 	; F3
-	dd      -508
+	dd      -512
+	dd      6
 	; F4
-	dd      -507
+	dd      -512
+	dd      8
 	; F5
-	dd      -506
+	dd      -512
+	dd      10
 	; F6
-	dd      -505
+	dd      -512
+	dd      12
 	; F7
-	dd      -504
+	dd      -512
+	dd      14
 	; F8
-	dd      -519
+	dd      -512
+	dd      -16
 	; F9
-	dd      -518
+	dd      -512
+	dd      -14
 	; FA
-	dd      -517
+	dd      -512
+	dd      -12
 	; FB
-	dd      -516
+	dd      -512
+	dd      -10
 	; FC
-	dd      -515
+	dd      -512
+	dd      -8
 	; FD
-	dd      -514
+	dd      -512
+	dd      -6
 	; FE
-	dd      -513
+	dd      -512
+	dd      -4
 	; FF
 	dd      -512
+	dd      -2
