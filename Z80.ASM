@@ -1396,6 +1396,23 @@ callback_megarom9_dac:
                 shr     bl,2
                 jmp     sound_buffer
 
+; callback_megarom9 --------------------------------------------------
+; Konami MegaROM without 8-bit DAC
+; addresses:  <none>      block 4000h-5FFFh  
+;             6000h       block 6000h-7FFFh  
+;             8000h       block 8000h-9FFFh  
+;             A000h       block A000h-BFFFh  
+
+;callback_megarom9:
+                cmp     ecx,04000h
+                jne     _ret
+
+                mov     rom9dac_enabled,1
+                mov     bl,al
+                mov     al,18
+                shr     bl,2
+                jmp     sound_buffer
+
 ; callback_megarom_extended ------------------------------------------
 ; Idle extended slot
 ; addresses:  FFFFh change entire slot

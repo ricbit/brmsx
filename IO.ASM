@@ -490,7 +490,7 @@ set_correct_palette_scr0_now:
                 mov     eax,011h
                 call    set_palette_color
 
-                mov     palette_scr8,1
+                mov     palette_scr8,0
                 ret
 
 ; setgraphmode --------------------------------------------------------

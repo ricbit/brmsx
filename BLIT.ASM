@@ -2979,6 +2979,8 @@ blit12_yjk:
                 test    byte ptr [offset vdpregs+25],BIT_4
                 jnz     blit12_scr11
 
+                call    check_bargraph
+
                 mov     eax,0
                 mov     esi,blitbuffer
 blit12_scr12_bank:
@@ -3101,8 +3103,36 @@ clipb_255:
 
 ; --------------------------------------------------------------------
 
+check_bargraph:
+                cmp     bargraphmode,1
+                jne     _ret
+
+                mov     edi,blitbuffer
+                mov     ecx,47
+
+check_bargraph_outer:
+                mov     ebx,52/4
+
+check_bargraph_inner:
+                mov     eax,[edi]
+                shl     eax,4
+                and     eax,0F0F0F0F0h
+                mov     [edi],eax
+                add     edi,4
+                dec     ebx
+                jnz     check_bargraph_inner
+
+                add     edi,256-52
+                dec     ecx
+                jnz     check_bargraph_outer
+
+                ret
+
+; --------------------------------------------------------------------
+
 blit12_scr11:
                 call    init_high_palette
+                call    check_bargraph
 
                 mov     eax,0
                 mov     esi,blitbuffer

@@ -66,6 +66,7 @@ soundclocks     dd      0
 first_line      dd      0
 last_line       dd      211
 halted          dd      0
+clocks_line     dd      212
 
 ; --------------------------------------------------------------------
 
@@ -306,7 +307,7 @@ EMULATE_MSX2    macro emtype,brtype
                 mov     exit_now,eax
                 mov     interrupt,eax
                 mov     firstscreen,1
-                mov     ebp,212 ; clocks per line
+                mov     ebp,clocks_line
                 mov     clocksleft,ebp  
                 movzx   edi,regpc
                 movzx   edx,regaf
@@ -325,8 +326,9 @@ emulate_loop:
                 cmp     ebp,0
                 jg      emulate_loop
                 
-                add     ebp,212
-                add     soundclocks,212
+                add     ebp,clocks_line
+                mov     ebx,clocks_line
+                add     soundclocks,ebx
 
                 mov     ebx,current_line
                 

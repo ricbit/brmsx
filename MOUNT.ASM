@@ -246,7 +246,7 @@ insert_file_middle:
 
                 ; 0
                 mov     byte ptr [eax],cl
-                shr     cl,8
+                shr     ecx,8
                 and     byte ptr [eax+1],0F0h
                 or      byte ptr [eax+1],cl
                 jmp     insert_file_next

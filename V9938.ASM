@@ -79,6 +79,8 @@ pDX             dd      0
 pDY             dd      0
 pNX             dd      0
 pNY             dd      0
+pMIN            dd      0
+pMAX            dd      0
 shift_mask      dd      0
 shift_factor    dd      0
 logical_op      dd      0
@@ -383,6 +385,8 @@ inemul98_msx2:
 ; MSX2 version
 
 inemul99_msx2:       
+                 or vdpstatus,BIT_5 ;;;
+
                 cmp     byte ptr [offset vdpregs+15],1
                 je      inemul99_msx2_reg1
 
@@ -598,8 +602,9 @@ inverse:
                 ; check inverse consistency
                 mov     eax,source
                 sub     eax,size
+                add     eax,1
                 jns     consistent
-
+                
                 mov     eax,source
                 mov     size,eax
 
@@ -916,8 +921,8 @@ vdp_command_YMMM_exit:
 ; vdp_command_HMMV ---------------------------------------------------
 
 vdp_command_HMMV:
-                ; only DIX=0 and DIY=0 are supported by now
-                test    byte ptr [offset vdpregs+45],1100b
+                ; only DIX=0 is supported by now
+                test    byte ptr [offset vdpregs+45],100b
                 jnz     _ret
 
                 pushad
@@ -965,19 +970,22 @@ HMMV_DX_consistent:
                 and     eax,and_y
                 mov     pNY,eax
                 
-                ; check DY consistency
-                mov     eax,pDY
-                add     eax,pNY                        
-                cmp     eax,max_y
-                jbe     HMMV_DY_consistent
+;                test    byte ptr [offset vdpregs+45],1000b
+;                jnz     hmmv_cons
+;
+;                ; check direct consistency
+;                mov     eax,pDY
+;                add     eax,pNY
+;                cmp     eax,max_y
+;                jbe     hmmv_cons
+;
+;                mov     eax,max_y
+;                sub     eax,pDY
+;                mov     pNY,eax 
+;hmmv_cons:
+                CHECK_VERTICAL pDY,pNY 
 
-                mov     eax,max_y
-                sub     eax,pDY
-                mov     pNY,eax
-
-HMMV_DY_consistent:
-
-                ; check NY consistency
+                ; check NY consistency (checked in kyokugen for direct)
                 cmp     pNY,0
                 jne     HMMV_NY_consistent
 
@@ -1002,7 +1010,9 @@ HMMV_NY_consistent:
                 mov     cl,shift_low_x
                 shr     edx,cl
 
-                mov     ebp,size_hx
+                ;mov     ebp,size_hx
+                LOAD_Y_INCREMENT
+                
                 sub     ebp,edx
 
                 ; load the filling byte
@@ -1043,29 +1053,6 @@ vdp_command_HMMC:
                 and     eax,and_hx
                 mov     pNX,eax
 
-;                ; check NX consistency
-;                cmp     pNX,0
-;                jne     HMMC_NX_consistent
-;
-;                mov     pDX,0
-;                mov     pSY,0
-;                mov     eax,max_x
-;                mov     pNX,eax
-;
-;HMMC_NX_consistent:
-;
-;                ; check DX consistency
-;                mov     eax,pDX
-;                add     eax,pNX                        
-;                cmp     eax,max_x
-;                jbe     HMMC_DX_consistent
-;
-;                mov     eax,max_x
-;                sub     eax,pDX
-;                mov     pNX,eax
-;
-;HMMC_DX_consistent:
-
                 CHECK_HORIZONTAL_SIZE   
 
                 CHECK_HORIZONTAL pDX,pNX
@@ -1080,28 +1067,11 @@ vdp_command_HMMC:
                 and     eax,and_y
                 mov     pNY,eax
                 
-                ; check DY consistency
-;                mov     eax,pDY
-;                add     eax,pNY                        
-;                cmp     eax,max_y
-;                jbe     HMMC_DY_consistent
-;
-;                mov     eax,max_y
-;                sub     eax,pDY
-;                mov     pNY,eax
-;
-;HMMC_DY_consistent:
                 CHECK_VERTICAL pDY,pNY
 
                 ; check NY consistency
                 cmp     pNY,0
                 je      vdp_command_HMMC_exit
-
-;                mov     eax,max_y
-;                mov     pNY,eax
-;                mov     pDY,0
-;
-;HMMC_NY_consistent:
 
                 ; eval destination start addresses                
                 mov     edi,pDY
@@ -1169,7 +1139,7 @@ callback_HMMC:
 
 ; READ_PIXEL ---------------------------------------------------------
 ; read one pixel from VRAM
-; enter: edi = vram byte
+; enter: esi = vram byte
 ;        edx = select pixel
 ; exit:  al = pixel
 ; destroy edx
@@ -1450,10 +1420,6 @@ vdp_command_LMMM_exit:
 ; vdp_command_LMMV ---------------------------------------------------
 
 vdp_command_LMMV:
-                ; only DIX=0 and DIY=0 are supported by now
-                test    byte ptr [offset vdpregs+45],1100b
-                jnz     _ret
-
                 pushad
 
                 ; load DX
@@ -1467,27 +1433,10 @@ vdp_command_LMMV:
                 mov     pNX,eax
 
                 ; check NX consistency
-                cmp     pNX,0
-                jne     LMMV_NX_consistent
-
-                mov     pDX,0
-                mov     pSY,0
-                mov     eax,max_x
-                mov     pNX,eax
-
-LMMV_NX_consistent:
+                CHECK_HORIZONTAL_SIZE
 
                 ; check DX consistency
-                mov     eax,pDX
-                add     eax,pNX                        
-                cmp     eax,max_x
-                jbe     LMMV_DX_consistent
-
-                mov     eax,max_x
-                sub     eax,pDX
-                mov     pNX,eax
-
-LMMV_DX_consistent:
+                CHECK_HORIZONTAL pDX,pNX
 
                 ; load DY
                 movzx   eax,word ptr [offset vdpregs+38]
@@ -1500,16 +1449,7 @@ LMMV_DX_consistent:
                 mov     pNY,eax
                 
                 ; check DY consistency
-                mov     eax,pDY
-                add     eax,pNY                        
-                cmp     eax,max_y
-                jbe     LMMV_DY_consistent
-
-                mov     eax,max_y
-                sub     eax,pDY
-                mov     pNY,eax
-
-LMMV_DY_consistent:
+                CHECK_VERTICAL pDY,pNY
 
                 ; check NY consistency
                 cmp     pNY,0
@@ -1528,7 +1468,7 @@ LMMV_DY_consistent:
                 ; adjust the pixel counters
                 mov     al,byte ptr [offset vdpregs+44]
                 mov     ebp,pDX
-
+                
                 ; begin the transfer
                 mov     ebx,pNY
 vdp_command_LMMV_outer:
@@ -1542,19 +1482,33 @@ vdp_command_LMMV_inner:
                 WRITE_PIXEL 
                 pop     eax
 
+                test    byte ptr [offset vdpregs+45],100b
+                jnz     vdp_command_LMMV_left
+                
                 inc     ebp
                 test    ebp,shift_mask
                 jnz     vdp_command_LMMV_ebp
                 inc     edi
 vdp_command_LMMV_ebp:
+                jmp     vdp_command_LMMV_next
+
+vdp_command_LMMV_left:
+                test    ebp,shift_mask
+                jnz     vdp_command_LMMV_ebp2
+                dec     edi
+vdp_command_LMMV_ebp2:
+                dec     ebp
+vdp_command_LMMV_next:
+                
                 dec     ecx
                 jnz     vdp_command_LMMV_inner
 
                 pop     edi esi
 
+                LOAD_Y_INCREMENT
+                add     esi,ebp
+                add     edi,ebp
                 mov     ebp,pDX
-                add     esi,size_hx
-                add     edi,size_hx
 
                 dec     ebx
                 jnz     vdp_command_LMMV_outer
@@ -1715,12 +1669,12 @@ vdp_command_LMCM:
                 pushad
 
                 ; load DX
-                movzx   eax,word ptr [offset vdpregs+36]
+                movzx   eax,word ptr [offset vdpregs+32] ;;;
                 and     eax,and_x
                 mov     pDX,eax
                         
                 ; load NX
-                movzx   eax,word ptr [offset vdpregs+40]
+                movzx   eax,word ptr [offset vdpregs+40] 
                 and     eax,and_x
                 mov     pNX,eax
 
@@ -1748,7 +1702,7 @@ LMCM_NX_consistent:
 LMCM_DX_consistent:
 
                 ; load DY
-                movzx   eax,word ptr [offset vdpregs+38]
+                movzx   eax,word ptr [offset vdpregs+34] ;;;
                 and     eax,and_y
                 mov     pDY,eax
                 
@@ -1811,7 +1765,7 @@ vdp_command_LMCM_exit:
 
 callback_LMCM:
                 push    edi edx
-                mov     edi,save_POS
+                mov     esi,save_POS
                 mov     edx,save_XOFFSET
                 READ_PIXEL
                 mov     byte ptr [offset vdpregs+44],al
@@ -1821,8 +1775,8 @@ callback_LMCM:
                 mov     save_XOFFSET,edx
                 test    edx,shift_mask
                 jnz     callback_LMCM_edx
-                inc     edi
-                mov     save_POS,edi
+                inc     esi
+                mov     save_POS,esi
 callback_LMCM_edx:
                 pop     edx edi
 
@@ -1850,20 +1804,13 @@ callback_LMCM_edx:
 ; vdp_command_LINE ---------------------------------------------------
 
 vdp_command_LINE:
-                ; only DIX=0 and DIY=0 are supported by now
-                test    byte ptr [offset vdpregs+45],1100b
-                jnz     _ret
-
                 pushad
 
-                ; load NY (min)
+                ; load MIN
                 movzx   eax,word ptr [offset vdpregs+42]
-                mov     pNY,eax
+                and     eax,and_x
+                mov     pMIN,eax
                 
-                ; only vertical and horizontal lines are supported
-                cmp     eax,0
-                jne     vdp_command_LINE_exit
-
                 ; load DX
                 movzx   eax,word ptr [offset vdpregs+36]
                 and     eax,and_x
@@ -1874,33 +1821,25 @@ vdp_command_LINE:
                 and     eax,and_y
                 mov     pDY,eax
                 
-                ; load NX (max)
+                ; load MAX
                 movzx   eax,word ptr [offset vdpregs+40]
-                mov     pNX,eax
+                and     eax,and_x
+                mov     pMAX,eax
 
-                ; only horizontal lines by now
+                ; select major axis 
                 test    byte ptr [offset vdpregs+45],BIT_0
                 jnz     vdp_command_vLINE
-
+                
 vdp_command_hLINE:
-                ; check NX consistency
-                cmp     pNX,0
+                ; check MAX consistency
+                cmp     pMAX,0
                 je      vdp_command_LINE_exit
 
                 ; bugfix
-                inc     pNX
+                inc     pMAX
+                inc     pMIN
 
-                ; check DX consistency
-                mov     eax,pDX
-                add     eax,pNX                        
-                cmp     eax,max_x
-                jbe     hLINE_DX_consistent
-
-                mov     eax,max_x
-                sub     eax,pDX
-                mov     pNX,eax
-
-hLINE_DX_consistent:
+                CHECK_HORIZONTAL pDX,pMAX
 
                 ; eval destination start addresses                
                 mov     edi,pDY
@@ -1912,11 +1851,29 @@ hLINE_DX_consistent:
                 add     edi,eax
                 add     edi,msxvram
 
+                ; check MIN/MAX consistency
+                mov     eax,pMAX
+                cmp     eax,pMIN
+                jb      vdp_command_LINE_exit
+
+                ; evaluate the DDA factor
+                mov     eax,pMIN
+                shl     eax,16
+                ;add     eax,8000h   ; 0.5 in fixed point
+                mov     edx,0
+                mov     ebx,pMAX
+                div     ebx
+                mov     ebx,eax
+                mov     esi,0
+                mov     eax,0
+
                 ; adjust the pixel counters
                 mov     al,byte ptr [offset vdpregs+44]
                 mov     ebp,pDX
 
-                mov     ecx,pNX
+vdp_command_hLINE_start:      
+
+                mov     ecx,pMAX
 vdp_command_hLINE_inner:
 
                 push    eax
@@ -1924,11 +1881,40 @@ vdp_command_hLINE_inner:
                 WRITE_PIXEL
                 pop     eax
 
+                test    byte ptr [offset vdpregs+45],100b
+                jnz     vdp_command_hLINE_left
+                
                 inc     ebp
                 test    ebp,shift_mask
                 jnz     vdp_command_hLINE_ebp
                 inc     edi
 vdp_command_hLINE_ebp:
+                jmp     vdp_command_hLINE_next
+
+vdp_command_hLINE_left:
+                test    ebp,shift_mask
+                jnz     vdp_command_hLINE_ebp2
+                dec     edi
+vdp_command_hLINE_ebp2:
+                dec     ebp
+
+vdp_command_hLINE_next:
+                add     esi,ebx
+                test    esi,0FFFF0000h
+                jz      vdp_command_hLINE_continue
+                and     esi,0FFFFh
+                
+                ;add     edi,size_hx
+                test    byte ptr [offset vdpregs+45],1000b
+                jnz     vdp_command_hLINE_up
+                
+                add     edi,size_hx
+                jmp     vdp_command_hLINE_continue
+
+vdp_command_hLINE_up:
+                sub     edi,size_hx
+
+vdp_command_hLINE_continue:
                 dec     ecx
                 jnz     vdp_command_hLINE_inner
 
@@ -1937,24 +1923,16 @@ vdp_command_LINE_exit:
                 ret
 
 vdp_command_vLINE:
-                ; check NX consistency
-                cmp     pNX,0
+                ; check MAX consistency
+                cmp     pMAX,0
                 je      vdp_command_LINE_exit
 
                 ; bugfix
-                inc     pNX
+                inc     pMAX
+                inc     pMIN
 
-                ; check DY consistency
-                mov     eax,pDY
-                add     eax,pNX                        
-                cmp     eax,max_y
-                jbe     vLINE_DY_consistent
-
-                mov     eax,max_y
-                sub     eax,pDY
-                mov     pNX,eax
-
-vLINE_DY_consistent:
+                ; check pDY consistency
+                CHECK_VERTICAL pDY,pMAX
 
                 ; eval destination start addresses                
                 mov     edi,pDY
@@ -1966,11 +1944,27 @@ vLINE_DY_consistent:
                 add     edi,eax
                 add     edi,msxvram
 
+                ; check MIN/MAX consistency
+                mov     eax,pMAX
+                cmp     eax,pMIN
+                jb      vdp_command_LINE_exit
+                
+                ; evaluate the DDA factor
+                mov     eax,pMIN
+                shl     eax,16
+                ;add     eax,8000h   ; 0.5 in fixed point
+                mov     edx,0
+                mov     ebx,pMAX
+                div     ebx
+                mov     ebx,eax
+                mov     esi,0
+                mov     eax,0
+
                 ; adjust the pixel counters
                 mov     al,byte ptr [offset vdpregs+44]
                 mov     ebp,pDX
 
-                mov     ecx,pNX
+                mov     ecx,pMAX
 vdp_command_vLINE_inner:
 
                 push    eax
@@ -1978,7 +1972,41 @@ vdp_command_vLINE_inner:
                 WRITE_PIXEL 
                 pop     eax
 
+                test    byte ptr [offset vdpregs+45],1000b
+                jnz     vdp_command_vLINE_up
+                
                 add     edi,size_hx
+                jmp     vdp_command_vLINE_next
+
+vdp_command_vLINE_up:
+                sub     edi,size_hx
+
+vdp_command_vLINE_next:
+
+                add     esi,ebx
+                test    esi,0FFFF0000h
+                jz      vdp_command_vLINE_continue
+                and     esi,0FFFFh
+                
+                test    byte ptr [offset vdpregs+45],100b
+                jnz     vdp_command_vLINE_left
+                
+                inc     ebp
+                test    ebp,shift_mask
+                jnz     vdp_command_vLINE_ebp
+                inc     edi
+vdp_command_vLINE_ebp:
+                jmp     vdp_command_vLINE_continue
+
+vdp_command_vLINE_left:
+                test    ebp,shift_mask
+                jnz     vdp_command_vLINE_ebp2
+                dec     edi
+vdp_command_vLINE_ebp2:
+                dec     ebp
+
+
+vdp_command_vLINE_continue:
 
                 dec     ecx
                 jnz     vdp_command_vLINE_inner
@@ -2803,34 +2831,45 @@ render_screen6:
                 je      render_screen6_sizedown
 
                 mov     edi,adjustbuffer
-                mov     esi,nametable
+                mov     esi,first_line
+                shl     esi,7
+                lea     edi,[edi+esi*2]
+                add     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
+                mov     edx,esi
                 add     esi,eax
-                add     esi,msxvram
-                mov     ecx,212
+                and     edx,0FFFF8000h
+                and     esi,000007FFFh
+                or      esi,edx
+                
+                mov     ebp,msxvram
+                mov     ecx,last_line
+                sub     ecx,first_line
+                inc     ecx
                 mov     eax,0
 
 render_screen6_outer:
+                push    ecx
                 mov     edx,128/4
 
 render_screen6_inner:
-                mov     ebx,dword ptr [esi]
+                mov     ebx,dword ptr [esi+ebp]
                 add     esi,4
 
                 mov     al,bh
-                mov     ebp,dword ptr [offset screen6_table+eax*4]
-                mov     [edi+4],ebp
+                mov     ecx,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+4],ecx
                 mov     al,bl
-                mov     ebp,dword ptr [offset screen6_table+eax*4]
-                mov     [edi+0],ebp
+                mov     ecx,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+0],ecx
                 shr     ebx,16
                 mov     al,bh
-                mov     ebp,dword ptr [offset screen6_table+eax*4]
-                mov     [edi+12],ebp
+                mov     ecx,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+12],ecx
                 mov     al,bl
-                mov     ebp,dword ptr [offset screen6_table+eax*4]
-                mov     [edi+8],ebp
+                mov     ecx,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+8],ecx
                 add     edi,16
 
                 dec     edx
@@ -2844,6 +2883,7 @@ render_screen6_inner:
                 and     esi,000007FFFh
                 or      esi,edx
 
+                pop     ecx
                 dec     ecx
                 jnz     render_screen6_outer
 
@@ -2852,13 +2892,6 @@ render_screen6_inner:
                 ret
 
 render_screen6_sizedown:
-                ;mov     edi,adjustbuffer
-                ;mov     esi,nametable
-                ;movzx   eax,byte ptr [offset vdpregs+23]
-                ;shl     eax,7
-                ;add     esi,eax
-                ;mov     ebp,msxvram
-                ;mov     ecx,212
                 mov     edi,adjustbuffer
                 mov     esi,first_line
                 shl     esi,7

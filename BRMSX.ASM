@@ -80,7 +80,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 2.3',13,10
+msg00           db      'BrMSX 2.4',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -104,7 +104,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 2.3',13,10
+msg22           db      'BrMSX 2.4',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -3013,14 +3013,14 @@ read_msx_rom_msx2:
                 mov     dword ptr [offset mem+7*4],eax
                 mov     dword ptr [offset memlock+7*4],EXTENDED_SLOT
                 
-                ; allocate 16kb to msx2ext rom
-                mov     eax,16384
+                ; allocate 32kb to msx2ext rom
+                mov     eax,32768
                 call    _getmem
                 jc      no_memory
                 mov     msxextrom,eax
 
                 ; place msx2ext in slot 0.1 (page 0)
-                irp     i,<0,1>
+                irp     i,<0,1,2,3>
                 mov     dword ptr [offset extended_slot_0+8*4*2+i*8],eax
                 add     eax,2000h
                 endm
@@ -3030,15 +3030,15 @@ read_msx_rom_msx2:
                 call    open_file
                 jc      msx2ext_rom_error
                 call    read_size_file
-                cmp     eax,04000h
-                jne     msx2ext_rom_error
+                ;cmp     eax,04000h
+                ;jne     msx2ext_rom_error
                 mov     edx,transf_buffer
-                mov     ecx,16384
+                mov     ecx,32768 ;;;16384
                 call    read_file
                 call    close_file
                 mov     edi,msxextrom
                 mov     esi,transf_buffer
-                mov     ecx,16384/4
+                mov     ecx,32768/4 ;;;;16384/4
                 rep     movsd
 
                 ; set the new VDP I/O ports
