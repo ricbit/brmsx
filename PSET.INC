@@ -15,7 +15,7 @@ pset:
 	pset0D: dd prinXX
 	pset0E: dd prinXX
 	pset0F: dd prinXX
-	pset10: dd prinXX
+	pset10: dd prin10
 	pset11: dd prin11
 	pset12: dd prinXX
 	pset13: dd prinXX
@@ -24,7 +24,7 @@ pset:
 	pset16: dd prinXX
 	pset17: dd prinXX
 	pset18: dd prinXX
-	pset19: dd prinXX
+	pset19: dd prin19
 	pset1A: dd prinXX
 	pset1B: dd prinXX
 	pset1C: dd prinXX
@@ -33,7 +33,7 @@ pset:
 	pset1F: dd prinXX
 	pset20: dd prin20
 	pset21: dd prin21
-	pset22: dd prinXX
+	pset22: dd prin22
 	pset23: dd prinXX
 	pset24: dd prin24
 	pset25: dd prin25
@@ -42,13 +42,13 @@ pset:
 	pset28: dd prin28
 	pset29: dd prinXX
 	pset2A: dd prinXX
-	pset2B: dd prinXX
+	pset2B: dd prin2B
 	pset2C: dd prinXX
 	pset2D: dd prinXX
 	pset2E: dd prin2E
 	pset2F: dd prin2F
 	pset30: dd prin30
-	pset31: dd prinXX
+	pset31: dd prin31
 	pset32: dd prin32
 	pset33: dd prinXX
 	pset34: dd prinXX
@@ -86,7 +86,7 @@ pset:
 	pset54: dd prinXX
 	pset55: dd prinXX
 	pset56: dd prinXX
-	pset57: dd prinXX
+	pset57: dd prin57
 	pset58: dd prinXX
 	pset59: dd prinXX
 	pset5A: dd prinXX
@@ -94,7 +94,7 @@ pset:
 	pset5C: dd prinXX
 	pset5D: dd prinXX
 	pset5E: dd prinXX
-	pset5F: dd prinXX
+	pset5F: dd prin5F
 	pset60: dd prinXX
 	pset61: dd prinXX
 	pset62: dd prinXX
@@ -158,7 +158,7 @@ pset:
 	pset9C: dd prinXX
 	pset9D: dd prinXX
 	pset9E: dd prinXX
-	pset9F: dd prinXX
+	pset9F: dd prin9F
 	psetA0: dd prinXX
 	psetA1: dd prinXX
 	psetA2: dd prinXX

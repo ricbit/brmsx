@@ -85,7 +85,7 @@ isetEDxx:
 	isetED53: dd emulXX
 	isetED54: dd emulXX
 	isetED55: dd emulXX
-	isetED56: dd emulXX
+	isetED56: dd emulED56
 	isetED57: dd emulXX
 	isetED58: dd emulXX
 	isetED59: dd emulXX

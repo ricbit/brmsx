@@ -85,7 +85,7 @@ psetEDxx:
 	psetED53: dd prinXX
 	psetED54: dd prinXX
 	psetED55: dd prinXX
-	psetED56: dd prinXX
+	psetED56: dd prinED56
 	psetED57: dd prinXX
 	psetED58: dd prinXX
 	psetED59: dd prinXX

@@ -12,3 +12,4 @@ brmsx.exe : $(OBJECTS)
 clean :
 	del *.o
 	del *.exe
+	del *.lst

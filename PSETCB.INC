@@ -24,7 +24,7 @@ psetCBxx:
 	psetCB16: dd prinXX
 	psetCB17: dd prinXX
 	psetCB18: dd prinXX
-	psetCB19: dd prinXX
+	psetCB19: dd prinCB19
 	psetCB1A: dd prinXX
 	psetCB1B: dd prinXX
 	psetCB1C: dd prinXX
