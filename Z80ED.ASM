@@ -19,6 +19,9 @@ public isetEDxx
 
 ; --------------------------------------------------------------------
 
+; ED 40 - IN B,(C)
+INREG           ED40,regb
+
 ; ED 41 - OUT (C),B
 OUTCREG         ED41,regb
 
@@ -42,6 +45,9 @@ emulED43:       inc     edi
 ; ED 44 - NEG
 OPNEG           ED44
 
+; ED 48 - IN C,(C)
+INREG           ED48,regc
+
 ; ED 49 - OUT (C),C
 OUTCREG         ED49,regc
 
@@ -64,6 +70,9 @@ emulED4B:       inc     edi
 
 ; ED 4D - RETI
 emulED4D:       jmp     emulC9
+
+; ED 50 - IN D,(C)
+INREG           ED50,regd
 
 ; ED 51 - OUT (C),D
 OUTCREG         ED51,regd
@@ -93,6 +102,9 @@ emulED56:       inc     edi
 ; ED 57 - LD A,I
 LDAI            ED57
 
+; ED 58 - IN E,(C)
+INREG           ED58,rege
+
 ; ED 59 - OUT (C),E
 OUTCREG         ED59,rege
 
@@ -116,6 +128,9 @@ emulED5B:       inc     edi
 ; ED 5F - LD A,R
 LDAR            ED5F    
 
+; ED 60 - IN H,(C)
+INREG           ED60,regh
+
 ; ED 61 - OUT (C),H
 OUTCREG         ED61,regh
 
@@ -124,6 +139,9 @@ SBCHLWREG       ED62,regl,regh
 
 ; ED 67 - RRD
 OPRRD           ED67
+
+; ED 68 - IN L,(C)
+INREG           ED68,regl
 
 ; ED 69 - OUT (C),L
 OUTCREG         ED69,regl
@@ -152,18 +170,7 @@ emulED73:       inc     edi
                 ret
 
 ; ED 78 - IN A,(C)
-emulED78:       inc     edi
-                mov     al,regc
-                call    [offset inportxx+eax*4]
-                mov     dh,bl
-                or      dh,dh
-                pushfd
-                pop     ecx
-                and     dl,00000001b
-                and     cl,11111100b
-                or      dl,cl
-                mov     ebp,12
-                ret
+INREG           ED78,dh
 
 ; ED 79 - OUT (C),A
 OUTCREG         ED79,dh

@@ -226,7 +226,7 @@ psetDDxx:
 	psetDDE0: dd prinXX
 	psetDDE1: dd prinDDE1
 	psetDDE2: dd prinXX
-	psetDDE3: dd prinXX
+	psetDDE3: dd prinDDE3
 	psetDDE4: dd prinXX
 	psetDDE5: dd prinDDE5
 	psetDDE6: dd prinXX

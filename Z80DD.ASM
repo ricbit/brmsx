@@ -194,6 +194,23 @@ emulDDE1:       inc     edi
                 mov     ebp,14
                 ret
 
+; DD E3 - EX (SP),IX
+emulDDE3:       inc     edi
+                mov     ecx,regesp
+                call    readmem
+                mov     bl,regixl
+                mov     regixl,al
+                mov     al,bl
+                call    writemem
+                inc     cx
+                call    readmem
+                mov     bl,regixh
+                mov     regixh,al
+                mov     al,bl
+                call    writemem
+                mov     ebp,23
+                ret
+
 ; DD E5 - PUSH IX
 emulDDE5:       inc     edi
                 mov     ecx,regesp

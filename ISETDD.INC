@@ -226,7 +226,7 @@ isetDDxx:
 	isetDDE0: dd emulXX
 	isetDDE1: dd emulDDE1
 	isetDDE2: dd emulXX
-	isetDDE3: dd emulXX
+	isetDDE3: dd emulDDE3
 	isetDDE4: dd emulXX
 	isetDDE5: dd emulDDE5
 	isetDDE6: dd emulXX

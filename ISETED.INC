@@ -63,7 +63,7 @@ isetEDxx:
 	isetED3D: dd emulXX
 	isetED3E: dd emulXX
 	isetED3F: dd emulXX
-	isetED40: dd emulXX
+	isetED40: dd emulED40
 	isetED41: dd emulED41
 	isetED42: dd emulED42
 	isetED43: dd emulED43
@@ -71,7 +71,7 @@ isetEDxx:
 	isetED45: dd emulXX
 	isetED46: dd emulXX
 	isetED47: dd emulXX
-	isetED48: dd emulXX
+	isetED48: dd emulED48
 	isetED49: dd emulED49
 	isetED4A: dd emulED4A
 	isetED4B: dd emulED4B
@@ -79,7 +79,7 @@ isetEDxx:
 	isetED4D: dd emulED4D
 	isetED4E: dd emulXX
 	isetED4F: dd emulXX
-	isetED50: dd emulXX
+	isetED50: dd emulED50
 	isetED51: dd emulED51
 	isetED52: dd emulED52
 	isetED53: dd emulED53
@@ -87,7 +87,7 @@ isetEDxx:
 	isetED55: dd emulXX
 	isetED56: dd emulED56
 	isetED57: dd emulED57
-	isetED58: dd emulXX
+	isetED58: dd emulED58
 	isetED59: dd emulED59
 	isetED5A: dd emulED5A
 	isetED5B: dd emulED5B
@@ -95,7 +95,7 @@ isetEDxx:
 	isetED5D: dd emulXX
 	isetED5E: dd emulXX
 	isetED5F: dd emulED5F
-	isetED60: dd emulXX
+	isetED60: dd emulED60
 	isetED61: dd emulED61
 	isetED62: dd emulED62
 	isetED63: dd emulXX
@@ -103,7 +103,7 @@ isetEDxx:
 	isetED65: dd emulXX
 	isetED66: dd emulXX
 	isetED67: dd emulED67
-	isetED68: dd emulXX
+	isetED68: dd emulED68
 	isetED69: dd emulED69
 	isetED6A: dd emulED6A
 	isetED6B: dd emulXX

@@ -1567,13 +1567,7 @@ emulDAa:        add     edi,3
                 ret
 
 ; DB - IN A,(dd)
-emulDB:         inc     edi
-                call    fetch
-                inc     edi
-                call    [offset inportxx+eax*4]
-                mov     dh,bl
-                mov     ebp,11
-                ret
+INADD           DB
 
 ; DC - CALL C,dddd 
 emulDC:         test    dl,CARRY_FLAG
@@ -1654,7 +1648,7 @@ emulE3:         inc     edi
                 mov     regh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,8
+                mov     ebp,13
                 ret
 
 ; E4 - CALL PO,dddd

@@ -397,6 +397,43 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; INADD - IN A,(dd) 
+
+INADD           macro   opcode
+
+emul&opcode:
+                inc     edi
+                call    fetch
+                inc     edi
+                call    [offset inportxx+eax*4]
+                and     ebx,0ffh
+                and     dl,1
+                mov     dh,bl
+                or      dl,[offset LOGICAL_table+ebx]
+                mov     ebp,11
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; INREG - IN rr,(C) 
+
+INREG           macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                and     ebx,0ffh
+                and     dl,1
+                mov     reg,bl
+                or      dl,[offset LOGICAL_table+ebx]
+                mov     ebp,12
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; INCREG - INC rr rr=[a,b,c,d,e,h,l]
 
 INCREG          macro   opcode,reg
