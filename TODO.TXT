@@ -9,5 +9,6 @@
 - finish the compiler
 - fix X-sprite cropping
 - noise/envelope in sound
-- add options to select sb addr/irq/dma
+- add clock-perfect sound sync
 - optimize sound composing functions
+- fix save-load game

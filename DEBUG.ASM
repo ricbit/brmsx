@@ -19,6 +19,7 @@ include bit.inc
 include compiler.inc
 include serial.inc
 include psg.inc
+include mouse.inc
 
 include debugsrc.inc
 include helpsrc.inc

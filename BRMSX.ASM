@@ -36,8 +36,8 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.74',13,10
-                db      'Copyright (C) 1997 by Ricardo Bittencourt'
+msg00           db      'BrMSX 1.84',13,10
+                db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -68,7 +68,7 @@ cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
 blasterenv      db      'BLASTER',0
 addrstr         db      3 dup (0)
-emptyspace      db      128 dup (32),'$'
+emptyspace      db      128 dup (0)
 
 align 4
 
@@ -185,6 +185,8 @@ main_getdma2:
                 jc      no_memory
                 mov     transf_buffer,eax
                 
+                call    parse_command_line
+
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem
@@ -242,7 +244,7 @@ _main0:
                 mov     dword ptr [offset slot2+56],eax
 
                 ; read cartridge 1 from disk
-                mov     edx,offset cart1_name
+                mov     edx,offset emptyspace
                 call    open_file
                 jc      _main2
                 call    read_size_file
@@ -381,10 +383,6 @@ _main_dontmeasure:
                 mov     eax,offset msg13
                 call    printmsg
 _main_nomouse:
-
-                ;mov     esi,82h
-                ;add     esi,_pspa
-                ;sub     esi,_code32a
 
                 call    search_blaster
                 jc      blaster_not_found
@@ -557,6 +555,15 @@ parse_blaster_loop_I:
 parse_blaster_found_I:
                 movzx   eax,byte ptr [esi+1]
                 sub     eax,'0'
+                movzx   ebx,byte ptr [esi+2]
+                cmp     ebx,'0'
+                jb      parse_blaster_write_I
+                cmp     ebx,'9'
+                ja      parse_blaster_write_I
+                lea     eax,[eax+eax*4]
+                lea     eax,[ebx+eax*2]
+                sub     eax,'0'
+parse_blaster_write_I:
                 mov     sbirq,eax
                 
                 mov     esi,edi
@@ -580,7 +587,37 @@ parse_blaster_found_D:
 parse_blaster_string_error:
                 stc
                 ret
+                
+; parse_command_line -------------------------------------------------
+; parse the command line and retrieve the correct ROM name
+                
+                
+parse_command_line:                
+                mov     esi,81h
+                add     esi,_pspa
+                sub     esi,_code32a
+                movzx   ecx,byte ptr [esi-1]
+                
+parse_command_line_find:
+                or      ecx,ecx
+                jz      parse_command_line_none
+                cmp     byte ptr [esi],32
+                ja      parse_command_line_arg
+                dec     ecx
+                inc     esi
+                jmp     parse_command_line_find
 
+parse_command_line_arg:
+                mov     edi,offset emptyspace
+
+parse_command_line_arg_loop:
+                movsb   
+                cmp     byte ptr [esi],32
+                ja      parse_command_line_arg_loop
+
+parse_command_line_none:
+                ret
+                
 code32          ends
                 end
 

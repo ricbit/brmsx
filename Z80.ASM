@@ -769,11 +769,7 @@ EMULABEL        continue,emtype,brtype
                 cmp     vsyncflag,1
                 JUMP    jne,vsyncskip,emtype,brtype
 
-                mov     edx,03DAh
-EMULABEL        vsync,emtype,brtype
-                in      al,dx
-                test    al,BIT_3
-                JUMP    jz,vsync,emtype,brtype
+                call    wait_vsync
 
 EMULABEL        vsyncskip,emtype,brtype
                 

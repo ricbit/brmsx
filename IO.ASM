@@ -20,6 +20,7 @@ include z80.inc
 include bit.inc
 include blit.inc
 include psg.inc
+include mouse.inc
 
 public printmsg
 public printasc
@@ -62,6 +63,7 @@ public cpupaused
 public gui_palette
 public fill_palette
 public palette
+public wait_vsync
 
 ; DATA ---------------------------------------------------------------
 
@@ -213,6 +215,18 @@ gethex4:
                 mov     eax,ecx
                 ret
 
+; wait_vsync ----------------------------------------------------------
+; wait for vertical retrace
+                
+wait_vsync:                
+                mov     edx,03DAh
+wait_vsync_loop:                
+                in      al,dx
+                test    al,BIT_3
+                jz      wait_vsync_loop
+
+                ret
+
 ; toupper -------------------------------------------------------------
 ; upcase a char
 ; in/out = al
@@ -267,22 +281,12 @@ setgraphmode:
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
-;                mov     al,0
-;                mov     dx,03C8h
-;                out     dx,al
-;                inc     dx
-;                mov     ebx,offset palette
-;                mov     ecx,16*3
-;setgraphmode1:  
-;                mov     al,[ebx]
-;                shr     al,2
-;                out     dx,al
-;                inc     ebx
-;                loop    setgraphmode1
 
                 mov     ebx,offset palette
                 mov     ecx,16
                 call    fill_palette
+
+                call    set_mouse_range
 
                 cmp     videomode,0
                 je      _ret

@@ -82,12 +82,24 @@ void main (void) {
 
   /* logo generator */
   
+  /*
   printf ("logo_bitmap:\n");
   for (j=132; j<=189; j++)
     for (i=4; i<=92; i++)
       printf ("\tdb\t%d\n",(b=getpixel (screen,i,j)+212)==221?0:b);
-  
+  */  
 
+  /* cursor generator */
+
+  printf ("cursor_bitmap:\n");
+  for (j=171; j<=171+16; j++)
+    for (i=109; i<=109+50; i++) {
+      printf ("\tdb\t%d\n",(b=getpixel (screen,i,j)+212)==221?0:b);
+      putpixel (screen,i,j,212);
+    }
+
+  getch ();
+  
   set_gfx_mode (GFX_TEXT,80,24,80,24);
   allegro_exit ();
 

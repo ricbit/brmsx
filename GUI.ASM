@@ -14,6 +14,7 @@ include io.inc
 include number.inc
 include vdp.inc
 include blit.inc
+include mouse.inc
 
 extrn blitbuffer: dword
 
@@ -34,7 +35,11 @@ public start_gui
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
+include alf.inc
 include logo.inc
+include cursor.inc
 
 align 4
 
@@ -65,6 +70,10 @@ guinumber       dd      0
 psgnumber       dd      0
 
 framenumber     dd      0
+
+msg_reset       db      'Reset',0
+msg_load_cart   db      'Load Cart',0
+msg_options     db      'Options',0
 
 ; CODE ---------------------------------------------------------------
 
@@ -284,47 +293,26 @@ evalcounter:
 ; start the gui
 
 start_gui:
-                ; update palette
+                call    clear
                 
+                ; update palette
                 mov     ebx,offset gui_palette
                 mov     ecx,256
                 call    fill_palette
-
                 mov     firstscreen,1
-                call    render
-                call    sprite_render
-
-                ; draw logo
-
-                mov     edi,135*256
-                add     edi,blitbuffer
-                mov     esi,offset logo_bitmap
-                mov     ecx,57
-
-start_gui_drawlogo:
-                mov     ebx,89
-
-start_gui_drawlogo_loop:
-                mov     al,[esi]
-                or      al,al
-                jz      start_gui_drawlogo_next
-
-                mov     [edi],al
-
-start_gui_drawlogo_next:
-                inc     edi
-                inc     esi
-                dec     ebx
-                jnz     start_gui_drawlogo_loop
-
-                add     edi,256-89
-                dec     ecx
-                jnz     start_gui_drawlogo
-
-                call    set_border_color_dark
-                call    blit
 
 start_gui_loop:
+                call    dirty_mouse
+                call    render
+                call    sprite_render
+                call    draw_logo
+                call    draw_main_menu
+                call    read_mouse
+                call    dirty_mouse
+                call    draw_mouse_cursor
+                call    wait_vsync
+                call    set_border_color_dark
+                call    blit
                 cmp     cpupaused,1
                 je      start_gui_loop
                 
@@ -334,6 +322,203 @@ start_gui_loop:
                 call    fill_palette
 
                 ret
+
+; draw_logo ----------------------------------------------------------
+; draw the brmsx logo
+
+draw_logo:
+                mov     edi,135*256
+                add     edi,blitbuffer
+                mov     esi,offset logo_bitmap
+                mov     ecx,57
+
+draw_gui_drawlogo:
+                mov     ebx,89
+
+draw_gui_drawlogo_loop:
+                mov     al,[esi]
+                or      al,al
+                jz      draw_gui_drawlogo_next
+
+                mov     [edi],al
+
+draw_gui_drawlogo_next:
+                inc     edi
+                inc     esi
+                dec     ebx
+                jnz     draw_gui_drawlogo_loop
+
+                add     edi,256-89
+                dec     ecx
+                jnz     draw_gui_drawlogo
+
+                ret
+
+; draw_mouse_cursor --------------------------------------------------
+; draw the mouse cursor
+
+draw_mouse_cursor:
+                
+                mov     edi,mousey
+                shl     edi,8
+                add     edi,mousex
+                add     edi,blitbuffer
+                mov     esi,offset cursor_bitmap
+                mov     ecx,17
+
+draw_cursor:
+                mov     ebx,51
+
+draw_cursor_loop:
+                mov     al,[esi]
+                or      al,al
+                jz      draw_cursor_next
+
+                mov     [edi],al
+
+draw_cursor_next:
+                inc     edi
+                inc     esi
+                dec     ebx
+                jnz     draw_cursor_loop
+
+                add     edi,256-51
+                dec     ecx
+                jnz     draw_cursor
+
+                ret
+
+; dirty_mouse --------------------------------------------------------
+; turn the screen behind the cursor dirty
+
+dirty_mouse:
+                mov     eax,mousey
+                shr     eax,3
+                shl     eax,5
+                mov     ebx,mousex
+                shr     ebx,3
+                add     eax,ebx
+                add     eax,offset dirtyname
+                mov     dword ptr [eax],01010101h
+                mov     dword ptr [eax+4],01010101h
+                mov     dword ptr [eax+32],01010101h
+                mov     dword ptr [eax+4+32],01010101h
+                mov     dword ptr [eax+64],01010101h
+                mov     dword ptr [eax+4+64],01010101h
+                ret
+
+; draw_main_menu -----------------------------------------------------
+; draw the main menu
+
+draw_main_menu:
+                mov     eax,0808h
+                mov     ebx,7849h
+                call    draw_box
+
+                mov     eax,offset msg_reset
+                mov     ebx,1010h
+                call    printgr
+                
+                mov     eax,offset msg_load_cart
+                mov     ebx,1810h
+                call    printgr
+
+                mov     eax,offset msg_options
+                mov     ebx,2010h
+                call    printgr
+
+                ret
+
+; draw_box -----------------------------------------------------------
+; draw a box window
+; enter ah=y coord al=x coord   
+;       bh=y size  bl=x size
+
+draw_box:
+                movzx   edi,ax
+                add     edi,blitbuffer
+                mov     esi,edi
+                movzx   edx,bh
+                movzx   ecx,bl
+
+draw_box_loop:
+                mov     al,0F0h
+                rep     stosb
+                movzx   ecx,bl
+                add     edi,256
+                sub     edi,ecx
+                dec     edx
+                jnz     draw_box_loop
+
+                ; draw the orange lines
+                lea     edi,[esi+1+256]
+                movzx   ecx,bl
+                mov     esi,ecx
+                sub     ecx,2
+                mov     al,0E4h
+                rep     stosb
+                
+                add     edi,256
+                sub     edi,esi
+                movzx   edx,bh
+                sub     edx,4
+                movzx   ecx,bl
+                sub     ecx,2
+
+draw_box_line_loop:
+                mov     byte ptr [edi+2],al
+                mov     byte ptr [edi+ecx+1],al
+                add     edi,256
+                dec     edx
+                jnz     draw_box_line_loop
+
+                add     edi,2
+                rep     stosb
+                
+                ret
+
+; printgr ------------------------------------------------------------
+; print a string the blit buffer
+; enter: eax -> offset of the message (ASCIIZ)
+;        bh = y coord , bl = x coord
+
+printgr:
+                movzx   edi,bx
+                add     edi,blitbuffer
+
+printgr_loop:
+
+                movzx   edx,byte ptr [eax]
+                or      edx,edx
+                jz      _ret
+
+                shl     edx,6
+                add     edx,offset alf_pattern
+
+                mov     esi,0FAFAFAFAh ; white
+
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                mov     ecx,[edx+i*8]
+                mov     ebp,ecx
+                xor     ecx,0FFFFFFFFh
+                and     [edi+i*256],ecx
+                and     ebp,esi
+                or      [edi+i*256],ebp
+
+                mov     ecx,[edx+i*8+4]
+                mov     ebp,ecx
+                xor     ecx,0FFFFFFFFh
+                and     [edi+i*256+4],ecx
+                and     ebp,esi
+                or      [edi+i*256+4],ebp
+
+                endm
+
+                inc     eax
+                add     edi,6
+                jmp     printgr_loop
+
 
 code32          ends
                 end
