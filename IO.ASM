@@ -83,6 +83,8 @@ public filtered_palette_green
 public gui_palette_green
 public wait_next_vsync
 public adjust_clock
+public oldmode
+public fastforward 
 
 ; DATA ---------------------------------------------------------------
 
@@ -134,6 +136,10 @@ measurestatus   dd      0
 measureend      dd      0
 
 bargraphmode    dd      0
+
+oldmode         dd      0
+fastforward     dd      0
+forwardlock     dd      0
 
 msg00           db      13,10,'$'
 
@@ -1096,6 +1102,9 @@ my_kb_irq_handler1:
                 cmp     al,88
                 je      my_kb_irq_handler_f12
 
+                cmp     al,69
+                je      my_kb_irq_handler_numlock
+
                 cmp     al,78
                 je      my_kb_irq_handler_keypadplus
 
@@ -1116,6 +1125,9 @@ my_kb_irq_handler1:
 
                 cmp     al,77+128
                 je      my_kb_irq_handler_right_released
+
+                cmp     al,69+128
+                je      my_kb_irq_handler_numlock_released
 
                 cmp     al,57
                 je      my_kb_irq_handler_spacebar
@@ -1216,6 +1228,19 @@ my_kb_irq_handler_right_released:
                 jz      my_kb_irq_handler_generic_key
                 or      autorun,BIT_2
                 jmp     my_kb_irq_handler_generic_key
+
+my_kb_irq_handler_numlock:
+                cmp     forwardlock,1
+                je      my_kb_irq_handler_exit       
+                mov     oldmode,2
+                mov     fastforward,1
+                mov     forwardlock,1
+                jmp     my_kb_irq_handler_exit       
+
+my_kb_irq_handler_numlock_released:
+                mov     fastforward,1
+                mov     forwardlock,0
+                jmp     my_kb_irq_handler_exit       
 
 my_kb_irq_handler_extended:
                 cmp     al,75

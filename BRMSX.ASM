@@ -61,7 +61,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.150',13,10
+msg00           db      'BrMSX 1.152',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -85,7 +85,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.150',13,10
+msg22           db      'BrMSX 1.152',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -149,6 +149,8 @@ help_message2   db      13
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
+                db      '-fmpac         enable FM-PAC sound (MSX Music)'
+                db      13,10
                 db      '-speaker       sound through the PC speaker',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
@@ -168,9 +170,9 @@ help_message2   db      13
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
-                db      '-server        computer is server',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
                 db      '-nopentium     disable pentium extensions and '
@@ -1451,14 +1453,17 @@ callback_noenter:
 
 callback_normal:
                 mov     emulatemode,0
+                mov     oldmode,0
                 ret
 
 callback_fast:
                 mov     emulatemode,1
+                mov     oldmode,1
                 ret
 
 callback_turbo:
                 mov     emulatemode,2
+                mov     oldmode,2
                 ret
 
 callback_noled:

@@ -1,4 +1,7 @@
-paranoia
+Paranoia MSX emulator test
+
+The softwares below tests all undocumented/hard to emulate MSX features
+
 
 Z80 related
 
@@ -24,7 +27,7 @@ VDP related
 
 - 16x16 zoomed sprites
   Rambo
-  Hundra
+  Valis
 
 - 5th sprite ocultation
   Parodius
@@ -35,7 +38,6 @@ VDP related
 
 - Undocumented feature of registers 3 and 4
   Thing Bounces Back  
-  Like
 
 - Undocumented feature in register reading/writing  
   Teenage Mutant Hero Turtles

@@ -71,6 +71,9 @@ DOS_ENGINE      EQU     0
 WIN_ENGINE      EQU     1
 MMX_ENGINE      EQU     2
 
+BITMASK_YES     EQU     0
+BITMASK_NO      EQU     1
+
 enabled         dd      1
 linenumber      dd      0
 stacksave       dd      0
@@ -111,6 +114,7 @@ spritemask      db      192 dup (01Fh)
 spritecounter   db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
+bitmask         db      0
 enginetype      dd      DOS_ENGINE
 
 ; render_screen0 -----------------------------------------------------
@@ -390,11 +394,16 @@ render11:       push    ebp
 ; PIPE2_DOS ----------------------------------------------------------
 ; this is the inner loop for render_screen2 function
 
-PIPE2_DOS       macro
+PIPE2_DOS       macro   bitmask_type
                 
                 mov     ecx,colorsave
                 
                 lea     ebx,[ebx+eax*8] 
+
+                if      bitmask_type EQ BITMASK_YES
+                and     al,bitmask
+                endif
+
                 lea     eax,[ecx+eax*8] 
 
                 ; fetch the pattern for that subline
@@ -437,9 +446,14 @@ PIPE2_DOS       macro
 ; this is the inner loop for render_screen2 function
 ; it uses the MMX instructions for better performance
 
-PIPE2_MMX       macro
+PIPE2_MMX       macro   bitmask_type
 
                 lea     esi,[ebx+eax*8]
+
+                if      bitmask_type EQ BITMASK_YES
+                and     al,bitmask
+                endif
+
                 lea     ebp,[ecx+eax*8]
                 mov     eax,0
                 
@@ -580,9 +594,9 @@ render2d_draw:
                 mov     ebx,patternsave
 
                 if      (videoengine EQ DOS_ENGINE)
-                  PIPE2_DOS
+                  PIPE2_DOS BITMASK_NO
                 else
-                  PIPE2_MMX
+                  PIPE2_MMX BITMASK_NO
                 endif
 
                 pop     edx
@@ -704,9 +718,9 @@ render21:
                 push    ebx
 
                 if (videoengine EQ DOS_ENGINE)
-                  PIPE2_DOS
+                  PIPE2_DOS BITMASK_YES
                 else
-                  PIPE2_MMX
+                  PIPE2_MMX BITMASK_YES
                 endif
 
                 add     edi,8
@@ -2130,6 +2144,19 @@ eval_base_address_begin:
                 mov     scr2inc,eax
                 mov     scr2inc_color,eax
 
+                ; perform undocumented correction in color table
+                ; used in the "atselous" demo
+                mov     al,byte ptr [offset vdpregs+3]
+                and     al,3
+                mov     bitmask,al
+                
+                mov     al,byte ptr [offset vdpregs+3]
+                shr     al,2
+                and     al,7
+                shl     al,5
+                or      al,00011100b
+                or      bitmask,al
+
                 ; check for the undocumented feature in image table
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,3
@@ -2146,14 +2173,14 @@ eval_base_address_begin:
 eval_base_address_scr2_check_color:
                 ; check for the undocumented feature in color table
                 movzx   eax,byte ptr [offset vdpregs+3]
-                shr     eax,5
-                and     eax,3
-                cmp     eax,3
+                and     eax,127
+                cmp     eax,127
                 je      eval_base_address_scr2_doc
 
                 ; undocumented mode is on
                 mov     everyframe,1
 
+                shr     eax,5
                 lea     eax,[eax+eax*2]
                 lea     ecx,[offset scr2undoc_table+eax*4]
                 mov     scr2inc_color,ecx
@@ -2186,7 +2213,7 @@ eval_base_address_scr1:
                 movzx   eax,byte ptr [offset vdpregs+3]
                 shl     eax,6
                 mov     colortable,eax
-
+                
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     al,07h
                 shl     eax,11

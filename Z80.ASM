@@ -1865,7 +1865,9 @@ outemul8E_page2:
 
 ; --------------------------------------------------------------------
 
-outemul98:      mov     esi,msxvram
+outemul98:      
+                mov     vdpcond,0
+                mov     esi,msxvram
                 mov     eax,vdpaddresse
                 mov     ecx,eax
                 inc     eax
@@ -2164,6 +2166,7 @@ inemul98:       mov     ecx,msxvram
                 and     esi,03FFFh
                 mov     vdpaddresse,esi
                 mov     vdplookahead,bh
+                mov     vdpcond,0
                 ret
 
 ; --------------------------------------------------------------------

@@ -1,8 +1,8 @@
 BrMSX 1.150
-by Ricardo Bittencourt
+Copyright (C) 1997,1998 by Ricardo Bittencourt
 
-The user's manual for version v1.150 is 
-available in English and Portuguese.
+The user's manual is available in English and Portuguese
+In the official homepage you can download translated
+version to Spanish, French and Italian
 
-Versions in French and Spanish will be 
-available soon in the homepage.
+Ricardo Bittencourt

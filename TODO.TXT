@@ -13,3 +13,4 @@
 - fix offset in ix/iy opcodes (printfd/dd.asm)
 - video cache bug in daiva
 - mount directory as drive A
+- there is something strange with the mapper

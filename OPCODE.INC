@@ -1502,12 +1502,6 @@ emul&opcode:
                 inc     edi
                 mov     regi,dh
                 sub     ebp,9+2
-                mov     al,dh
-                and     dl,1
-                mov     bl,byte ptr [offset iff1]
-                shl     bl,2
-                or      dl,[offset INTERRUPT_table+eax]
-                or      dl,bl
                 ret
 
                 endm
@@ -1544,12 +1538,6 @@ emul&opcode:
                 mov     rmask,dh
                 and     rmask,07Fh
                 sub     ebp,9+2
-                mov     al,dh
-                and     dl,1
-                mov     bl,byte ptr [offset iff1]
-                shl     bl,2
-                or      dl,[offset INTERRUPT_table+eax]
-                or      dl,bl
                 ret
 
                 endm

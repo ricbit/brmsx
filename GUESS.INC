@@ -1,4 +1,12 @@
 guess_table:
+        dd      045DBFB63h
+        dd      0+2
+        dd      offset name_dragon_quest_1_msx1
+
+        dd      07761C793h
+        dd      0+2
+        dd      offset name_cross_blaim
+        
         dd      0FF017612h
         dd      8+2
         dd      offset name_fmpac_original
@@ -154,6 +162,12 @@ guess_table:
         dd      0
 
 ; name table
+
+name_dragon_quest_1_msx1:
+        db      'Dragon Quest 1 (MSX1 version)$'
+
+name_cross_blaim:
+        db      'Cross Blaim$'
 
 name_fmpac_original:
         db      'Original Panasonic FM-PAC$'

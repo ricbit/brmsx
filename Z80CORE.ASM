@@ -178,6 +178,10 @@ EMULABEL        turbo_skip,emtype,brtype
                 call    checkpsg
                 mov     interrupt,0
                 
+                ; check for fast forward key
+                cmp     fastforward,1
+                JUMP    je,exit,emtype,brtype
+
                 cmp     error,1
                 JUMP    je,exit,emtype,brtype
                 cmp     exit_now,1
@@ -209,19 +213,6 @@ EMULABEL        turbo_skip,emtype,brtype
                 call    z80_interrupt
                 JUMP    jmp,loop,emtype,brtype
 
-EMULABEL        exit,emtype,brtype
-
-                mov     regpc,di
-                mov     regaf,dx
-                if      emtype EQ FAST
-                mov     clockcounter,0
-                else
-                mov     clockcounter,ebp
-                endif
-                call    speaker_shutup
-                call    reset_adlib
-                ret
-
 EMULABEL        fakeirq,emtype,brtype
 
                 mov     eax,0
@@ -241,6 +232,32 @@ EMULABEL        vdpdisabled,emtype,brtype
                 call    set_vdp_interrupt
                 JUMP    jmp,loop,emtype,brtype
                 
+EMULABEL        exit,emtype,brtype
+
+                mov     regpc,di
+                mov     regaf,dx
+                if      emtype EQ FAST
+                mov     clockcounter,0
+                else
+                mov     clockcounter,ebp
+                endif
+                call    speaker_shutup
+                call    reset_adlib
+
+                ; fall through !!!
+
+                endm
+
+FASTF           macro   jump_point
+
+                cmp     fastforward,1
+                jne     _ret
+                mov     fastforward,0
+                mov     ecx,oldmode
+                xchg    ecx,emulatemode
+                mov     oldmode,ecx
+                jmp     jump_point
+
                 endm
 
 ; emulate ------------------------------------------------------------
@@ -250,10 +267,13 @@ emulate:
                 cmp     emulatemode,NORMAL
                 jne     emulate1
                 EMULATE NORMAL,NOBREAK
+                FASTF   emulate
 emulate1:       cmp     emulatemode,FAST
                 jne     emulate2
                 EMULATE FAST,NOBREAK
+                FASTF   emulate
 emulate2:       EMULATE TURBO,NOBREAK
+                FASTF   emulate
 
 ; emulate_break ------------------------------------------------------
 ; starts emulation with breakpoint, stop with any error
@@ -262,10 +282,13 @@ emulate_break:
                 cmp     emulatemode,NORMAL
                 jne     emulate1_break
                 EMULATE NORMAL,BREAK
+                FASTF   emulate
 emulate1_break: cmp     emulatemode,FAST
                 jne     emulate2_break
                 EMULATE FAST,BREAK
+                FASTF   emulate
 emulate2_break: EMULATE TURBO,BREAK
+                FASTF   emulate
 
 ; emulate_trap -------------------------------------------------------
 ; starts emulation with trap, stop with any error
@@ -274,10 +297,13 @@ emulate_trap:
                 cmp     emulatemode,NORMAL
                 jne     emulate1_trap
                 EMULATE NORMAL,TRAP
+                FASTF   emulate
 emulate1_trap:  cmp     emulatemode,FAST
                 jne     emulate2_trap
                 EMULATE FAST,TRAP
+                FASTF   emulate
 emulate2_trap:  EMULATE TURBO,TRAP
+                FASTF   emulate
 
 ; emulate_histogr ----------------------------------------------------
 ; starts emulation with histogram evaluation, stop with any error
@@ -286,12 +312,15 @@ emulate_histogr:
                 cmp     emulatemode,NORMAL
                 jne     emulate1_histogr
                 EMULATE NORMAL,HISTOGRAM
+                FASTF   emulate
 emulate1_histogr:  
                 cmp     emulatemode,FAST
                 jne     emulate2_histogr
                 EMULATE FAST,HISTOGRAM
+                FASTF   emulate
 emulate2_histogr:  
                 EMULATE TURBO,HISTOGRAM
+                FASTF   emulate
 
 ; emulate_compiler ---------------------------------------------------
 ; starts emulation with compiler pipeline
@@ -300,12 +329,15 @@ emulate_compiler:
                 cmp     emulatemode,NORMAL
                 jne     emulate1_compiler
                 EMULATE NORMAL,COMPILER
+                FASTF   emulate
 emulate1_compiler:  
                 cmp     emulatemode,FAST
                 jne     emulate2_compiler
                 EMULATE FAST,COMPILER
+                FASTF   emulate
 emulate2_compiler:  
                 EMULATE TURBO,COMPILER
+                FASTF   emulate
 
 ; SLOT_MACRO ---------------------------------------------------------
 
