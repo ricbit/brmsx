@@ -11,6 +11,7 @@ code32  segment para public use32
 include z80.inc
 include opcode.inc
 include bit.inc
+include fetch.inc
 
 extrn emulEDFF: near
 

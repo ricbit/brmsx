@@ -1,3 +1,7 @@
+release 1.54:
+
+- new, improved FETCH1 and FETCHW1 macro
+
 release 1.53:
 
 - histogram evaluation

@@ -30,6 +30,7 @@ include opcode.inc
 include z80supp.inc
 include pmode.inc
 include gui.inc
+include fetch.inc
 
 public fetch
 public fetch1
@@ -410,6 +411,8 @@ FETCHMACRO      macro   skip
                 lea     ebx,[edi+skip]                  ; clock 1 V
                 shr     esi,13                          ; clock 2 U
                 and     ebx,01fffh                      ; clock 2 V
+                ;cmp     ebx,3000h
+                ;ja      fetch1
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
                 mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
 
@@ -810,7 +813,7 @@ emul00:         inc     edi
 
 ; 01 - LD BC,dddd
 emul01:         
-                call    fetchw1
+                FETCHW1 01
                 mov     regebc,eax
                 add     edi,3
                 xor     eax,eax
@@ -877,7 +880,7 @@ OPRRCA          0F
 
 ; 10 - DJNZ dd
 emul10:         
-                call    fetch1
+                FETCH1  10
                 add     edi,2
                 dec     regb
                 jz      emul10a
@@ -890,7 +893,7 @@ emul10a:        sub     ebp,8+2
 
 ; 11 - LD DE,dddd
 emul11:         
-                call    fetchw1
+                FETCHW1 11
                 add     edi,3
                 mov     regede,eax
                 xor     eax,eax
@@ -922,7 +925,7 @@ OPRLA           17
 
 ; 18 - JR dd
 emul18:         
-                call    fetch1
+                FETCH1  18
                 cmp     al,0FEh
                 je      emul18a
                 movsx   ebx,al
@@ -930,8 +933,8 @@ emul18:
                 lea     edi,[edi+ebx+2]
                 ret
 emul18a:
-                ;mov     clockcounter,60000
                 mov     ebp,0
+                ; remember to implement the R correction
                 ret
 
 ; 19 - ADD HL,DE
@@ -965,7 +968,7 @@ JRCC            20,jnz,ZERO_FLAG
 
 ; 21 - LD HL,dddd
 emul21:         
-                call    fetchw1
+                FETCHW1 21
                 add     edi,3
                 mov     regehl,eax
                 xor     eax,eax
@@ -1055,7 +1058,7 @@ JRCC            30,jnz,CARRY_FLAG
 
 ; 31 - LD SP,dddd
 emul31:         
-                call    fetchw1
+                FETCHW1 31
                 add     edi,3
                 mov     regesp,eax
                 xor     eax,eax
@@ -1064,7 +1067,7 @@ emul31:
 
 ; 32 - LD (dddd),A
 emul32:         
-                call    fetchw1
+                FETCHW1 32
                 mov     ecx,eax
                 mov     al,dh
                 call    writemem
@@ -1100,7 +1103,7 @@ ADDREGWREGW     39,regl,regh,regspl,regsph,11
 
 ; 3A - LD A,(dddd)
 emul3A:         
-                call    fetchw1
+                FETCHW1 3A
                 mov     ecx,eax
                 call    readmem
                 mov     dh,al
@@ -1560,7 +1563,7 @@ JPCC            C2,jnz,ZERO_FLAG
 
 ; C3 - JP dddd
 emulC3:         
-                call    fetchw1
+                FETCHW1 C3
                 mov     edi,eax
                 xor     eax,eax
                 sub     ebp,10+3
@@ -1615,13 +1618,14 @@ emulCC:         test    dl,ZERO_FLAG
 
 ; CD - CALL dddd
 emulCD:
+                FETCHW1 CD
+                lea     ebx,[edi+3]
+                mov     edi,eax
                 mov     ecx,regesp
-                lea     eax,[edi+3]
+                mov     eax,ebx
                 sub     ecx,2
                 call    writememw
                 mov     regesp,ecx
-                call    fetchw1
-                mov     edi,eax
                 xor     eax,eax
                 sub     ebp,17+5
                 ret
