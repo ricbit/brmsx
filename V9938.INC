@@ -14,3 +14,4 @@ extrn render_screen7: near
 extrn render_screen8: near
 extrn sprite_render_msx2: near
 extrn dirty_palette: byte
+extrn render_msx2: near

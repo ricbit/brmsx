@@ -5,3 +5,5 @@ extrn emulED: near
 extrn emulFD: near
 extrn emulFF: near
 extrn emulXX: near
+extrn emulFB_MSX2: near
+extrn emul76_MSX2: near

@@ -34,6 +34,7 @@ extrn cart_sram: dword
 extrn cart1: dword
 extrn extendedrom: dword
 extrn smart_print: near
+extrn msxmodel: dword
 
 include io.inc
 include vdp.inc
@@ -191,6 +192,7 @@ public regeiy
 public regepc
 public vdpregs
 public vsyncflag
+public truevsync
 public reset_cpu
 public reset_cpu_hard
 public ramslot
@@ -461,6 +463,7 @@ vdpcond         dd      0
 vdpaddress      dw      0
                 dw      0
 vsyncflag       dd      0
+truevsync       dd      0
 vdpaccess       dd      0
 vdptemp         db      0
 vdplookahead    db      0
@@ -1588,9 +1591,13 @@ process_frame:
 
                 call    video_processing
 
+                cmp     truevsync,1
+                je      process_frame_vsyncskip_now
+
                 cmp     vsyncflag,1
                 jne     process_frame_vsyncskip
 
+process_frame_vsyncskip_now:
                 call    wait_vsync
 
 process_frame_vsyncskip:
@@ -2025,6 +2032,9 @@ sound_buffer:
                 cmp     ecx,32768
                 jae     _ret
 
+                cmp     msxmodel,0
+                jne     sound_buffer_msx2
+                
                 mov     esi,soundbuffer
                 mov     [esi+ecx*2],al
                 mov     [esi+ecx*2+1],bl
@@ -2038,6 +2048,23 @@ sound_buffer:
                 inc     psgpos
 
                 ret
+
+sound_buffer_msx2:
+                mov     esi,soundbuffer
+                mov     [esi+ecx*2],al
+                mov     [esi+ecx*2+1],bl
+
+                mov     esi,timebuffer
+                mov     ebx,212 ;TC 
+                sub     ebx,ebp
+                add     ebx,psgclocks
+                add     ebx,soundclocks
+                mov     [esi+ecx*4],ebx
+
+                inc     psgpos
+
+                ret
+
 
 ; --------------------------------------------------------------------
 

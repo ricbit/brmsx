@@ -66,6 +66,7 @@ public scr2inc
 public scr2inc_color   
 public scr2offset      
 public bitmask
+public render_screen3
 
 ; DATA ---------------------------------------------------------------
 
@@ -378,16 +379,6 @@ render_screen2:
 
 render_screen2_mmx:
                 RENDER_SCREEN2_MACRO MMX_ENGINE,MSX1_RENDER,blitbuffer
-
-; render_screen4 -----------------------------------------------------
-; render a screen 4 page
-; WARNING: this function must ALWAYS be 
-;          called with interrupts DISABLED
-
-render_screen4:
-                call    render_screen2
-                mov     spriteenable,2
-                ret
 
 ; render_screen3 -----------------------------------------------------
 ; render a screen 3 page
@@ -1225,6 +1216,9 @@ render_col_inner:
 ; render the MSX screen, based on VDP registers and VRAM
 
 render:
+                cmp     msxmodel,0
+                jne     render_msx2
+
                 test    byte ptr [offset vdpregs+1],BIT_6
                 jnz     render_enabled
 
@@ -1292,12 +1286,6 @@ render_check_first:
                 call    set_border_color
 
 render_draw:
-                cmp     msxmodel,0
-                je      render_msx1
-
-                call    set_correct_palette
-
-render_msx1:
                 mov     bl,actualscreen
 
                 cmp     bl,0
@@ -1315,21 +1303,6 @@ render_msx1:
 
                 cmp     bl,3
                 je      render_screen3
-
-                cmp     bl,4
-                je      render_screen4
-
-                cmp     bl,5
-                je      render_screen5
-
-                cmp     bl,6
-                je      render_screen6
-
-                cmp     bl,7
-                je      render_screen7
-
-                cmp     bl,8
-                je      render_screen8
 
                 ret
 
@@ -2048,13 +2021,14 @@ eval_screen4:
                 shl     eax,10
                 mov     nametable,eax
 
-                movzx   eax,byte ptr [offset vdpregs+3]
-                and     al,80h
+                mov     al,byte ptr [offset vdpregs+3]
+                mov     ah,byte ptr [offset vdpregs+10]
+                and     eax,780h
                 shl     eax,6
                 mov     colortable,eax
 
                 movzx   eax,byte ptr [offset vdpregs+4]
-                and     al,04h
+                and     al,03Ch
                 shl     eax,11
                 mov     patterntable,eax
 

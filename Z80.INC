@@ -165,3 +165,4 @@ extrn vdpaddresse: dword
 extrn outemulB4: near
 extrn outemulB5: near
 extrn inemulB5: near
+extrn truevsync: dword

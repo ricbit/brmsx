@@ -8,3 +8,9 @@ extrn slot_change: near
 extrn emumode: dword
 extrn intcount: dword
 extrn index_mark: dword
+extrn soundclocks: dword
+extrn first_line: dword
+extrn last_line: dword
+extrn emulate_fakeirq_msx2: near
+extrn current_line: dword
+extrn halted: dword

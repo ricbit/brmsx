@@ -25,6 +25,7 @@ extrn isetFDxx: near
 extrn start_counter: near
 extrn end_counter: near
 extrn codetable: dword
+extrn msxmodel: dword
 
 public emulate
 public emulate_break
@@ -33,9 +34,15 @@ public emulate_compiler
 public fetchcallback
 public comp_position
 public slot_change
-public emumode
 public intcount
 public index_mark
+public emumode
+public soundclocks
+public first_line
+public last_line
+public emulate_fakeirq_msx2
+public current_line
+public halted
 
 ; DATA ---------------------------------------------------------------
 
@@ -50,9 +57,14 @@ dirtycode:
                 db      0
 
 comp_position   dd      0
-emumode         dd      0
 intcount        dd      0
 index_mark      dd      0
+current_line    dd      0
+emumode         dd      0
+soundclocks     dd      0
+first_line      dd      0
+last_line       dd      211
+halted          dd      0
 
 ; --------------------------------------------------------------------
 
@@ -81,10 +93,11 @@ EMULABEL        macro   point,emtype,brtype
                 endm
 
 EMULATE         macro   emtype,brtype
+                local   skip_sync
 
-                mov     emumode,emtype
                 xor     eax,eax
                 xor     ecx,ecx
+                mov     emumode,emtype
                 mov     error,eax
                 mov     exit_now,eax
                 mov     interrupt,eax
@@ -148,7 +161,10 @@ EMULABEL        loop,emtype,brtype
                 xor     eax,eax
                 
                 if      emtype EQ NORMAL
+                cmp     truevsync,1
+                je      skip_sync
                 call    synch_emulation
+skip_sync:
                 endif
 
 EMULABEL        interrupt,emtype,brtype
@@ -269,10 +285,243 @@ FASTF           macro   jump_point
 
                 endm
 
+; EMULATE_MSX2 -------------------------------------------------------
+; z80 pipeline for msx2
+
+EMULATE_MSX2    macro emtype,brtype
+                local   emulate_loop
+                local   emulate_exit
+                local   emulate_nextline
+                local   emulate_continue
+                local   skip_render
+                local   emulate_norender
+                local   turbo_skip
+                local   skip_truevsync
+
+                xor     eax,eax
+                xor     ecx,ecx
+                mov     emumode,emtype
+                mov     error,eax
+                mov     exit_now,eax
+                mov     interrupt,eax
+                mov     firstscreen,1
+                mov     ebp,212 ; clocks per line
+                mov     clocksleft,ebp  
+                movzx   edi,regpc
+                movzx   edx,regaf
+
+emulate_loop:
+                if      brtype EQ BREAK
+                cmp     edi,breakpoint
+                je      emulate_exit
+                endif
+
+                ; execute one z80 opcode
+                FETCHMACRO 0
+                inc     rcounter
+                call    [offset iset + eax*4]
+
+                cmp     ebp,0
+                jg      emulate_loop
+                
+                add     ebp,212
+                add     soundclocks,212
+
+                mov     ebx,current_line
+                
+                movzx   esi,byte ptr [offset vdpregs+23]
+                movzx   ecx,byte ptr [offset vdpregs+19]
+                sub     ecx,esi
+                add     ecx,3
+                and     ecx,0FFh
+                cmp     ebx,ecx 
+                jne     emulate_continue
+
+                ;cmp     ebx,212
+                ;ja      emulate_continue
+
+                test    byte ptr [offset vdpregs+0],BIT_4
+                jz      emulate_continue
+
+                pushad
+                cmp     ebx,211
+                jae     skip_render
+                mov     last_line,ebx
+                push    ebx
+                call    render
+                call    sprite_render
+                pop     ebx
+                mov     first_line,ebx
+                inc     first_line
+skip_render:
+                popad
+
+                or      byte ptr [offset vdpstatus+1],BIT_0
+
+                mov     iline,1
+                
+                cmp     iff1,1
+                jne     emulate_continue
+                
+                call    remove_halted_condition
+                inc     current_line
+                mov     iff1,0 
+                mov     fakeirq,0
+                inc     rcounter
+                call    z80_interrupt
+                jmp     emulate_loop
+
+emulate_continue:
+                inc     ebx
+                cmp     ebx,280
+                jne     emulate_nextline
+
+                mov     ebx,0
+emulate_nextline:
+                mov     current_line,ebx
+
+                cmp     ebx,212
+                jne     emulate_loop
+
+                mov     eax,offset z80counter
+                call    end_counter
+                mov     eax,dword ptr [offset z80counter]
+                mov     z80rate,eax
+                
+                call    compose_sound
+                
+                mov     eax,0
+                
+                if      emtype EQ TURBO
+                cmp     interrupt,1
+                jne     turbo_skip
+                pushad
+                call    check_mouse
+                cmp     first_line,211
+                ja      emulate_norender
+                mov     last_line,211
+                call    process_frame
+emulate_norender:
+                popad
+turbo_skip:
+                mov     last_line,211
+                mov     first_line,0
+                else
+                
+                cmp     truevsync,1
+                je      skip_truevsync
+                call    synch_emulation
+skip_truevsync:
+                
+                pushad
+                call    check_mouse
+                cmp     first_line,211
+                ja      emulate_norender
+                mov     last_line,211
+                call    process_frame
+emulate_norender:
+                mov     first_line,0
+                popad
+                endif
+                
+                ; must be called without pushads
+                call    z80paused
+
+                mov     eax,offset z80counter
+                call    start_counter
+                xor     eax,eax
+                
+                inc     intcount
+                mov     index_mark,1
+                
+                mov     soundclocks,0
+                call    checkpsg
+                mov     interrupt,0
+
+                cmp     fastforward,1
+                je      emulate_exit
+                cmp     error,1
+                je      emulate_exit
+                cmp     exit_now,1
+                je      emulate_exit
+                
+                pushad
+                call    set_keyboard_leds
+                call    check_joystick
+                call    check_client
+                popad
+                
+                ; irq has arrived
+                or      byte ptr [offset vdpstatus+0],BIT_7
+
+                test    byte ptr [offset vdpregs+1],BIT_5
+                jz      emulate_loop
+
+                mov     iline,1
+
+                cmp     iff1,1
+                jne     emulate_loop
+                
+                call    remove_halted_condition
+                mov     iff1,0 
+                mov     fakeirq,0
+                inc     rcounter
+                call    z80_interrupt
+                jmp     emulate_loop
+
+emulate_exit:
+                mov     regpc,di
+                mov     regaf,dx
+                mov     clockcounter,ebp
+                call    speaker_shutup
+                call    reset_adlib
+
+                ;ret
+
+                ; fall through
+
+                endm
+
+emulate_fakeirq_msx2:
+                mov     eax,0
+                
+                test    byte ptr [offset vdpstatus+0],BIT_7
+                jnz     emulate_fakeirq_horiz
+
+                ;test    byte ptr [offset vdpregs+1],BIT_5
+                ;jz      _ret
+
+                jmp     emulate_irq_now
+
+emulate_fakeirq_horiz:
+                test    byte ptr [offset vdpstatus+1],BIT_0
+                jnz     _ret
+
+                ;test    byte ptr [offset vdpregs+0],BIT_4
+                ;jz      _ret
+
+emulate_irq_now:
+                call    remove_halted_condition
+                mov     iff1,0
+                inc     rcounter
+                call    z80_interrupt
+                
+                ret
+
+remove_halted_condition:
+                cmp     halted,1
+                jne     _ret
+
+                mov     halted,0
+                inc     edi
+                ret
+
 ; emulate ------------------------------------------------------------
 ; starts emulation, stop with any error
 
 emulate:        
+                cmp     msxmodel,0
+                jne     emulate_msx2
                 cmp     emulatemode,NORMAL
                 jne     emulate1
                 EMULATE NORMAL,NOBREAK
@@ -284,20 +533,40 @@ emulate1:       cmp     emulatemode,FAST
 emulate2:       EMULATE TURBO,NOBREAK
                 FASTF   emulate
 
+emulate_msx2:
+                cmp     emulatemode,TURBO
+                je      emulate_msx2_turbo
+                EMULATE_MSX2 NORMAL,NOBREAK
+                FASTF   emulate_msx2
+emulate_msx2_turbo:
+                EMULATE_MSX2 TURBO,NOBREAK
+                FASTF   emulate_msx2
+
 ; emulate_break ------------------------------------------------------
 ; starts emulation with breakpoint, stop with any error
 
 emulate_break:        
+                cmp     msxmodel,0
+                jne     emulate_break_msx2
                 cmp     emulatemode,NORMAL
                 jne     emulate1_break
                 EMULATE NORMAL,BREAK
-                FASTF   emulate
+                FASTF   emulate_break
 emulate1_break: cmp     emulatemode,FAST
                 jne     emulate2_break
                 EMULATE FAST,BREAK
-                FASTF   emulate
+                FASTF   emulate_break
 emulate2_break: EMULATE TURBO,BREAK
-                FASTF   emulate
+                FASTF   emulate_break
+
+emulate_break_msx2:
+                cmp     emulatemode,TURBO
+                je      emulate_break_msx2_turbo
+                EMULATE_MSX2 NORMAL,BREAK
+                FASTF   emulate_break_msx2
+emulate_break_msx2_turbo:
+                EMULATE_MSX2 TURBO,BREAK
+                FASTF   emulate_break_msx2
 
 ; emulate_trap -------------------------------------------------------
 ; starts emulation with trap, stop with any error

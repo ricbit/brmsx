@@ -65,6 +65,9 @@ include debug4.inc
 debug5_screen: 
 include debug5.inc
 
+debug6_screen: 
+include debug6.inc
+
 help_screen: 
 include help.inc
 
@@ -462,6 +465,9 @@ render_debug:
 
                 cmp     debugtype,5
                 je      render_debug5
+
+                cmp     debugtype,6
+                je      render_debug6
 
                 ; copy the template to temp buffer
                 
@@ -1109,28 +1115,9 @@ print_access0:
                 
                 ; print the actual screen mode
 
-                cmp     lastscreen,0
-                jne     print_screen1x
-                mov     tabspace,'0'
-                jmp     print_screen0x
-print_screen1x:
-                cmp     lastscreen,1
-                jne     print_screen2x
-                mov     tabspace,'1'
-                jmp     print_screen0x
-print_screen2x:
-                cmp     lastscreen,2
-                jne     print_screen3x
-                mov     tabspace,'2'
-                jmp     print_screen0x
-print_screen3x:
-                cmp     lastscreen,3
-                jne     print_screenXx
-                mov     tabspace,'3'
-                jmp     print_screen0x
-print_screenXx:
-                mov     tabspace,'X'
-print_screen0x:
+                mov     al,actualscreen
+                add     al,'0'
+                mov     byte ptr [offset tabspace],al
                 COORD   75,9
                 mov     eax,offset tabspace
                 call    printmsgd
@@ -1662,6 +1649,56 @@ sprint_dis_skip:
                 jmp     blit_screen
 
 ; --------------------------------------------------------------------
+                
+render_debug6:
+                ; sixth debug screen
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug6_screen
+                call    uncompress_screen
+
+
+                call    status_bar
+
+; --------------------------------------------------------------------
+                
+                ; print the v9938 registers
+
+                irp     i,<0,1,2>
+                local   print_38
+
+                mov     ecx,0
+                mov     esi,offset vdpregs+10h*i
+                COORD   7+8*i,3
+print_38:
+                mov     al,[esi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                add     edx,100h
+                inc     esi
+                inc     ecx
+                cmp     ecx,16
+                jnz     print_38
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; print the current line
+
+                mov     eax,current_line
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   46,3
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                jmp     blit_screen
+
+; --------------------------------------------------------------------
 
 debug:          
                 ;call    init_compiler
@@ -1734,6 +1771,8 @@ debug_loop:
                 je      command_4
                 cmp     al,'5'
                 je      command_5
+                cmp     al,'6'
+                je      command_6
                 cmp     al,'V'
                 je      command_v
                 ;cmp     al,'Z'
@@ -2197,6 +2236,8 @@ command_0:
                 call    setgraphmode
                 call    clear
                 mov     firstscreen,1
+                mov     first_line,0
+                mov     last_line,211
                 call    render
                 call    sprite_render
                 call    blit
@@ -2295,6 +2336,12 @@ command_4:
 
 command_5:
                 mov     debugtype,5
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_6:
+                mov     debugtype,6
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------

@@ -12,6 +12,7 @@ include pmode.inc
 include pentium.inc
 include io.inc
 include z80.inc
+include z80sing.inc
 include debug.inc
 include psg.inc
 include mouse.inc
@@ -71,6 +72,7 @@ public temp_screen
 extrn detect_cpu: near
 extrn pentiumfound: dword
 extrn mmxfound: dword
+extrn iset: dword
 
 ; DATA ---------------------------------------------------------------
 
@@ -78,7 +80,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 2.1',13,10
+msg00           db      'BrMSX 2.2',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -102,7 +104,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 2.1',13,10
+msg22           db      'BrMSX 2.2',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -190,8 +192,10 @@ help_message2   db      13
                 db      'support with black scanlines',13,10
                 db      '               11=640x480x8  MSX-2 full screen '
                 db      'support with black scanlines',13,10
-                db      '-vsync         enable vertical retrace '
-                db      'synchronization',13,10
+                db      '-vsync         sync with the monitor and the '
+                db      'internal timer',13,10
+                db      '-truevsync     sync with the monitor only '
+                db      '(require monitor with 60Hz refresh)',13,10
                 db      '-green         enable green monitor emulation',13,10
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
@@ -200,9 +204,9 @@ help_message2   db      13
                 db      'detection',13,10
                 db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
-                db      '-nommx         disable MMX optimizations',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-nommx         disable MMX optimizations',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
@@ -238,9 +242,9 @@ help_message3   db      13
                 db      '-autospeed <n> adjust speed for autofire '
                 db      '(range is 0 to 9, default is 5)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
-                db      '-com <port>    select COM serial port [1-4]',13,10
                 db      'Press enter to continue.$'
 help_message4   db      13
+                db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
@@ -338,6 +342,7 @@ switch_dos2      db      '-dos2',0
 switch_prn       db      '-prn',0
 switch_msx2      db      '-msx2',0
 switch_vdplog    db      '-vdplog',0
+switch_truevsync db      '-truevsync',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -392,8 +397,9 @@ switch_table:
                 dd      offset switch_prn
                 dd      offset switch_msx2
                 dd      offset switch_vdplog
+                dd      offset switch_truevsync
 
-switch_total    dd      52
+switch_total    dd      53
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -448,6 +454,7 @@ switch_callback:
                 dd      offset callback_prn
                 dd      offset callback_msx2
                 dd      offset callback_vdplog
+                dd      offset callback_truevsync
 
 cart1table:
                 dd      128*1024
@@ -2140,6 +2147,10 @@ callback_vdplog:
                 mov     vdplog,1
                 ret
 
+callback_truevsync:
+                mov     truevsync,1
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -3030,6 +3041,12 @@ read_msx_rom_msx2:
                 
                 mov     eax,offset inemulB5
                 mov     dword ptr [offset inportxx+0B5h*4],eax
+                
+                ; init the new IRQ handler
+                mov     eax,offset emulFB_MSX2
+                mov     dword ptr [offset iset+0FBh*4],eax
+                mov     eax,offset emul76_MSX2
+                mov     dword ptr [offset iset+076h*4],eax
                 
                 ; 128kb of VRAM
                 mov     vramsize,128*1024

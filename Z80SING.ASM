@@ -26,6 +26,8 @@ public emulDD
 public emulED
 public emulFD
 public emulFF
+public emulFB_MSX2
+public emul76_MSX2
 public emulXX
 public iset
 
@@ -394,6 +396,7 @@ LDHLREG         75,regl
 
 ; 76 - HALT
 OPHALT          76
+OPHALT_MSX2     76_MSX2
 
 ; 77 - LD (HL),A
 LDHLREG         77,dh
@@ -848,6 +851,7 @@ JPCC            FA,jz,SIGN_FLAG
 
 ; FB - EI
 OPEI            FB      
+OPEI_MSX2       FB_MSX2
 
 ; FC - CALL M,dddd
 CALLCC          FC,SIGN_FLAG,jnz

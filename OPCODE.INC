@@ -799,6 +799,38 @@ emul&opcode&x:
                 endm
 
 ; --------------------------------------------------------------------
+; OPEI - EI
+; MSX2 VERSION
+
+OPEI_MSX2       macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     iff1,1
+                sub     ebp,4+1
+                
+                cmp     iline,1
+                je      emul&opcode&iline
+
+                FETCHMACRO 0
+                inc     rcounter
+                call    dword ptr [offset iset + eax*4]
+
+                ret
+
+emul&opcode&iline:
+
+                FETCHMACRO 0
+                inc     rcounter
+                call    dword ptr [offset iset + eax*4]
+
+                call    emulate_fakeirq_msx2
+
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPEXAFAF - EX AF,AF'
 
 OPEXAFAF        macro   opcode
@@ -879,6 +911,20 @@ OPHALT          macro   opcode
 
 emul&opcode:
                 inc     edi
+                mov     ebp,0
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPHALT - HALT
+; MSX2 VERSION
+
+OPHALT_MSX2     macro   opcode
+
+emul&opcode:
+                ;inc     edi
+                mov     halted,1
                 mov     ebp,0
                 ret
 

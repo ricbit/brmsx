@@ -42,3 +42,4 @@ extrn scr2inc: dword
 extrn scr2inc_color: dword  
 extrn scr2offset: dword      
 extrn bitmask: byte
+extrn render_screen3: near
