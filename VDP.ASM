@@ -77,6 +77,7 @@ screenselect    dd      ? ; nothing
 dirtyname       db      32*24 dup (0)
 dirtypattern    db      256*3 dup (0)
 dirtysprite     db      32 dup (0)
+falsesprite     db      2*256 dup (0)
 spriteline      db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
@@ -779,14 +780,14 @@ sprite16N6:
 sprite16N1:     push    ecx eax
 
                 call    eval_sprite_coords
-                cmp     eax,0
-                js      sprite16N3
-                cmp     eax,192-16
-                jge     sprite16N3
                 cmp     ecx,0
                 js      sprite16N3
                 cmp     ecx,256-16
                 jge     sprite16N3
+                cmp     eax,0
+                js      sprite_crop
+                cmp     eax,192-16
+                jge     sprite_crop
                 mov     ch,al
                 mov     edi,blitbuffer
                 add     edi,ecx
@@ -872,6 +873,112 @@ sprite16N3:
                 dec     ebp
                 jnz     sprite16N1
                 ret
+
+sprite_crop:
+                ; address of sprite image
+                movzx   eax,[esi+2]
+                and     al,11111100b
+                mov     ecx,sprpatttable
+                add     ecx,msxvram
+                lea     ecx,[ecx+eax*8]
+
+                ; color mask
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+
+                mov     edx,16
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+                push    esi ebp
+                
+sprite_crop_loop:
+
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                ; get the sprite mask
+                mov     esi,[offset backgroundmask+ebx*8]
+
+                ; get the sprite color
+                mov     ebp,eax
+
+                ; blend with the sprite image
+                and     ebp,[offset foregroundmask+ebx*8]
+
+                ; put back to screen
+                mov     [edi],esi
+                mov     [edi+4],ebp
+
+                ; do it again for the next four pixels
+                
+                mov     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                mov     [edi+8],esi
+                mov     [edi+4+8],ebp
+                
+                ; do it again for the next eight pixels
+                
+                mov     bl,[ecx+16]
+                
+                mov     esi,[offset backgroundmask+ebx*8]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8]
+                mov     [edi+16],esi
+                mov     [edi+4+16],ebp
+                
+                mov     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                mov     [edi+16+8],esi
+                mov     [edi+4+16+8],ebp
+                
+                add     edi,32
+                inc     ecx
+                dec     edx
+                jnz     sprite_crop_loop
+
+                pop     ebp esi
+
+                call    eval_sprite_coords                
+                push    esi ebp
+                mov     esi,offset falsesprite
+                mov     edx,16
+                mov     edi,eax
+                sal     edi,8
+                add     edi,blitbuffer
+                add     edi,ecx
+
+sprite_crop_draw:
+                cmp     eax,192
+                jae     sprite_crop_draw_nextline
+                mov     ebp,[edi]
+                and     ebp,[esi]
+                or      ebp,[esi+4]
+                mov     [edi],ebp
+                mov     ebp,[edi+4]
+                and     ebp,[esi+8]
+                or      ebp,[esi+4+8]
+                mov     [edi+4],ebp
+                mov     ebp,[edi+8]
+                and     ebp,[esi+16]
+                or      ebp,[esi+4+16]
+                mov     [edi+8],ebp
+                mov     ebp,[edi+4+8]
+                and     ebp,[esi+8+16]
+                or      ebp,[esi+4+8+16]
+                mov     [edi+4+8],ebp
+
+sprite_crop_draw_nextline:
+                add     esi,32
+                add     edi,256
+                inc     eax
+                dec     edx
+                jnz     sprite_crop_draw
+
+                pop     ebp esi
+                jmp     sprite16N3
 
 sprite16N2:
                 pop     ecx
@@ -964,13 +1071,13 @@ clear:
 
 eval_sprite_coords:
                 xor     ecx,ecx
-                mov     al,[esi+3]
-                mov     cl,[esi+1]
+                mov     al,[esi+3]      ; "early clock" attribute
+                mov     cl,[esi+1]      ; x coordinate
                 and     eax,080h
                 shr     eax,2
                 sub     ecx,eax
 
-                mov     al,[esi]
+                mov     al,[esi]        ; y coordinate
                 cmp     al,0BEh
                 jbe     eval_sprite_coords1
                 movsx   eax,al

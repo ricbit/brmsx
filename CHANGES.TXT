@@ -1,3 +1,7 @@
+release 1.72:
+
+- sprite Y-clipping: no more bugs on penguin, zanac, kv2
+
 release 1.71:
 
 - removed bug when a 0D0h is inserted in sprite attribute table
