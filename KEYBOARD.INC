@@ -74,7 +74,7 @@ keyboardtable:
 	key_47: db 8,BIT_1      ; HOME
 	key_48: db 8,BIT_5      ; UP
 	key_49: db 7,BIT_4      ; PAGE UP
-	key_4A: db 1,BIT_2      ; -
+	key_4A: db 0,0
 	key_4B: db 8,BIT_4      ; LEFT
 	key_4C: db 0,0
 	key_4D: db 8,BIT_7      ; RIGHT

@@ -35,6 +35,8 @@ public blitrate
 public guirate
 public psgrate
 
+public psggraph
+
 public draw_gui
 public start_gui
 
@@ -77,12 +79,13 @@ psgnumber       dd      0
 
 framenumber     dd      0
 lastmouse       dd      0
+psggraph        dd      0
 
 ; vars for main menu
 
 menu_selected   dd      0
 menu_last       dd      0
-menu_number     dd      7
+menu_number     dd      8
 menu_locked     dd      0
 menu_child      dd      0
 
@@ -91,14 +94,26 @@ menu_callback:
                 dd      offset reset_cpu_now
                 dd      offset load_rom
                 dd      offset changebargraph
+                dd      offset change_psggraph
                 dd      offset change_sound
                 dd      offset save_sta
                 dd      offset load_sta
                 dd      offset quit_emulator
 
+menu_msg:
+                dd      offset msg_reset
+                dd      offset msg_load_cart
+                dd      offset msg_bargraph
+                dd      offset msg_psggraph
+                dd      offset msg_sound
+                dd      offset msg_save_sta
+                dd      offset msg_load_sta
+                dd      offset msg_quit
+
 msg_reset       db      'Reset',0
 msg_load_cart   db      'Load ROM',0
-msg_bargraph    db      'Bar Graph',0
+msg_bargraph    db      'CPU Graph',0
+msg_psggraph    db      'PSG Graph',0
 msg_sound       db      'Sound',0
 msg_save_sta    db      'Save State',0
 msg_load_sta    db      'Load State',0
@@ -117,6 +132,12 @@ name_buffer             db      16 dup (0)
 rom_mask                db      '*.ROM',0
 rom_extension           db      '.ROM',0
 
+; psg color bars
+
+psgcolor:
+                db      12,12,12,12,03,03,03,03
+                db      10,10,11,11,09,09,08,08
+
 ; CODE ---------------------------------------------------------------
 
 ; draw_gui -----------------------------------------------------------
@@ -124,10 +145,19 @@ rom_extension           db      '.ROM',0
 
 draw_gui:
                 cmp     bargraphmode,0
+                je      draw_gui_psg
+                call    draw_bar_graph
+draw_gui_psg:
+                cmp     psggraph,0
                 je      _ret
+                call    draw_psggraph
+
+                ret
 
 ; --------------------------------------------------------------------
                 
+draw_bar_graph:
+
                 ; draw the bar graph
 
                 mov     edi,0
@@ -206,6 +236,60 @@ draw_update0:
                 or      [edi+j*32],eax
                 or      [edi+4+j*32],ebx
                 endm
+
+                ret
+
+; draw_psggraph ------------------------------------------------------
+; draw bar graph for PSG-VU meter
+
+draw_psggraph:
+
+                movzx   eax,byte ptr [offset psgreg+8]
+                and     eax,0Fh
+                mov     edi,30*8
+                call    draw_psggraph_channel
+
+                movzx   eax,byte ptr [offset psgreg+9]
+                and     eax,0Fh
+                mov     edi,30*8+4
+                call    draw_psggraph_channel
+
+                movzx   eax,byte ptr [offset psgreg+10]
+                and     eax,0Fh
+                mov     edi,30*8+8
+                call    draw_psggraph_channel
+
+                mov     word ptr [offset dirtyname+30+0*32],0101h
+                mov     word ptr [offset dirtyname+30+1*32],0101h
+                mov     word ptr [offset dirtyname+30+2*32],0101h
+                mov     word ptr [offset dirtyname+30+3*32],0101h
+
+                ret
+
+draw_psggraph_channel:
+                add     edi,blitbuffer
+                add     edi,256
+                mov     ecx,15
+
+draw_psggraph_channel_loop:
+                cmp     ecx,eax
+                ja      draw_psggraph_channel_next
+
+                mov     bl,[offset psgcolor+ecx]
+                mov     [edi+1],bl
+                mov     [edi+2],bl
+                mov     [edi+3],bl
+                ;mov     byte ptr [edi+1],08h
+                ;mov     word ptr [edi+2],0808h
+                cmp     ecx,1
+                je      draw_psggraph_channel_next
+                mov     byte ptr [edi+1+256],01h
+                mov     word ptr [edi+2+256],0101h
+
+draw_psggraph_channel_next:
+                add     edi,512
+                dec     ecx
+                jnz     draw_psggraph_channel_loop
 
                 ret
 
@@ -496,33 +580,17 @@ draw_main_menu:
 
                 call    check_selection
 
-                mov     eax,offset msg_reset
+                mov     ebp,menu_number
+                mov     edi,offset menu_msg
                 mov     ebx,1010h
-                call    printgr_shaded
-                
-                mov     eax,offset msg_load_cart
-                mov     ebx,1810h
-                call    printgr_shaded
 
-                mov     eax,offset msg_bargraph
-                mov     ebx,2010h
+draw_main_menu_loop:
+                mov     eax,[edi]
                 call    printgr_shaded
-
-                mov     eax,offset msg_sound
-                mov     ebx,2810h
-                call    printgr_shaded
-
-                mov     eax,offset msg_save_sta
-                mov     ebx,3010h
-                call    printgr_shaded
-
-                mov     eax,offset msg_load_sta
-                mov     ebx,3810h
-                call    printgr_shaded
-
-                mov     eax,offset msg_quit
-                mov     ebx,4010h
-                call    printgr_shaded
+                add     ebx,0800h
+                add     edi,4
+                dec     ebp
+                jnz     draw_main_menu_loop
 
                 call    draw_menu_child
 
@@ -582,7 +650,7 @@ draw_box_line_loop:
 ;        bh = y coord , bl = x coord
 
 printgr_shaded:
-                push    ebp edx ebx                
+                push    ebp edx ebx edi
 
                 sub     ebx,0101h
 
@@ -598,7 +666,7 @@ printgr_shaded:
                 call    printgr
                 pop     eax
                 
-                pop     ebx edx ebp                
+                pop     edi ebx edx ebp                
                 ret
 
 ; printgr ------------------------------------------------------------
@@ -1068,6 +1136,13 @@ reset_cpu_now:
                 call    release_button
                 call    reset_cpu
                 mov     cpupaused,0
+                ret
+
+; change_psggraph ----------------------------------------------------
+; turns on/off the psg bar graph
+
+change_psggraph:
+                xor     psggraph,1
                 ret
 
 ; quit_emulator ------------------------------------------------------

@@ -751,6 +751,12 @@ emul&opcode:
                 inc     edi
                 mov     iff1,1
                 sub     ebp,4+1
+                cmp     iline,0
+                ;ret;;;
+                je      _ret
+                mov     clocksleft,ebp
+                mov     ebp,0
+                mov     iline,0
                 ret
 
                 endm

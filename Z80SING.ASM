@@ -12,6 +12,7 @@ include z80.inc
 include opcode.inc
 include bit.inc
 include fetch.inc
+include pmode.inc
 
 extrn isetCBxx: near
 extrn isetDDxx: near

@@ -368,7 +368,7 @@ set_border_color:
                 mov     al,[ebx+2]
                 out     dx,al
                 
-                cmp     lastscreen,4
+                cmp     lastscreen,0
                 jne     set_border_color_ret
                 
                 ; screen 0
@@ -394,7 +394,7 @@ set_border_color_ret:
                 ret
 
 set_border_color_512x384:
-                cmp     lastscreen,4
+                cmp     lastscreen,0
                 je      set_border_color_512x384_scr0
                 
                 push    eax ebx edx
@@ -631,7 +631,7 @@ set_border_color_dark:
                 shr     al,2
                 out     dx,al
 
-                cmp     lastscreen,4
+                cmp     lastscreen,0
                 jne     set_border_color_dark_ret
 
                 ; screen 0
@@ -932,6 +932,12 @@ my_kb_irq_handler1:
                 cmp     al,88
                 je      my_kb_irq_handler_f12
 
+                cmp     al,78
+                je      my_kb_irq_handler_keypadplus
+
+                cmp     al,74
+                je      my_kb_irq_handler_keypadminus
+
                 cmp     al,224
                 je      my_kb_irq_handler_extended_signal
                 
@@ -961,6 +967,22 @@ my_kb_irq_handler_exit:
 
 my_kb_irq_handler_f12:
                 xor     cpupaused,1
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_keypadplus:
+                call    read_master_volume
+                cmp     al,0Fh
+                je      my_kb_irq_handler_exit
+                inc     al
+                call    write_master_volume
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_keypadminus:
+                call    read_master_volume
+                cmp     al,0h
+                je      my_kb_irq_handler_exit
+                dec     al
+                call    write_master_volume
                 jmp     my_kb_irq_handler_exit
 
 my_kb_irq_handler_extended:

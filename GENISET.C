@@ -3,8 +3,8 @@
 void main (void) {
   int i,j;
 
-  printf ("isetFDCBxx:\n");
+  printf ("isetDDCBxx:\n");
   for (i=0; i<256; i++) {
-    printf ("\tisetFDCB%02X: dd emulFDCB%02X\n",i,i);
+    printf ("\tdd emulDDCB%02X\n",i,i);
   }
 }

@@ -26,6 +26,8 @@ public sbbaseaddr
 public sbirq
 public sbdma
 public sounddetected
+public read_master_volume
+public write_master_volume
 
 ; DATA ---------------------------------------------------------------
 
@@ -353,6 +355,48 @@ sound_off:
                 cmp     soundenabled,0
                 je      _ret
                 call    turnoff_sbirq
+                ret
+
+; read_master_volume -------------------------------------------------
+; read the value of the master volume from the sb pro mixer
+; output: al= value read (low nibble)
+
+read_master_volume:
+                push    edx
+                mov     edx,sbbaseaddr
+                add     edx,4
+                
+                ; read the master volume
+                mov     al,22h
+                out     dx,al
+                inc     dx
+                in      al,dx
+                and     al,0Fh
+
+                pop     edx
+                ret
+
+; write_master_volume ------------------------------------------------
+; write a value to the master volume 
+; input: al= value write (low nibble)
+
+write_master_volume:
+                push    edx eax
+                mov     edx,sbbaseaddr
+                add     edx,4
+                mov     ah,al
+                and     ah,0Fh
+
+                ; write the master volume
+                mov     al,22h
+                out     dx,al
+                inc     dx
+                mov     al,ah
+                shl     ah,4
+                or      al,ah
+                out     dx,al
+
+                pop     eax edx
                 ret
 
 ; compose_soundstream ------------------------------------------------

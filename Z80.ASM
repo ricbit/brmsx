@@ -42,6 +42,7 @@ include fetch.inc
 include flags.inc
 include z80sing.inc
 include mouse.inc
+include joystick.inc
 
 public fetch
 public fetch1
@@ -66,6 +67,8 @@ public megarom0_switchbank
 public histogr
 public error
 public imtype
+public iline
+public clocksleft
 
 public opsubreg
 public opsbcreg
@@ -307,6 +310,8 @@ z80counter      db      8 dup (0)
 z80rate         dd      0
 reset_flag      dd      0
 imtype          dd      1
+iline           dd      0
+clocksleft      dd      59659
 rmask           db      0
 regi            db      0
 
@@ -326,6 +331,7 @@ align 4
 
 psgselect       db      0
 psgreg          db      16 dup (0)
+psgjoya         db      00111111b
 psgjoyb         db      00111111b
 
 ; PPI registers
@@ -670,6 +676,7 @@ EMULATE         macro   emtype,brtype
                 mov     interrupt,eax
                 mov     firstscreen,1
                 mov     ebp,59659
+                mov     clocksleft,ebp
                 movzx   edi,regpc
                 movzx   edx,regaf
 
@@ -747,6 +754,8 @@ EMULABEL        continue,emtype,brtype
                 mov     eax,framerate
                 mov     on_off,eax
 
+                call    pre_dirty
+
                 mov     eax,offset rendercounter
                 call    start_counter
                 cli
@@ -796,21 +805,28 @@ EMULABEL        nextint,emtype,brtype
                 mov     eax,offset z80counter
                 call    start_counter
                 xor     eax,eax
-                mov     ebp,59659
+                mov     ebp,clocksleft
+                mov     clocksleft,59659
                 mov     interrupt,0
-                or      vdpstatus,10000000b
                 
                 cmp     error,1
                 JUMP    je,exit,emtype,brtype
                 cmp     exit_now,1
                 JUMP    je,exit,emtype,brtype
                 
+                call    check_joystick
                 call    check_client
                 
+                test    byte ptr [vdpregs+1],00100000b
+                JUMP    jz,loop,emtype,brtype
+                
+                or      vdpstatus,10000000b
+                mov     iline,1
                 cmp     iff1,1
                 JUMP    jne,loop,emtype,brtype
                 
                 mov     iff1,0 
+                mov     iline,0
                 inc     rcounter
                 call    z80_interrupt
                 JUMP    jmp,loop,emtype,brtype
@@ -848,6 +864,22 @@ z80_interrupt_im2:
 
 PUSHREGW        IM,edi,0
 
+; pre_dirty ----------------------------------------------------------
+; this routine pre-dirty some parts of screen
+; used for transparency effects, like in PSG GRAPH routine
+
+pre_dirty:
+                cmp     psggraph,1
+                jne     _ret
+                
+                mov     word ptr [offset dirtyname+30+0*32],0101h
+                mov     word ptr [offset dirtyname+30+1*32],0101h
+                mov     word ptr [offset dirtyname+30+2*32],0101h
+                mov     word ptr [offset dirtyname+30+3*32],0101h
+
+                ret
+
+
 ; check_mouse --------------------------------------------------------
 ; if the mouse button is pressed, then start the GUI 
 ; and pause emulation
@@ -878,6 +910,27 @@ check_client:
                 call    UART_receive
                 mov     psgjoyb,al
                 popad
+                ret
+
+; check_joystick -----------------------------------------------------
+; check the joystick status
+
+check_joystick:
+                cmp     joyenable,0
+                je      _ret
+
+                push    eax
+                call    read_joystick
+                cmp     joyenable,2
+                je      check_joystick_b
+
+                mov     psgjoya,al
+                jmp     check_joystick_exit
+check_joystick_b:
+                mov     psgjoyb,al
+
+check_joystick_exit:
+                pop     eax
                 ret
 
 ; z80paused ----------------------------------------------------------
@@ -1032,24 +1085,25 @@ print:
 outemulXX:      ret
 
 outemul8E:
+                mov     eax,2
                 irp     i,<2,3,4,5>
-                mov     dword ptr [offset slot1+i*8+4],2
+                mov     dword ptr [offset slot1+i*8+4],eax
                 endm
                 mov     bl,prim_slotreg
                 shr     ebx,2
                 and     ebx,3
                 cmp     ebx,1
                 jne     outemul8E_page2
-                mov     dword ptr [offset memlock+2*4],2
-                mov     dword ptr [offset memlock+3*4],2
+                mov     dword ptr [offset memlock+2*4],eax
+                mov     dword ptr [offset memlock+3*4],eax
 outemul8E_page2:
                 mov     bl,prim_slotreg
                 shr     ebx,4
                 and     ebx,3
                 cmp     ebx,1
                 jne     _ret
-                mov     dword ptr [offset memlock+2*4],2
-                mov     dword ptr [offset memlock+3*4],2
+                mov     dword ptr [offset memlock+2*4],eax
+                mov     dword ptr [offset memlock+3*4],eax
                 ret
 
 outemul98:      mov     esi,msxvram
@@ -1163,24 +1217,25 @@ outemulAA:      mov     ppic,bl
 inemulXX:       ret
 
 inemul8E:
+                mov     eax,0
                 irp     i,<2,3,4,5>
-                mov     dword ptr [offset slot1+i*8+4],0
+                mov     dword ptr [offset slot1+i*8+4],eax
                 endm
                 mov     bl,prim_slotreg
                 shr     ebx,2
                 and     ebx,3
                 cmp     ebx,1
                 jne     inemul8E_page2
-                mov     dword ptr [offset memlock+2*4],0
-                mov     dword ptr [offset memlock+3*4],0
+                mov     dword ptr [offset memlock+2*4],eax
+                mov     dword ptr [offset memlock+3*4],eax
 inemul8E_page2:
                 mov     bl,prim_slotreg
                 shr     ebx,4
                 and     ebx,3
                 cmp     ebx,1
                 jne     _ret
-                mov     dword ptr [offset memlock+2*4],0
-                mov     dword ptr [offset memlock+3*4],0
+                mov     dword ptr [offset memlock+2*4],eax
+                mov     dword ptr [offset memlock+3*4],eax
                 ret
 
 inemul98:       mov     ecx,msxvram
@@ -1203,7 +1258,7 @@ inemulA2a:
                 mov     al,byte ptr [offset psgreg+15]
                 test    al,BIT_6
                 jnz     inemulA2b
-                mov     bl,00111111b
+                mov     bl,psgjoya
                 ret
 inemulA2b:
                 mov     bl,psgjoyb

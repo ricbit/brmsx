@@ -69,10 +69,10 @@ set_mouse_range:
                 cmp     mousedriver,1
                 jne     _ret
                 
-                ; set the horizontal range from 8 to 256-57
+                ; set the horizontal range from 8 to 256-63
                 mov     v86r_ax,7
                 mov     v86r_cx,8
-                mov     v86r_dx,256-57
+                mov     v86r_dx,256-63
                 mov     al,33h
                 int     33h
 

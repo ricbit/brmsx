@@ -88,9 +88,14 @@ actualscreen    db      0
 
 render_screen0:
                 mov     esi,msxvram                
-                lea     ebx,[esi+0800h]
+                add     esi,nametable
+                
+                mov     ebx,msxvram
+                add     ebx,patterntable
+                
                 mov     edi,blitbuffer
                 add     edi,8
+
                 mov     ecx,0
                 mov     edx,0
                 
@@ -214,22 +219,21 @@ PIPE1           macro
 ; render a screen 1 page using dirty blocks
 
 render_screen1_dirty:
+
+                call    wash_sprite
                 
                 ; esi = name table
-                mov     eax,nametable
-                mov     esi,msxvram
-                lea     esi,[esi+eax]
+                mov     esi,nametable
+                add     esi,msxvram
 
                 ; ebx = character pattern table
                 
-                mov     eax,patterntable
-                mov     ebx,msxvram
-                lea     ebx,[ebx+eax]
+                mov     ebx,patterntable
+                add     ebx,msxvram
 
                 ; ecx = color table
-                mov     eax,colortable
-                mov     ecx,msxvram
-                lea     ecx,[ecx+eax]
+                mov     ecx,colortable
+                add     ecx,msxvram
 
                 ; edi = blit buffer
                 mov     edi,blitbuffer
@@ -696,6 +700,62 @@ render21:
                 mov     spriteenable,1
                 ret
 
+; render_screen3 -----------------------------------------------------
+; render a screen 3 page
+
+render_screen3:
+                mov     edi,blitbuffer
+
+                mov     ecx,nametable
+                add     ecx,msxvram
+
+                mov     esi,patterntable
+                add     esi,msxvram
+
+                mov     eax,0
+                mov     edx,0
+
+                mov     ebp,6
+render_screen3_outerloop:
+                push    ebp
+
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                mov     ebx,0
+render_screen3_innerloop_&i:
+                
+                mov     al,[ecx]
+                
+                mov     dl,[esi+eax*8+i]
+                mov     ebp,[offset foregroundcolor+edx*4]
+                irp     j,<0,1,2,3>
+                mov     [edi+j*256],ebp
+                endm
+                
+                mov     ebp,[offset backgroundcolor+edx*4]
+                irp     j,<0,1,2,3>
+                mov     [edi+j*256+4],ebp
+                endm
+
+                add     edi,8
+                inc     ecx
+
+                inc     ebx
+                cmp     ebx,32
+                jne     render_screen3_innerloop_&i
+
+                add     edi,3*256
+                add     ecx,((i AND 1)*32)-32
+
+                endm
+
+                pop     ebp
+                dec     ebp
+                jnz     render_screen3_outerloop
+
+                mov     spriteenable,1
+                ret
+
 ; sprite_render ------------------------------------------------------
 ; draw the sprites directly on the blit buffer
 
@@ -719,22 +779,15 @@ sprite16:
 
 sprite16N:
                 ; clear sprite line buffer
-                call    clear_sprite_buffer
+                ;call    clear_sprite_buffer
                 
                 ; esi = sprite attribute table
-                movzx   eax,byte ptr [offset vdpregs+5]
-                and     eax,07fh
-                shl     eax,7
-                mov     sprattrtable,eax
                 mov     esi,msxvram
-                lea     esi,[esi+eax]
+                add     esi,sprattrtable
 
                 ; ecx = sprite image table
-                movzx   eax,byte ptr [offset vdpregs+6]
-                and     eax,07h
-                shl     eax,11
                 mov     ecx,msxvram
-                lea     ecx,[ecx+eax]
+                add     ecx,sprpatttable
 
                 ; edi = blit buffer
                 mov     edi,blitbuffer
@@ -757,20 +810,26 @@ sprite16N6:
                 mov     eax,32
                 sub     eax,ebp
                 mov     ebp,eax
-                jz      sprite16N7
+                jz      _ret
 
                 ; for each sprite
 sprite16N1:     push    ecx eax
 
+                ; check if the sprite is transparent
+                mov     cl,[esi+3]
+                and     cl,0Fh
+                jz      sprite16N3
+
                 call    eval_sprite_coords
                 cmp     ecx,0
-                js      sprite16N3
-                cmp     ecx,256-16
-                jge     sprite16N3
-                cmp     eax,0
                 js      sprite_crop
+                cmp     ecx,256-16
+                jge     sprite_crop
+                cmp     eax,0
+                jl      sprite_crop
                 cmp     eax,192-16
                 jge     sprite_crop
+                
                 mov     ch,al
                 mov     edi,blitbuffer
                 add     edi,ecx
@@ -932,6 +991,8 @@ sprite_crop_loop:
                 sal     edi,8
                 add     edi,blitbuffer
                 add     edi,ecx
+                cmp     ecx,256-16
+                jae     sprite_crop_draw_x
 
 sprite_crop_draw:
                 cmp     eax,192
@@ -956,6 +1017,47 @@ sprite_crop_draw_nextline:
                 pop     ebp esi
                 jmp     sprite16N3
 
+sprite_crop_draw_x:
+                cmp     eax,192
+                jae     sprite_crop_draw_x_nextline
+
+                mov     ebp,0
+                mov     bh,4
+
+sprite_crop_draw_x_loop:
+                push    ecx
+                add     ecx,ebp
+                cmp     ecx,255
+                ja      sprite_crop_draw_x_nextpixel
+
+                mov     bl,[edi]
+                and     bl,[esi]
+                or      bl,[esi+4]
+                mov     [edi],bl
+
+sprite_crop_draw_x_nextpixel:
+                dec     bh
+                jnz     sprite_crop_draw_x_nocorrection
+                add     esi,4
+                mov     bh,4
+
+sprite_crop_draw_x_nocorrection:
+                pop     ecx                
+                inc     esi
+                inc     edi
+                inc     ebp
+                cmp     ebp,16
+                jne     sprite_crop_draw_x_loop
+
+sprite_crop_draw_x_nextline:
+                add     edi,256-16
+                inc     eax
+                dec     edx
+                jnz     sprite_crop_draw_x
+
+                pop     ebp esi
+                jmp     sprite16N3
+
 sprite16N2:
                 pop     ecx
 sprite16N7:
@@ -975,51 +1077,74 @@ clear_sprite_buffer:
 ; render the MSX screen, based on VDP registers and VRAM
 
 render:
-                mov     bl,byte ptr [offset vdpregs]                        
-                shr     bl,1
-                and     bl,1
-                mov     bh,byte ptr [offset vdpregs+1]
-                ; test for "video enable" flag
-                test    bh,01000000b
-                jnz     render1
+                test    byte ptr [offset vdpregs+1],BIT_6
+                jnz     render_enabled
+
+                ; video is disabled
                 cmp     enabled,0
-                je      render2
+                je      _ret
+
                 mov     enabled,0
                 jmp     clear
-render1:
+
+render_enabled:
+                ; video is enabled
                 cmp     enabled,0
-                jne     render3
+                jne     render_check_screen
+
+                ; video is enabled after being disabled for a while
+                ; now it must be fully restored
                 mov     firstscreen,1
-render3:
+
+render_check_screen:
                 mov     enabled,1
-                shr     bh,2
-                and     bh,00000110b
-                or      bl,bh
+                
+                ; check if the SCREEN mode has changed
+                mov     bl,actualscreen
                 cmp     bl,lastscreen
-                jz      render0
-                call    clear
+                je      render_check_first
+
+                ; SCREEN mode has changed
+                ; clear blitbuffer to avoid border problems
+                ; also copy a new palette
                 mov     lastscreen,bl
-render0:
-                cmp     firstscreen,1
-                jne     render4
-                mov     eax,001010101h
+                call    clear
+                call    set_correct_palette
+
+render_check_first:
+                cmp     firstscreen,1            
+                jne     render_draw
+
+                ; first screen after a major change in display
+                ; must update all the display
+                mov     firstscreen,0
+                mov     eax,01010101h
                 mov     edi,offset dirtyname
                 mov     ecx,32*24/4
                 rep     stosd
+
+                ; check if the GUI is enabled
                 cmp     cpupaused,1
-                je      render_cpupaused
+                je      render_draw
+
+                ; GUI is not enabled: update the border color
                 call    set_border_color
-render_cpupaused:
-                mov     firstscreen,0
-                
-render4:
+
+render_draw:
+                mov     bl,actualscreen
+
                 cmp     bl,0
-                je      render_screen1
-                cmp     bl,1
-                je      render_screen2
-                cmp     bl,4
                 je      render_screen0
-render2:
+
+                cmp     bl,1
+                je      render_screen1
+
+                cmp     bl,2
+                je      render_screen2
+
+                cmp     bl,3
+                je      render_screen3
+
                 ret
 
 ; clear --------------------------------------------------------------
@@ -1130,7 +1255,7 @@ eval_base_address:
                 ; first we need to determine the actual screen
 
                 test    byte ptr [offset vdpregs+0],BIT_1
-                jz      eval_base_address0
+                jz      eval_base_address_scr1
 
                 ; M3 set - screen 2
 
@@ -1220,10 +1345,10 @@ eval_base_address:
                 xor     eax,eax
                 ret
 
-eval_base_address0:
+eval_base_address_scr1:
 
                 test    byte ptr [offset vdpregs+1],(BIT_4 OR BIT_3)
-                jnz     eval_base_address1
+                jnz     eval_base_address_scr0
 
                 ; M3,M2,M1 reset - screen 1
 
@@ -1311,8 +1436,115 @@ eval_base_address0:
                 xor     eax,eax
                 ret
 
-eval_base_address1:
+eval_base_address_scr0:
+                test    byte ptr [offset vdpregs+1],BIT_4
+                jz      eval_base_address_scr3
 
+                ; M3,M1 set, M2 reset - screen 0
+
+                mov     actualscreen,0
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,0Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,07h
+                shl     eax,11
+                mov     patterntable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     al,07Fh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,07h
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen0_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen0_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen0_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen0_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen0_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen0_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+
+                xor     eax,eax
+                ret
+
+eval_base_address_scr3:
+                
+                ; M3,M2 set, M1 reset - screen 3
+                
+                mov     actualscreen,3
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,0Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,07h
+                shl     eax,11
+                mov     patterntable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     al,07Fh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,07h
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen3_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen3_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen3_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen3_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen3_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen3_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+                xor     eax,eax
                 ret
 
 ; --------------------------------------------------------------------
@@ -1453,6 +1685,30 @@ dirty_screen1_sprpatt:
                 mov     [eax+esi],bl
                 mov     byte ptr [offset dirtysprite+ecx],1
                 xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+; these are the functions to perform dirty operations on screen 0
+
+dirty_screen0_nothing:
+dirty_screen0_name:
+dirty_screen0_color:
+dirty_screen0_pattern:
+dirty_screen0_sprpatt:
+dirty_screen0_sprattr:
+                mov     [ecx+esi],bl
+                ret
+
+; --------------------------------------------------------------------
+; these are the functions to perform dirty operations on screen 3
+
+dirty_screen3_nothing:
+dirty_screen3_name:
+dirty_screen3_color:
+dirty_screen3_pattern:
+dirty_screen3_sprpatt:
+dirty_screen3_sprattr:
+                mov     [ecx+esi],bl
                 ret
 
 ; wash_sprite --------------------------------------------------------

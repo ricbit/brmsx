@@ -1,257 +1,257 @@
 isetDDCBxx:
-	isetDDCB00: dd emulDDCB00
-	isetDDCB01: dd emulDDCB01
-	isetDDCB02: dd emulDDCB02
-	isetDDCB03: dd emulDDCB03
-	isetDDCB04: dd emulDDCB04
-	isetDDCB05: dd emulDDCB05
-	isetDDCB06: dd emulDDCB06
-	isetDDCB07: dd emulDDCB07
-	isetDDCB08: dd emulDDCB08
-	isetDDCB09: dd emulDDCB09
-	isetDDCB0A: dd emulDDCB0A
-	isetDDCB0B: dd emulDDCB0B
-	isetDDCB0C: dd emulDDCB0C
-	isetDDCB0D: dd emulDDCB0D
-	isetDDCB0E: dd emulDDCB0E
-	isetDDCB0F: dd emulDDCB0F
-	isetDDCB10: dd emulDDCB10
-	isetDDCB11: dd emulDDCB11
-	isetDDCB12: dd emulDDCB12
-	isetDDCB13: dd emulDDCB13
-	isetDDCB14: dd emulDDCB14
-	isetDDCB15: dd emulDDCB15
-	isetDDCB16: dd emulDDCB16
-	isetDDCB17: dd emulDDCB17
-	isetDDCB18: dd emulDDCB18
-	isetDDCB19: dd emulDDCB19
-	isetDDCB1A: dd emulDDCB1A
-	isetDDCB1B: dd emulDDCB1B
-	isetDDCB1C: dd emulDDCB1C
-	isetDDCB1D: dd emulDDCB1D
-	isetDDCB1E: dd emulDDCB1E
-	isetDDCB1F: dd emulDDCB1F
-	isetDDCB20: dd emulDDCB20
-	isetDDCB21: dd emulDDCB21
-	isetDDCB22: dd emulDDCB22
-	isetDDCB23: dd emulDDCB23
-	isetDDCB24: dd emulDDCB24
-	isetDDCB25: dd emulDDCB25
-	isetDDCB26: dd emulDDCB26
-	isetDDCB27: dd emulDDCB27
-	isetDDCB28: dd emulDDCB28
-	isetDDCB29: dd emulDDCB29
-	isetDDCB2A: dd emulDDCB2A
-	isetDDCB2B: dd emulDDCB2B
-	isetDDCB2C: dd emulDDCB2C
-	isetDDCB2D: dd emulDDCB2D
-	isetDDCB2E: dd emulDDCB2E
-	isetDDCB2F: dd emulDDCB2F
-	isetDDCB30: dd emulDDCB30
-	isetDDCB31: dd emulDDCB31
-	isetDDCB32: dd emulDDCB32
-	isetDDCB33: dd emulDDCB33
-	isetDDCB34: dd emulDDCB34
-	isetDDCB35: dd emulDDCB35
-	isetDDCB36: dd emulDDCB36
-	isetDDCB37: dd emulDDCB37
-	isetDDCB38: dd emulDDCB38
-	isetDDCB39: dd emulDDCB39
-	isetDDCB3A: dd emulDDCB3A
-	isetDDCB3B: dd emulDDCB3B
-	isetDDCB3C: dd emulDDCB3C
-	isetDDCB3D: dd emulDDCB3D
-	isetDDCB3E: dd emulDDCB3E
-	isetDDCB3F: dd emulDDCB3F
-	isetDDCB40: dd emulDDCB40
-	isetDDCB41: dd emulDDCB41
-	isetDDCB42: dd emulDDCB42
-	isetDDCB43: dd emulDDCB43
-	isetDDCB44: dd emulDDCB44
-	isetDDCB45: dd emulDDCB45
-	isetDDCB46: dd emulDDCB46
-	isetDDCB47: dd emulDDCB47
-	isetDDCB48: dd emulDDCB48
-	isetDDCB49: dd emulDDCB49
-	isetDDCB4A: dd emulDDCB4A
-	isetDDCB4B: dd emulDDCB4B
-	isetDDCB4C: dd emulDDCB4C
-	isetDDCB4D: dd emulDDCB4D
-	isetDDCB4E: dd emulDDCB4E
-	isetDDCB4F: dd emulDDCB4F
-	isetDDCB50: dd emulDDCB50
-	isetDDCB51: dd emulDDCB51
-	isetDDCB52: dd emulDDCB52
-	isetDDCB53: dd emulDDCB53
-	isetDDCB54: dd emulDDCB54
-	isetDDCB55: dd emulDDCB55
-	isetDDCB56: dd emulDDCB56
-	isetDDCB57: dd emulDDCB57
-	isetDDCB58: dd emulDDCB58
-	isetDDCB59: dd emulDDCB59
-	isetDDCB5A: dd emulDDCB5A
-	isetDDCB5B: dd emulDDCB5B
-	isetDDCB5C: dd emulDDCB5C
-	isetDDCB5D: dd emulDDCB5D
-	isetDDCB5E: dd emulDDCB5E
-	isetDDCB5F: dd emulDDCB5F
-	isetDDCB60: dd emulDDCB60
-	isetDDCB61: dd emulDDCB61
-	isetDDCB62: dd emulDDCB62
-	isetDDCB63: dd emulDDCB63
-	isetDDCB64: dd emulDDCB64
-	isetDDCB65: dd emulDDCB65
-	isetDDCB66: dd emulDDCB66
-	isetDDCB67: dd emulDDCB67
-	isetDDCB68: dd emulDDCB68
-	isetDDCB69: dd emulDDCB69
-	isetDDCB6A: dd emulDDCB6A
-	isetDDCB6B: dd emulDDCB6B
-	isetDDCB6C: dd emulDDCB6C
-	isetDDCB6D: dd emulDDCB6D
-	isetDDCB6E: dd emulDDCB6E
-	isetDDCB6F: dd emulDDCB6F
-	isetDDCB70: dd emulDDCB70
-	isetDDCB71: dd emulDDCB71
-	isetDDCB72: dd emulDDCB72
-	isetDDCB73: dd emulDDCB73
-	isetDDCB74: dd emulDDCB74
-	isetDDCB75: dd emulDDCB75
-	isetDDCB76: dd emulDDCB76
-	isetDDCB77: dd emulDDCB77
-	isetDDCB78: dd emulDDCB78
-	isetDDCB79: dd emulDDCB79
-	isetDDCB7A: dd emulDDCB7A
-	isetDDCB7B: dd emulDDCB7B
-	isetDDCB7C: dd emulDDCB7C
-	isetDDCB7D: dd emulDDCB7D
-	isetDDCB7E: dd emulDDCB7E
-	isetDDCB7F: dd emulDDCB7F
-	isetDDCB80: dd emulDDCB80
-	isetDDCB81: dd emulDDCB81
-	isetDDCB82: dd emulDDCB82
-	isetDDCB83: dd emulDDCB83
-	isetDDCB84: dd emulDDCB84
-	isetDDCB85: dd emulDDCB85
-	isetDDCB86: dd emulDDCB86
-	isetDDCB87: dd emulDDCB87
-	isetDDCB88: dd emulDDCB88
-	isetDDCB89: dd emulDDCB89
-	isetDDCB8A: dd emulDDCB8A
-	isetDDCB8B: dd emulDDCB8B
-	isetDDCB8C: dd emulDDCB8C
-	isetDDCB8D: dd emulDDCB8D
-	isetDDCB8E: dd emulDDCB8E
-	isetDDCB8F: dd emulDDCB8F
-	isetDDCB90: dd emulDDCB90
-	isetDDCB91: dd emulDDCB91
-	isetDDCB92: dd emulDDCB92
-	isetDDCB93: dd emulDDCB93
-	isetDDCB94: dd emulDDCB94
-	isetDDCB95: dd emulDDCB95
-	isetDDCB96: dd emulDDCB96
-	isetDDCB97: dd emulDDCB97
-	isetDDCB98: dd emulDDCB98
-	isetDDCB99: dd emulDDCB99
-	isetDDCB9A: dd emulDDCB9A
-	isetDDCB9B: dd emulDDCB9B
-	isetDDCB9C: dd emulDDCB9C
-	isetDDCB9D: dd emulDDCB9D
-	isetDDCB9E: dd emulDDCB9E
-	isetDDCB9F: dd emulDDCB9F
-	isetDDCBA0: dd emulDDCBA0
-	isetDDCBA1: dd emulDDCBA1
-	isetDDCBA2: dd emulDDCBA2
-	isetDDCBA3: dd emulDDCBA3
-	isetDDCBA4: dd emulDDCBA4
-	isetDDCBA5: dd emulDDCBA5
-	isetDDCBA6: dd emulDDCBA6
-	isetDDCBA7: dd emulDDCBA7
-	isetDDCBA8: dd emulDDCBA8
-	isetDDCBA9: dd emulDDCBA9
-	isetDDCBAA: dd emulDDCBAA
-	isetDDCBAB: dd emulDDCBAB
-	isetDDCBAC: dd emulDDCBAC
-	isetDDCBAD: dd emulDDCBAD
-	isetDDCBAE: dd emulDDCBAE
-	isetDDCBAF: dd emulDDCBAF
-	isetDDCBB0: dd emulDDCBB0
-	isetDDCBB1: dd emulDDCBB1
-	isetDDCBB2: dd emulDDCBB2
-	isetDDCBB3: dd emulDDCBB3
-	isetDDCBB4: dd emulDDCBB4
-	isetDDCBB5: dd emulDDCBB5
-	isetDDCBB6: dd emulDDCBB6
-	isetDDCBB7: dd emulDDCBB7
-	isetDDCBB8: dd emulDDCBB8
-	isetDDCBB9: dd emulDDCBB9
-	isetDDCBBA: dd emulDDCBBA
-	isetDDCBBB: dd emulDDCBBB
-	isetDDCBBC: dd emulDDCBBC
-	isetDDCBBD: dd emulDDCBBD
-	isetDDCBBE: dd emulDDCBBE
-	isetDDCBBF: dd emulDDCBBF
-	isetDDCBC0: dd emulDDCBC0
-	isetDDCBC1: dd emulDDCBC1
-	isetDDCBC2: dd emulDDCBC2
-	isetDDCBC3: dd emulDDCBC3
-	isetDDCBC4: dd emulDDCBC4
-	isetDDCBC5: dd emulDDCBC5
-	isetDDCBC6: dd emulDDCBC6
-	isetDDCBC7: dd emulDDCBC7
-	isetDDCBC8: dd emulDDCBC8
-	isetDDCBC9: dd emulDDCBC9
-	isetDDCBCA: dd emulDDCBCA
-	isetDDCBCB: dd emulDDCBCB
-	isetDDCBCC: dd emulDDCBCC
-	isetDDCBCD: dd emulDDCBCD
-	isetDDCBCE: dd emulDDCBCE
-	isetDDCBCF: dd emulDDCBCF
-	isetDDCBD0: dd emulDDCBD0
-	isetDDCBD1: dd emulDDCBD1
-	isetDDCBD2: dd emulDDCBD2
-	isetDDCBD3: dd emulDDCBD3
-	isetDDCBD4: dd emulDDCBD4
-	isetDDCBD5: dd emulDDCBD5
-	isetDDCBD6: dd emulDDCBD6
-	isetDDCBD7: dd emulDDCBD7
-	isetDDCBD8: dd emulDDCBD8
-	isetDDCBD9: dd emulDDCBD9
-	isetDDCBDA: dd emulDDCBDA
-	isetDDCBDB: dd emulDDCBDB
-	isetDDCBDC: dd emulDDCBDC
-	isetDDCBDD: dd emulDDCBDD
-	isetDDCBDE: dd emulDDCBDE
-	isetDDCBDF: dd emulDDCBDF
-	isetDDCBE0: dd emulDDCBE0
-	isetDDCBE1: dd emulDDCBE1
-	isetDDCBE2: dd emulDDCBE2
-	isetDDCBE3: dd emulDDCBE3
-	isetDDCBE4: dd emulDDCBE4
-	isetDDCBE5: dd emulDDCBE5
-	isetDDCBE6: dd emulDDCBE6
-	isetDDCBE7: dd emulDDCBE7
-	isetDDCBE8: dd emulDDCBE8
-	isetDDCBE9: dd emulDDCBE9
-	isetDDCBEA: dd emulDDCBEA
-	isetDDCBEB: dd emulDDCBEB
-	isetDDCBEC: dd emulDDCBEC
-	isetDDCBED: dd emulDDCBED
-	isetDDCBEE: dd emulDDCBEE
-	isetDDCBEF: dd emulDDCBEF
-	isetDDCBF0: dd emulDDCBF0
-	isetDDCBF1: dd emulDDCBF1
-	isetDDCBF2: dd emulDDCBF2
-	isetDDCBF3: dd emulDDCBF3
-	isetDDCBF4: dd emulDDCBF4
-	isetDDCBF5: dd emulDDCBF5
-	isetDDCBF6: dd emulDDCBF6
-	isetDDCBF7: dd emulDDCBF7
-	isetDDCBF8: dd emulDDCBF8
-	isetDDCBF9: dd emulDDCBF9
-	isetDDCBFA: dd emulDDCBFA
-	isetDDCBFB: dd emulDDCBFB
-	isetDDCBFC: dd emulDDCBFC
-	isetDDCBFD: dd emulDDCBFD
-	isetDDCBFE: dd emulDDCBFE
-	isetDDCBFF: dd emulDDCBFF
+	dd emulDDCB00
+	dd emulDDCB01
+	dd emulDDCB02
+	dd emulDDCB03
+	dd emulDDCB04
+	dd emulDDCB05
+	dd emulDDCB06
+	dd emulDDCB07
+	dd emulDDCB08
+	dd emulDDCB09
+	dd emulDDCB0A
+	dd emulDDCB0B
+	dd emulDDCB0C
+	dd emulDDCB0D
+	dd emulDDCB0E
+	dd emulDDCB0F
+	dd emulDDCB10
+	dd emulDDCB11
+	dd emulDDCB12
+	dd emulDDCB13
+	dd emulDDCB14
+	dd emulDDCB15
+	dd emulDDCB16
+	dd emulDDCB17
+	dd emulDDCB18
+	dd emulDDCB19
+	dd emulDDCB1A
+	dd emulDDCB1B
+	dd emulDDCB1C
+	dd emulDDCB1D
+	dd emulDDCB1E
+	dd emulDDCB1F
+	dd emulDDCB20
+	dd emulDDCB21
+	dd emulDDCB22
+	dd emulDDCB23
+	dd emulDDCB24
+	dd emulDDCB25
+	dd emulDDCB26
+	dd emulDDCB27
+	dd emulDDCB28
+	dd emulDDCB29
+	dd emulDDCB2A
+	dd emulDDCB2B
+	dd emulDDCB2C
+	dd emulDDCB2D
+	dd emulDDCB2E
+	dd emulDDCB2F
+	dd emulDDCB30
+	dd emulDDCB31
+	dd emulDDCB32
+	dd emulDDCB33
+	dd emulDDCB34
+	dd emulDDCB35
+	dd emulDDCB36
+	dd emulDDCB37
+	dd emulDDCB38
+	dd emulDDCB39
+	dd emulDDCB3A
+	dd emulDDCB3B
+	dd emulDDCB3C
+	dd emulDDCB3D
+	dd emulDDCB3E
+	dd emulDDCB3F
+	dd emulDDCB40
+	dd emulDDCB41
+	dd emulDDCB42
+	dd emulDDCB43
+	dd emulDDCB44
+	dd emulDDCB45
+	dd emulDDCB46
+	dd emulDDCB47
+	dd emulDDCB48
+	dd emulDDCB49
+	dd emulDDCB4A
+	dd emulDDCB4B
+	dd emulDDCB4C
+	dd emulDDCB4D
+	dd emulDDCB4E
+	dd emulDDCB4F
+	dd emulDDCB50
+	dd emulDDCB51
+	dd emulDDCB52
+	dd emulDDCB53
+	dd emulDDCB54
+	dd emulDDCB55
+	dd emulDDCB56
+	dd emulDDCB57
+	dd emulDDCB58
+	dd emulDDCB59
+	dd emulDDCB5A
+	dd emulDDCB5B
+	dd emulDDCB5C
+	dd emulDDCB5D
+	dd emulDDCB5E
+	dd emulDDCB5F
+	dd emulDDCB60
+	dd emulDDCB61
+	dd emulDDCB62
+	dd emulDDCB63
+	dd emulDDCB64
+	dd emulDDCB65
+	dd emulDDCB66
+	dd emulDDCB67
+	dd emulDDCB68
+	dd emulDDCB69
+	dd emulDDCB6A
+	dd emulDDCB6B
+	dd emulDDCB6C
+	dd emulDDCB6D
+	dd emulDDCB6E
+	dd emulDDCB6F
+	dd emulDDCB70
+	dd emulDDCB71
+	dd emulDDCB72
+	dd emulDDCB73
+	dd emulDDCB74
+	dd emulDDCB75
+	dd emulDDCB76
+	dd emulDDCB77
+	dd emulDDCB78
+	dd emulDDCB79
+	dd emulDDCB7A
+	dd emulDDCB7B
+	dd emulDDCB7C
+	dd emulDDCB7D
+	dd emulDDCB7E
+	dd emulDDCB7F
+	dd emulDDCB80
+	dd emulDDCB81
+	dd emulDDCB82
+	dd emulDDCB83
+	dd emulDDCB84
+	dd emulDDCB85
+	dd emulDDCB86
+	dd emulDDCB87
+	dd emulDDCB88
+	dd emulDDCB89
+	dd emulDDCB8A
+	dd emulDDCB8B
+	dd emulDDCB8C
+	dd emulDDCB8D
+	dd emulDDCB8E
+	dd emulDDCB8F
+	dd emulDDCB90
+	dd emulDDCB91
+	dd emulDDCB92
+	dd emulDDCB93
+	dd emulDDCB94
+	dd emulDDCB95
+	dd emulDDCB96
+	dd emulDDCB97
+	dd emulDDCB98
+	dd emulDDCB99
+	dd emulDDCB9A
+	dd emulDDCB9B
+	dd emulDDCB9C
+	dd emulDDCB9D
+	dd emulDDCB9E
+	dd emulDDCB9F
+	dd emulDDCBA0
+	dd emulDDCBA1
+	dd emulDDCBA2
+	dd emulDDCBA3
+	dd emulDDCBA4
+	dd emulDDCBA5
+	dd emulDDCBA6
+	dd emulDDCBA7
+	dd emulDDCBA8
+	dd emulDDCBA9
+	dd emulDDCBAA
+	dd emulDDCBAB
+	dd emulDDCBAC
+	dd emulDDCBAD
+	dd emulDDCBAE
+	dd emulDDCBAF
+	dd emulDDCBB0
+	dd emulDDCBB1
+	dd emulDDCBB2
+	dd emulDDCBB3
+	dd emulDDCBB4
+	dd emulDDCBB5
+	dd emulDDCBB6
+	dd emulDDCBB7
+	dd emulDDCBB8
+	dd emulDDCBB9
+	dd emulDDCBBA
+	dd emulDDCBBB
+	dd emulDDCBBC
+	dd emulDDCBBD
+	dd emulDDCBBE
+	dd emulDDCBBF
+	dd emulDDCBC0
+	dd emulDDCBC1
+	dd emulDDCBC2
+	dd emulDDCBC3
+	dd emulDDCBC4
+	dd emulDDCBC5
+	dd emulDDCBC6
+	dd emulDDCBC7
+	dd emulDDCBC8
+	dd emulDDCBC9
+	dd emulDDCBCA
+	dd emulDDCBCB
+	dd emulDDCBCC
+	dd emulDDCBCD
+	dd emulDDCBCE
+	dd emulDDCBCF
+	dd emulDDCBD0
+	dd emulDDCBD1
+	dd emulDDCBD2
+	dd emulDDCBD3
+	dd emulDDCBD4
+	dd emulDDCBD5
+	dd emulDDCBD6
+	dd emulDDCBD7
+	dd emulDDCBD8
+	dd emulDDCBD9
+	dd emulDDCBDA
+	dd emulDDCBDB
+	dd emulDDCBDC
+	dd emulDDCBDD
+	dd emulDDCBDE
+	dd emulDDCBDF
+	dd emulDDCBE0
+	dd emulDDCBE1
+	dd emulDDCBE2
+	dd emulDDCBE3
+	dd emulDDCBE4
+	dd emulDDCBE5
+	dd emulDDCBE6
+	dd emulDDCBE7
+	dd emulDDCBE8
+	dd emulDDCBE9
+	dd emulDDCBEA
+	dd emulDDCBEB
+	dd emulDDCBEC
+	dd emulDDCBED
+	dd emulDDCBEE
+	dd emulDDCBEF
+	dd emulDDCBF0
+	dd emulDDCBF1
+	dd emulDDCBF2
+	dd emulDDCBF3
+	dd emulDDCBF4
+	dd emulDDCBF5
+	dd emulDDCBF6
+	dd emulDDCBF7
+	dd emulDDCBF8
+	dd emulDDCBF9
+	dd emulDDCBFA
+	dd emulDDCBFB
+	dd emulDDCBFC
+	dd emulDDCBFD
+	dd emulDDCBFE
+	dd emulDDCBFF

@@ -20,6 +20,7 @@ include compiler.inc
 include serial.inc
 include psg.inc
 include mouse.inc
+include joystick.inc
 
 include debugsrc.inc
 include helpsrc.inc
@@ -74,6 +75,10 @@ com1            db      '1$'
 com2            db      '2$'
 com3            db      '3$'
 com4            db      '4$'
+joyn            db      '-$'
+joya            db      'A$'
+joyb            db      'B$'
+imode0          db      'IM0$'
 imode1          db      'IM1$'
 imode2          db      'IM2$'
 sessionsingle   db      'SINGLE$'
@@ -257,6 +262,14 @@ changevideomode_vesa2:
 change_sound:
                 mov     eax,sounddetected
                 xor     soundenabled,eax
+                ret
+; --------------------------------------------------------------------
+
+change_joystick:
+                add     joyenable,1
+                cmp     joyenable,3
+                jne     _ret
+                mov     joyenable,0
                 ret
 
 ; --------------------------------------------------------------------
@@ -454,6 +467,27 @@ print_session2:
                 mov     eax,offset sessionclient
                 call    printmsgd
 print_session_exit:
+
+; --------------------------------------------------------------------
+
+                ; print the joystick mode
+
+                COORD   8,22
+                cmp     joyenable,0
+                jne     joystick_mode1
+                mov     eax,offset joyn
+                call    printmsgd
+                jmp     joystick_mode_exit
+joystick_mode1:
+                cmp     joyenable,1
+                jne     joystick_mode2
+                mov     eax,offset joya
+                call    printmsgd
+                jmp     joystick_mode_exit
+joystick_mode2:
+                mov     eax,offset joyb
+                call    printmsgd
+joystick_mode_exit:
 
 ; --------------------------------------------------------------------
 
@@ -658,19 +692,26 @@ print_psg1:
                 
                 ; print the actual screen mode
 
-                cmp     lastscreen,4
+                cmp     lastscreen,0
                 jne     print_screen1
                 mov     tabspace,'0'
                 jmp     print_screen0
 print_screen1:
-                cmp     lastscreen,0
+                cmp     lastscreen,1
                 jne     print_screen2
                 mov     tabspace,'1'
                 jmp     print_screen0
 print_screen2:
+                cmp     lastscreen,2
+                jne     print_screen3
                 mov     tabspace,'2'
-                cmp     lastscreen,1
-                je      print_screen0
+                jmp     print_screen0
+print_screen3:
+                cmp     lastscreen,3
+                jne     print_screenX
+                mov     tabspace,'3'
+                jmp     print_screen0
+print_screenX:
                 mov     tabspace,'X'
 print_screen0:
                 COORD   74,19
@@ -707,7 +748,12 @@ print_iff0:
 
                 cmp     imtype,2
                 je      print_im2
+                cmp     imtype,0
+                je      print_im0
                 mov     eax,offset imode1
+                jmp     print_im_print
+print_im0:
+                mov     eax,offset imode0
                 jmp     print_im_print
 print_im2:
                 mov     eax,offset imode2
@@ -934,8 +980,8 @@ debug_loop:
                 je      command_j
                 cmp     al,'K'
                 je      command_k
-                cmp     al,'R'
-                je      command_r
+                ;cmp     al,'R'
+                ;je      command_r
                 cmp     al,'A'
                 je      command_a
                 cmp     al,'I'
@@ -952,12 +998,12 @@ debug_loop:
                 je      command_2
                 cmp     al,'V'
                 je      command_v
-                cmp     al,'Z'
-                je      command_z
+                ;cmp     al,'Z'
+                ;je      command_z
                 cmp     al,'N'
                 je      command_n
-                cmp     al,'E'
-                je      command_e
+                ;cmp     al,'E'
+                ;je      command_e
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -1031,7 +1077,7 @@ command_f:
                 jmp     debug_loop
 
 command_j:
-                call    save_histogram
+                call    change_joystick
                 jmp     debug_loop
 
 command_v:      call    changevideomode
@@ -1149,15 +1195,8 @@ command_s_go:
                 jmp     debug_loop
 
 command_c:      
-                mov     firstscreen,1
-                call    setgraphmode
-                call    clear
-                call    turnon_kb_irq
-                call    turnon_irq
-                call    compile_pipeline
-                call    turnoff_irq
-                call    turnoff_kb_irq
-                call    settextmode
+                call    calibrate_joystick
+                mov     joyenable,1
                 jmp     debug_loop
 
 ;command_k:

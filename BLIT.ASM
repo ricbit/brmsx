@@ -70,7 +70,9 @@ blit_linear_320_0:
 ; dirty 320x192 ------------------------------------------------------
 
 blit_dirty_320:
-                cmp     lastscreen,4
+                cmp     lastscreen,0
+                je      blit_linear_320
+                cmp     lastscreen,3
                 je      blit_linear_320
                 mov     ebx,offset dirtyname
                 mov     esi,blitbuffer
@@ -120,7 +122,9 @@ blit_dirty_320_next:
 ; dirty 256x192 ------------------------------------------------------
 
 blit_dirty_256:
-                cmp     lastscreen,4
+                cmp     lastscreen,0
+                je      blit_linear_256
+                cmp     lastscreen,3
                 je      blit_linear_256
                 mov     ebx,offset dirtyname
                 mov     esi,blitbuffer
@@ -260,7 +264,9 @@ blit2_linear_inner_loop:
 ; dirty 512x384 ------------------------------------------------------
 
 blit2_dirty:
-                cmp     lastscreen,4
+                cmp     lastscreen,0
+                je      blit2_linear
+                cmp     lastscreen,3
                 je      blit2_linear
 
                 mov     ebx,offset dirtyname

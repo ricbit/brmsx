@@ -109,3 +109,5 @@ extrn reset_flag: dword
 extrn reset_cpu: near
 extrn LDI_table: byte
 extrn imtype: dword
+extrn iline: dword
+extrn clocksleft: dword

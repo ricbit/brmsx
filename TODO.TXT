@@ -1,12 +1,10 @@
 - fix border color in 256 mode
-- fix video cache for screen 1
 - add video cache for screen 0
 - improve video cache in screen 2
-- add screen 3
 - improve gui
 - finish the compiler
-- fix X-sprite cropping
 - noise/envelope in sound
 - add clock-perfect sound sync
 - optimize sound composing functions
-- fix save-load game
+- add low-level and high-level disk functions
+- add true-disk emulation

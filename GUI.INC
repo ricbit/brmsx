@@ -1,6 +1,8 @@
 extrn draw_gui: near
 extrn start_gui: near
 
+extrn psggraph: dword
+
 extrn rendercounter: byte
 extrn spritecounter: byte
 extrn blitcounter: byte

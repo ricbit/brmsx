@@ -2,9 +2,19 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
-release 1.XX:
+release 1.04:
 
+- fixed bug on video cache of SCREEN 1
+- support for joystick in both port-A and port-B
+- added volume control
+- added full sprite cropping
+- fixed bug with transparent sprites
+- support to SCREEN 3
+- fixed bug in interrupt handling (frogger)
+- added PSG graph
+- fixed bug in color 2
 - fixed bug in "PLAY" basic statement.
+- added support for 256kb megaram
 
 release 1.101:
 
