@@ -19,7 +19,8 @@ void main (void) {
   for (i=0; i<256; i++) {
     a=0-i;    
     f=(a&BIT_7)|(a&BIT_5)|(a&BIT_3)|((a==0)?BIT_6:0)|
-      ((i&0xf)>0?BIT_4:0)|((i!=0)?BIT_0:0)|((i==0x80)?BIT_2:0);
+      ((i&0xf)>0?BIT_4:0)|((i!=0)?BIT_0:0)|((i==0x80)?BIT_2:0)|
+      BIT_1;
     printf ("\t\tdb\t0%02xh,0%02xh\t;%02x\n",f,a,i);
   }
 }

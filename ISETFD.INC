@@ -181,7 +181,7 @@ isetFDxx:
 	isetFDB3: dd emulXX
 	isetFDB4: dd emulXX
 	isetFDB5: dd emulXX
-	isetFDB6: dd emulXX
+	isetFDB6: dd emulFDB6
 	isetFDB7: dd emulXX
 	isetFDB8: dd emulXX
 	isetFDB9: dd emulXX
@@ -232,7 +232,7 @@ isetFDxx:
 	isetFDE6: dd emulXX
 	isetFDE7: dd emulXX
 	isetFDE8: dd emulXX
-	isetFDE9: dd emulXX
+	isetFDE9: dd emulFDE9
 	isetFDEA: dd emulXX
 	isetFDEB: dd emulXX
 	isetFDEC: dd emulXX

@@ -181,7 +181,7 @@ psetDDxx:
 	psetDDB3: dd prinXX
 	psetDDB4: dd prinXX
 	psetDDB5: dd prinXX
-	psetDDB6: dd prinXX
+	psetDDB6: dd prinDDB6
 	psetDDB7: dd prinXX
 	psetDDB8: dd prinXX
 	psetDDB9: dd prinXX

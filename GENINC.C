@@ -18,7 +18,7 @@ void main (void) {
   printf ("INC_table:\n");
   for (i=0; i<256; i++) {
     k=(i&BIT_5)|(i&BIT_3)|(i==0?BIT_6:0)|(i&BIT_7)|
-      (i&0xf==0?BIT_4:0)|(i==0x80?BIT_2:0);
+      ((i&0xf)==0?BIT_4:0)|(i==0x80?BIT_2:0);
     printf ("\t\tdb\t0%02xh\t;%02x\n",k,i);
   }
 }

@@ -90,12 +90,11 @@ emul&opcode:
 BITREG          macro   opcode,reg,bit
 
 emul&opcode:                
+                mov     al,reg
                 inc     edi
-                xor     ebx,ebx
-                mov     bl,reg
                 and     dl,01h
                 mov     ebp,8
-                or      dl,[offset BIT&bit&_table+ebx]
+                or      dl,[offset BIT&bit&_table+eax]
                 ret
 
                 endm
@@ -112,6 +111,7 @@ emul&opcode:
                 and     dl,01h
                 mov     ebp,12
                 or      dl,[offset BIT&bit&_table+eax]
+                and     dl,11010111b
                 ret
 
                 endm
@@ -180,9 +180,10 @@ DECII           macro   opcode,reg
 emul&opcode:
                 inc     edi
                 call    fetch
+                movsx   ebx,al
                 inc     edi
                 mov     ecx,reg
-                add     cx,ax
+                add     cx,bx
                 call    readmem
                 dec     al
                 call    writemem
@@ -248,9 +249,10 @@ INCII           macro   opcode,reg
 emul&opcode:
                 inc     edi
                 call    fetch
+                movsx   ebx,al
                 inc     edi
                 mov     ecx,reg
-                add     cx,ax
+                add     cx,bx
                 call    readmem
                 inc     al
                 call    writemem
@@ -676,8 +678,9 @@ emul&opcode:
                 inc     edi                             ; clock 1 U
                 mov     ecx,itype
                 call    fetch
+                movsx   ebx,al
                 inc     edi
-                add     cx,ax
+                add     cx,bx
                 call    readmem
                 mov     bh,al
                 mov     ebp,7
@@ -711,6 +714,42 @@ emul&opcode:
                 shr     reg,1
                 and     dl,1
                 mov     al,reg
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SRAREG - SRA rr rr=[a,b,c,d,e,h,l]
+
+SRAREG          macro   opcode,reg
+
+emul&opcode:                
+                inc     edi
+                mov     dl,reg
+                sar     reg,1
+                and     dl,1
+                mov     al,reg
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SRAHL - SRA (HL)
+
+SRAHL           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     dl,al
+                sar     al,1
+                and     dl,1
+                call    writemem
                 mov     ebp,8
                 or      dl,[offset LOGICAL_table+eax]
                 ret
@@ -782,6 +821,27 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; ORII - OR (II+dd)
+
+ORII            macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                movsx   ebx,al
+                mov     ecx,regii
+                inc     edi
+                add     cx,bx
+                call    readmem
+                or      dh,al
+                mov     al,dh
+                mov     ebp,7
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDD
 
 OPLDD           macro   opcode
@@ -828,9 +888,10 @@ LDIIDDREG       macro   opcode,reg,itype
 emul&opcode:
                 inc     edi
                 call    fetch
+                movsx   ebx,al
                 mov     ecx,itype
                 inc     edi
-                add     cx,ax
+                add     cx,bx
                 mov     al,reg
                 call    writemem
                 mov     ebp,19
@@ -846,8 +907,9 @@ LDIIDDNN        macro   opcode,itype
 emul&opcode:
                 inc     edi
                 call    fetch
+                movsx   ebx,al
                 mov     ecx,itype
-                add     cx,ax
+                add     cx,bx
                 inc     edi
                 call    fetch
                 inc     edi
@@ -866,12 +928,17 @@ emul&opcode:
                 mov     ecx,regehl                    
                 call    readmem                       
                 mov     bl,al                         
+                ; put high digit of hl in al
                 shr     al,4
+                ; put low digit of hl in bl
                 and     bl,0fh                        
                 mov     bh,dh                         
+                ; put high digit of a in dh
                 and     dh,0f0h
+                ; put low digit of a in upper part of bh
                 shl     bh,4
                 or      dh,bl
+                ; mix
                 or      al,bh
                 call    writemem
                 mov     al,dh
@@ -892,11 +959,15 @@ emul&opcode:
                 mov     ecx,regehl                    
                 call    readmem                       
                 mov     bl,al                         
+                ; put low digit of hl in upper part of al
                 shl     al,4
                 mov     bh,dh                         
+                ; dh has upper digit of a
                 and     dh,0f0h
+                ; bh has lower digit of a
                 and     bh,0fh
                 shr     bl,4
+                ; mix
                 or      dh,bl
                 or      al,bh
                 call    writemem
@@ -1017,3 +1088,91 @@ emul&opcode:
                 ret
 
                 endm
+
+; --------------------------------------------------------------------
+; ADD HL,regw   regw=[bc,de,hl,sp]
+
+ADDHLWREG       macro   opcode,reglow,reghigh
+
+emul&opcode:                
+                inc     edi
+                mov     bl,reglow
+                add     regl,bl
+                mov     bh,regh
+                mov     bl,reghigh
+                mov     cl,0
+                adc     regh,bl
+                mov     ebp,11
+                adc     cl,cl
+                mov     al,regh
+                xor     bl,bh
+                xor     bl,al
+                and     dl,11000100b
+                or      dl,cl
+                and     bl,BIT_4
+                or      dl,bl
+                or      dl,[offset PVN53_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; ADC HL,regw   regw=[bc,de,hl,sp]
+
+ADCHLWREG       macro   opcode,reglow,reghigh
+
+emul&opcode:                
+                inc     edi
+                shr     dl,1
+                mov     bl,reglow
+                adc     regl,bl
+                mov     bh,regh
+                mov     bl,reghigh
+                mov     cl,0
+                adc     regh,bl
+                mov     ebp,11
+                adc     cl,cl
+                mov     al,regh
+                xor     bl,bh
+                xor     bl,al
+                mov     dl,cl
+                or      dl,[offset ARITP_table+eax]
+                mov     al,cl
+                or      al,bl
+                and     bl,BIT_4
+                or      dl,bl
+                or      dl,[offset OVERFLOW_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SBC HL,regw   regw=[bc,de,hl,sp]
+
+SBCHLWREG       macro   opcode,reglow,reghigh
+
+emul&opcode:                
+                inc     edi
+                shr     dl,1
+                mov     bl,reglow
+                sbb     regl,bl
+                mov     bh,regh
+                mov     bl,reghigh
+                mov     cl,0
+                sbb     regh,bl
+                mov     ebp,11
+                adc     cl,cl
+                mov     al,regh
+                xor     bl,bh
+                xor     bl,al
+                mov     dl,cl
+                or      dl,[offset ARITN_table+eax]
+                mov     al,cl
+                or      al,bl
+                and     bl,BIT_4
+                or      dl,bl
+                or      dl,[offset OVERFLOW_table+eax]
+                ret
+
+                endm
+

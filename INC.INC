@@ -1,5 +1,5 @@
 INC_table:
-		db	040h	;00
+		db	050h	;00
 		db	000h	;01
 		db	000h	;02
 		db	000h	;03
@@ -15,7 +15,7 @@ INC_table:
 		db	008h	;0d
 		db	008h	;0e
 		db	008h	;0f
-		db	000h	;10
+		db	010h	;10
 		db	000h	;11
 		db	000h	;12
 		db	000h	;13
@@ -31,7 +31,7 @@ INC_table:
 		db	008h	;1d
 		db	008h	;1e
 		db	008h	;1f
-		db	020h	;20
+		db	030h	;20
 		db	020h	;21
 		db	020h	;22
 		db	020h	;23
@@ -47,7 +47,7 @@ INC_table:
 		db	028h	;2d
 		db	028h	;2e
 		db	028h	;2f
-		db	020h	;30
+		db	030h	;30
 		db	020h	;31
 		db	020h	;32
 		db	020h	;33
@@ -63,7 +63,7 @@ INC_table:
 		db	028h	;3d
 		db	028h	;3e
 		db	028h	;3f
-		db	000h	;40
+		db	010h	;40
 		db	000h	;41
 		db	000h	;42
 		db	000h	;43
@@ -79,7 +79,7 @@ INC_table:
 		db	008h	;4d
 		db	008h	;4e
 		db	008h	;4f
-		db	000h	;50
+		db	010h	;50
 		db	000h	;51
 		db	000h	;52
 		db	000h	;53
@@ -95,7 +95,7 @@ INC_table:
 		db	008h	;5d
 		db	008h	;5e
 		db	008h	;5f
-		db	020h	;60
+		db	030h	;60
 		db	020h	;61
 		db	020h	;62
 		db	020h	;63
@@ -111,7 +111,7 @@ INC_table:
 		db	028h	;6d
 		db	028h	;6e
 		db	028h	;6f
-		db	020h	;70
+		db	030h	;70
 		db	020h	;71
 		db	020h	;72
 		db	020h	;73
@@ -127,7 +127,7 @@ INC_table:
 		db	028h	;7d
 		db	028h	;7e
 		db	028h	;7f
-		db	084h	;80
+		db	094h	;80
 		db	080h	;81
 		db	080h	;82
 		db	080h	;83
@@ -143,7 +143,7 @@ INC_table:
 		db	088h	;8d
 		db	088h	;8e
 		db	088h	;8f
-		db	080h	;90
+		db	090h	;90
 		db	080h	;91
 		db	080h	;92
 		db	080h	;93
@@ -159,7 +159,7 @@ INC_table:
 		db	088h	;9d
 		db	088h	;9e
 		db	088h	;9f
-		db	0a0h	;a0
+		db	0b0h	;a0
 		db	0a0h	;a1
 		db	0a0h	;a2
 		db	0a0h	;a3
@@ -175,7 +175,7 @@ INC_table:
 		db	0a8h	;ad
 		db	0a8h	;ae
 		db	0a8h	;af
-		db	0a0h	;b0
+		db	0b0h	;b0
 		db	0a0h	;b1
 		db	0a0h	;b2
 		db	0a0h	;b3
@@ -191,7 +191,7 @@ INC_table:
 		db	0a8h	;bd
 		db	0a8h	;be
 		db	0a8h	;bf
-		db	080h	;c0
+		db	090h	;c0
 		db	080h	;c1
 		db	080h	;c2
 		db	080h	;c3
@@ -207,7 +207,7 @@ INC_table:
 		db	088h	;cd
 		db	088h	;ce
 		db	088h	;cf
-		db	080h	;d0
+		db	090h	;d0
 		db	080h	;d1
 		db	080h	;d2
 		db	080h	;d3
@@ -223,7 +223,7 @@ INC_table:
 		db	088h	;dd
 		db	088h	;de
 		db	088h	;df
-		db	0a0h	;e0
+		db	0b0h	;e0
 		db	0a0h	;e1
 		db	0a0h	;e2
 		db	0a0h	;e3
@@ -239,7 +239,7 @@ INC_table:
 		db	0a8h	;ed
 		db	0a8h	;ee
 		db	0a8h	;ef
-		db	0a0h	;f0
+		db	0b0h	;f0
 		db	0a0h	;f1
 		db	0a0h	;f2
 		db	0a0h	;f3

@@ -227,7 +227,7 @@ pset:
 	psetE1: dd prinE1
 	psetE2: dd prinE2
 	psetE3: dd prinE3
-	psetE4: dd prinXX
+	psetE4: dd prinE4
 	psetE5: dd prinE5
 	psetE6: dd prinE6
 	psetE7: dd prinE7
@@ -235,7 +235,7 @@ pset:
 	psetE9: dd prinE9
 	psetEA: dd prinEA
 	psetEB: dd prinEB
-	psetEC: dd prinXX
+	psetEC: dd prinEC
 	psetED: dd prinED
 	psetEE: dd prinEE
 	psetEF: dd prinEF

@@ -105,9 +105,9 @@ dumpmem1:       call    fetch
                 mov     ecx,16
 dumpmem2:       call    fetch
                 cmp     al,32
-                jl      dumpmem3
+                jb      dumpmem3
                 cmp     al,128
-                jl      dumpmem4
+                jb      dumpmem4
 dumpmem3:       mov     al,'.'
 dumpmem4:       call    printasc
                 inc     edi

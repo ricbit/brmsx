@@ -39,14 +39,14 @@ isetCBxx:
 	isetCB25: dd emulCB25
 	isetCB26: dd emulCB26
 	isetCB27: dd emulCB27
-	isetCB28: dd emulXX
-	isetCB29: dd emulXX
-	isetCB2A: dd emulXX
-	isetCB2B: dd emulXX
-	isetCB2C: dd emulXX
-	isetCB2D: dd emulXX
-	isetCB2E: dd emulXX
-	isetCB2F: dd emulXX
+	isetCB28: dd emulCB28
+	isetCB29: dd emulCB29
+	isetCB2A: dd emulCB2A
+	isetCB2B: dd emulCB2B
+	isetCB2C: dd emulCB2C
+	isetCB2D: dd emulCB2D
+	isetCB2E: dd emulCB2E
+	isetCB2F: dd emulCB2F
 	isetCB30: dd emulXX
 	isetCB31: dd emulXX
 	isetCB32: dd emulXX

@@ -5,7 +5,7 @@ psetDDCBxx:
 	psetDDCB03: dd prinXX
 	psetDDCB04: dd prinXX
 	psetDDCB05: dd prinXX
-	psetDDCB06: dd prinXX
+	psetDDCB06: dd prinDDCB06
 	psetDDCB07: dd prinXX
 	psetDDCB08: dd prinXX
 	psetDDCB09: dd prinXX

@@ -377,8 +377,23 @@ sprite16N:
                 xor     eax,eax
                 xor     ebx,ebx
 
-                ; for each sprite
+                ; find last sprite
                 mov     ebp,32
+sprite16N5:
+                mov     ah,[esi]
+                cmp     ah,0D0h
+                je      sprite16N6
+                add     esi,4
+                dec     ebp
+                jnz     sprite16N5
+sprite16N6:     
+                sub     esi,4
+                mov     eax,32
+                sub     eax,ebp
+                mov     ebp,eax
+                jz      sprite16N7
+
+                ; for each sprite
 sprite16N1:     push    ecx
                 ; ah = vertical position of sprite
                 mov     ah,[esi]
@@ -476,13 +491,14 @@ sprite16N4:
 
 sprite16N3:
                 pop     ecx
-                add     esi,4
+                sub     esi,4
                 dec     ebp
                 jnz     sprite16N1
                 ret
 
 sprite16N2:
                 pop     ecx
+sprite16N7:
                 ret
 
 sprite16M:      ret

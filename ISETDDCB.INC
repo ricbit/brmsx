@@ -5,7 +5,7 @@ isetDDCBxx:
 	isetDDCB03: dd emulXX
 	isetDDCB04: dd emulXX
 	isetDDCB05: dd emulXX
-	isetDDCB06: dd emulXX
+	isetDDCB06: dd emulDDCB06
 	isetDDCB07: dd emulXX
 	isetDDCB08: dd emulXX
 	isetDDCB09: dd emulXX

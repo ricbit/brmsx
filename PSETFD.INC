@@ -181,7 +181,7 @@ psetFDxx:
 	psetFDB3: dd prinXX
 	psetFDB4: dd prinXX
 	psetFDB5: dd prinXX
-	psetFDB6: dd prinXX
+	psetFDB6: dd prinFDB6
 	psetFDB7: dd prinXX
 	psetFDB8: dd prinXX
 	psetFDB9: dd prinXX
@@ -232,7 +232,7 @@ psetFDxx:
 	psetFDE6: dd prinXX
 	psetFDE7: dd prinXX
 	psetFDE8: dd prinXX
-	psetFDE9: dd prinXX
+	psetFDE9: dd prinFDE9
 	psetFDEA: dd prinXX
 	psetFDEB: dd prinXX
 	psetFDEC: dd prinXX

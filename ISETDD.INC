@@ -181,7 +181,7 @@ isetDDxx:
 	isetDDB3: dd emulXX
 	isetDDB4: dd emulXX
 	isetDDB5: dd emulXX
-	isetDDB6: dd emulXX
+	isetDDB6: dd emulDDB6
 	isetDDB7: dd emulXX
 	isetDDB8: dd emulXX
 	isetDDB9: dd emulXX

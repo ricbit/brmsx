@@ -137,6 +137,30 @@ SLAHL           CB26
 ; CB 27 - SLA A
 SLAREG          CB27,dh
 
+; CB 28 - SRA B
+SRAREG          CB28,regb
+
+; CB 29 - SRA C
+SRAREG          CB29,regc
+
+; CB 2A - SRA D
+SRAREG          CB2A,regd
+
+; CB 2B - SRA E
+SRAREG          CB2B,rege
+
+; CB 2C - SRA H
+SRAREG          CB2C,regh
+
+; CB 2D - SRA L
+SRAREG          CB2D,regl
+
+; CB 2E - SRA (HL)
+SRAHL           CB2E
+
+; CB 2F - SRA A
+SRAREG          CB2F,dh
+
 ; CB 38 - SRL B
 SRLREG          CB38,regb
 
@@ -227,8 +251,8 @@ BITREG          CB55,regl,2
 ; CB 56 - BIT 2,(HL)
 BITHL           CB56,2
 
-; CB 57 - BIT 3,A
-BITREG          CB57,dh,3
+; CB 57 - BIT 2,A
+BITREG          CB57,dh,2
 
 ; CB 58 - BIT 3,B
 BITREG          CB58,regb,3

@@ -227,7 +227,7 @@ iset:
 	isetE1: dd emulE1
 	isetE2: dd emulE2
 	isetE3: dd emulE3
-	isetE4: dd emulXX
+	isetE4: dd emulE4
 	isetE5: dd emulE5
 	isetE6: dd emulE6
 	isetE7: dd emulE7
@@ -235,7 +235,7 @@ iset:
 	isetE9: dd emulE9
 	isetEA: dd emulEA
 	isetEB: dd emulEB
-	isetEC: dd emulXX
+	isetEC: dd emulEC
 	isetED: dd emulED
 	isetEE: dd emulEE
 	isetEF: dd emulEF
