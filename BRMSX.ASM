@@ -27,7 +27,7 @@ extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.42',13,10
+msg00           db      'BrMSX 1.43',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'

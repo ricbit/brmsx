@@ -20,6 +20,8 @@ include debugsrc.inc
 extrn msxrom: near
 extrn pentiumfound: dword
 extrn isize: dword
+extrn setup_profile: near
+extrn end_profile: near
 
 public debug
 public printmsgd
@@ -29,14 +31,15 @@ public printmsgd
 align 4
 
 temp_screen     db      3840 dup (0)
-message         dw      80 dup (0Fh)
+message         db      80*2 dup (0)
 messagepointer  dd      0
 memdump         dd      0
 tabspace        db      ' $'
+tabindicator    db      '>$'
 flags           db      '00000000$'
 msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
-msgpentiumonly  db      'this option requires a pentium',13,10,'$'
+msgpentiumonly  db      'This option requires a Pentium$'
 res320          db      '320x200$'
 res256          db      '256x200$'
 modenormal      db      'NORMAL$'
@@ -61,16 +64,14 @@ COORD           macro   x,y
 ; clear the text screen
 
 clear_text:
-                push    eax edi ecx es
-                mov     ax,gs
-                mov     es,ax
-                mov     eax,00070007h
+                push    eax edi ecx
+                mov     eax,07200720h
                 mov     edi,offset message
                 mov     ecx,80*2/4
                 rep     stosd
                 mov     eax,offset message
                 mov     messagepointer,eax
-                pop     es ecx edi eax
+                pop     ecx edi eax
                 jmp     printmessage
 
 ; printmessage -------------------------------------------------------
@@ -100,6 +101,21 @@ writemessage:
                 inc     eax
                 jmp     writemessage
 
+; write8 -------------------------------------------------------------
+; write a 8-byte hex number in the message field
+
+write8:
+                mov     ebx,eax
+                shr     eax,16
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
+                mov     eax,ebx
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
+                ret
+
 ; printmsgd ----------------------------------------------------------
 ; print a message in dos format, 
 ; drawing directly in the temp buffer
@@ -111,7 +127,7 @@ printmsgd:
                 movzx   edi,dh
                 lea     edi,[edi+edi*4]
                 shl     edi,5
-                movzx   edx,dl
+                and     edx,0FFh
                 lea     edi,[edi+edx*2]
                 add     edi,offset temp_screen
 printmsgd1:
@@ -498,6 +514,17 @@ print_dis0:
                 mov     eax,offset tmphex4
                 call    printmsgd
 
+                ; print the pc indicator
+                cmp     edi,regepc
+                jne     print_dis2
+                COORD   8,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                mov     eax,offset tabindicator
+                call    printmsgd
+
+print_dis2:
                 ; print the opcode
                 COORD   10,3
                 mov     esi,ecx
@@ -613,7 +640,7 @@ print_mega:
                 mov     es,ax
                 mov     esi,offset temp_screen
                 mov     edi,0b8000h
-                mov     ecx,3840/4
+                mov     ecx,80*24*2/4
                 rep     movsd
                 pop     es
 
@@ -623,7 +650,6 @@ print_mega:
 
 debug:          
                 call    clear_text
-                ;mov     pentiumfound,0
 debug_loop:                
                 call    render_debug
                 call    printmessage
@@ -644,6 +670,8 @@ debug_loop:
                 je      command_s
                 cmp     al,'B'
                 je      command_b
+                cmp     al,'P'
+                je      command_p
                 cmp     al,'F'
                 je      command_f
                 ;cmp     al,'K'
@@ -724,6 +752,24 @@ command_b:
                 call    crlf
                 jmp     debug_loop
 
+command_p:
+                call    setgraphmode
+                call    turnon_irq
+                call    turnon_kb_irq
+                call    setup_profile
+                call    emulate_trap
+                call    end_profile
+                push    edx eax
+                call    turnoff_kb_irq
+                call    turnoff_irq
+                call    settextmode
+                pop     eax
+                call    write8
+                add     messagepointer,2
+                pop     eax
+                call    write8
+                jmp     debug_loop
+
 command_0:
                 call    checkpentium
                 jc      debug_loop
@@ -742,9 +788,13 @@ command_0:
                 pop     eax
                 mov     ebx,eax
                 shr     eax,16
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 mov     eax,ebx
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 call    crlf
                 jmp     debug_loop
 
@@ -782,9 +832,13 @@ command_1:
                 pop     eax
                 mov     ebx,eax
                 shr     eax,16
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 mov     eax,ebx
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 call    crlf
                 jmp     debug_loop
 
@@ -808,9 +862,13 @@ command_2:
                 pop     eax
                 mov     ebx,eax
                 shr     eax,16
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 mov     eax,ebx
-                call    printhex4
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
                 call    crlf
                 jmp     debug_loop
 

@@ -35,6 +35,7 @@ public trace
 public print
 public emulate
 public emulate_break
+public emulate_trap
 public emulXX
 public emulC9
 public outemulXX
@@ -514,6 +515,7 @@ trace:
 
 BREAK           EQU     0
 NOBREAK         EQU     1
+TRAP            EQU     2
 
 NORMAL          EQU     0
 FAST            EQU     1       
@@ -563,6 +565,11 @@ EMULABEL        loop,emtype,brtype
                   add   clockcounter,ebp
                   cmp   clockcounter,59659
                   JUMP  jb,loop,emtype,brtype
+                endif
+
+                if      (brtype EQ TRAP)
+                mov     interrupt,1
+                mov     exit_now,1
                 endif
 
                 mov     eax,offset z80counter
@@ -629,6 +636,18 @@ emulate1_break: cmp     emulatemode,FAST
                 jne     emulate2_break
                 EMULATE FAST,BREAK
 emulate2_break: EMULATE TURBO,BREAK
+
+; emulate_trap -------------------------------------------------------
+; starts emulation with trap, stop with any error
+
+emulate_trap:        
+                cmp     emulatemode,NORMAL
+                jne     emulate1_trap
+                EMULATE NORMAL,TRAP
+emulate1_trap:  cmp     emulatemode,FAST
+                jne     emulate2_trap
+                EMULATE FAST,TRAP
+emulate2_trap:  EMULATE TURBO,TRAP
 
 ; print --------------------------------------------------------------
 ; prints only the next instruction

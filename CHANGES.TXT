@@ -1,3 +1,8 @@
+release 1.43:
+
+- added a message line at the bottom of debugger screen
+- added some pentium profiling options
+
 release 1.42:
 
 - added save/load machine state

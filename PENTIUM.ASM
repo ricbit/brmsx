@@ -17,12 +17,18 @@ public pentiumfound
 public detect_cpu
 public start_counter
 public end_counter
+public setup_profile
+public end_profile
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
 pentiumfound    dd      0
+counter12       db      8 dup (0)
+counter13       db      8 dup (0)
+
+; CODE ---------------------------------------------------------------
 
 ; detect_cpu ---------------------------------------------------------
 ; this function detect the cpuid instruction
@@ -83,7 +89,54 @@ end_counter:
                 pop     edx esi
                 ret
 
+; setup_profile ------------------------------------------------------
+; this function setup the pentium msr to read two profile registers
+
+setup_profile:
+                cmp     pentiumfound,1
+                jne     _ret
+                xor     edx,edx
+                ;                     msr 13          msr 12
+                ;                     ------          ------
+                mov     eax,00000000110111110000000011100001b
+                mov     ecx,011h
+                wrmsr
+                mov     ecx,012h
+                rdmsr
+                mov     dword ptr [offset counter12],eax
+                mov     dword ptr [offset counter12+4],edx
+                mov     ecx,013h
+                rdmsr
+                mov     dword ptr [offset counter13],eax
+                mov     dword ptr [offset counter13+4],edx
+                ret
+
+; end_profile --------------------------------------------------------
+; this function ends the profiling
+; return eax=counter for msr 12 and edx=counter for msr 13
+
+end_profile:
+                cmp     pentiumfound,1
+                jne     _ret
+                
+                mov     ecx,012h
+                rdmsr
+                sub     eax,dword ptr [offset counter12]
+                sbb     edx,dword ptr [offset counter12+4]
+                mov     dword ptr [offset counter12],eax
+
+                mov     ecx,013h
+                rdmsr
+                sub     eax,dword ptr [offset counter13]
+                sbb     edx,dword ptr [offset counter13+4]
+                mov     dword ptr [offset counter13],eax
+
+                mov     eax,dword ptr [offset counter12]
+                mov     edx,dword ptr [offset counter13]
+
+                ret
+
+
 code32          ends
                 end
-
 

@@ -861,17 +861,6 @@ blit:
                 sub     edi,_code32a
                 mov     ecx,256*192/4
                 rep     movsd                
-;                mov     ecx,256*192/16
-;TOP:    FILD    QWORD PTR [ESI]                                                 
-;        FILD    QWORD PTR [ESI+8]                                               
-;        FXCH                                                                    
-;        FISTP   QWORD PTR [EDI]                                                 
-;        FISTP   QWORD PTR [EDI+8]                                               
-;        ADD     ESI, 16                                                         
-;        ADD     EDI, 16                                                         
-;        DEC     ECX                                                             
-;        JNZ     TOP                                                             
-                                                                                
                 ret
 blit0:
                 mov     esi,blitbuffer

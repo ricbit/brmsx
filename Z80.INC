@@ -3,8 +3,8 @@ extrn trace: near
 extrn fetch: near
 extrn fetchw: near
 extrn emulate: near
-extrn emulate_echo: near
 extrn emulate_break: near
+extrn emulate_trap: near
 extrn print: near
 extrn regaf: word
 extrn regbc: word
