@@ -1,7 +1,7 @@
-BrMSX 1.142
+BrMSX 1.145
 by Ricardo Bittencourt
 
-The user's manual for version v1.141 is 
+The user's manual for version v1.145 is 
 available in English and Portuguese.
 
 Versions in French and Spanish will be 

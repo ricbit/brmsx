@@ -27,6 +27,7 @@ public _main
 public msxram
 public msxvram
 public blitbuffer
+public collisionfield
 public transf_buffer
 public diskimage
 public cart1
@@ -46,6 +47,7 @@ public disksize
 public codetable
 public rommapper
 public rommappera
+public cart_sram
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -55,7 +57,9 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.142',13,10
+include guess.inc
+
+msg00           db      'BrMSX 1.147',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -79,7 +83,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.142',13,10
+msg22           db      'BrMSX 1.147',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -95,6 +99,11 @@ msg28           db      'Tape: $'
 msg29           db      'Tape image not found',13,10,'$'
 msg30           db      'Tape image greater than 64kb',13,10,'$'
 msg31           db      'MSXHAN.ROM invalid or not found',13,10,'$'
+msg32           db      'I guess this game is $'
+msg33           db      'Using MegaROM Mapper #$'
+msg34           db      'This game is unknown, using MegaROM Mapper #0',13,10
+                db      'Please contact the author at ricardo@lsi.usp.br'
+                db      13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -103,35 +112,35 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
                 db      '-roma <n>      select MegaROM Mapper for '
-                db      'cartridge A',13,10
+                db      'cartridge A (default=autodetect)',13,10
                 db      '-romb <n>      select MegaROM Mapper for '
                 db      'cartridge B',13,10
-                db      '               0=Generic MegaROM with SCC, '
-                db      'default',13,10
+                db      '               0=Generic MegaROM with SCC',13,10
                 db      '               2=Konami with SCC',13,10
                 db      '               3=Konami without SCC',13,10
                 db      '               4=ASCII 8kb',13,10
                 db      '               5=ASCII 16kb',13,10
+                db      '               6=ASCII 8kb with 8kb SRAM',13,10
+                db      '               7=ASCII 16kb with 2kb SRAM',13,10
+                db      '               8=Panasonic FM-PAC with 8kb SRAM',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
                 db      '-korean        enable korean memory layout '
                 db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
-                db      '-win           windows video engine '
-                db      '(slower, default)',13,10
-                db      '-dos           dos video engine (fast but does not '
-                db      'work under windows)',13,10
-                db      '-mmx           MMX video engine (fastest but '
+                db      '-mmx           MMX video engine ('
                 db      'requires MMX processor)',13,10
                 db      '-res <mode>    resolution (0=320x200 1=256x200 '
                 db      '2=512x384 3=256x192)',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
-                db      '-green         enable green monitor emulation',13,10
                 db      'Press enter to continue.$'
 help_message2   db      13
+                db      '-green         enable green monitor emulation',13,10
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
                 db      '-allspr        disable 5th sprite ocultation',13,10
+                db      '-nosprcol      disable sprite collision '
+                db      'detection',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
@@ -149,10 +158,16 @@ help_message2   db      13
                 db      '(range is 0 to 7, default is 3)',13,10
                 db      '-fakejoy       make the keyboard act as '
                 db      'joystick A',13,10
+                db      '-autofire      enable the automatic fire',13,10
+                db      '-autorun       enable the automatic run',13,10
+                db      '-autospeed <n> adjust speed for autofire '
+                db      '(range is 0 to 9, default is 5)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
+                db      'Press enter to continue.$'
+help_message3   db      13
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
                 db      '-nopentium     disable pentium extensions and '
@@ -160,9 +175,6 @@ help_message2   db      13
                 db      '-noenter       disable enter pressing at '
                 db      'start',13,10
                 db      '-help          show this help page',13,10
-                db      'Press enter to continue.$'
-help_message3   db      13
-                db      '                           '
                 db      '$'
 msgnocpuid      db      '486 or below $'
 msg386          db      '386 $'
@@ -189,49 +201,53 @@ cartridge1      db      128 dup (0)
 cartridge2      db      128 dup (0)
 drivea_name     db      128 dup (0)
 tape_name       db      128 dup (0)
-
-switch_mmx      db      '-mmx',0
-switch_dos      db      '-dos',0
-switch_win      db      '-win',0
-switch_scc      db      '-scc',0
-switch_psgg     db      '-psggraph',0
-switch_cpug     db      '-cpugraph',0
-switch_help     db      '-help',0
-switch_diska    db      '-diska',0
-switch_nosound  db      '-nosound',0
-switch_vsync    db      '-vsync',0
-switch_nocache  db      '-nocache',0
-switch_nomouse  db      '-nomouse',0
-switch_novesa   db      '-novesa',0
-switch_noenter  db      '-noenter',0
-switch_normal   db      '-normal',0
-switch_fast     db      '-fast',0
-switch_turbo    db      '-turbo',0
-switch_noled    db      '-noled',0
-switch_res      db      '-res',0
-switch_disklow  db      '-disklow',0
-switch_diskhigh db      '-diskhigh',0
-switch_joy      db      '-joy',0
-switch_com      db      '-com',0
-switch_server   db      '-server',0
-switch_client   db      '-client',0
-switch_frame    db      '-frame',0
-switch_tape     db      '-tape',0
-switch_nopent   db      '-nopentium',0
-switch_ramslot  db      '-ramslot',0
-switch_joysens  db      '-joysens',0
-switch_korean   db      '-korean',0
-switch_green    db      '-green',0
-switch_roma     db      '-roma',0
-switch_romb     db      '-romb',0
-switch_speaker  db      '-speaker',0
-switch_allspr   db      '-allspr',0
-switch_fakejoy  db      '-fakejoy',0
+sramname        db      128 dup (0)
+mountdir_name   db      128 dup (0)
+                 
+switch_mmx       db      '-mmx',0
+switch_scc       db      '-scc',0
+switch_psgg      db      '-psggraph',0
+switch_cpug      db      '-cpugraph',0
+switch_help      db      '-help',0
+switch_diska     db      '-diska',0
+switch_nosound   db      '-nosound',0
+switch_vsync     db      '-vsync',0
+switch_nocache   db      '-nocache',0
+switch_nomouse   db      '-nomouse',0
+switch_novesa    db      '-novesa',0
+switch_noenter   db      '-noenter',0
+switch_normal    db      '-normal',0
+switch_fast      db      '-fast',0
+switch_turbo     db      '-turbo',0
+switch_noled     db      '-noled',0
+switch_res       db      '-res',0
+switch_disklow   db      '-disklow',0
+switch_diskhigh  db      '-diskhigh',0
+switch_joy       db      '-joy',0
+switch_com       db      '-com',0
+switch_server    db      '-server',0
+switch_client    db      '-client',0
+switch_frame     db      '-frame',0
+switch_tape      db      '-tape',0
+switch_nopent    db      '-nopentium',0
+switch_ramslot   db      '-ramslot',0
+switch_joysens   db      '-joysens',0
+switch_korean    db      '-korean',0
+switch_green     db      '-green',0
+switch_roma      db      '-roma',0
+switch_romb      db      '-romb',0
+switch_speaker   db      '-speaker',0
+switch_allspr    db      '-allspr',0
+switch_fakejoy   db      '-fakejoy',0
+switch_autofire  db      '-autofire',0
+switch_autospeed db      '-autospeed',0
+switch_autorun   db      '-autorun',0
+switch_fmpac     db      '-fmpac',0
+switch_nosprcol  db      '-nosprcol',0
+switch_mount     db      '-mount',0
 
 switch_table:
                 dd      offset switch_mmx
-                dd      offset switch_dos
-                dd      offset switch_win
                 dd      offset switch_scc
                 dd      offset switch_psgg
                 dd      offset switch_cpug
@@ -266,13 +282,17 @@ switch_table:
                 dd      offset switch_speaker
                 dd      offset switch_allspr
                 dd      offset switch_fakejoy
+                dd      offset switch_autofire
+                dd      offset switch_autospeed
+                dd      offset switch_autorun
+                dd      offset switch_fmpac
+                dd      offset switch_nosprcol
+                dd      offset switch_mount
 
-switch_total    dd      37
+switch_total    dd      41
 
 switch_callback: 
                 dd      offset callback_mmx
-                dd      offset callback_dos
-                dd      offset callback_win
                 dd      offset callback_scc
                 dd      offset callback_psgg
                 dd      offset callback_cpug
@@ -307,12 +327,19 @@ switch_callback:
                 dd      offset callback_speaker
                 dd      offset callback_allspr
                 dd      offset callback_fakejoy
+                dd      offset callback_autofire
+                dd      offset callback_autospeed
+                dd      offset callback_autorun
+                dd      offset callback_fmpac
+                dd      offset callback_nosprcol
+                dd      offset callback_mount
 
 align 4
 
 msxram          dd      ?
 msxvram         dd      ?
 blitbuffer      dd      ?
+collisionfield  dd      ?
 msxrom          dd      ?
 cart1           dd      ?
 cart2           dd      ?
@@ -333,6 +360,7 @@ idlerom         dd      ?
 tapeimage       dd      ?
 msxhan          dd      ?
 codetable       dd      ?
+cart_sram       dd      ?
 
 diskenabled     dd      0
 cpugraphok      dd      0
@@ -344,9 +372,11 @@ filesize        dd      0
 nopentium       dd      0
 korean          dd      0
 disksize        dd      0
+guess           dd      1
 rommappera      dd      2
 rommapperb      dd      2
 rommapper       dd      2
+firsttime       dd      1
 
 ; --------------------------------------------------------------------
 
@@ -531,6 +561,18 @@ _main_idlerom:
                 jc      no_memory
                 mov     msxvram,eax
 
+                ; clear msx vram
+                mov     edi,msxvram
+                mov     ecx,16384/4
+                mov     eax,0
+                rep     stosd
+
+                ; allocate 16kb to cartridge sram
+                mov     eax,16384
+                call    _getmem
+                jc      no_memory
+                mov     cart_sram,eax
+
                 ; allocate 64kb*4 to code table
                 ;mov     eax,65536*4
                 ;call    _getmem
@@ -603,8 +645,8 @@ _main_idlerom:
                 jc      no_memory
                 mov     timebuffer,eax
 
-                ; alloc always 256kb to cart1                
-                mov     eax,256*1024
+                ; alloc always 512kb to cart1                
+                mov     eax,512*1024 ; 256*1024
                 call     _getmem
                 jc      no_memory
                 mov     cart1,eax
@@ -634,7 +676,12 @@ main_has_cart1:
                 mov     ecx,rommappera
                 mov     rommapper,ecx
                 call    read_rom
+                mov     ecx,rommapper
+                mov     rommappera,ecx
                 jc      error_in_rom                
+
+                ; load sram from disk if needed
+                call    load_sram
 
 main_nocart1:
 
@@ -676,6 +723,18 @@ main_nocart2:
                 jc      no_memory
                 mov     blitbuffer,eax
 
+                ; allocate 8kb for collision field
+                mov     eax,8192
+                call    _getmem
+                jc      no_memory
+                mov     collisionfield,eax
+
+                ; clear collision field
+                mov     edi,collisionfield
+                mov     eax,0
+                mov     ecx,8192/4
+                rep     stosd
+
                 ; allocate 8kb to file name list
                 mov     eax,8192
                 call    _getmem
@@ -703,8 +762,8 @@ main_nodrivea:
 
                 mov     diskenabled,1
                 call    read_size_file
-                ;cmp     eax,720*1024
-                ;jne     disk_size_not_supported
+                cmp     eax,720*1024
+                ja      disk_size_not_supported
                 mov     ebx,eax
                 shr     ebx,10+2
                 mov     disksize,ebx
@@ -935,6 +994,13 @@ _main_nomouse:
                 call    printmsg
                 mov     sounddetected,1
 
+                cmp     fmenabled,1
+                jne     _main_nofm
+
+                call    init_adlib
+
+_main_nofm:
+
 _main_nosound:
 
                 cmp     novesa,1
@@ -994,6 +1060,7 @@ _main_notrouble:
                 mov     startdebugger,1
 
 _main_noenter:
+                mov     firsttime,0
                 call    debug
 
 main_getout:
@@ -1019,6 +1086,15 @@ main_exit_nodisk:
                 call    flush_tape
 
 main_exit_notape:
+
+                call    save_sram
+
+                cmp     fmenabled,1
+                jne     main_exit_nofm
+                call    reset_adlib
+
+main_exit_nofm:
+
                 ; exit to dos
                 jmp     _exit
 
@@ -1345,14 +1421,6 @@ callback_mmx:
                 mov     enginetype,2
                 ret
 
-callback_dos:
-                mov     enginetype,0
-                ret
-
-callback_win:
-                mov     enginetype,1
-                ret
-
 callback_scc:
                 mov     sccenabled,1
                 ret
@@ -1597,6 +1665,7 @@ callback_green:
                 ret
 
 callback_roma:
+                mov     guess,0
                 mov     secondarg,1
                 mov     eax,offset callback_roma_second
                 mov     second_callback,eax
@@ -1606,36 +1675,18 @@ callback_roma_second:
                 mov     al,byte ptr [offset emptyspace]
                 sub     al,'0'
 
-                cmp     al,0
-                jne     callback_roma_second_2
-                mov     rommappera,2+0
-                ret
+                cmp     al,1
+                je      _ret
+                cmp     al,8
+                ja      _ret
 
-callback_roma_second_2:
-                cmp     al,2
-                jne     callback_roma_second_3
-                mov     rommappera,2+2
-                ret
-
-callback_roma_second_3:
-                cmp     al,3
-                jne     callback_roma_second_4
-                mov     rommappera,2+3
-                ret
-
-callback_roma_second_4:
-                cmp     al,4
-                jne     callback_roma_second_5
-                mov     rommappera,2+4
-                ret
-
-callback_roma_second_5:
-                cmp     al,5
-                jne     _ret
-                mov     rommappera,2+5
+                add     al,2
+                and     eax,0FFh
+                mov     rommappera,eax
                 ret
 
 callback_romb:
+                mov     guess,0
                 mov     secondarg,1
                 mov     eax,offset callback_romb_second
                 mov     second_callback,eax
@@ -1645,33 +1696,14 @@ callback_romb_second:
                 mov     al,byte ptr [offset emptyspace]
                 sub     al,'0'
                 
-                cmp     al,0
-                jne     callback_romb_second_2
-                mov     rommapperb,2+0
-                ret
+                cmp     al,1
+                je      _ret
+                cmp     al,8
+                ja      _ret
 
-callback_romb_second_2:
-                cmp     al,2
-                jne     callback_romb_second_3
-                mov     rommapperb,2+2
-                ret
-
-callback_romb_second_3:
-                cmp     al,3
-                jne     callback_romb_second_4
-                mov     rommapperb,2+3
-                ret
-
-callback_romb_second_4:
-                cmp     al,4
-                jne     callback_romb_second_5
-                mov     rommapperb,2+4
-                ret
-
-callback_romb_second_5:
-                cmp     al,5
-                jne     _ret
-                mov     rommapperb,2+5
+                add     al,2
+                and     eax,0FFh
+                mov     rommapperb,eax
                 ret
 
 callback_speaker:
@@ -1685,6 +1717,49 @@ callback_allspr:
 
 callback_fakejoy:
                 mov     fakejoy,1
+                ret
+
+callback_autofire:
+                mov     autofire,1
+                ret
+
+callback_autospeed:
+                mov     secondarg,1
+                mov     eax,offset callback_autospeed_second
+                mov     second_callback,eax
+                ret
+
+callback_autospeed_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                inc     al
+                and     eax,0FFh
+                mov     autospeed,eax
+                ret
+
+callback_autorun:
+                mov     autorun,7+16
+                ret
+
+callback_fmpac:
+                mov     fmenabled,1
+                ret
+
+callback_nosprcol:
+                mov     no_collision,1
+                ret
+
+callback_mount:
+                mov     secondarg,1
+                mov     eax,offset callback_mount_second
+                mov     second_callback,eax
+                ret
+
+callback_mount_second:
+                mov     edi,offset mountdir_name
+                mov     esi,offset emptyspace
+                mov     ecx,128/4
+                rep     movsd
                 ret
 
 ; read_rom -----------------------------------------------------------
@@ -1704,8 +1779,12 @@ read_rom:
                 mov     filesize,eax
                 pop     eax
 
-                ; size must be multiple of 4000h
+                ; check for 8kb roms
                 mov     ecx,filesize
+                cmp     ecx,8192
+                je      read_rom_8kb
+                
+                ; size must be multiple of 4000h
                 and     ecx,03FFFh
                 jnz     error_in_rom
 
@@ -1748,6 +1827,30 @@ read_rom_place_16kb:
                 call    close_file
                 or      eax,eax
                 ret
+
+read_rom_8kb:
+                ; read the rom
+                mov     edx,transf_buffer
+                mov     ecx,02000h
+                call    read_file
+
+                ; copy first 16kb to correct position
+                mov     esi,transf_buffer
+                mov     edi,eax
+                mov     ecx,02000h/4
+                rep     movsd
+
+                ; mirror the ROM in all pages
+                irp     i,<0,1,2,3,4,5,6,7>
+                mov     [ebp+i*8],eax
+                endm
+                
+                call    enable_rom    
+                
+                call    close_file
+                or      eax,eax
+                ret
+
 
 read_rom_basic:
                 ; check for BASIC header
@@ -1811,6 +1914,14 @@ read_rom_not_32kb:
                 mov     ebx,filesize
                 shr     ebx,14
                 dec     ebx
+
+                ; fill the megarom mask
+                mov     edx,filesize
+                shr     edx,13
+                dec     edx
+                mov     megamask,edx
+
+                call    guess_megarom_type
 
 read_rom_megarom_loop:
                 ; read a 16kb chunk
@@ -1876,6 +1987,13 @@ read_rom_megarom_finish:
                 shr     ebp,6
                 mov     dword ptr [offset megadump+ebp*4],eax
 
+                ; fill the scc area with parts of rom
+                mov     esi,transf_buffer
+                add     esi,2000h
+                mov     edi,sccram
+                mov     ecx,1800h/4
+                rep     movsd
+
                 call    close_file
                 or      eax,eax
                 ret
@@ -1894,6 +2012,7 @@ enable_megaram:
                 mov     eax,cart1
                 mov     dword ptr [offset megadump+4],eax
                 
+                mov     megaram,1
                 ret
 
 
@@ -2010,6 +2129,174 @@ flush_tape:
                 mov     ecx,32768
                 call    write_file
 
+                call    close_file
+                ret
+
+; guess_megarom_type -------------------------------------------------
+; try to guess the megarom type, based on the CRC of the first 8kb
+
+guess_megarom_type:
+                cmp     guess,1
+                jne     _ret
+                
+                pushad
+
+                mov     ecx,8192/4
+                mov     eax,0
+                mov     esi,transf_buffer
+
+guess_loop:
+                xor     eax,[esi]
+                add     esi,4
+                dec     ecx
+                jnz     guess_loop
+
+                mov     esi,offset guess_table
+
+guess_try_again:
+                cmp     eax,dword ptr [esi]
+                je      guess_found
+                add     esi,12
+                cmp     dword ptr [esi],0
+                jne     guess_try_again
+
+                mov     eax,offset msg34
+                call    printmsg
+
+                popad
+                ret
+
+guess_found:
+                mov     eax,dword ptr [esi+4]
+                mov     rommapper,eax
+                cmp     firsttime,1
+                jne     guess_ret
+
+                mov     eax,offset msg32
+                call    printmsg
+                mov     eax,dword ptr [esi+8]
+                call    printmsg
+                call    crlf
+                mov     eax,offset msg33
+                call    printmsg
+                mov     eax,dword ptr [esi+4]
+                mov     rommapper,eax
+                sub     eax,2
+                call    printhex2
+                call    crlf
+
+guess_ret:
+                popad
+                ret
+
+; decode_cartridge ---------------------------------------------------
+; decode the cartridge name, retrieving a name for the save state
+
+decode_cartridge:
+                mov     esi,offset cartridge1
+                mov     edi,offset sramname
+
+decode_cartridge_loop:
+                mov     al,[esi]
+                cmp     al,':'
+                je      decode_cartridge_restart
+                cmp     al,'/'
+                je      decode_cartridge_restart
+                cmp     al,'\'
+                je      decode_cartridge_restart
+                cmp     al,0
+                je      decode_cartridge_append
+                cmp     al,'.'
+                je      decode_cartridge_append
+                mov     [edi],al
+                inc     esi
+                inc     edi
+                jmp     decode_cartridge_loop
+
+decode_cartridge_restart:
+                inc     esi
+                mov     edi,offset sramname
+                jmp     decode_cartridge_loop
+
+decode_cartridge_append:
+                mov     byte ptr [edi],'.'
+                mov     byte ptr [edi+1],'S'
+                mov     byte ptr [edi+2],'R'
+                mov     byte ptr [edi+3],'M'
+                mov     byte ptr [edi+4],0
+                ret
+
+; load_sram ----------------------------------------------------------
+; load sram from disk if needed
+
+load_sram:
+                ; megarom types with sram are 6 and 7 and 8
+                cmp     rommapper,6+2
+                jb      _ret
+
+                ; decode cartridge name (.srm)
+                call    decode_cartridge
+
+                ; check if file exists
+                mov     edx,offset sramname
+                call    open_file
+                jc      clear_sram
+
+                ; read from disk
+                mov     ecx,16384
+                mov     edx,transf_buffer
+                call    read_file
+
+                ; place in correct place
+                mov     edi,cart_sram
+                mov     esi,transf_buffer
+                mov     ecx,16384/4
+                rep     movsd
+
+                ; close the file 
+                call    close_file
+
+                ; check for sram initialization
+                cmp     rommapper,8
+                jne     _ret
+
+                mov     esi,cart_sram
+                mov     word ptr [esi+01FFEh],0
+                ret
+
+clear_sram:
+                mov     edi,cart_sram
+                mov     ecx,16384/4
+                mov     eax,0
+                rep     stosd
+                ret
+
+                ret
+
+; save_sram ----------------------------------------------------------
+; save sram to disk
+
+save_sram:
+                ; megarom types with sram are 6 and 7 and 8
+                cmp     rommappera,6+2
+                jb      _ret
+
+                ; create file
+                mov     edx,offset sramname
+                call    create_file
+
+                ; place in correct place
+                mov     esi,cart_sram
+                mov     edi,transf_buffer
+                mov     ecx,16384/4
+                rep     movsd
+
+                ; write to disk
+                mov     ecx,16384
+                mov     edx,transf_buffer
+                call    write_file
+
+                ; close the file and exit
                 call    close_file
                 ret
 

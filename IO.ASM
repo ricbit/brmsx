@@ -1062,7 +1062,6 @@ my_irq_handler:
 
 
                 mov     interrupt,1
-                call    sound_ack
 
                 pop     ds
                 
@@ -1087,7 +1086,7 @@ my_kb_irq_handler:
 
                 cmp     al,44h
                 jne     my_kb_irq_handler1
-                mov     ds:exit_now,1
+                mov     exit_now,1
 
 my_kb_irq_handler1:
                 cmp     al,64
@@ -1105,9 +1104,29 @@ my_kb_irq_handler1:
                 cmp     al,74
                 je      my_kb_irq_handler_keypadminus
 
+                cmp     al,75
+                je      my_kb_irq_handler_left
+
+                cmp     al,77
+                je      my_kb_irq_handler_right
+
+                cmp     al,75+128
+                je      my_kb_irq_handler_left_released
+
+                cmp     al,77+128
+                je      my_kb_irq_handler_right_released
+
+                cmp     al,57
+                je      my_kb_irq_handler_spacebar
+
+                cmp     al,57+128
+                je      my_kb_irq_handler_spacebar_released
+
                 cmp     al,224
                 je      my_kb_irq_handler_extended_signal
                 
+my_kb_irq_handler_generic_key:                      
+
                 test    al,080h
                 jnz     my_kb_irq_handler2
                 and     eax,07fh
@@ -1160,7 +1179,57 @@ my_kb_irq_handler_keypadminus:
                 call    write_master_volume
                 jmp     my_kb_irq_handler_exit
 
+my_kb_irq_handler_spacebar:
+                test    autofire,1
+                jz      my_kb_irq_handler_generic_key
+                mov     autofire,3
+                jmp     my_kb_irq_handler_generic_key
+
+my_kb_irq_handler_spacebar_released:
+                test    autofire,1
+                jz      my_kb_irq_handler_generic_key
+                mov     autofire,1
+                jmp     my_kb_irq_handler_generic_key
+
+                
+my_kb_irq_handler_left:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key
+                and     autorun,NBIT_1
+                jmp     my_kb_irq_handler_generic_key
+
+my_kb_irq_handler_right:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key
+                and     autorun,NBIT_2
+                jmp     my_kb_irq_handler_generic_key
+
+my_kb_irq_handler_left_released:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key
+                or      autorun,BIT_1
+                jmp     my_kb_irq_handler_generic_key
+
+my_kb_irq_handler_right_released:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key
+                or      autorun,BIT_2
+                jmp     my_kb_irq_handler_generic_key
+
 my_kb_irq_handler_extended:
+                cmp     al,75
+                je      my_kb_irq_handler_left_extended
+
+                cmp     al,77
+                je      my_kb_irq_handler_right_extended
+
+                cmp     al,75+128
+                je      my_kb_irq_handler_left_released_extended
+
+                cmp     al,77+128
+                je      my_kb_irq_handler_right_released_extended
+
+my_kb_irq_handler_generic_key_extended:
                 mov     key_extended,0
                 test    al,080h
                 jnz     my_kb_irq_handler_extended_released
@@ -1182,6 +1251,30 @@ my_kb_irq_handler_extended_signal:
                 mov     key_extended,1
                 jmp     my_kb_irq_handler_exit
                 
+my_kb_irq_handler_left_extended:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key_extended
+                and     autorun,NBIT_1
+                jmp     my_kb_irq_handler_generic_key_extended
+
+my_kb_irq_handler_right_extended:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key_extended
+                and     autorun,NBIT_2
+                jmp     my_kb_irq_handler_generic_key_extended
+
+my_kb_irq_handler_left_released_extended:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key_extended
+                or      autorun,BIT_1
+                jmp     my_kb_irq_handler_generic_key_extended
+
+my_kb_irq_handler_right_released_extended:
+                test    autorun,1
+                jz      my_kb_irq_handler_generic_key_extended
+                or      autorun,BIT_2
+                jmp     my_kb_irq_handler_generic_key_extended
+
 ; open_file ----------------------------------------------------------
 ; open a file
 ; in: edx = ASCIIZ filename

@@ -16,3 +16,6 @@ extrn speaker_shutup: near
 extrn noise_table: byte
 extrn sb_flushed: dword
 extrn noise_counter: dword
+extrn init_adlib: near
+extrn reset_adlib: near
+extrn fm_single_register: near

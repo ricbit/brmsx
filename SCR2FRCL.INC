@@ -1,257 +1,513 @@
 foregroundcolor:
-	forecolor00: db 000h,000h,000h,000h
-	forecolor01: db 000h,000h,000h,000h
-	forecolor02: db 000h,000h,000h,000h
-	forecolor03: db 000h,000h,000h,000h
-	forecolor04: db 000h,000h,000h,000h
-	forecolor05: db 000h,000h,000h,000h
-	forecolor06: db 000h,000h,000h,000h
-	forecolor07: db 000h,000h,000h,000h
-	forecolor08: db 000h,000h,000h,000h
-	forecolor09: db 000h,000h,000h,000h
-	forecolor0A: db 000h,000h,000h,000h
-	forecolor0B: db 000h,000h,000h,000h
-	forecolor0C: db 000h,000h,000h,000h
-	forecolor0D: db 000h,000h,000h,000h
-	forecolor0E: db 000h,000h,000h,000h
-	forecolor0F: db 000h,000h,000h,000h
-	forecolor10: db 001h,001h,001h,001h
-	forecolor11: db 001h,001h,001h,001h
-	forecolor12: db 001h,001h,001h,001h
-	forecolor13: db 001h,001h,001h,001h
-	forecolor14: db 001h,001h,001h,001h
-	forecolor15: db 001h,001h,001h,001h
-	forecolor16: db 001h,001h,001h,001h
-	forecolor17: db 001h,001h,001h,001h
-	forecolor18: db 001h,001h,001h,001h
-	forecolor19: db 001h,001h,001h,001h
-	forecolor1A: db 001h,001h,001h,001h
-	forecolor1B: db 001h,001h,001h,001h
-	forecolor1C: db 001h,001h,001h,001h
-	forecolor1D: db 001h,001h,001h,001h
-	forecolor1E: db 001h,001h,001h,001h
-	forecolor1F: db 001h,001h,001h,001h
-	forecolor20: db 002h,002h,002h,002h
-	forecolor21: db 002h,002h,002h,002h
-	forecolor22: db 002h,002h,002h,002h
-	forecolor23: db 002h,002h,002h,002h
-	forecolor24: db 002h,002h,002h,002h
-	forecolor25: db 002h,002h,002h,002h
-	forecolor26: db 002h,002h,002h,002h
-	forecolor27: db 002h,002h,002h,002h
-	forecolor28: db 002h,002h,002h,002h
-	forecolor29: db 002h,002h,002h,002h
-	forecolor2A: db 002h,002h,002h,002h
-	forecolor2B: db 002h,002h,002h,002h
-	forecolor2C: db 002h,002h,002h,002h
-	forecolor2D: db 002h,002h,002h,002h
-	forecolor2E: db 002h,002h,002h,002h
-	forecolor2F: db 002h,002h,002h,002h
-	forecolor30: db 003h,003h,003h,003h
-	forecolor31: db 003h,003h,003h,003h
-	forecolor32: db 003h,003h,003h,003h
-	forecolor33: db 003h,003h,003h,003h
-	forecolor34: db 003h,003h,003h,003h
-	forecolor35: db 003h,003h,003h,003h
-	forecolor36: db 003h,003h,003h,003h
-	forecolor37: db 003h,003h,003h,003h
-	forecolor38: db 003h,003h,003h,003h
-	forecolor39: db 003h,003h,003h,003h
-	forecolor3A: db 003h,003h,003h,003h
-	forecolor3B: db 003h,003h,003h,003h
-	forecolor3C: db 003h,003h,003h,003h
-	forecolor3D: db 003h,003h,003h,003h
-	forecolor3E: db 003h,003h,003h,003h
-	forecolor3F: db 003h,003h,003h,003h
-	forecolor40: db 004h,004h,004h,004h
-	forecolor41: db 004h,004h,004h,004h
-	forecolor42: db 004h,004h,004h,004h
-	forecolor43: db 004h,004h,004h,004h
-	forecolor44: db 004h,004h,004h,004h
-	forecolor45: db 004h,004h,004h,004h
-	forecolor46: db 004h,004h,004h,004h
-	forecolor47: db 004h,004h,004h,004h
-	forecolor48: db 004h,004h,004h,004h
-	forecolor49: db 004h,004h,004h,004h
-	forecolor4A: db 004h,004h,004h,004h
-	forecolor4B: db 004h,004h,004h,004h
-	forecolor4C: db 004h,004h,004h,004h
-	forecolor4D: db 004h,004h,004h,004h
-	forecolor4E: db 004h,004h,004h,004h
-	forecolor4F: db 004h,004h,004h,004h
-	forecolor50: db 005h,005h,005h,005h
-	forecolor51: db 005h,005h,005h,005h
-	forecolor52: db 005h,005h,005h,005h
-	forecolor53: db 005h,005h,005h,005h
-	forecolor54: db 005h,005h,005h,005h
-	forecolor55: db 005h,005h,005h,005h
-	forecolor56: db 005h,005h,005h,005h
-	forecolor57: db 005h,005h,005h,005h
-	forecolor58: db 005h,005h,005h,005h
-	forecolor59: db 005h,005h,005h,005h
-	forecolor5A: db 005h,005h,005h,005h
-	forecolor5B: db 005h,005h,005h,005h
-	forecolor5C: db 005h,005h,005h,005h
-	forecolor5D: db 005h,005h,005h,005h
-	forecolor5E: db 005h,005h,005h,005h
-	forecolor5F: db 005h,005h,005h,005h
-	forecolor60: db 006h,006h,006h,006h
-	forecolor61: db 006h,006h,006h,006h
-	forecolor62: db 006h,006h,006h,006h
-	forecolor63: db 006h,006h,006h,006h
-	forecolor64: db 006h,006h,006h,006h
-	forecolor65: db 006h,006h,006h,006h
-	forecolor66: db 006h,006h,006h,006h
-	forecolor67: db 006h,006h,006h,006h
-	forecolor68: db 006h,006h,006h,006h
-	forecolor69: db 006h,006h,006h,006h
-	forecolor6A: db 006h,006h,006h,006h
-	forecolor6B: db 006h,006h,006h,006h
-	forecolor6C: db 006h,006h,006h,006h
-	forecolor6D: db 006h,006h,006h,006h
-	forecolor6E: db 006h,006h,006h,006h
-	forecolor6F: db 006h,006h,006h,006h
-	forecolor70: db 007h,007h,007h,007h
-	forecolor71: db 007h,007h,007h,007h
-	forecolor72: db 007h,007h,007h,007h
-	forecolor73: db 007h,007h,007h,007h
-	forecolor74: db 007h,007h,007h,007h
-	forecolor75: db 007h,007h,007h,007h
-	forecolor76: db 007h,007h,007h,007h
-	forecolor77: db 007h,007h,007h,007h
-	forecolor78: db 007h,007h,007h,007h
-	forecolor79: db 007h,007h,007h,007h
-	forecolor7A: db 007h,007h,007h,007h
-	forecolor7B: db 007h,007h,007h,007h
-	forecolor7C: db 007h,007h,007h,007h
-	forecolor7D: db 007h,007h,007h,007h
-	forecolor7E: db 007h,007h,007h,007h
-	forecolor7F: db 007h,007h,007h,007h
-	forecolor80: db 008h,008h,008h,008h
-	forecolor81: db 008h,008h,008h,008h
-	forecolor82: db 008h,008h,008h,008h
-	forecolor83: db 008h,008h,008h,008h
-	forecolor84: db 008h,008h,008h,008h
-	forecolor85: db 008h,008h,008h,008h
-	forecolor86: db 008h,008h,008h,008h
-	forecolor87: db 008h,008h,008h,008h
-	forecolor88: db 008h,008h,008h,008h
-	forecolor89: db 008h,008h,008h,008h
-	forecolor8A: db 008h,008h,008h,008h
-	forecolor8B: db 008h,008h,008h,008h
-	forecolor8C: db 008h,008h,008h,008h
-	forecolor8D: db 008h,008h,008h,008h
-	forecolor8E: db 008h,008h,008h,008h
-	forecolor8F: db 008h,008h,008h,008h
-	forecolor90: db 009h,009h,009h,009h
-	forecolor91: db 009h,009h,009h,009h
-	forecolor92: db 009h,009h,009h,009h
-	forecolor93: db 009h,009h,009h,009h
-	forecolor94: db 009h,009h,009h,009h
-	forecolor95: db 009h,009h,009h,009h
-	forecolor96: db 009h,009h,009h,009h
-	forecolor97: db 009h,009h,009h,009h
-	forecolor98: db 009h,009h,009h,009h
-	forecolor99: db 009h,009h,009h,009h
-	forecolor9A: db 009h,009h,009h,009h
-	forecolor9B: db 009h,009h,009h,009h
-	forecolor9C: db 009h,009h,009h,009h
-	forecolor9D: db 009h,009h,009h,009h
-	forecolor9E: db 009h,009h,009h,009h
-	forecolor9F: db 009h,009h,009h,009h
-	forecolorA0: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA1: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA2: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA3: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA4: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA5: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA6: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA7: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA8: db 00Ah,00Ah,00Ah,00Ah
-	forecolorA9: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAA: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAB: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAC: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAD: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAE: db 00Ah,00Ah,00Ah,00Ah
-	forecolorAF: db 00Ah,00Ah,00Ah,00Ah
-	forecolorB0: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB1: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB2: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB3: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB4: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB5: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB6: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB7: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB8: db 00Bh,00Bh,00Bh,00Bh
-	forecolorB9: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBA: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBB: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBC: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBD: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBE: db 00Bh,00Bh,00Bh,00Bh
-	forecolorBF: db 00Bh,00Bh,00Bh,00Bh
-	forecolorC0: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC1: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC2: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC3: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC4: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC5: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC6: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC7: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC8: db 00Ch,00Ch,00Ch,00Ch
-	forecolorC9: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCA: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCB: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCC: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCD: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCE: db 00Ch,00Ch,00Ch,00Ch
-	forecolorCF: db 00Ch,00Ch,00Ch,00Ch
-	forecolorD0: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD1: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD2: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD3: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD4: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD5: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD6: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD7: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD8: db 00Dh,00Dh,00Dh,00Dh
-	forecolorD9: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDA: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDB: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDC: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDD: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDE: db 00Dh,00Dh,00Dh,00Dh
-	forecolorDF: db 00Dh,00Dh,00Dh,00Dh
-	forecolorE0: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE1: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE2: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE3: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE4: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE5: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE6: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE7: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE8: db 00Eh,00Eh,00Eh,00Eh
-	forecolorE9: db 00Eh,00Eh,00Eh,00Eh
-	forecolorEA: db 00Eh,00Eh,00Eh,00Eh
-	forecolorEB: db 00Eh,00Eh,00Eh,00Eh
-	forecolorEC: db 00Eh,00Eh,00Eh,00Eh
-	forecolorED: db 00Eh,00Eh,00Eh,00Eh
-	forecolorEE: db 00Eh,00Eh,00Eh,00Eh
-	forecolorEF: db 00Eh,00Eh,00Eh,00Eh
-	forecolorF0: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF1: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF2: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF3: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF4: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF5: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF6: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF7: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF8: db 00Fh,00Fh,00Fh,00Fh
-	forecolorF9: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFA: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFB: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFC: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFD: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFE: db 00Fh,00Fh,00Fh,00Fh
-	forecolorFF: db 00Fh,00Fh,00Fh,00Fh
+	; 00
+ db 000h,000h,000h,000h
+	; 01
+ db 000h,000h,000h,000h
+	; 02
+ db 000h,000h,000h,000h
+	; 03
+ db 000h,000h,000h,000h
+	; 04
+ db 000h,000h,000h,000h
+	; 05
+ db 000h,000h,000h,000h
+	; 06
+ db 000h,000h,000h,000h
+	; 07
+ db 000h,000h,000h,000h
+	; 08
+ db 000h,000h,000h,000h
+	; 09
+ db 000h,000h,000h,000h
+	; 0A
+ db 000h,000h,000h,000h
+	; 0B
+ db 000h,000h,000h,000h
+	; 0C
+ db 000h,000h,000h,000h
+	; 0D
+ db 000h,000h,000h,000h
+	; 0E
+ db 000h,000h,000h,000h
+	; 0F
+ db 000h,000h,000h,000h
+	; 10
+ db 001h,001h,001h,001h
+	; 11
+ db 001h,001h,001h,001h
+	; 12
+ db 001h,001h,001h,001h
+	; 13
+ db 001h,001h,001h,001h
+	; 14
+ db 001h,001h,001h,001h
+	; 15
+ db 001h,001h,001h,001h
+	; 16
+ db 001h,001h,001h,001h
+	; 17
+ db 001h,001h,001h,001h
+	; 18
+ db 001h,001h,001h,001h
+	; 19
+ db 001h,001h,001h,001h
+	; 1A
+ db 001h,001h,001h,001h
+	; 1B
+ db 001h,001h,001h,001h
+	; 1C
+ db 001h,001h,001h,001h
+	; 1D
+ db 001h,001h,001h,001h
+	; 1E
+ db 001h,001h,001h,001h
+	; 1F
+ db 001h,001h,001h,001h
+	; 20
+ db 002h,002h,002h,002h
+	; 21
+ db 002h,002h,002h,002h
+	; 22
+ db 002h,002h,002h,002h
+	; 23
+ db 002h,002h,002h,002h
+	; 24
+ db 002h,002h,002h,002h
+	; 25
+ db 002h,002h,002h,002h
+	; 26
+ db 002h,002h,002h,002h
+	; 27
+ db 002h,002h,002h,002h
+	; 28
+ db 002h,002h,002h,002h
+	; 29
+ db 002h,002h,002h,002h
+	; 2A
+ db 002h,002h,002h,002h
+	; 2B
+ db 002h,002h,002h,002h
+	; 2C
+ db 002h,002h,002h,002h
+	; 2D
+ db 002h,002h,002h,002h
+	; 2E
+ db 002h,002h,002h,002h
+	; 2F
+ db 002h,002h,002h,002h
+	; 30
+ db 003h,003h,003h,003h
+	; 31
+ db 003h,003h,003h,003h
+	; 32
+ db 003h,003h,003h,003h
+	; 33
+ db 003h,003h,003h,003h
+	; 34
+ db 003h,003h,003h,003h
+	; 35
+ db 003h,003h,003h,003h
+	; 36
+ db 003h,003h,003h,003h
+	; 37
+ db 003h,003h,003h,003h
+	; 38
+ db 003h,003h,003h,003h
+	; 39
+ db 003h,003h,003h,003h
+	; 3A
+ db 003h,003h,003h,003h
+	; 3B
+ db 003h,003h,003h,003h
+	; 3C
+ db 003h,003h,003h,003h
+	; 3D
+ db 003h,003h,003h,003h
+	; 3E
+ db 003h,003h,003h,003h
+	; 3F
+ db 003h,003h,003h,003h
+	; 40
+ db 004h,004h,004h,004h
+	; 41
+ db 004h,004h,004h,004h
+	; 42
+ db 004h,004h,004h,004h
+	; 43
+ db 004h,004h,004h,004h
+	; 44
+ db 004h,004h,004h,004h
+	; 45
+ db 004h,004h,004h,004h
+	; 46
+ db 004h,004h,004h,004h
+	; 47
+ db 004h,004h,004h,004h
+	; 48
+ db 004h,004h,004h,004h
+	; 49
+ db 004h,004h,004h,004h
+	; 4A
+ db 004h,004h,004h,004h
+	; 4B
+ db 004h,004h,004h,004h
+	; 4C
+ db 004h,004h,004h,004h
+	; 4D
+ db 004h,004h,004h,004h
+	; 4E
+ db 004h,004h,004h,004h
+	; 4F
+ db 004h,004h,004h,004h
+	; 50
+ db 005h,005h,005h,005h
+	; 51
+ db 005h,005h,005h,005h
+	; 52
+ db 005h,005h,005h,005h
+	; 53
+ db 005h,005h,005h,005h
+	; 54
+ db 005h,005h,005h,005h
+	; 55
+ db 005h,005h,005h,005h
+	; 56
+ db 005h,005h,005h,005h
+	; 57
+ db 005h,005h,005h,005h
+	; 58
+ db 005h,005h,005h,005h
+	; 59
+ db 005h,005h,005h,005h
+	; 5A
+ db 005h,005h,005h,005h
+	; 5B
+ db 005h,005h,005h,005h
+	; 5C
+ db 005h,005h,005h,005h
+	; 5D
+ db 005h,005h,005h,005h
+	; 5E
+ db 005h,005h,005h,005h
+	; 5F
+ db 005h,005h,005h,005h
+	; 60
+ db 006h,006h,006h,006h
+	; 61
+ db 006h,006h,006h,006h
+	; 62
+ db 006h,006h,006h,006h
+	; 63
+ db 006h,006h,006h,006h
+	; 64
+ db 006h,006h,006h,006h
+	; 65
+ db 006h,006h,006h,006h
+	; 66
+ db 006h,006h,006h,006h
+	; 67
+ db 006h,006h,006h,006h
+	; 68
+ db 006h,006h,006h,006h
+	; 69
+ db 006h,006h,006h,006h
+	; 6A
+ db 006h,006h,006h,006h
+	; 6B
+ db 006h,006h,006h,006h
+	; 6C
+ db 006h,006h,006h,006h
+	; 6D
+ db 006h,006h,006h,006h
+	; 6E
+ db 006h,006h,006h,006h
+	; 6F
+ db 006h,006h,006h,006h
+	; 70
+ db 007h,007h,007h,007h
+	; 71
+ db 007h,007h,007h,007h
+	; 72
+ db 007h,007h,007h,007h
+	; 73
+ db 007h,007h,007h,007h
+	; 74
+ db 007h,007h,007h,007h
+	; 75
+ db 007h,007h,007h,007h
+	; 76
+ db 007h,007h,007h,007h
+	; 77
+ db 007h,007h,007h,007h
+	; 78
+ db 007h,007h,007h,007h
+	; 79
+ db 007h,007h,007h,007h
+	; 7A
+ db 007h,007h,007h,007h
+	; 7B
+ db 007h,007h,007h,007h
+	; 7C
+ db 007h,007h,007h,007h
+	; 7D
+ db 007h,007h,007h,007h
+	; 7E
+ db 007h,007h,007h,007h
+	; 7F
+ db 007h,007h,007h,007h
+	; 80
+ db 008h,008h,008h,008h
+	; 81
+ db 008h,008h,008h,008h
+	; 82
+ db 008h,008h,008h,008h
+	; 83
+ db 008h,008h,008h,008h
+	; 84
+ db 008h,008h,008h,008h
+	; 85
+ db 008h,008h,008h,008h
+	; 86
+ db 008h,008h,008h,008h
+	; 87
+ db 008h,008h,008h,008h
+	; 88
+ db 008h,008h,008h,008h
+	; 89
+ db 008h,008h,008h,008h
+	; 8A
+ db 008h,008h,008h,008h
+	; 8B
+ db 008h,008h,008h,008h
+	; 8C
+ db 008h,008h,008h,008h
+	; 8D
+ db 008h,008h,008h,008h
+	; 8E
+ db 008h,008h,008h,008h
+	; 8F
+ db 008h,008h,008h,008h
+	; 90
+ db 009h,009h,009h,009h
+	; 91
+ db 009h,009h,009h,009h
+	; 92
+ db 009h,009h,009h,009h
+	; 93
+ db 009h,009h,009h,009h
+	; 94
+ db 009h,009h,009h,009h
+	; 95
+ db 009h,009h,009h,009h
+	; 96
+ db 009h,009h,009h,009h
+	; 97
+ db 009h,009h,009h,009h
+	; 98
+ db 009h,009h,009h,009h
+	; 99
+ db 009h,009h,009h,009h
+	; 9A
+ db 009h,009h,009h,009h
+	; 9B
+ db 009h,009h,009h,009h
+	; 9C
+ db 009h,009h,009h,009h
+	; 9D
+ db 009h,009h,009h,009h
+	; 9E
+ db 009h,009h,009h,009h
+	; 9F
+ db 009h,009h,009h,009h
+	; A0
+ db 00Ah,00Ah,00Ah,00Ah
+	; A1
+ db 00Ah,00Ah,00Ah,00Ah
+	; A2
+ db 00Ah,00Ah,00Ah,00Ah
+	; A3
+ db 00Ah,00Ah,00Ah,00Ah
+	; A4
+ db 00Ah,00Ah,00Ah,00Ah
+	; A5
+ db 00Ah,00Ah,00Ah,00Ah
+	; A6
+ db 00Ah,00Ah,00Ah,00Ah
+	; A7
+ db 00Ah,00Ah,00Ah,00Ah
+	; A8
+ db 00Ah,00Ah,00Ah,00Ah
+	; A9
+ db 00Ah,00Ah,00Ah,00Ah
+	; AA
+ db 00Ah,00Ah,00Ah,00Ah
+	; AB
+ db 00Ah,00Ah,00Ah,00Ah
+	; AC
+ db 00Ah,00Ah,00Ah,00Ah
+	; AD
+ db 00Ah,00Ah,00Ah,00Ah
+	; AE
+ db 00Ah,00Ah,00Ah,00Ah
+	; AF
+ db 00Ah,00Ah,00Ah,00Ah
+	; B0
+ db 00Bh,00Bh,00Bh,00Bh
+	; B1
+ db 00Bh,00Bh,00Bh,00Bh
+	; B2
+ db 00Bh,00Bh,00Bh,00Bh
+	; B3
+ db 00Bh,00Bh,00Bh,00Bh
+	; B4
+ db 00Bh,00Bh,00Bh,00Bh
+	; B5
+ db 00Bh,00Bh,00Bh,00Bh
+	; B6
+ db 00Bh,00Bh,00Bh,00Bh
+	; B7
+ db 00Bh,00Bh,00Bh,00Bh
+	; B8
+ db 00Bh,00Bh,00Bh,00Bh
+	; B9
+ db 00Bh,00Bh,00Bh,00Bh
+	; BA
+ db 00Bh,00Bh,00Bh,00Bh
+	; BB
+ db 00Bh,00Bh,00Bh,00Bh
+	; BC
+ db 00Bh,00Bh,00Bh,00Bh
+	; BD
+ db 00Bh,00Bh,00Bh,00Bh
+	; BE
+ db 00Bh,00Bh,00Bh,00Bh
+	; BF
+ db 00Bh,00Bh,00Bh,00Bh
+	; C0
+ db 00Ch,00Ch,00Ch,00Ch
+	; C1
+ db 00Ch,00Ch,00Ch,00Ch
+	; C2
+ db 00Ch,00Ch,00Ch,00Ch
+	; C3
+ db 00Ch,00Ch,00Ch,00Ch
+	; C4
+ db 00Ch,00Ch,00Ch,00Ch
+	; C5
+ db 00Ch,00Ch,00Ch,00Ch
+	; C6
+ db 00Ch,00Ch,00Ch,00Ch
+	; C7
+ db 00Ch,00Ch,00Ch,00Ch
+	; C8
+ db 00Ch,00Ch,00Ch,00Ch
+	; C9
+ db 00Ch,00Ch,00Ch,00Ch
+	; CA
+ db 00Ch,00Ch,00Ch,00Ch
+	; CB
+ db 00Ch,00Ch,00Ch,00Ch
+	; CC
+ db 00Ch,00Ch,00Ch,00Ch
+	; CD
+ db 00Ch,00Ch,00Ch,00Ch
+	; CE
+ db 00Ch,00Ch,00Ch,00Ch
+	; CF
+ db 00Ch,00Ch,00Ch,00Ch
+	; D0
+ db 00Dh,00Dh,00Dh,00Dh
+	; D1
+ db 00Dh,00Dh,00Dh,00Dh
+	; D2
+ db 00Dh,00Dh,00Dh,00Dh
+	; D3
+ db 00Dh,00Dh,00Dh,00Dh
+	; D4
+ db 00Dh,00Dh,00Dh,00Dh
+	; D5
+ db 00Dh,00Dh,00Dh,00Dh
+	; D6
+ db 00Dh,00Dh,00Dh,00Dh
+	; D7
+ db 00Dh,00Dh,00Dh,00Dh
+	; D8
+ db 00Dh,00Dh,00Dh,00Dh
+	; D9
+ db 00Dh,00Dh,00Dh,00Dh
+	; DA
+ db 00Dh,00Dh,00Dh,00Dh
+	; DB
+ db 00Dh,00Dh,00Dh,00Dh
+	; DC
+ db 00Dh,00Dh,00Dh,00Dh
+	; DD
+ db 00Dh,00Dh,00Dh,00Dh
+	; DE
+ db 00Dh,00Dh,00Dh,00Dh
+	; DF
+ db 00Dh,00Dh,00Dh,00Dh
+	; E0
+ db 00Eh,00Eh,00Eh,00Eh
+	; E1
+ db 00Eh,00Eh,00Eh,00Eh
+	; E2
+ db 00Eh,00Eh,00Eh,00Eh
+	; E3
+ db 00Eh,00Eh,00Eh,00Eh
+	; E4
+ db 00Eh,00Eh,00Eh,00Eh
+	; E5
+ db 00Eh,00Eh,00Eh,00Eh
+	; E6
+ db 00Eh,00Eh,00Eh,00Eh
+	; E7
+ db 00Eh,00Eh,00Eh,00Eh
+	; E8
+ db 00Eh,00Eh,00Eh,00Eh
+	; E9
+ db 00Eh,00Eh,00Eh,00Eh
+	; EA
+ db 00Eh,00Eh,00Eh,00Eh
+	; EB
+ db 00Eh,00Eh,00Eh,00Eh
+	; EC
+ db 00Eh,00Eh,00Eh,00Eh
+	; ED
+ db 00Eh,00Eh,00Eh,00Eh
+	; EE
+ db 00Eh,00Eh,00Eh,00Eh
+	; EF
+ db 00Eh,00Eh,00Eh,00Eh
+	; F0
+ db 00Fh,00Fh,00Fh,00Fh
+	; F1
+ db 00Fh,00Fh,00Fh,00Fh
+	; F2
+ db 00Fh,00Fh,00Fh,00Fh
+	; F3
+ db 00Fh,00Fh,00Fh,00Fh
+	; F4
+ db 00Fh,00Fh,00Fh,00Fh
+	; F5
+ db 00Fh,00Fh,00Fh,00Fh
+	; F6
+ db 00Fh,00Fh,00Fh,00Fh
+	; F7
+ db 00Fh,00Fh,00Fh,00Fh
+	; F8
+ db 00Fh,00Fh,00Fh,00Fh
+	; F9
+ db 00Fh,00Fh,00Fh,00Fh
+	; FA
+ db 00Fh,00Fh,00Fh,00Fh
+	; FB
+ db 00Fh,00Fh,00Fh,00Fh
+	; FC
+ db 00Fh,00Fh,00Fh,00Fh
+	; FD
+ db 00Fh,00Fh,00Fh,00Fh
+	; FE
+ db 00Fh,00Fh,00Fh,00Fh
+	; FF
+ db 00Fh,00Fh,00Fh,00Fh

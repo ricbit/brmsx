@@ -25,6 +25,8 @@ include z80core.inc
 
 include debugsrc.inc
 include debugsr2.inc
+include debugsr3.inc
+include debugsr4.inc
 include helpsrc.inc
 include srsrc.inc
 include clsrc.inc
@@ -36,6 +38,8 @@ extrn setup_profile: near
 extrn end_profile: near
 extrn dirtycode: dword
 extrn compbuffer: dword
+extrn msxvram: dword
+extrn sccram: dword
 
 public debug
 public printmsgd
@@ -57,6 +61,7 @@ temp_screen     db      3840 dup (0)
 message         db      80*2 dup (0)
 messagepointer  dd      0
 memdump         dd      0
+vmemdump        dd      0
 tabspace        db      ' $'
 tabindicator    db      '>$'
 flags           db      '00000000$'
@@ -91,6 +96,25 @@ sessionserver   db      'SERVER$'
 sessionclient   db      'CLIENT$'
 stateyes        db      'YES$'
 stateno         db      ' NO$'
+
+fminstr         db      'Original        $'
+                db      'Violin          $'
+                db      'Guitar          $'
+                db      'Piano           $'
+                db      'Flute           $'
+                db      'Clarinet        $'
+                db      'Oboe            $'
+                db      'Trumpet         $'
+                db      'Organ           $'
+                db      'Horn            $'
+                db      'Synthesizer     $'
+                db      'Harpsichord     $'
+                db      'Vibraphone      $'
+                db      'Synthesizer Bass$'
+                db      'Wood Bass       $'
+                db      'Eletric Guitar  $'
+                db      '< DRUM MODE >   $'
+                ;        12345678901234567
 
 align 4
 
@@ -349,6 +373,12 @@ render_debug:
                 cmp     debugtype,2
                 je      render_debug2
 
+                cmp     debugtype,3
+                je      render_debug3
+
+                cmp     debugtype,4
+                je      render_debug4
+
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug_screen
@@ -537,36 +567,6 @@ print_psg1:
 
 ; --------------------------------------------------------------------
                 
-                ; print the actual screen mode
-
-                cmp     lastscreen,0
-                jne     print_screen1
-                mov     tabspace,'0'
-                jmp     print_screen0
-print_screen1:
-                cmp     lastscreen,1
-                jne     print_screen2
-                mov     tabspace,'1'
-                jmp     print_screen0
-print_screen2:
-                cmp     lastscreen,2
-                jne     print_screen3
-                mov     tabspace,'2'
-                jmp     print_screen0
-print_screen3:
-                cmp     lastscreen,3
-                jne     print_screenX
-                mov     tabspace,'3'
-                jmp     print_screen0
-print_screenX:
-                mov     tabspace,'X'
-print_screen0:
-                COORD   74,19
-                mov     eax,offset tabspace
-                call    printmsgd
-
-; --------------------------------------------------------------------
-                
                 ; print contents of Z80 register "I"
 
                 mov     al,regi
@@ -725,6 +725,15 @@ print_flags0:
                 COORD   48,14
                 call    printmsgd
                 
+; --------------------------------------------------------------------
+                
+                ; print the psg address
+                COORD   77,19
+                movzx   eax,psgselect
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+
 ; --------------------------------------------------------------------
                 
                 ; print primary slot configuration
@@ -1251,6 +1260,204 @@ print_scc1:
                 ret
 
 ; --------------------------------------------------------------------
+                
+render_debug3:
+                ; third debug screen
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug3_screen
+                mov     edi,offset temp_screen
+                mov     ecx,3840/4
+                rep     movsd
+
+                call    status_bar
+
+; --------------------------------------------------------------------
+                
+                ; print the fm registers
+
+                irp     i,<0,1,2,3>
+                local   print_fm
+
+                mov     ecx,0
+                mov     esi,offset fmreg+10h*i
+                COORD   7+8*i,3
+print_fm:
+                mov     al,[esi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                add     edx,100h
+                inc     esi
+                inc     ecx
+                cmp     ecx,16
+                jnz     print_fm
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; print the fm instruments 0-8
+
+                mov     ecx,0
+                mov     esi,offset fmreg+30h
+                COORD   40,3
+print_fminstr:
+                mov     al,[esi]
+                mov     ah,al
+                shr     al,4
+                and     ah,0F0h
+                or      al,ah
+                and     eax,0FFh
+                test    byte ptr [offset fmreg+0Eh],BIT_5
+                jz      print_fminstr2
+                cmp     ecx,6
+                jb      print_fminstr2
+                mov     eax,16*17
+print_fminstr2:
+                add     eax,offset fminstr
+                push    edx
+                call    printmsgd
+                pop     edx
+                add     edx,100h
+                inc     esi
+                inc     ecx
+                cmp     ecx,9
+                jnz     print_fminstr
+
+; --------------------------------------------------------------------
+                
+blit_screen:
+                ; blit the temp buffer to screen 
+                
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset temp_screen
+                mov     edi,0b8000h
+                mov     ecx,80*24*2/4
+                rep     movsd
+                pop     es
+
+                ret
+
+; --------------------------------------------------------------------
+                
+render_debug4:
+                ; fourth debug screen
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug4_screen
+                mov     edi,offset temp_screen
+                mov     ecx,3840/4
+                rep     movsd
+
+                call    status_bar
+
+; --------------------------------------------------------------------
+                
+                ; dump the msx vram
+
+                irp     i,<0,1,2,3>
+                local   print_dump1
+                local   print_dump2
+                local   print_dump3
+
+                mov     eax,vmemdump
+                add     eax,i*16
+
+                ; print the address
+                push    eax                
+                call    convhex4
+                COORD   4,15+i
+                mov     eax,offset tmphex4
+                call    printmsgd
+                pop     eax
+
+                ; print the contents in hex format
+                xor     ecx,ecx
+                COORD   10,15+i
+print_dump1:
+                push    eax
+                lea     edi,[eax+ecx]
+                and     edi,03FFFh
+                add     edi,msxvram
+                mov     al,[edi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                pop     eax
+                add     edx,3
+                inc     ecx
+                cmp     ecx,16
+                jnz     print_dump1
+                
+                ; print the contents in ascii format
+                xor     ecx,ecx
+                COORD   59,15+i
+print_dump2:
+                push    eax
+                lea     edi,[eax+ecx]
+                and     edi,03FFFh
+                add     edi,msxvram
+                mov     al,[edi]
+                cmp     al,32
+                jbe     print_dump3
+                cmp     al,128
+                jae     print_dump3
+                mov     tabspace,al
+                push    edx
+                mov     eax,offset tabspace
+                call    printmsgd
+                pop     edx
+print_dump3:
+                pop     eax
+                inc     ecx                
+                inc     edx
+                cmp     ecx,16
+                jnz     print_dump2
+
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; dump the scc waveforms
+
+                irp     i,<0,1,2,3,4,5,6,7>
+                local   print_dump1
+
+                ; print the contents in hex format
+                mov     eax,16*i
+                add     eax,1800h
+                add     eax,sccram
+                xor     ecx,ecx
+                COORD   10,3+i
+print_dump1:
+                push    eax
+                mov     al,[eax]
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                pop     eax
+                inc     eax
+                add     edx,3
+                inc     ecx
+                cmp     ecx,16
+                jnz     print_dump1
+                
+
+                endm
+
+; --------------------------------------------------------------------
+                
+                jmp     blit_screen
+
+; --------------------------------------------------------------------
 
 debug:          
                 ;call    init_compiler
@@ -1279,6 +1486,8 @@ debug_loop:
                 je      command_c
                 cmp     al,'0'
                 je      command_0
+                cmp     al,'9'
+                je      command_9
                 cmp     al,'M'
                 je      command_m
                 cmp     al,'U'
@@ -1315,6 +1524,10 @@ debug_loop:
                 je      command_1
                 cmp     al,'2'
                 je      command_2
+                cmp     al,'3'
+                je      command_3
+                cmp     al,'4'
+                je      command_4
                 cmp     al,'V'
                 je      command_v
                 ;cmp     al,'Z'
@@ -1349,9 +1562,14 @@ command_extended:
                 je      command_pgdown
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_pgup:
-                cmp     debugtype,1
-                jne     command_pgup_2
+                cmp     debugtype,2
+                je      command_pgup_2
+                cmp     debugtype,4
+                je      command_pgup_4
+                
                 sub     memdump,32
                 and     memdump,0FFFFh
                 jmp     debug_loop
@@ -1359,6 +1577,12 @@ command_pgup_2:
                 sub     memdump,16*8
                 and     memdump,0FFFFh
                 jmp     debug_loop
+command_pgup_4:
+                sub     vmemdump,16*4
+                and     vmemdump,03FFFh
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_find:
                 COORD   14,23
@@ -1375,9 +1599,14 @@ command_find_next:
                 je      debug_loop
                 jmp     command_find_next
 
+; --------------------------------------------------------------------
+
 command_pgdown:
-                cmp     debugtype,1
-                jne     command_pgdown_2
+                cmp     debugtype,2
+                je      command_pgdown_2
+                cmp     debugtype,4
+                je      command_pgdown_4
+
                 add     memdump,32
                 and     memdump,0FFFFh
                 jmp     debug_loop
@@ -1385,18 +1614,39 @@ command_pgdown_2:
                 add     memdump,16*8
                 and     memdump,0FFFFh
                 jmp     debug_loop
+command_pgdown_4:
+                add     vmemdump,16*4
+                and     vmemdump,03FFFh
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_n:
                 call    changesession
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_d:
+                cmp     debugtype,4
+                je      command_d_4
+                
                 COORD   14,23
                 call    set_cursor_position
                 call    gethex4
                 and     eax,0FFFFh
                 mov     memdump,eax
                 jmp     debug_loop
+
+command_d_4:
+                COORD   14,23
+                call    set_cursor_position
+                call    gethex4
+                and     eax,03FFFh
+                mov     vmemdump,eax
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_u:
                 COORD   14,23
@@ -1405,6 +1655,8 @@ command_u:
                 and     eax,0FFFFh
                 mov     disasm_address,eax
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_e:
                 COORD   14,23
@@ -1419,22 +1671,32 @@ command_e:
                 call    writemem
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_y:              
                 call    change_vsync
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_z:
                 call    UART_init
                 call    UART_send_idstring
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_r:
                 call    save_histogram
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_x:
                 call    change_scc
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_help:
                 push    es
@@ -1448,11 +1710,15 @@ command_help:
                 call    getchar
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_g:
                 call    checkpentium
                 jc      debug_loop
                 call    changebargraph
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_f:
                 COORD   14,23
@@ -1464,20 +1730,31 @@ command_f:
                 call    crlf
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_j:
                 call    change_joystick
                 jmp     debug_loop
 
-command_v:      call    changevideomode
+; --------------------------------------------------------------------
+
+command_v:      
+                call    changevideomode
                 jmp     debug_loop
+                
+; --------------------------------------------------------------------
 
 command_i:
                 xor     imagetype,1
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_save:
                 call    save_state
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_load:
                 call    load_state
@@ -1485,9 +1762,13 @@ command_load:
                 mov     disasm_address,edi
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_m:      
                 call    changemode
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_b:
                 COORD   14,23
@@ -1510,6 +1791,8 @@ command_b:
                 mov     disasm_address,edi
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_stepover:
                 mov     eax,nextbp
                 mov     breakpoint,eax
@@ -1528,9 +1811,13 @@ command_stepover:
                 mov     disasm_address,edi
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_p:
                 call    change_sound
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_h:
                 call    setgraphmode
@@ -1545,6 +1832,8 @@ command_h:
                 call    settextmode
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_w:
                 call    setgraphmode
                 call    clear
@@ -1558,18 +1847,30 @@ command_w:
                 call    settextmode
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_0:
                 call    setgraphmode
                 call    clear
                 mov     firstscreen,1
-                cli
                 call    render
                 call    sprite_render
-                sti
                 call    blit
                 call    getchar
                 call    settextmode
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_9:
+                call    setgraphmode
+                call    sprite_collision
+                call    render_col
+                call    getchar
+                call    settextmode
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_s:      
                 cmp     sessionmode,2
@@ -1601,10 +1902,14 @@ command_s_go:
                 mov     disasm_address,edi
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_c:      
                 call    calibrate_joystick
                 mov     joyenable,1
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_k:
                 inc     comport
@@ -1615,13 +1920,31 @@ command_k_print:
                 call    set_com_baseaddr
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_1:
                 mov     debugtype,1
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_2:
                 mov     debugtype,2
                 jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_3:
+                mov     debugtype,3
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_4:
+                mov     debugtype,4
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 command_t:
                 mov     edi,regepc
@@ -1633,10 +1956,15 @@ command_t:
                 mov     disasm_address,edi
                 jmp     debug_loop
 
+; --------------------------------------------------------------------
+
 command_exit:
                 ret
 
+; --------------------------------------------------------------------
+
 code32          ends
                 end
+
 
 

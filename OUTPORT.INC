@@ -248,9 +248,9 @@ outportxx:
 	; 7B
  dd outemulXX
 	; 7C
- dd outemulXX
+ dd outemul7C
 	; 7D
- dd outemulXX
+ dd outemul7D
 	; 7E
  dd outemulXX
 	; 7F

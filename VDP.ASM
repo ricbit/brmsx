@@ -17,6 +17,7 @@ include z80.inc
 extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
+extrn collisionfield: dword
 
 public render_screen0
 public render_screen1
@@ -44,6 +45,9 @@ public enabled
 public enginetype
 public everyframe
 public all_sprites
+public no_collision
+public render_col
+public sprite_collision
 
 ; DATA ---------------------------------------------------------------
 
@@ -58,8 +62,14 @@ include scr2frmx.inc
 include scr2bkmx.inc
 include scr2frzm.inc
 include scr2bkzm.inc
+include scr2und.inc
+include sprzoom.inc
 
 align 4
+
+DOS_ENGINE      EQU     0
+WIN_ENGINE      EQU     1
+MMX_ENGINE      EQU     2
 
 enabled         dd      1
 linenumber      dd      0
@@ -77,6 +87,10 @@ firstscreen     dd      1
 everyframe      dd      0
 spr_occult      dd      255
 all_sprites     dd      0
+no_collision    dd      0
+y_factor        dd      0
+x_factor        dd      0
+
 scr2inc         dd      offset scr2undoc_table+3*12
 scr2inc_color   dd      offset scr2undoc_table+3*12
 scr2offset      dd      0
@@ -97,32 +111,7 @@ spritemask      db      192 dup (01Fh)
 spritecounter   db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
-enginetype      dd      1
-
-scr2undoc_table: 
-                ; 0 (LIKE)
-                dd      0
-                dd      0
-                dd      0
-
-                ; 1 (marujo)
-                dd      0
-                dd      800h
-                dd      -800h
-
-                ; 2 (Thing Bounces Back)
-                dd      0
-                dd      0
-                dd      1000h
-
-                ; 3 (common)
-                dd      0
-                dd      800h
-                dd      800h
-
-DOS_ENGINE      EQU     0
-WIN_ENGINE      EQU     1
-MMX_ENGINE      EQU     2
+enginetype      dd      DOS_ENGINE
 
 ; render_screen0 -----------------------------------------------------
 ; render a screen 0 page
@@ -188,6 +177,20 @@ render05:
                 jnz     render06
 
                 mov     spriteenable,0
+
+                ; clear a small portion of screen
+                ; to prevent the last psggraph 
+                ; to be displayed forever
+
+                mov     edi,blitbuffer
+                mov     ecx,32
+render0_psgbugfix:
+                mov     dword ptr [edi+31*8],0
+                mov     dword ptr [edi+31*8+4],0
+                add     edi,256
+                dec     ecx
+                jnz     render0_psgbugfix
+
                 ret
 
 ; PIPE1 --------------------------------------------------------------
@@ -384,6 +387,111 @@ render11:       push    ebp
                 mov     spriteenable,1
                 ret
 
+; PIPE2_DOS ----------------------------------------------------------
+; this is the inner loop for render_screen2 function
+
+PIPE2_DOS       macro
+                
+                mov     ecx,colorsave
+                
+                lea     ebx,[ebx+eax*8] 
+                lea     eax,[ecx+eax*8] 
+
+                ; fetch the pattern for that subline
+                mov     dl,[ebx]
+                movzx   ecx,byte ptr [eax]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                mov     ebp,[offset foregroundmask+edx*8]
+                mov     esi,[offset backgroundmask+edx*8]
+
+                and     ebp,[offset foregroundcolor+ecx*4]
+                and     esi,[offset backgroundcolor+ecx*4]
+
+                or      ebp,esi
+                mov     dl,[ebx+i]
+
+                mov     cl,[eax+i]
+                mov     [edi+i*256],ebp
+                
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                mov     esi,[offset backgroundmask+edx*8+4]
+                
+                and     ebp,[offset foregroundcolor+ecx*4]
+                and     esi,[offset backgroundcolor+ecx*4]
+                
+                or      ebp,esi
+                mov     dl,[ebx+(i+1)]
+                
+                mov     cl,[eax+(i+1)]
+                mov     [edi+4+i*256],ebp
+
+                endm
+                
+                mov     eax,0
+                
+                endm
+
+; PIPE2_MMX ----------------------------------------------------------
+; this is the inner loop for render_screen2 function
+; it uses the MMX instructions for better performance
+
+PIPE2_MMX       macro
+
+                lea     esi,[ebx+eax*8]
+                lea     ebp,[ecx+eax*8]
+                mov     eax,0
+                
+                ; pattern
+                mov     dl,[esi]
+                ; color
+                mov     al,[ebp]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                ; foreground and background mask
+                ;;movq    MM0,[offset foregroundmask+edx*8]
+                movq
+                db      00000100b
+                db      11010101b
+                dd      offset foregroundmask
+
+                mov     dl,[esi+i+1]
+                
+                ;;movq    MM1,MM0
+                movq
+                db      11001000b
+
+                ; blend with the foreground color
+                ;;pand    MM0,[offset foregroundcolor_MMX+eax*8]
+                pand
+                db      00000100b
+                db      11000101b
+                dd      offset foregroundcolor_MMX
+                
+                ; blend with the background color
+                ;;pandn    MM1,[offset backgroundcolor_MMX+eax*8]
+                pandn
+                db      00001100b
+                db      11000101b
+                dd      offset backgroundcolor_MMX
+                
+                ;;por     MM0,MM1
+                por
+                db      11000001b
+                
+                mov     al,[ebp+i+1]
+                
+                ;;movq    [edi+i*256],MM0
+                movq_st
+                db      10000111b
+                dd      i*256
+                
+                endm
+
+                endm
+
 ; render_screen2_dirty (macro version) -------------------------------
 
 RENDER_SCREEN2_DIRTY_MACRO macro videoengine
@@ -469,11 +577,7 @@ EMULABEL        render2d_draw,videoengine
                 if      (videoengine EQ DOS_ENGINE)
                   PIPE2_DOS
                 else
-                  if (videoengine EQ MMX_ENGINE)
-                    PIPE2_MMX
-                  else
-                    PIPE2_WIN
-                  endif
+                  PIPE2_MMX
                 endif
 
                 pop     edx
@@ -505,158 +609,6 @@ EMULABEL        render2d_next,videoengine
 
                 mov     spriteenable,1
                 ret
-
-                endm
-
-; PIPE2_DOS ----------------------------------------------------------
-; this is the inner loop for render_screen2 function
-; it uses the esp as a general register
-; and because of that, this macro doesn't run under
-; multitasking environments
-
-PIPE2_DOS       macro
-                
-                mov     stacksave,esp
-                mov     esp,colorsave
-
-                ; fetch the pattern for that subline
-                mov     dl,[ebx+eax*8]
-                mov     cl,[esp+eax*8]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-
-                mov     ebp,[offset foregroundmask+edx*8]
-                mov     esi,[offset backgroundmask+edx*8]
-
-                and     ebp,[offset foregroundcolor+ecx*4]
-                and     esi,[offset backgroundcolor+ecx*4]
-
-                or      ebp,esi
-                mov     dl,[ebx+eax*8+i]
-
-                mov     cl,[esp+eax*8+i]
-                mov     [edi+i*256],ebp
-                
-                mov     ebp,[offset foregroundmask+edx*8+4]
-                mov     esi,[offset backgroundmask+edx*8+4]
-                
-                and     ebp,[offset foregroundcolor+ecx*4]
-                and     esi,[offset backgroundcolor+ecx*4]
-                
-                or      ebp,esi
-                mov     dl,[ebx+eax*8+(i+1)]
-                
-                mov     cl,[esp+eax*8+(i+1)]
-                mov     [edi+4+i*256],ebp
-
-                endm
-                
-                mov     esp,stacksave
-                
-                endm
-
-; PIPE2_WIN ----------------------------------------------------------
-; this is the inner loop for render_screen2 function
-; it doesn't use the esp as a general register
-; and can run under windows
-
-PIPE2_WIN       macro
-                
-                mov     dl,[ebx+eax*8]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-
-                ; get the foreground mask
-                mov     ebp,[offset foregroundmask+edx*8]
-                
-                ; get the background mask
-                mov     esi,[offset backgroundmask+edx*8]
-
-                ; fetch the color for that subline
-                mov     dl,[ecx+eax*8+i]
-
-                ; blend with the foreground color
-                and     ebp,[offset foregroundcolor+edx*4]
-
-                ; blend with the background color
-                and     esi,[offset backgroundcolor+edx*4]
-
-                ; mix the colors
-                or      ebp,esi
-
-                ; display the subline
-                mov     dl,[ebx+eax*8+i]
-                mov     [edi+i*256],ebp
-                
-                ; do it again for the next four pixels
-                mov     ebp,[offset foregroundmask+edx*8+4]
-                mov     esi,[offset backgroundmask+edx*8+4]
-                mov     dl,[ecx+eax*8+i]
-                and     ebp,[offset foregroundcolor+edx*4]
-                and     esi,[offset backgroundcolor+edx*4]
-                or      ebp,esi
-                mov     dl,[ebx+eax*8+(i+1)]
-                mov     [edi+4+i*256],ebp
-
-                endm
-                endm
-
-; PIPE2_MMX ----------------------------------------------------------
-; this is the inner loop for render_screen2 function
-; it uses the MMX instructions for better performance
-
-PIPE2_MMX       macro
-
-                lea     esi,[ebx+eax*8]
-                lea     ebp,[ecx+eax*8]
-                mov     eax,0
-                
-                ; pattern
-                mov     dl,[esi]
-                ; color
-                mov     al,[ebp]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-
-                ; foreground and background mask
-                ;;movq    MM0,[offset foregroundmask+edx*8]
-                movq
-                db      00000100b
-                db      11010101b
-                dd      offset foregroundmask
-
-                mov     dl,[esi+i+1]
-                
-                ;;movq    MM1,MM0
-                movq
-                db      11001000b
-
-                ; blend with the foreground color
-                ;;pand    MM0,[offset foregroundcolor_MMX+eax*8]
-                pand
-                db      00000100b
-                db      11000101b
-                dd      offset foregroundcolor_MMX
-                
-                ; blend with the background color
-                ;;pandn    MM1,[offset backgroundcolor_MMX+eax*8]
-                pandn
-                db      00001100b
-                db      11000101b
-                dd      offset backgroundcolor_MMX
-                
-                ;;por     MM0,MM1
-                por
-                db      11000001b
-                
-                mov     al,[ebp+i+1]
-                
-                ;;movq    [edi+i*256],MM0
-                movq_st
-                db      10000111b
-                dd      i*256
-                
-                endm
 
                 endm
 
@@ -759,19 +711,17 @@ EMULABEL        render21,videoengine
                 mov     al,[esi]
                 push    ebp
                 push    esi
+                push    ebx
 
                 if (videoengine EQ DOS_ENGINE)
                   PIPE2_DOS
                 else
-                  if (videoengine EQ MMX_ENGINE)
-                    PIPE2_MMX
-                  else
-                    PIPE2_WIN
-                  endif
+                  PIPE2_MMX
                 endif
 
                 add     edi,8
 
+                pop     ebx
                 pop     esi
                 pop     ebp
                 
@@ -914,6 +864,8 @@ sprite_render:
                 test    byte ptr [offset vdpregs+1],BIT_6
                 jz      _ret
 
+                call    sprite_collision
+
                 ; esi = sprite attribute table
                 mov     esi,msxvram
                 add     esi,sprattrtable
@@ -1017,7 +969,6 @@ sprite_render_line_slow:
                 push    esi
                 sub     esi,msxvram
                 sub     esi,sprattrtable
-                ;shr     esi,2
                 shl     esi,6
                 mov     ebx,esi
                 mov     esi,offset falsesprite
@@ -1107,7 +1058,7 @@ mark_sprite:
                 ; at this point edx = number of rows
                 ; now we will evaluate the y coord of sprite
                 movzx   ecx,byte ptr [esi]
-                cmp     ecx,0F0h 
+                cmp     ecx,0BEh                ;0F0h? 
                 jbe     mark_sprite_positive
                 movsx   ecx,cl
 mark_sprite_positive:
@@ -1148,9 +1099,525 @@ mark_sprite_ocult:
                 cmp     spr_occult,255
                 jne     mark_sprite_next
                 mov     spr_occult,ebx
+                and     vdpstatus,0F0h
                 or      vdpstatus,bl
                 or      vdpstatus,BIT_6
                 jmp     mark_sprite_next
+
+; sprite_collision ---------------------------------------------------
+; check for sprite collision 
+
+sprite_collision:
+                cmp     no_collision,1                
+                je      _ret
+                
+                ; clear sprite collision flag
+                and     vdpstatus,NBIT_5
+
+                ; esi = sprite attribute table
+                mov     esi,msxvram
+                add     esi,sprattrtable
+
+                ; find last sprite
+                mov     ebp,32
+sprite_collision_loop:
+                mov     ah,[esi]
+                cmp     ah,0D0h
+                je      _ret
+
+                call    check_one_sprite
+
+                test    vdpstatus,BIT_5
+                jnz     sprite_collision_clear
+
+                add     esi,4
+                dec     ebp
+                jnz     sprite_collision_loop
+
+                jmp     sprite_collision_clear
+
+; sprite_collision_clear ---------------------------------------------
+; clear the collision field
+
+sprite_collision_clear:
+                ; esi = sprite attribute table
+                mov     esi,msxvram
+                add     esi,sprattrtable
+
+                ; find last sprite
+                mov     ebp,32
+sprite_collision_clear_loop:
+                mov     ah,[esi]
+                cmp     ah,0D0h
+                je      _ret
+
+                call    clear_one_sprite
+
+                add     esi,4
+                dec     ebp
+                jnz     sprite_collision_clear_loop
+                
+                ret
+
+; check_one_sprite ---------------------------------------------------
+; check a single sprite for collision
+; this routine works for all sprite sizes (8x8 or 16x16, Z or NZ)
+
+check_one_sprite:
+                test    byte ptr [offset vdpregs+1],BIT_1
+                jz      check_one_sprite_simple
+
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jz      check_one_sprite_simple
+
+check_one_sprite_complex:
+                ; _1_  3
+                ;  2   4
+                mov     x_factor,0
+                call    draw_binary_sprite
+                mov     x_factor,0
+                mov     y_factor,0
+                call    collision_check
+                ;  1   3
+                ; _2_  4
+                mov     x_factor,8
+                call    draw_binary_sprite
+                mov     x_factor,0
+                mov     y_factor,16
+                call    collision_check
+                ;  1  _3_
+                ;  2   4
+                mov     x_factor,16
+                call    draw_binary_sprite
+                mov     x_factor,16
+                mov     y_factor,0
+                call    collision_check
+                ;  1   3
+                ;  2  _4_
+                mov     x_factor,24
+                call    draw_binary_sprite
+                mov     x_factor,16
+                mov     y_factor,16
+                call    collision_check
+                ret
+
+check_one_sprite_simple:
+                mov     y_factor,0
+                mov     x_factor,0
+                call    draw_binary_sprite
+                call    collision_check
+                ret
+
+; draw_binary_sprite -------------------------------------------------
+; draw a binary sprite in the false buffer
+; esi points to spr attr table
+
+draw_binary_sprite:
+                test    byte ptr [offset vdpregs+1],BIT_1
+                jnz     draw_binary_sprite_1616N
+
+                jmp     draw_binary_sprite_88N
+
+
+; --------------------------------------------------------------------
+
+draw_binary_sprite_1616N:
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     draw_binary_sprite_1616Z
+
+                ; 16x16 unzoomed
+                movzx   eax,byte ptr [esi+2]
+                and     eax,11111100b
+                shl     eax,3
+                add     eax,sprpatttable
+                add     eax,msxvram
+
+                mov     ecx,16
+                mov     edi,offset falsesprite
+
+draw_binary_sprite_1616N_loop:
+                mov     bl,[eax]
+                mov     [edi],bl
+                mov     bl,[eax+16]
+                mov     [edi+1],bl
+                add     edi,2
+                inc     eax
+                dec     ecx
+                jnz     draw_binary_sprite_1616N_loop
+
+                ret
+
+; --------------------------------------------------------------------
+
+draw_binary_sprite_88N:
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     draw_binary_sprite_88Z
+
+                ; 8x8 unzoomed
+                movzx   eax,byte ptr [esi+2]
+                shl     eax,3
+                add     eax,sprpatttable
+                add     eax,msxvram
+
+                mov     ecx,8
+                mov     edi,offset falsesprite
+
+draw_binary_sprite_88N_loop:
+                mov     bl,[eax]
+                mov     byte ptr [edi],bl
+                mov     byte ptr [edi+1],0
+                add     edi,2
+                inc     eax
+                dec     ecx
+                jnz     draw_binary_sprite_88N_loop
+
+                ; fill the remaining 16 bytes 
+                mov     ecx,16/4
+                mov     eax,0
+                rep     stosd
+
+                ret
+
+; --------------------------------------------------------------------
+
+draw_binary_sprite_88Z:
+
+                ; 8x8 zoomed
+                movzx   eax,byte ptr [esi+2]
+                shl     eax,3
+                add     eax,sprpatttable
+                add     eax,msxvram
+
+                mov     ecx,8
+                mov     edi,offset falsesprite
+
+draw_binary_sprite_88Z_loop:
+                movzx   ebx,byte ptr [eax]
+                mov     bx,word ptr [offset binary_zoom+ebx*2]
+                mov     word ptr [edi],bx
+                mov     word ptr [edi+2],bx
+                add     edi,4
+                inc     eax
+                dec     ecx
+                jnz     draw_binary_sprite_88Z_loop
+
+                ret
+
+; --------------------------------------------------------------------
+
+draw_binary_sprite_1616Z:
+
+                ; 16x16 zoomed (just one quarter of it)
+                movzx   eax,byte ptr [esi+2]
+                shl     eax,3
+                add     eax,sprpatttable
+                add     eax,msxvram
+                add     eax,x_factor
+
+                mov     ecx,8
+                mov     edi,offset falsesprite
+
+draw_binary_sprite_1616Z_loop:
+                movzx   ebx,byte ptr [eax]
+                mov     bx,word ptr [offset binary_zoom+ebx*2]
+                mov     word ptr [edi],bx
+                mov     word ptr [edi+2],bx
+                add     edi,4
+                inc     eax
+                dec     ecx
+                jnz     draw_binary_sprite_1616Z_loop
+
+                ret
+
+; collision_check ----------------------------------------------------
+; check for coincidence in the collision field
+; don't touch esi and ebp
+
+collision_check:
+                call    eval_sprite_coords
+                add     eax,y_factor
+                add     ecx,x_factor
+
+                push    ebp
+                mov     ebp,eax
+
+                ; eax = y  ; ecx =x
+                cmp     ecx,16
+                jl      collision_check_slow
+                cmp     ecx,256-16
+                jg      collision_check_slow
+
+                mov     ebx,ecx
+                shr     ebx,3
+                sal     eax,5
+                add     eax,ebx
+                add     eax,collisionfield
+                and     ecx,7
+                mov     edi,offset falsesprite
+
+                push    esi
+                mov     esi,eax
+                ; eax points to char 
+                mov     ebx,16
+collision_check_loop:
+                cmp     ebp,0
+                jl      collision_check_skip
+                cmp     ebp,192
+                jge     collision_check_skip
+
+                irp     i,<0,1>
+                movzx   eax,byte ptr [edi+i]
+                shl     eax,8
+                shr     eax,cl
+                xchg    ah,al
+                mov     edx,dword ptr [esi+i]
+                and     edx,eax
+                jnz     collision_found
+                or      dword ptr [esi+i],eax
+                endm
+
+collision_check_skip:
+                inc     ebp
+                add     esi,256/8
+                add     edi,2
+                dec     ebx
+                jnz     collision_check_loop
+                pop     esi
+
+collision_check_ret:
+                pop     ebp
+                ret
+
+; --------------------------------------------------------------------
+
+collision_found:
+                or      vdpstatus,BIT_5
+                pop     esi
+                pop     ebp
+                ret
+
+; --------------------------------------------------------------------
+
+collision_check_slow:                
+                mov     edi,ecx
+                sar     edi,3
+                sal     eax,5
+                add     eax,edi
+                add     eax,collisionfield
+                and     ecx,7
+
+                push    esi
+                mov     esi,eax
+                ; eax points to char 
+                mov     ebx,0 ;16
+collision_check_loop_slow:
+                cmp     ebp,0
+                jl      collision_check_skip_slow
+                cmp     ebp,192
+                jge     collision_check_skip_slow
+
+                irp     i,<0,1> 
+                local   skip1,skip2
+                movzx   eax,byte ptr [offset falsesprite+ebx*2+i] 
+                shl     eax,8
+                shr     eax,cl
+                ;
+                cmp     edi,-i
+                jl      skip1
+                cmp     edi,31-i
+                jg      skip1
+                mov     dl,byte ptr [esi+i]
+                and     dl,ah
+                jnz     collision_found
+                or      byte ptr [esi+i],ah
+                ;
+skip1:
+                cmp     edi,-(i+1)
+                jl      skip2
+                cmp     edi,31-(i+1)
+                jg      skip2
+                mov     dl,byte ptr [esi+i+1]
+                and     dl,al
+                jnz     collision_found
+                or      byte ptr [esi+i+1],al
+                ;
+skip2:
+                endm
+
+collision_check_skip_slow:
+                inc     ebp
+                add     esi,256/8
+                inc     ebx
+                cmp     ebx,16
+                jne     collision_check_loop_slow
+                pop     esi
+
+                jmp     collision_check_ret
+
+; collision_clear ----------------------------------------------------
+; clear one sprite from collision field
+; don't touch esi and ebp
+
+collision_clear:
+                call    eval_sprite_coords
+                add     eax,y_factor
+                add     ecx,x_factor
+
+                push    ebp
+                mov     ebp,eax
+
+                ; eax = y  ; ecx =x
+                cmp     ecx,16
+                jl      collision_clear_slow
+                cmp     ecx,256-16
+                jg      collision_clear_slow
+                
+                sar     ecx,3
+                shl     eax,5
+                add     eax,ecx
+                add     eax,collisionfield
+
+                mov     edx,eax
+                mov     ebx,16
+collision_clear_loop:
+                cmp     ebp,0
+                jl      collision_clear_skip
+                cmp     ebp,192
+                jge     collision_clear_skip
+                mov     dword ptr [edx],0
+
+collision_clear_skip:
+                inc     ebp
+                add     edx,256/8
+                dec     ebx
+                jnz     collision_clear_loop
+
+collision_clear_ret:
+                pop     ebp
+                ret
+
+; --------------------------------------------------------------------
+
+collision_clear_slow:                
+                mov     edi,ecx
+                sar     edi,3
+                sal     eax,5
+                add     eax,edi
+                add     eax,collisionfield
+                and     ecx,7
+
+                push    esi
+                mov     esi,eax
+                ; eax points to char 
+                mov     ebx,0 ;16
+collision_clear_loop_slow:
+                cmp     ebp,0
+                jl      collision_clear_skip_slow
+                cmp     ebp,192
+                jge     collision_clear_skip_slow
+
+                irp     i,<0,1> 
+                local   skip1,skip2
+                ;
+                cmp     edi,-i
+                jl      skip1
+                cmp     edi,31-i
+                jg      skip1
+                mov     byte ptr [esi+i],0
+                ;
+skip1:
+                cmp     edi,-(i+1)
+                jl      skip2
+                cmp     edi,31-(i+1)
+                jg      skip2
+                mov     byte ptr [esi+i+1],0
+                ;
+skip2:
+                endm
+
+collision_clear_skip_slow:
+                inc     ebp
+                add     esi,256/8
+                inc     ebx
+                cmp     ebx,16
+                jne     collision_clear_loop_slow
+                pop     esi
+
+                pop     ebp
+                ret
+
+; clear_one_sprite ---------------------------------------------------
+; clear a single sprite from collision field
+; this routine works for all sprite sizes (8x8 or 16x16, Z or NZ)
+
+clear_one_sprite:
+                test    byte ptr [offset vdpregs+1],BIT_1
+                jz      clear_one_sprite_simple
+
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jz      clear_one_sprite_simple
+
+clear_one_sprite_complex:
+                ; _1_  3
+                ;  2   4
+                mov     x_factor,0
+                mov     y_factor,0
+                call    collision_clear
+                ;  1   3
+                ; _2_  4
+                mov     x_factor,0
+                mov     y_factor,16
+                call    collision_clear
+                ;  1  _3_
+                ;  2   4
+                mov     x_factor,16
+                mov     y_factor,0
+                call    collision_clear
+                ;  1   3
+                ;  2  _4_
+                mov     x_factor,16
+                mov     y_factor,16
+                call    collision_clear
+                ret
+
+clear_one_sprite_simple:
+                mov     y_factor,0
+                mov     x_factor,0
+                call    collision_clear
+                ret
+
+; render_col ---------------------------------------------------------
+; render the collision field
+
+render_col:
+                mov     edi,0A0000h
+                sub     edi,_code32a
+                add     edi,32
+                mov     esi,collisionfield
+
+                mov     ebp,192
+render_col_outer:
+
+                mov     edx,32
+render_col_inner:
+                mov     al,[esi]
+                irp     i,<0,1,2,3,4,5,6,7>
+                shl     al,1
+                sbb     ah,ah
+                and     ah,15
+                mov     [edi],ah
+                inc     edi
+                endm
+
+                inc     esi
+                dec     edx
+                jnz     render_col_inner
+
+                add     edi,320-256
+                dec     ebp
+                jnz     render_col_outer
+
+                ret
 
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM
@@ -1262,7 +1729,7 @@ eval_sprite_coords:
                 sub     ecx,eax
 
                 mov     al,[esi]        ; y coordinate
-                cmp     al,0F0h         ; 0BEh ??
+                cmp     al,0BEh         ; 0F0h ??
                 jbe     eval_sprite_coords1
                 movsx   eax,al
 
@@ -1629,36 +2096,37 @@ eval_base_address_begin:
                 mov     eax,01010101h
                 mov     edi,nametable
                 shr     edi,6
-                mov     ecx,32*24/64/4
+                mov     ecx,32*24/64 
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
 
                 mov     eax,02020202h
-                mov     ecx,32*24*8/64/4
+                mov     ecx,32*24*8/64 
                 mov     edi,patterntable
                 shr     edi,6
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
 
                 mov     eax,03030303h
-                mov     ecx,32*24*8/64/4
+                mov     ecx,32*24*8/64 
                 mov     edi,colortable
                 shr     edi,6
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
 
                 mov     eax,05050505h
                 mov     edi,sprpatttable
                 shr     edi,6
-                mov     ecx,256*8/64/4
+                mov     ecx,256*8/64 
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
 
                 mov     eax,04040404h
                 mov     edi,sprattrtable
                 shr     edi,6
                 add     edi,offset vrammapping
-                mov     [edi],ax
+                mov     ecx,2
+                call    fill_vram_table
 
                 mov     eax,offset dirty_screen2_nothing
                 mov     dword ptr [offset screenselect+0*4],eax
@@ -1759,35 +2227,37 @@ eval_base_address_scr1:
                 mov     eax,01010101h
                 mov     edi,nametable
                 shr     edi,6
-                mov     ecx,32*24/64/4
+                mov     ecx,32*24/64 
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
                 
                 mov     eax,02020202h
                 mov     edi,patterntable
                 shr     edi,6
-                mov     ecx,256*8/64/4
+                mov     ecx,256*8/64 
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
 
                 mov     al,03h
                 mov     edi,colortable
                 shr     edi,6
                 add     edi,offset vrammapping
-                mov     [edi],al
+                mov     ecx,1
+                call    fill_vram_table
 
                 mov     eax,05050505h
                 mov     edi,sprpatttable
                 shr     edi,6
-                mov     ecx,256*8/64/4
+                mov     ecx,256*8/64 
                 add     edi,offset vrammapping
-                rep     stosd
+                call    fill_vram_table
                 
                 mov     eax,04040404h
                 mov     edi,sprattrtable
                 shr     edi,6
                 add     edi,offset vrammapping
-                mov     [edi],ax
+                mov     ecx,2
+                call    fill_vram_table
 
                 mov     eax,offset dirty_screen1_nothing
                 mov     dword ptr [offset screenselect+0*4],eax
@@ -2087,6 +2557,36 @@ dirty_screen3_pattern:
 dirty_screen3_sprpatt:
 dirty_screen3_sprattr:
                 mov     [ecx+esi],bl
+                ret
+
+; fill_vram_table ----------------------------------------------------
+; this is like a "rep stosd" but check for overlap
+
+fill_vram_table:
+                test    ecx,3
+                jnz     fill_vram_table_slow
+
+                shr     ecx,2
+fill_vram_table_fast:
+                cmp     dword ptr [edi],0
+                jne     fill_vram_table_overlap
+                mov     dword ptr [edi],eax
+                add     edi,4
+                dec     ecx
+                jnz     fill_vram_table_fast
+                ret
+
+fill_vram_table_slow:
+                cmp     byte ptr [edi],0
+                jne     fill_vram_table_overlap
+                mov     byte ptr [edi],al
+                inc     edi
+                dec     ecx
+                jnz     fill_vram_table_slow
+                ret
+
+fill_vram_table_overlap:
+                mov     everyframe,1
                 ret
 
 ; wash_sprite --------------------------------------------------------

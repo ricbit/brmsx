@@ -219,6 +219,7 @@ EMULABEL        exit,emtype,brtype
                 mov     clockcounter,ebp
                 endif
                 call    speaker_shutup
+                call    reset_adlib
                 ret
 
 EMULABEL        fakeirq,emtype,brtype

@@ -140,3 +140,10 @@ extrn psgselect: byte
 extrn vdpaccess: dword
 extrn speaker: dword
 extrn fakejoy: dword
+extrn megamask: dword
+extrn autofire: dword
+extrn autospeed: dword
+extrn autorun: dword
+extrn megaram: dword
+extrn fmreg: byte
+extrn fmenabled: dword

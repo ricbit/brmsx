@@ -315,7 +315,7 @@ emul&opcode:
                 mov     edi,eax
                 mov     ecx,regesp
                 mov     eax,ebx
-                sub     ecx,2
+                sub     cx,2
                 call    writememw
                 mov     regesp,ecx
                 mov     eax,0
@@ -1135,8 +1135,15 @@ emul&opcode:
                 lea     edi,[edi+ebx+2]
                 ret
 emul&opcode&a:
-                mov     ebp,0
-                ; remember to implement the R correction
+                push    edx
+                mov     eax,ebp
+                mov     edx,0
+                mov     ebp,13
+                div     ebp
+                add     rcounter,eax
+                pop     edx
+                mov     eax,0
+                mov     ebp,eax
                 ret
 
                 endm
@@ -1885,7 +1892,7 @@ POPREGW         macro   opcode,reg,cycles
 emul&opcode:                
                 mov     ecx,regesp
                 call    readmemw
-                add     ecx,2
+                add     cx,2
                 mov     reg,eax
                 mov     regesp,ecx
                 sub     ebp,cycles
@@ -1905,8 +1912,8 @@ emul&opcode:
                 ; and the "inc edi" must always be done
                 ; AFTER the "writememw"
                 mov     ecx,regesp
-                sub     ecx,2
                 mov     eax,reg
+                sub     cx,2
                 call    writememw
                 mov     regesp,ecx
                 xor     eax,eax
@@ -1990,7 +1997,7 @@ OPRET           macro   opcode
 emul&opcode:                
                 mov     ecx,regesp
                 call    readmemw
-                add     ecx,2
+                add     cx,2
                 mov     edi,eax
                 mov     regesp,ecx
                 mov     eax,0

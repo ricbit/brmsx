@@ -177,10 +177,6 @@ outemulD0_write_sector:
                 ; disk_image+(track*18+sector+side*9)*512
 
                 mov     esi,disksize
-                ;mov     cl,0
-                ;cmp     esi,45
-                ;jbe     outemulD0_write_sector_180
-                ;mov     cl,1
                 mov     cl,shiftfactor
 outemulD0_write_sector_180:
                 movzx   eax,current_track

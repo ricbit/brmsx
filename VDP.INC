@@ -23,3 +23,6 @@ extrn enabled: dword
 extrn enginetype: dword
 extrn everyframe: dword
 extrn all_sprites: dword
+extrn no_collision: dword
+extrn render_col: near
+extrn sprite_collision: near

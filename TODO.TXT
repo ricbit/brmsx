@@ -1,11 +1,16 @@
 - fix border color in 256 mode
 - add video cache for screen 0/3
 - improve video cache in screen 2 (is it worth?)
-- add sprite collision detection
 - improve gui
 - finish the compiler (again)
-- envelope in sound
 - add high-level disk functions
 - add true-disk emulation
-- fix the remaining IRQ bug (yawara/goonies module)
-- fix the scc soundstream generator
+- fix the remaining IRQ bug (yawara/goonies module and thezeus)
+- fix the scc soundstream generator  (f1 spirit)
+- finish sprite collision detection
+- fix r register emulation in block commands
+- fix irq in block commands
+- load dsk in the gui
+- fix offset in ix/iy opcodes (printfd/dd.asm)
+- fix the third psggraph in screen0 
+- video cache bug in daiva

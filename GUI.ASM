@@ -172,7 +172,7 @@ draw_gui_psg:
 ; --------------------------------------------------------------------
                 
 draw_wave_graph:
-                mov     esi,dmastart
+                ;mov     esi,dmastart
                 mov     ecx,252
                 mov     edx,0
 draw_wave_graph_loop:
@@ -301,7 +301,7 @@ draw_psggraph:
                 mov     word ptr [offset dirtyname+30+3*32],0101h
 
                 cmp     sccenabled,0
-                je      _ret
+                je      draw_psggraph_fmpac
 
                 irp     i,<0,1,2,3,4>
 
@@ -316,6 +316,34 @@ draw_psggraph:
                 mov     dword ptr [offset dirtyname+27+1*32],01010101h
                 mov     dword ptr [offset dirtyname+27+2*32],01010101h
                 mov     dword ptr [offset dirtyname+27+3*32],01010101h
+
+draw_psggraph_fmpac:
+                cmp     fmenabled,1
+                jne     _ret
+                
+                irp     i,<0,1,2,3,4,5,6,7,8>
+
+                movzx   eax,byte ptr [offset fmreg+30h+i]
+                and     eax,0Fh
+                xor     eax,0Fh
+                mov     ah,byte ptr [offset fmreg+20h+i]
+                shr     ah,5
+                sbb     ah,ah
+                and     al,ah
+                mov     ah,0
+                mov     edi,21*8+i*4
+                call    draw_psggraph_channel
+                
+                endm
+
+                mov     dword ptr [offset dirtyname+21+0*32],01010101h
+                mov     dword ptr [offset dirtyname+21+1*32],01010101h
+                mov     dword ptr [offset dirtyname+21+2*32],01010101h
+                mov     dword ptr [offset dirtyname+21+3*32],01010101h
+                or      dword ptr [offset dirtyname+25+0*32],01010101h
+                or      dword ptr [offset dirtyname+25+1*32],01010101h
+                or      dword ptr [offset dirtyname+25+2*32],01010101h
+                or      dword ptr [offset dirtyname+25+3*32],01010101h
 
                 ret
 
@@ -536,9 +564,7 @@ draw_menu_screen:
                 cmp     turnoff_flag,1
                 je      draw_noise_screen
 
-                cli     
                 call    render
-                sti
                 call    sprite_render
                 call    set_border_color_dark
                 ret
