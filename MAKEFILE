@@ -5,7 +5,7 @@ OBJECTS = pmode.o brmsx.o debug.o patch.o \
 TASMFLAGS = /ml /m2 /q /la
 ECHO = rbecho
 
-all : rbecho.exe brmsx.exe brmsxwin.exe
+all : rbecho.exe brmsx.exe brmsxwin.exe brmsxmmx.exe
 
 rbecho.exe: rbecho.c
 	gcc $^ -o $@ 
@@ -18,11 +18,18 @@ brmsxwin.exe : $(OBJECTS) vdpwin.o
 	$(ECHO) objects.lst $^
 	tlink /3 /x @objects.lst , $@
 
+brmsxmmx.exe : $(OBJECTS) vdpmmx.o
+	$(ECHO) objects.lst $^
+	tlink /3 /x @objects.lst , $@
+
 vdpdos.o : vdp.asm
 	tasm $(TASMFLAGS) /dDOS $^,$@
 
 vdpwin.o : vdp.asm
 	tasm $(TASMFLAGS) /dWIN $^,$@
+
+vdpmmx.o : vdp.asm
+	tasm $(TASMFLAGS) /dMMX $^,$@
 
 %.o : %.asm
 	tasm $(TASMFLAGS) $^,$@

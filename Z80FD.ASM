@@ -31,7 +31,7 @@ ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+1
 
 ; FD 21 - LD IY,dddd
 emulFD21:       
-                call    fetchw1
+                FETCHW1 FD21
                 add     edi,3
                 mov     regeiy,eax
                 xor     eax,eax

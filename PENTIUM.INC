@@ -46,6 +46,12 @@ pand            macro
 
                 endm
 
+pandn           macro
+
+                db 0fh,0dfh
+
+                endm
+
 por             macro
 
                 db 0fh,0ebh     

@@ -453,24 +453,16 @@ PIPE2_WIN       macro
 
 PIPE2_MMX       macro
 
-                push    ebx ecx
-
                 lea     esi,[ebx+eax*8]
                 lea     ebp,[ecx+eax*8]
-                mov     ebx,0
-                mov     ecx,ebx
+                mov     eax,0
                 
                 ; pattern
                 mov     dl,[esi]
                 ; color
-                mov     bl,[ebp]
+                mov     al,[ebp]
                 
-                ; pattern
-                mov     al,[esi+1]
-                ; color
-                mov     cl,[ebp+1]
-                
-                irp     i,<0,1,2,3>
+                irp     i,<0,1,2,3,4,5,6,7>
 
                 ; foreground and background mask
                 ;;movq    MM0,[offset foregroundmask+edx*8]
@@ -479,82 +471,38 @@ PIPE2_MMX       macro
                 db      11010101b
                 dd      offset foregroundmask
 
-                ;;movq    MM2,[offset foregroundmask+eax*8]
+                ;;movq    MM1,MM0
                 movq
-                db      00010100b
-                db      11000101b
-                dd      offset foregroundmask
-
-                ;;movq    MM1,[offset backgroundmask+edx*8]
-                movq
-                db      00001100b
-                db      11010101b
-                dd      offset backgroundmask
-
-                ;;movq    MM3,[offset backgroundmask+eax*8]
-                movq
-                db      00011100b
-                db      11000101b
-                dd      offset backgroundmask
+                db      11001000b
 
                 ; blend with the foreground color
-                ;;pand    MM0,[offset foregroundcolor+ebx*8]
+                ;;pand    MM0,[offset foregroundcolor_MMX+ebx*8]
                 pand
                 db      00000100b
-                db      11011101b
-                dd      offset foregroundcolor_MMX
-                
-                ; blend with the foreground color
-                ;;pand    MM2,[offset foregroundcolor+ecx*8]
-                pand
-                db      00010100b
-                db      11001101b
+                db      11000101b
                 dd      offset foregroundcolor_MMX
                 
                 ; blend with the background color
-                ;;pand    MM1,[offset backgroundcolor+ebx*8]
-                pand
+                ;;pandn    MM1,[offset backgroundcolor_MMX+ebx*8]
+                pandn
                 db      00001100b
-                db      11011101b
+                db      11000101b
                 dd      offset backgroundcolor_MMX
                 
-                ; blend with the background color
-                ;;pand    MM3,[offset backgroundcolor+ebx*8]
-                pand
-                db      00011100b
-                db      11001101b
-                dd      offset backgroundcolor_MMX
+                mov     dl,[esi+i+1]
                 
                 ;;por     MM0,MM1
                 por
                 db      11000001b
                 
-                mov     dl,[esi+(2*i)+2]
+                mov     al,[ebp+i+1]
                 
-                ;;por     MM2,MM3
-                por
-                db      11010011b
-                
-                mov     bl,[ebp+(2*i)+2]
-                
-
                 ;;movq    [edi+i*256],MM0
                 movq_st
                 db      10000111b
-                dd      (2*i)*256
-                
-                mov     al,[esi+(2*i)+3]
-                
-                ;;movq    [edi+i*256],MM2
-                movq_st
-                db      10010111b
-                dd      ((2*i)+1)*256
-                
-                mov     cl,[ebp+(2*i)+3]
+                dd      i*256
                 
                 endm
-
-                pop     ecx ebx
 
                 endm
 
@@ -637,7 +585,11 @@ render2d_draw:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_WIN
+                  ifdef MMX
+                    PIPE2_MMX
+                  else
+                    PIPE2_WIN
+                  endif
                 endif
 
                 pop     edx
@@ -729,7 +681,11 @@ render21:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_WIN
+                  ifdef MMX
+                    PIPE2_MMX
+                  else
+                    PIPE2_WIN
+                  endif
                 endif
 
                 add     edi,8

@@ -409,11 +409,8 @@ FETCHMACRO      macro   skip
                 lea     ebx,[edi+skip]                  ; clock 1 V
                 shr     esi,13                          ; clock 2 U
                 and     ebx,01fffh                      ; clock 2 V
-                ;cmp     ebx,3000h
-                ;ja      fetch1
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
-                ;mov     ebx,[esi+ebx]
-                mov     al,[esi+ebx]           ; clock 6 U [AGI]
+                mov     al,[esi+ebx]                    ; clock 6 U [AGI]
 
                 endm
 
