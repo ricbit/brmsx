@@ -162,3 +162,4 @@ extrn msx2palette: byte
 extrn vdpaddressh: byte
 extrn vdpaddressl: byte
 extrn vdpaddresse: dword
+

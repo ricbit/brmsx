@@ -430,7 +430,9 @@ set_correct_palette_msx2_check:
                 cmp     byte ptr [esi],1
                 jne     set_correct_palette_msx2_next
 
+                or      al,10h
                 call    set_palette_color
+                and     al,0EFh
 
 set_correct_palette_msx2_next:
                 mov     byte ptr [esi],0
@@ -457,11 +459,22 @@ set_correct_palette_scr8:
 ; set video mode 13h (320x200x256)
 
 setgraphmode:
+                mov     eax,01010101h
+                mov     ecx,16/4
+                mov     edi,offset dirty_palette
+                rep     stosd
+
                 cmp     videomode,2
                 je      setgraphmode_vesa
 
                 cmp     videomode,6
                 je      setgraphmode_vesa_512_15
+
+                cmp     videomode,8
+                je      setgraphmode_vesa_msx2
+
+                cmp     videomode,9
+                je      setgraphmode_vesa_msx2
 
                 mov     v86r_ax,13h
                 mov     al,10h
@@ -477,7 +490,7 @@ setgraphmode:
                 je      _ret
 
                 cmp     videomode,7
-                je      setgraph_msx2
+                je      setgraphmode_msx2
 
                 cmp     videomode,3
                 je      setgraph_256x192
@@ -500,10 +513,28 @@ setgraphmode:
 
                 ret
 
+setgraphmode_msx2:
+                mov     eax,01010101h
+                mov     ecx,16/4
+                mov     edi,offset dirty_palette
+                rep     stosd
+                ret
+
 setgraphmode_vesa:
                 call    set_vesa_mode
                 
                 mov     ebx,pal_filtered
+                mov     ecx,256
+                call    fill_palette
+                
+                call    set_mouse_range
+
+                ret
+
+setgraphmode_vesa_msx2:
+                call    set_vesa_mode
+                
+                mov     ebx,pal_normal
                 mov     ecx,256
                 call    fill_palette
                 
@@ -572,13 +603,6 @@ mov ax,0FF18h
 out dx,ax
 
 ret
-
-setgraph_msx2:
-                mov     eax,01010101h
-                mov     ecx,16/4
-                mov     edi,offset dirty_palette
-                rep     stosd
-                ret
 
 ; set_border_color ----------------------------------------------------
 ; set color 0 of VGA as VDP border color

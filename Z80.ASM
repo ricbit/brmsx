@@ -53,6 +53,7 @@ include joystick.inc
 include drive.inc
 include saveload.inc
 include z80core.inc
+include extended.inc
 
 public compose_sound
 public synch_emulation
@@ -372,7 +373,7 @@ extended_slot_0:
                 dd      ?
                 dd      1
                 dd      ?
-                dd      9+2
+                dd      EXTENDED_SLOT
 
                 endm
 
@@ -405,18 +406,19 @@ mapper_banks:
 ; --------------------------------------------------------------------
 
 megarom_callback:
-                dd      _ret                    ; pure RAM
-                dd      _ret                    ; pure ROM
-                dd      callback_megarom0       ; generic
-                dd      callback_megarom1       ; MSX-DOS 2 cartridge
-                dd      callback_megarom2       ; konami with SCC
-                dd      callback_megarom3       ; konami without SCC
-                dd      callback_megarom4       ; ascii 8kb
-                dd      callback_megarom5       ; ascii 16kb
-                dd      callback_megarom6       ; ascii 8kb with 8kb sram
-                dd      callback_megarom7       ; ascii 16kb with 2kb sram
-                dd      callback_megarom8       ; fm-pac with 8kb sram
-                dd      callback_megarom9       ; idle rom in extended slot
+                dd      _ret                      ; pure RAM
+                dd      _ret                      ; pure ROM
+                dd      callback_megarom0         ; generic
+                dd      callback_megarom1         ; MSX-DOS 2 cartridge
+                dd      callback_megarom2         ; konami with SCC
+                dd      callback_megarom3         ; konami without SCC
+                dd      callback_megarom4         ; ascii 8kb
+                dd      callback_megarom5         ; ascii 16kb
+                dd      callback_megarom6         ; ascii 8kb with 8kb sram
+                dd      callback_megarom7         ; ascii 16kb with 2kb sram
+                dd      callback_megarom8         ; fm-pac with 8kb sram
+                dd      callback_megarom9         ; konami with 8-bit DAC
+                dd      callback_megarom_extended ; idle rom in extended slot
 
 ; --------------------------------------------------------------------
 
@@ -1355,10 +1357,41 @@ callback_megarom8_enable_sram:
                 ret
 
 ; callback_megarom9 --------------------------------------------------
+; Konami MegaROM without 8-bit DAC
+; addresses:  <none>      block 4000h-5FFFh  
+;             6000h       block 6000h-7FFFh  
+;             8000h       block 8000h-9FFFh  
+;             A000h       block A000h-BFFFh  
+
+callback_megarom9:
+                cmp     ecx,05000h
+                jb      _ret
+                cmp     ecx,05FFFh
+                jbe     callback_megarom9_dac
+                
+                mov     ebx,eax
+                and     ebx,megamask    ; ebx,01Fh ; only 256kb by now
+                call    retrieve_slot_info
+                mov     dword ptr [offset megablock+esi*4],ebx
+                shl     ebx,13
+                add     ebx,ecx
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [eax+esi*8],ebx
+                mov     eax,0
+                ret
+
+callback_megarom9_dac:
+                mov     rom9dac_enabled,1
+                mov     bl,al
+                mov     al,18
+                shr     bl,2
+                jmp     sound_buffer
+
+; callback_megarom_extended ------------------------------------------
 ; Idle extended slot
 ; addresses:  FFFFh change entire slot
 
-callback_megarom9:
+callback_megarom_extended:
                 cmp     ecx,0FFFFh
                 jne     _ret
 
@@ -1969,6 +2002,7 @@ print:
 ;   PSG          00-0F      register      00-FF       value
 ;  click           16          -          00/20       value
 ; cassete          17          -          00/20       value
+; rom9dac          18          -          00-3F       value
 ;   SCC          80-8F      reg+80h       00-FF       value
 ;   SCC            7E      waveform(1)    00-7F    RAM position
 ;   SCC            7F      waveform(2)    00-FF       value

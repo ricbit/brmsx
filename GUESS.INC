@@ -1,4 +1,16 @@
 guess_table:
+        dd      0DE8DC68Fh
+        dd      2+2
+        dd      offset name_kings_valley_2_msx2
+        
+        dd      0BEC3D518h
+        dd      2+2
+        dd      offset name_solid_snake
+        
+        dd      08BA31D3Eh
+        dd      9+2
+        dd      offset name_mahjong_2
+        
         dd      0A4F1FB29h
         dd      2+2
         dd      offset name_solid_snake_english
@@ -144,6 +156,10 @@ guess_table:
         dd      2+2
         dd      offset name_kings_valley_2_msx1
         
+        dd      073689D87h
+        dd      2+2
+        dd      offset name_kings_valley_2_msx1
+        
         dd      0E1290682h
         dd      0+2
         dd      offset name_mirai
@@ -179,6 +195,12 @@ guess_table:
         dd      0
 
 ; name table
+
+name_solid_snake:
+        db      'Solid Snake$'
+
+name_mahjong_2:
+        db      'Mahjong 2 (original)$'
 
 name_solid_snake_english:
         db      'Solid Snake (english)$'
@@ -257,6 +279,9 @@ name_mirai:
 
 name_kings_valley_2_msx1:
         db      'King''s Valley 2 (MSX1 version)$'
+
+name_kings_valley_2_msx2:
+        db      'King''s Valley 2 (MSX2 version)$'
 
 name_maze_of_galious:
         db      'Maze of Galious$'

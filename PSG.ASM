@@ -19,6 +19,7 @@ extrn dmatemp: dword
 extrn timebuffer: dword
 extrn soundbuffer: dword
 extrn sccram: dword
+extrn noise_uncompressed: dword
 
 public init_sound_blaster
 public sound_on
@@ -33,7 +34,7 @@ public read_master_volume
 public write_master_volume
 public compose_speaker
 public speaker_shutup
-public noise_table
+;public noise_table
 public sb_flushed
 public noise_counter
 public init_adlib
@@ -43,12 +44,15 @@ public soundplaying
 public _samplerate
 public _skipfactor
 public _verticalrate
+public uncompress_noise
+public rom9dac_enabled
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
-include noise.inc
+;include noise.inc
+include noise2.inc
 include scc.inc
 include envelope.inc
 include fm.inc
@@ -150,6 +154,9 @@ FMpos                   db      9 dup (0)
 align 4
 ppiclick                db      0
 ppicassete              db      0
+
+rom9dac_value           db      0
+rom9dac_enabled         db      0
 
 psgregstack             db      16 dup (0)
 PSGreg                  db      16 dup (0)
@@ -319,6 +326,7 @@ init_sound_blaster:
                 mov     dword ptr [offset patch__315+2],eax
                 mov     dword ptr [offset patch__316+2],eax
                 mov     dword ptr [offset patch__317+2],eax
+                mov     dword ptr [offset patch__318+2],eax
 
                 ; SCCFACTOR equ (32/32*MSXCLOCK/SAMPLERATE*65536)
                 mov     eax,912E0000h
@@ -336,10 +344,39 @@ init_sound_blaster:
 
                 ret
   
+; uncompress_noise ---------------------------------------------------
+; uncompress the noise and patch all references
+
+uncompress_noise:
+                mov     ecx,16384/8
+                mov     esi,offset noise_table_z
+                mov     edi,noise_uncompressed
+uncompress_noise_loop:
+                mov     bl,[esi]
+                irp     i,<0,1,2,3,4,5,6,7>
+                rol     bl,1
+                sbb     al,al
+                mov     [edi],al
+                inc     edi
+                endm
+                inc     esi
+                dec     ecx
+                jnz     uncompress_noise_loop
+
+                mov     eax,noise_uncompressed
+                mov     dword ptr [offset patch__41+2],eax
+                mov     dword ptr [offset patch__42+2],eax
+                mov     dword ptr [offset patch__43+2],eax
+                mov     dword ptr [offset patch__44+2],eax
+                mov     dword ptr [offset patch__45+2],eax
+                mov     dword ptr [offset patch__46+2],eax
+                mov     dword ptr [offset patch__47+2],eax
+
+                ret
+
 ; init_dma_buffer ----------------------------------------------------
 ; init the dma buffer
 ; this version uses a constant tone of about 60 Hz
-
 
 init_dma_buffer:
                 mov     edi,dmabuffer
@@ -663,6 +700,9 @@ compose_soundstream:
                 call    compose_click
 
                 mov     localpos,0
+                call    compose_rom9dac
+
+                mov     localpos,0
                 call    compose_cassete
 
                 mov     localpos,0
@@ -823,6 +863,57 @@ compose_channel_notclick:
 
                 mov     al,ppiclick
                 jmp     compose_click_nextsample
+
+; compose_rom9dac ----------------------------------------------------
+; compose and mix the 8-bit DAC used in mapper #9
+
+compose_rom9dac:
+                cmp     rom9dac_enabled,1
+                jne     _ret
+
+                mov     ecx,0
+                mov     edi,_buffersize ; BUFFERSIZE
+                mov     esi,dmatemp
+                mov     ebp,timebuffer
+                mov     ebp,[ebp]
+                shl     ebp,8
+                mov     al,rom9dac_value
+
+compose_rom9dac_loop:
+                add     [esi],al
+patch__318:     add     ecx,CLOCKSPERSAMPLE
+                inc     esi                
+                
+                cmp     ecx,ebp
+                jae     compose_rom9dac_check
+
+compose_rom9dac_nextsample:                
+                dec     edi
+                jnz     compose_rom9dac_loop
+                ret
+
+compose_rom9dac_check:
+                mov     ebp,localpos
+                add     ebp,ebp
+                add     ebp,soundbuffer
+
+                mov     al,byte ptr [ebp]
+                mov     dl,byte ptr [ebp+1]
+                cmp     al,18
+                jne     compose_rom9dac_notclick
+                mov     rom9dac_value,dl
+compose_rom9dac_notclick:
+
+                inc     localpos
+
+                mov     ebp,localpos
+                shl     ebp,2
+                add     ebp,timebuffer
+                mov     ebp,dword ptr [ebp]
+                shl     ebp,8
+
+                mov     al,rom9dac_value
+                jmp     compose_rom9dac_nextsample
 
 ; compose_cassete ----------------------------------------------------
 ; compose and mix the cassete output
@@ -1618,7 +1709,7 @@ patch__15:      add     esi,CONV_FACTOR
                 jle     compose_noise_mix
 
                 mov     edx,noise_counter
-                mov     al,byte ptr [offset noise_table+edx]
+patch__41:      mov     al,byte ptr [offset noise_table_z+edx]
                 inc     edx
                 and     edx,16383
                 mov     noise_counter,edx
@@ -1627,7 +1718,7 @@ patch__15:      add     esi,CONV_FACTOR
                 je      compose_noise_one
 
                 mov     edx,noise_counter2
-                xor     al,byte ptr [offset noise_table+edx]
+patch__42:      xor     al,byte ptr [offset noise_table_z+edx]
                 inc     edx
                 cmp     edx,16383
                 jne     compose_noise_skip
@@ -1663,8 +1754,8 @@ compose_noise_danger_loop:
                 inc     edx
                 and     edx,16384
 compose_noise_danger_loop_go:
-                mov     al,byte ptr [offset noise_table+edx]
-                xor     al,byte ptr [offset noise_table+ebx]
+patch__43:      mov     al,byte ptr [offset noise_table_z+edx]
+patch__44:      xor     al,byte ptr [offset noise_table_z+ebx]
                 inc     edx
                 inc     ebx
                 mov     [edi+offset noisestream],al
@@ -1857,8 +1948,8 @@ compose_purenoise:
                 mov     ebx,offset doublebuffer ; dmatemp
                 
 compose_purenoise_loop:
-                mov     al,byte ptr [offset noise_table+edx]
-                xor     al,byte ptr [offset noise_table+ebp]
+patch__45:      mov     al,byte ptr [offset noise_table_z+edx]
+patch__46:      xor     al,byte ptr [offset noise_table_z+ebp]
                 inc     edx
                 inc     ebp
                 and     al,15

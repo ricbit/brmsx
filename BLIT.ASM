@@ -33,7 +33,7 @@ all0002         dq      00002000200020002h
 allFFFE         dq      0FFFEFFFEFFFEFFFEh
 allFFFC         dq      0FFFCFFFCFFFCFFFCh
 all0006         dq      00006000600060006h
-all000F         dq      0000F000F000F000Fh
+all001F         dq      0001F001F001F001Fh
 
 ENGINE_DOS      EQU     0
 ENGINE_MMX      EQU     2
@@ -62,6 +62,12 @@ blit:
 
                 cmp     videomode,7
                 je      blit7
+
+                cmp     videomode,8
+                je      blit8
+
+                cmp     videomode,9
+                je      blit9
 
                 cmp     imagetype,1
                 je      blit_dirty_256
@@ -1634,14 +1640,15 @@ blit2_msx2_outer_loop:
 blit7:
                 call    eval_bottom_field_7
 
-                cmp     actualscreen,6
-                je      blit7_sizedown
-
-                cmp     actualscreen,7
-                je      blit7_sizedown
-
                 cmp     text_columns,80
                 je      blit7_sizedown
+
+                cmp     actualscreen,0
+                jbe     blit7_start
+                cmp     actualscreen,5
+                jb      blit7_retouch
+
+blit7_start:
 
                 mov     esi,blitbuffer
                 mov     edi,0A0000h+32
@@ -1654,6 +1661,34 @@ blit7_outer:
                 add     edi,64
                 dec     edx
                 jnz     blit7_outer
+                
+                ret
+
+; --------------------------------------------------------------------
+
+blit7_retouch:
+                mov     esi,blitbuffer
+                mov     edi,0A0000h+32
+                sub     edi,_code32a
+
+blit7_retouch_outer:
+                mov     ecx,256/8
+                ;rep     movsd
+blit7_retouch_inner:
+                mov     eax,[esi]
+                mov     ebp,[esi+4]
+                or      eax,10101010h
+                or      ebp,10101010h
+                add     esi,8
+                mov     [edi],eax
+                mov     [edi+4],ebp
+                add     edi,8
+                dec     ecx
+                jnz     blit7_retouch_inner
+
+                add     edi,64
+                dec     edx
+                jnz     blit7_retouch_outer
                 
                 ret
 
@@ -1702,10 +1737,10 @@ blit7_sizedown_mmx:
                 mov     edi,0A0000h+32
                 sub     edi,_code32a
 
-                ;movq    MM4,all000F
+                ;movq    MM4,all001F
                 movq
                 db      00100101b
-                dd      offset all000F
+                dd      offset all001F
 
 
 blit7_sizedown_outer_mmx:
@@ -1783,6 +1818,308 @@ eval_bottom_field_7_check:
 
                 mov     clear_bottom_field,0
                 ret
+
+; linear 512x384 -----------------------------------------------------
+; MSX2 VERSION
+
+blit8:
+                cmp     actualscreen,6
+                je      blit8_single
+
+                cmp     actualscreen,7
+                je      blit8_single
+
+                cmp     text_columns,80
+                je      blit8_single
+
+
+blit8_double:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit8_double_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit8_double_loop:
+                mov     ecx,64
+                mov     edx,0
+blit8_double_inner_loop:
+                mov     ebx,dword ptr [esi]                
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi],edx
+                mov     dword ptr [edi+512],edx
+                shr     ebx,16
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi+4],edx
+                mov     dword ptr [edi+512+4],edx
+
+                add     esi,4
+                add     edi,8
+                dec     ecx
+                jnz     blit8_double_inner_loop
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit8_double_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit8_double_outer_loop
+
+                ret
+
+blit8_single:
+                cmp     enginetype,0
+                jne     blit8_single_mmx
+
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit8_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit8_loop:
+                mov     ecx,256/2
+                mov     edx,0
+blit8_inner_loop:
+                mov     eax,dword ptr [esi]
+                mov     dword ptr [edi],eax
+                mov     dword ptr [edi+512],eax
+                
+                add     esi,4
+                add     edi,4
+                dec     ecx
+                jnz     blit8_inner_loop
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit8_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit8_outer_loop
+
+                ret
+
+blit8_single_mmx:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit8_outer_loop_mmx:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit8_loop_mmx:
+                mov     ecx,256/4
+                mov     edx,0
+blit8_inner_loop_mmx:
+                add     edi,8
+
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+                
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+
+                ; movq_st [edi+512-8],MM0
+                movq_st
+                db      10000111b
+                dd      512-8
+                
+                jnz     blit8_inner_loop_mmx
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit8_loop_mmx
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit8_outer_loop_mmx
+
+                ret
+
+; linear 512x384 with scanlines --------------------------------------
+; MSX2 VERSION
+
+blit9:
+                cmp     actualscreen,6
+                je      blit9_single
+
+                cmp     actualscreen,7
+                je      blit9_single
+
+                cmp     text_columns,80
+                je      blit9_single
+
+
+blit9_double:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit9_double_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit9_double_loop:
+                mov     ecx,64
+                mov     edx,0
+blit9_double_inner_loop:
+                mov     ebx,dword ptr [esi]                
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi],edx
+                shr     ebx,16
+                mov     dl,bh
+                mov     dh,bh
+                shl     edx,16
+                mov     dl,bl
+                mov     dh,bl
+                mov     dword ptr [edi+4],edx
+
+                add     esi,4
+                add     edi,8
+                dec     ecx
+                jnz     blit9_double_inner_loop
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit9_double_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit9_double_outer_loop
+
+                ret
+
+blit9_single:
+                cmp     enginetype,0
+                jne     blit9_single_mmx
+
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit9_outer_loop:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit9_loop:
+                mov     ecx,256/2
+                mov     edx,0
+blit9_inner_loop:
+                mov     eax,dword ptr [esi]
+                add     esi,4
+                mov     dword ptr [edi],eax
+                
+                add     edi,4
+                dec     ecx
+                jnz     blit9_inner_loop
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit9_loop
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit9_outer_loop
+
+                ret
+
+blit9_single_mmx:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit9_outer_loop_mmx:
+                call    set_vesa_bank
+                mov     ebp,192/3
+                mov     edi,0a0000h
+                sub     edi,_code32a
+                push    eax
+
+blit9_loop_mmx:
+                mov     ecx,256/4
+                mov     edx,0
+blit9_inner_loop_mmx:
+                add     edi,8
+
+                ; movq MM0,[esi]
+                movq
+                db      00000110b
+
+                add     esi,8
+                
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                dec     ecx
+                
+                jnz     blit9_inner_loop_mmx
+
+                add     edi,512
+
+                dec     ebp
+                jnz     blit9_loop_mmx
+
+                pop     eax
+
+                inc     eax
+                cmp     eax,3
+                jne     blit9_outer_loop_mmx
+
+                ret
+
+
 
 code32          ends
                 end

@@ -49,6 +49,7 @@ public psggraph
 public draw_gui
 public start_gui
 public turnoff_flag
+public patch__47
 
 ; DATA ---------------------------------------------------------------
 
@@ -152,6 +153,8 @@ firstrom                dd      0
 totalrom                dd      0
 gui_mask                dd      0
 actual_mask             dd      offset rom_mask
+save_videomode          dd      0
+
 name_buffer             db      16 dup (0)
 rom_mask                db      '*.ROM',0
 dsk_mask                db      '*.DSK',0
@@ -386,13 +389,17 @@ draw_psggraph_channel_next:
                 ret
 
 DRAW_NUMBER     macro x_offset                
-                local   draw_msx2,draw_exit
+                local   draw_msx2,draw_exit,draw_now
                 
+                cmp     videomode,7
+                je      draw_now
+
                 cmp     actualscreen,6
                 je      draw_msx2
                 cmp     actualscreen,7
                 je      draw_msx2
 
+draw_now:
                 irp     i,<0,1,2,3,4>
                 mov     ebx,[esi+i*8]
                 mov     ecx,[esi+i*8+4]
@@ -428,11 +435,11 @@ draw_exit:
 ; draw a single bar in blitbuffer
 
 drawline:
-                mov     msx2_cpu_mask,0
-                cmp     msxmodel,1
-                jb      drawline_msx1
-                mov     msx2_cpu_mask,1010h
-drawline_msx1:
+;                mov     msx2_cpu_mask,0
+;                cmp     msxmodel,1
+;                jb      drawline_msx1
+;                mov     msx2_cpu_mask,1010h
+;drawline_msx1:
                 mov     ebx,100
                 mul     ebx                
                 xor     edx,edx
@@ -444,11 +451,15 @@ drawline_msx1:
                 mov     ebx,0F0Dh
                 or      ebx,msx2_cpu_mask
 
+                cmp     videomode,7
+                je      draw_now
+                
                 cmp     actualscreen,6
                 je      drawline_msx2
                 cmp     actualscreen,7
                 je      drawline_msx2
-
+                
+draw_now:
                 shl     edi,8
                 add     edi,blitbuffer
 
@@ -519,11 +530,14 @@ drawline_continue:
                 add     esi,offset number_font
                 DRAW_NUMBER 5
                 
+                cmp     videomode,7
+                je      draw_point_skip
+                
                 cmp     actualscreen,6
                 je      draw_point_msx2
                 cmp     actualscreen,7
                 je      draw_point_msx2
-
+draw_point_skip:
                 mov     byte ptr [edi+5*256+10],04h
                 jmp     draw_point_exit
 draw_point_msx2:
@@ -573,9 +587,17 @@ evalcounter:
 ; start the gui
 
 start_gui:
-                
                 call    release_button
-                
+
+                cmp     videomode,8
+                jb      start_gui_now
+
+                mov     eax,videomode
+                mov     save_videomode,eax
+                mov     videomode,7
+                call    setgraphmode
+
+start_gui_now:
                 call    clear
                 mov     menu_locked,0
                 
@@ -611,6 +633,14 @@ start_gui_pipeline:
                 je      turnoff_trap
                 
 start_gui_exit:
+                mov     eax,save_videomode
+                cmp     eax,0
+                je      start_gui_exit_now
+
+                mov     videomode,eax
+                call    setgraphmode
+
+start_gui_exit_now:
                 call    clear
                 mov     eax,01010101h
                 mov     ecx,32*24/4
@@ -1494,7 +1524,7 @@ turn_off_seed:
                 mov     esi,ebx
 
 turn_off_inner:
-                mov     al,[esi+offset noise_table]
+patch__47:      mov     al,[esi+offset turn_off_inner] 
                 and     al,15
                 mov     [edi],al
                 inc     esi

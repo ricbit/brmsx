@@ -23,3 +23,5 @@ extrn soundplaying: dword
 extrn _samplerate: dword
 extrn _skipfactor: dword
 extrn _verticalrate: dword
+extrn uncompress_noise: near
+extrn rom9dac_enabled: byte

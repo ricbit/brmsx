@@ -39,11 +39,12 @@ public dirty_palette
 
 align 4
 include screen0l.inc
-include timp.inc
+include screen6.inc
 
 align 4
 
 all0F           dq      0F0F0F0F0F0F0F0Fh
+all10           dq      1010101010101010h
 
 falsesprite     db      32*32*2 dup (0)
 falsemask       db      32 dup (0)
@@ -406,8 +407,10 @@ inemul99_msx2:
 
 inemul99_msx2_reg2:
                 mov     bl,byte ptr [offset vdpstatus+2]
-                xor     bl,060h
-                mov     byte ptr [offset vdpstatus+2],bl
+                xor     bl,020h 
+                mov     cl,bl
+                and     cl,NBIT_6
+                mov     byte ptr [offset vdpstatus+2],cl
                 ret
 
 inemul99_msx2_generic:
@@ -696,6 +699,9 @@ HMMM_DY_consistent:
                 mov     edx,pNX
                 mov     cl,shift_low_x
                 shr     edx,cl
+                
+                mov     ebp,size_hx
+                sub     ebp,edx
 
                 ; begin the transfer
                 mov     ebx,pNY
@@ -704,10 +710,8 @@ vdp_command_HMMM_outer:
                 mov     ecx,edx
                 rep     movsb
 
-                sub     esi,edx
-                sub     edi,edx
-                add     esi,size_hx
-                add     edi,size_hx
+                add     esi,ebp
+                add     edi,ebp
 
                 dec     ebx
                 jnz     vdp_command_HMMM_outer
@@ -804,6 +808,9 @@ YMMM_DY_consistent:
                 mov     cl,shift_low_x
                 shr     edx,cl
 
+                mov     ebp,size_hx
+                sub     ebp,edx
+
                 ; begin the transfer
                 mov     ebx,pNY
 vdp_command_YMMM_outer:
@@ -811,10 +818,12 @@ vdp_command_YMMM_outer:
                 mov     ecx,edx
                 rep     movsb
 
-                sub     esi,edx
-                sub     edi,edx
-                add     esi,size_hx
-                add     edi,size_hx
+                ;sub     esi,edx
+                ;sub     edi,edx
+                ;add     esi,size_hx
+                ;add     edi,size_hx
+                add     esi,ebp
+                add     edi,ebp
 
                 dec     ebx
                 jnz     vdp_command_YMMM_outer
@@ -1598,12 +1607,14 @@ render_screen5_inner:
                 shr     eax,16
                 mov     bl,cl
                 shr     ecx,16
+                or      ebx,10101010h
                 mov     dword ptr [edi],ebx
                 mov     bh,ah
                 mov     bl,ch
                 shl     ebx,16
                 mov     bh,al
                 mov     bl,cl
+                or      ebx,10101010h
                 mov     dword ptr [edi+4],ebx
 
                 add     esi,4
@@ -1645,6 +1656,11 @@ render_screen5_mmx:
                 db      00100101b
                 dd      offset all0F
 
+                ; movq    mm5,mem10
+                movq
+                db      00101101b
+                dd      offset all10
+
 render_screen5_mmx_outer:
                 push    ecx
                 mov     edx,16
@@ -1668,13 +1684,21 @@ render_screen5_mmx_inner:
                 db      11010001b
                 db      4
                 
+                ; por      mm0,mm5
+                por
+                db      11000101b
+
+                ; pand    mm1,mm4
+                pand
+                db      11001100b
+
                 ; movq    mm2,mm0
                 movq
                 db      11010000b
                 
-                ; pand    mm1,mm4
-                pand
-                db      11001100b
+                ; por      mm1,mm5
+                por
+                db      11001101b
 
                 ; movq     mm3,mm1
                 movq
@@ -1727,6 +1751,9 @@ render_screen5_mmx_inner:
 ; render the SCREEN 6
 
 render_screen6:
+                cmp     videomode,7
+                je      render_screen6_sizedown
+
                 mov     edi,blitbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
@@ -1734,22 +1761,30 @@ render_screen6:
                 add     esi,eax
                 add     esi,msxvram
                 mov     ecx,212
+                mov     eax,0
 
 render_screen6_outer:
-                mov     edx,128
+                mov     edx,128/4
 
 render_screen6_inner:
-                mov     ah,byte ptr [esi]
-                inc     esi
-                irp     i,<0,1,2,3>
+                mov     ebx,dword ptr [esi]
+                add     esi,4
 
-                mov     al,ah
-                shr     al,(3-i)*2
-                and     al,3
-                mov     [edi+i],al
+                mov     al,bh
+                mov     ebp,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+4],ebp
+                mov     al,bl
+                mov     ebp,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+0],ebp
+                shr     ebx,16
+                mov     al,bh
+                mov     ebp,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+12],ebp
+                mov     al,bl
+                mov     ebp,dword ptr [offset screen6_table+eax*4]
+                mov     [edi+8],ebp
+                add     edi,16
 
-                endm
-                add     edi,4
                 dec     edx
                 jnz     render_screen6_inner
 
@@ -1768,10 +1803,73 @@ render_screen6_inner:
 
                 ret
 
+render_screen6_sizedown:
+                mov     edi,blitbuffer
+                mov     esi,nametable
+                movzx   eax,byte ptr [offset vdpregs+23]
+                shl     eax,7
+                add     esi,eax
+                mov     ebp,msxvram
+                mov     ecx,212
+
+render_screen6_outer_sizedown:
+                push    ecx
+                mov     edx,32
+
+render_screen6_inner_sizedown:
+                mov     eax,dword ptr [esi+ebp]
+                mov     ecx,eax
+                and     eax,0F0F0F0Fh
+                mov     bh,ah
+                shr     ecx,4
+                and     ecx,0F0F0F0Fh
+                mov     bl,ch
+                shl     ebx,16
+                mov     bh,al
+                shr     eax,16
+                mov     bl,cl
+                shr     ecx,16
+                and     ebx,03030303h
+                or      ebx,10101010h
+                mov     dword ptr [edi],ebx
+                mov     bh,ah
+                mov     bl,ch
+                shl     ebx,16
+                mov     bh,al
+                mov     bl,cl
+                and     ebx,03030303h
+                or      ebx,10101010h
+                mov     dword ptr [edi+4],ebx
+
+                add     esi,4
+                add     edi,8
+                dec     edx
+                jnz     render_screen6_inner_sizedown
+
+                pop     ecx
+
+                ; adjust scroll wraparound
+                dec     esi
+                mov     edx,esi
+                inc     esi
+                and     edx,0FFFF8000h
+                and     esi,000007FFFh
+                or      esi,edx
+
+                dec     ecx
+                jnz     render_screen6_outer_sizedown
+
+                mov     spriteenable,0
+
+                ret
+
 ; render_screen7 -----------------------------------------------------
 ; render the SCREEN 7
 
 render_screen7:
+                cmp     videomode,7
+                je      render_screen7_sizedown
+                
                 cmp     enginetype,0
                 jne     render_screen7_mmx
 
@@ -1785,7 +1883,7 @@ render_screen7:
 
 render_screen7_outer:
                 push    ecx
-                mov     edx,64 ;32
+                mov     edx,64 
 
 render_screen7_inner:
                 mov     eax,dword ptr [esi+ebp]
@@ -1800,12 +1898,14 @@ render_screen7_inner:
                 shr     eax,16
                 mov     bl,cl
                 shr     ecx,16
+                or      ebx,10101010h
                 mov     dword ptr [edi],ebx
                 mov     bh,ah
                 mov     bl,ch
                 shl     ebx,16
                 mov     bh,al
                 mov     bl,cl
+                or      ebx,10101010h
                 mov     dword ptr [edi+4],ebx
 
                 add     esi,4
@@ -1847,6 +1947,11 @@ render_screen7_mmx:
                 db      00100101b
                 dd      offset all0F
 
+                ; movq    mm5,mem10
+                movq
+                db      00101101b
+                dd      offset all10
+
 render_screen7_mmx_outer:
                 push    ecx
                 mov     edx,32 ;16
@@ -1870,13 +1975,21 @@ render_screen7_mmx_inner:
                 db      11010001b
                 db      4
                 
+                ; por      mm0,mm5
+                por
+                db      11000101b
+
+                ; pand    mm1,mm4
+                pand
+                db      11001100b
+
                 ; movq    mm2,mm0
                 movq
                 db      11010000b
                 
-                ; pand    mm1,mm4
-                pand
-                db      11001100b
+                ; por      mm1,mm5
+                por
+                db      11001101b
 
                 ; movq     mm3,mm1
                 movq
@@ -1922,6 +2035,130 @@ render_screen7_mmx_inner:
                 jnz     render_screen7_mmx_outer
 
                 mov     spriteenable,0
+
+                ret
+
+; render_screen7_sizedown --------------------------------------------
+; render the SCREEN 7 in "-res 7"
+
+render_screen7_sizedown:
+                cmp     enginetype,0
+                jne     render_screen7_sizedown_mmx
+
+                mov     edi,blitbuffer
+                mov     esi,nametable
+                movzx   eax,byte ptr [offset vdpregs+23]
+                shl     eax,8
+                add     esi,eax
+                mov     ebp,msxvram
+                mov     ecx,212
+
+render_screen7_outer_sizedown:
+                push    ecx
+                mov     edx,64 
+
+render_screen7_inner_sizedown:
+                mov     eax,dword ptr [esi+ebp]
+                and     eax,0F0F0F0Fh
+                or      eax,10101010h
+                add     esi,4
+                mov     dword ptr [edi],eax
+                add     edi,4
+                dec     edx
+                jnz     render_screen7_inner_sizedown
+
+                pop     ecx
+
+                ; adjust scroll wraparound
+                dec     esi
+                mov     edx,esi
+                inc     esi
+                and     edx,0FFFF0000h
+                and     esi,00000FFFFh
+                or      esi,edx
+
+                dec     ecx
+                jnz     render_screen7_outer_sizedown
+
+                mov     spriteenable,2
+
+                ret
+
+; render_screen7_sizedown_mmx ----------------------------------------
+; render the SCREEN 7 in "-res 7" using MMX
+
+render_screen7_sizedown_mmx:
+                mov     edi,blitbuffer
+                mov     esi,nametable
+                movzx   eax,byte ptr [offset vdpregs+23]
+                shl     eax,8
+                add     esi,eax
+                mov     ebp,msxvram
+                mov     ecx,212
+                
+                ; movq    mm4,mem0F
+                movq
+                db      00100101b
+                dd      offset all0F
+
+                ; movq    mm5,mem10
+                movq
+                db      00101101b
+                dd      offset all10
+
+
+render_screen7_outer_sizedown_mmx:
+                push    ecx
+                mov     edx,64/2
+
+render_screen7_inner_sizedown_mmx:
+                ;mov     eax,dword ptr [esi+ebp]
+                ;and     eax,0F0F0F0Fh
+                ;or      eax,10101010h
+                ;add     esi,4
+                ;mov     dword ptr [edi],eax
+                ;add     edi,4
+                
+                ; movq    mm0,[esi+ebp]
+                movq
+                db      00000100b 
+                db      02Eh
+
+                add     esi,8
+                
+                ; pand    MM0,MM4
+                pand    
+                db      11000100b
+
+                add     edi,8
+
+                ; por     MM0,MM5
+                por
+                db      11000101b
+
+                dec     edx
+
+                ; movq_st [edi-8],mm0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                jnz     render_screen7_inner_sizedown_mmx
+
+                pop     ecx
+
+                ; adjust scroll wraparound
+                dec     esi
+                mov     edx,esi
+                inc     esi
+                and     edx,0FFFF0000h
+                and     esi,00000FFFFh
+                or      esi,edx
+
+                dec     ecx
+                jnz     render_screen7_outer_sizedown_mmx
+
+                mov     spriteenable,2
 
                 ret
 
@@ -2081,6 +2318,7 @@ sprite_render_line_msx2_normal:
                 and     ebx,esi
                 or      ebx,[ecx+32+i]
                 and     edx,eax
+                or      ebx,10101010h
                 mov     [edi+i],ebx
                 mov     [ebp+i],edx
                 endm

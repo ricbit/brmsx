@@ -25,6 +25,7 @@ include z80core.inc
 include mount.inc
 include symdeb.inc
 include v9938.inc
+include extended.inc
 
 public _main
 public msxram
@@ -63,6 +64,7 @@ public msxmodel
 public vdplog
 public drivea_name
 public load_disk_image
+public noise_uncompressed
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -74,7 +76,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.168',13,10
+msg00           db      'BrMSX 1.170',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -98,7 +100,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.168',13,10
+msg22           db      'BrMSX 1.170',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -151,26 +153,35 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '               6=ASCII 8kb with 8kb SRAM',13,10
                 db      '               7=ASCII 16kb with 2kb SRAM',13,10
                 db      '               8=Panasonic FM-PAC with 8kb SRAM',13,10
+                db      '               9=Konami with 8-bit DAC',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
+                db      '-korean        enable korean memory layout '
+                db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
+                db      'Press enter to continue.$'
+help_message2   db      13
                 db      '-megaram <n>   select size of MegaRAM '
                 db      '(default=1)',13,10
                 db      '               0=128kb 1=256kb 2=512kb 3=1Mb 4=2Mb',13,10
-                db      'Press enter to continue.$'
-help_message2   db      13
                 db      '-mapper <n>    select size of Memory Mapper '
                 db      '(default=1)',13,10
                 db      '               0=64kb 1=128kb 2=256kb 3=512kb '
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
-                db      '-korean        enable korean memory layout '
-                db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
                 db      '-res <mode>    select screen resolution',13,10 
-                db      '               0=320x200x8  default',13,10
-                db      '               1=256x200x8  large screen',13,10
-                db      '               2=512x384x8  TV emulation '
+                db      '               0=320x200x8  MSX-1 default',13,10
+                db      '               1=256x200x8  MSX-1 large screen'
+                db      13,10
+                db      '               2=512x384x8  MSX-1 TV emulation '
                 db      '(interpolation+scanlines)',13,10
-                db      '               3=256x192x8  square pixels',13,10
-                db      '               6=512x384x15 Parrot engine',13,10
+                db      '               3=256x192x8  MSX-1 square pixels'
+                db      13,10
+                db      '               6=512x384x15 MSX-1 Parrot engine'
+                db      13,10
+                db      '               7=320x200x8  MSX-2 default',13,10
+                db      '               8=512x384x8  MSX-2 full width '
+                db      'support',13,10
+                db      '               9=512x384x8  MSX-2 full width '
+                db      'support with black scanlines',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
                 db      '-green         enable green monitor emulation',13,10
@@ -185,14 +196,14 @@ help_message2   db      13
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
+                db      'Press enter to continue.$'
+help_message3   db      13
                 db      '-scc           enable SCC sound',13,10
                 db      '-fmpac         enable FM-PAC sound (MSX Music)'
                 db      13,10
                 db      '-sr <n>        select the sample rate '
                 db      '(default is 45455)',13,10
                 db      '-speaker       sound through the PC speaker',13,10
-                db      'Press enter to continue.$'
-help_message3   db      13
                 db      '-speaq <n>     select quality for PC speaker sound'
                 db      ' (range is 1 to 9)',13,10
                 db      '-dos2          enable MSX-DOS 2 emulation '
@@ -460,36 +471,37 @@ mapper_mask:
 
 align 4
 
-msxram          dd      ?
-msxvram         dd      ?
-blitbuffer      dd      ?
-collisionfield  dd      ?
-msxrom          dd      ?
-msxextrom       dd      ?
-cart1           dd      ?
-cart2           dd      ?
-transf_buffer   dd      ?
-message_buffer  dd      ?
-diskimage       dd      ?
-compbuffer      dd      ?
-dirtycode       dd      ?
-dmabuffer       dd      ?
-dmatemp         dd      ?
-filenamelist    dd      ?
-vesaheader      dd      ?
-vesamodeinfo    dd      ?
-diskrom         dd      ?
-soundbuffer     dd      ?
-timebuffer      dd      ?
-sccram          dd      ?
-idlerom         dd      ?
-tapeimage       dd      ?
-msxhan          dd      ?
-codetable       dd      ?
-cart_sram       dd      ?
-redbuffer       dd      ?
-bluebuffer      dd      ?
-extendedrom     dd      ?
+msxram                  dd      ?
+msxvram                 dd      ?
+blitbuffer              dd      ?
+collisionfield          dd      ?
+msxrom                  dd      ?
+msxextrom               dd      ?
+cart1                   dd      ?
+cart2                   dd      ?
+transf_buffer           dd      ?
+message_buffer          dd      ?
+diskimage               dd      ?
+compbuffer              dd      ?
+dirtycode               dd      ?
+dmabuffer               dd      ?
+dmatemp                 dd      ?
+filenamelist            dd      ?
+vesaheader              dd      ?
+vesamodeinfo            dd      ?
+diskrom                 dd      ?
+soundbuffer             dd      ?
+timebuffer              dd      ?
+sccram                  dd      ?
+idlerom                 dd      ?
+tapeimage               dd      ?
+msxhan                  dd      ?
+codetable               dd      ?
+cart_sram               dd      ?
+redbuffer               dd      ?
+bluebuffer              dd      ?
+extendedrom             dd      ?
+noise_uncompressed      dd      ?
 
 diskenabled        dd      0
 cpugraphok         dd      0
@@ -718,7 +730,7 @@ _main_idlerom:
                 mov     edi,msxvram
                 mov     ecx,vramsize
                 shr     ecx,2
-                mov     eax,0
+                mov     eax,055555555h
                 rep     stosd
 
                 ; allocate 16kb to cartridge sram
@@ -800,8 +812,16 @@ _main_idlerom:
                 jc      no_memory
                 mov     timebuffer,eax
 
+                ; alloc 16kb to noise table
+                mov     eax,16384
+                call     _getmem
+                jc      no_memory
+                mov     noise_uncompressed,eax
+
+                call    uncompress_noise
+
                 ; alloc always 512kb to cart1                
-                mov     eax,cart1size ;512*1024 
+                mov     eax,cart1size 
                 call     _getmem
                 jc      no_memory
                 mov     cart1,eax
@@ -1667,6 +1687,10 @@ callback_res_second:
                 je      callback_res_512x384_parrot
                 cmp     bl,'7'
                 je      callback_res_320x200xmsx2
+                cmp     bl,'8'
+                je      callback_res_512x384xmsx2
+                cmp     bl,'9'
+                je      callback_res_512x384xmsx2_scanlines
                 mov     videomode,0
                 ret
 
@@ -1688,6 +1712,14 @@ callback_res_512x384_parrot:
 
 callback_res_320x200xmsx2:
                 mov     videomode,7
+                ret
+
+callback_res_512x384xmsx2:
+                mov     videomode,8
+                ret
+
+callback_res_512x384xmsx2_scanlines:
+                mov     videomode,9
                 ret
 
 callback_disklow:
@@ -1839,7 +1871,7 @@ callback_roma_second:
                 mov     al,byte ptr [offset emptyspace]
                 sub     al,'0'
 
-                cmp     al,8
+                cmp     al,9
                 ja      _ret
 
                 add     al,2
@@ -1860,7 +1892,7 @@ callback_romb_second:
                 
                 cmp     al,1
                 je      _ret
-                cmp     al,8
+                cmp     al,9
                 ja      _ret
 
                 add     al,2
@@ -2905,9 +2937,9 @@ read_msx_rom_msx2:
                 ; make the slot0 become an extended slot
                 mov     eax,extendedrom
                 mov     dword ptr [offset slot0+7*8],eax
-                mov     dword ptr [offset slot0+7*8+4],2+9
+                mov     dword ptr [offset slot0+7*8+4],EXTENDED_SLOT
                 mov     dword ptr [offset mem+7*4],eax
-                mov     dword ptr [offset memlock+7*4],2+9
+                mov     dword ptr [offset memlock+7*4],EXTENDED_SLOT
                 
                 ; allocate 16kb to msx2ext rom
                 mov     eax,16384
@@ -2968,7 +3000,6 @@ read_msx_rom_msx2:
                 mov     videomode,7
 msx2_videomode_valid:
 
-               
                 ret
 
 ; --------------------------------------------------------------------

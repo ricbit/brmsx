@@ -184,7 +184,8 @@ EMULABEL        turbo_skip,emtype,brtype
                 ;;;
                 call    checkpsg
                 mov     interrupt,0
-                
+                or      byte ptr [offset vdpstatus+2],BIT_6                
+
                 ; check for fast forward key
                 cmp     fastforward,1
                 JUMP    je,exit,emtype,brtype
