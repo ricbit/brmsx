@@ -90,3 +90,6 @@ pcmpeqw         macro
                 db      0fh,075h
                 endm
 
+packuswb        macro
+                db      0Fh,067h
+                endm

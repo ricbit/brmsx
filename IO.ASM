@@ -92,6 +92,7 @@ public sg1000_high_palette
 public gui_palette_high
 public border_changed
 public set_palette_color
+public vdplog_now
 
 ; DATA ---------------------------------------------------------------
 
@@ -150,6 +151,7 @@ oldmode         dd      0
 fastforward     dd      0
 forwardlock     dd      0
 border_changed  dd      0
+vdplog_now      dd      0
 
 msg00           db      13,10,'$'
 
@@ -1221,6 +1223,14 @@ my_kb_irq_handler_f12:
                 xor     cpupaused,1
                 jmp     my_kb_irq_handler_exit
 
+my_kb_irq_handler_enter_keypad_released:
+                mov     vdplog_now,0
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_enter_keypad:
+                mov     vdplog_now,1
+                jmp     my_kb_irq_handler_exit
+
 my_kb_irq_handler_f6:
                 mov     tape_pos,0
                 jmp     my_kb_irq_handler_exit
@@ -1301,6 +1311,12 @@ my_kb_irq_handler_extended:
 
                 cmp     al,77
                 je      my_kb_irq_handler_right_extended
+
+                cmp     al,28
+                je      my_kb_irq_handler_enter_keypad
+
+                cmp     al,28+128
+                je      my_kb_irq_handler_enter_keypad_released
 
                 cmp     al,75+128
                 je      my_kb_irq_handler_left_released_extended

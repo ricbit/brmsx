@@ -1654,6 +1654,15 @@ render:
                 test    byte ptr [offset vdpregs+1],BIT_6
                 jnz     render_enabled
 
+                ; check if the SCREEN mode has changed
+                mov     bl,actualscreen
+                cmp     bl,lastscreen
+                je      render_disabled
+
+                ; SCREEN mode has changed
+                mov     enabled,1
+
+render_disabled:
                 ; video is disabled
                 cmp     enabled,0
                 je      _ret

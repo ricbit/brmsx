@@ -33,6 +33,7 @@ all0002         dq      00002000200020002h
 allFFFE         dq      0FFFEFFFEFFFEFFFEh
 allFFFC         dq      0FFFCFFFCFFFCFFFCh
 all0006         dq      00006000600060006h
+all000F         dq      0000F000F000F000Fh
 
 ENGINE_DOS      EQU     0
 ENGINE_MMX      EQU     2
@@ -1659,19 +1660,31 @@ blit7_outer:
 ; --------------------------------------------------------------------
 
 blit7_sizedown:
+                cmp     enginetype,0
+                jne     blit7_sizedown_mmx
+
                 mov     esi,blitbuffer
                 mov     ecx,200
                 mov     edi,0A0000h+32
                 sub     edi,_code32a
 
 blit7_sizedown_outer:
-                mov     edx,256
+                mov     edx,64
 
 blit7_sizedown_inner:
-                mov     al,[esi]
-                add     esi,2
-                mov     [edi],al
-                inc     edi
+                mov     eax,[esi+4]
+                add     edi,4
+                mov     bl,al
+                shr     eax,16
+                mov     bh,al
+                mov     eax,[esi]
+                shl     ebx,16
+                add     esi,8
+                mov     bl,al
+                shr     eax,16
+                mov     bh,al
+                mov     [edi-4],ebx
+
                 dec     edx
                 jnz     blit7_sizedown_inner
 
@@ -1680,6 +1693,67 @@ blit7_sizedown_inner:
                 jnz     blit7_sizedown_outer
                 
                 ret
+
+; --------------------------------------------------------------------
+
+blit7_sizedown_mmx:
+                mov     esi,blitbuffer
+                mov     ecx,200
+                mov     edi,0A0000h+32
+                sub     edi,_code32a
+
+                ;movq    MM4,all000F
+                movq
+                db      00100101b
+                dd      offset all000F
+
+
+blit7_sizedown_outer_mmx:
+                mov     edx,32
+
+blit7_sizedown_inner_mmx:
+
+                ;movq    MM0,[esi]
+                movq
+                db      00000110b
+
+                add     edi,8
+
+                ;movq    MM1,[esi+8]
+                movq
+                db      10001110b
+                dd      8
+
+                ;pand    MM0,MM4
+                pand
+                db      11000100b
+
+                ;pand    MM1,MM4
+                pand    
+                db      11001100b
+
+                add     esi,16
+
+                ;packuswb MM0,MM1
+                packuswb
+                db      11000001b
+
+                dec     edx
+
+                ; movq_st [edi-8],MM0
+                movq_st
+                db      10000111b
+                dd      -8
+
+                jnz     blit7_sizedown_inner_mmx
+
+                add     edi,64
+                dec     ecx
+                jnz     blit7_sizedown_outer_mmx
+                
+                ret
+
+; --------------------------------------------------------------------
 
 eval_bottom_field_7:
                 mov     edx,total_lines

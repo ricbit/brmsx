@@ -384,6 +384,45 @@ draw_psggraph_channel_next:
 
                 ret
 
+DRAW_NUMBER     macro x_offset                
+                local   draw_msx2,draw_exit
+                
+                cmp     actualscreen,6
+                je      draw_msx2
+                cmp     actualscreen,7
+                je      draw_msx2
+
+                irp     i,<0,1,2,3,4>
+                mov     ebx,[esi+i*8]
+                mov     ecx,[esi+i*8+4]
+                and     [edi+(i+1)*256+x_offset],ebx
+                and     [edi+(i+1)*256+4+x_offset],ecx
+                xor     ebx,0FFFFFFFFh
+                xor     ecx,0FFFFFFFFh
+                and     ebx,004040404h
+                and     ecx,004040404h
+                or      [edi+(i+1)*256+x_offset],ebx
+                or      [edi+(i+1)*256+4+x_offset],ecx
+                endm
+
+                jmp     draw_exit
+
+draw_msx2:
+                irp     i,<0,1,2,3,4>
+                irp     j,<0,1,2,3,4,5,6,7>
+                mov     bl,[esi+i*8+j]
+                and     [edi+(i+1)*512+(j+x_offset)*2],bl
+                and     [edi+(i+1)*512+(j+x_offset)*2+1],bl
+                xor     bl,0FFh
+                and     bl,004h
+                or      [edi+(i+1)*512+(j+x_offset)*2],bl
+                or      [edi+(i+1)*512+(j+x_offset)*2+1],bl
+                endm
+                endm
+
+draw_exit:
+                endm
+
 ; drawline -----------------------------------------------------------
 ; draw a single bar in blitbuffer
 
@@ -401,10 +440,17 @@ drawline_msx1:
                 mov     ecx,50
                 mov     esi,eax
                 shr     esi,1
-                shl     edi,8
-                add     edi,blitbuffer
                 mov     ebx,0F0Dh
                 or      ebx,msx2_cpu_mask
+
+                cmp     actualscreen,6
+                je      drawline_msx2
+                cmp     actualscreen,7
+                je      drawline_msx2
+
+                shl     edi,8
+                add     edi,blitbuffer
+
 drawline1:      
                 cmp     ecx,esi
                 jbe     drawline2
@@ -421,28 +467,47 @@ drawline_loop:
                 dec     ecx
                 jnz     drawline1
 
+                sub     edi,33
 
+                jmp     drawline_continue
+
+
+drawline_msx2:
+
+                shl     edi,9
+                add     edi,blitbuffer
+
+drawline1_msx2:      
+                cmp     ecx,esi
+                jbe     drawline2_msx2
+                irp     i,<0,1,2,3,4,5,6>
+                mov     byte ptr [edi+512*i],bh
+                mov     byte ptr [edi+512*i+1],bh
+                endm
+                jmp     drawline_loop_msx2
+drawline2_msx2:
+                irp     i,<0,1,2,3,4,5,6>
+                mov     byte ptr [edi+512*i],bl
+                mov     byte ptr [edi+512*i+1],bl
+                endm
+drawline_loop_msx2:
+                add     edi,2
+                dec     ecx
+                jnz     drawline1_msx2
+
+                sub     edi,66
+
+drawline_continue:
 
                 mov     eax,ebp
-                sub     edi,33
+                ;sub     edi,33
                 mov     ebx,100
                 xor     edx,edx
                 div     ebx
                 mov     esi,eax
                 shl     esi,6
                 add     esi,offset number_font
-                irp     i,<0,1,2,3,4>
-                mov     ebx,[esi+i*8]
-                mov     ecx,[esi+i*8+4]
-                and     [edi+(i+1)*256],ebx
-                and     [edi+(i+1)*256+4],ecx
-                xor     ebx,0FFFFFFFFh
-                xor     ecx,0FFFFFFFFh
-                and     ebx,004040404h
-                and     ecx,004040404h
-                or      [edi+(i+1)*256],ebx
-                or      [edi+(i+1)*256+4],ecx
-                endm
+                DRAW_NUMBER 0
                 
                 mov     eax,edx
                 mov     ebx,10
@@ -451,36 +516,25 @@ drawline_loop:
                 mov     esi,eax
                 shl     esi,6
                 add     esi,offset number_font
-                irp     i,<0,1,2,3,4>
-                mov     ebx,[esi+i*8]
-                mov     ecx,[esi+i*8+4]
-                and     [edi+(i+1)*256+5],ebx
-                and     [edi+(i+1)*256+4+5],ecx
-                xor     ebx,0FFFFFFFFh
-                xor     ecx,0FFFFFFFFh
-                and     ebx,004040404h
-                and     ecx,004040404h
-                or      [edi+(i+1)*256+5],ebx
-                or      [edi+(i+1)*256+4+5],ecx
-                endm
+                DRAW_NUMBER 5
                 
+                cmp     actualscreen,6
+                je      draw_point_msx2
+                cmp     actualscreen,7
+                je      draw_point_msx2
+
                 mov     byte ptr [edi+5*256+10],04h
+                jmp     draw_point_exit
+draw_point_msx2:
+                mov     byte ptr [edi+5*512+10*2],04h
+                mov     byte ptr [edi+5*512+10*2+1],04h
+
+draw_point_exit:
 
                 mov     esi,edx
                 shl     esi,6
                 add     esi,offset number_font
-                irp     i,<0,1,2,3,4>
-                mov     ebx,[esi+i*8]
-                mov     ecx,[esi+i*8+4]
-                and     [edi+(i+1)*256+12],ebx
-                and     [edi+(i+1)*256+4+12],ecx
-                xor     ebx,0FFFFFFFFh
-                xor     ecx,0FFFFFFFFh
-                and     ebx,004040404h
-                and     ecx,004040404h
-                or      [edi+(i+1)*256+12],ebx
-                or      [edi+(i+1)*256+4+12],ecx
-                endm
+                DRAW_NUMBER 12
                 
                 ret
 

@@ -63,3 +63,4 @@ extrn sg1000_high_palette: byte
 extrn gui_palette_high: byte
 extrn border_changed: dword
 extrn set_palette_color: near
+extrn vdplog_now: dword
