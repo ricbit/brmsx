@@ -32,6 +32,8 @@ public open_file
 public read_file
 public read_size_file
 public blit
+public framerate
+public on_off
 
 ; DATA ---------------------------------------------------------------
 
@@ -56,8 +58,9 @@ oldkbpirqvect   dd      0
 oldkbrirqvect   dd      0
 
 align 4
+framerate       dd      2
 exit_now        dd      0
-on_off          dd      0
+on_off          dd      1
 
 msg00           db      13,10,'$'
 
@@ -335,8 +338,10 @@ my_irq_handler:
                 mov     ds,cs:_seldata
                 mov     gs,cs:_selzero
                 
-                xor     on_off,1
+                dec     on_off
                 jnz     my_irq_handler0
+                mov     eax,framerate
+                mov     on_off,eax
                 call    render
                 call    blit
 my_irq_handler0:

@@ -138,6 +138,8 @@ debug_loop:
                 je      command_s
                 cmp     al,'B'
                 je      command_b
+                cmp     al,'F'
+                je      command_f
                 cmp     al,'R'
                 je      command_r
                 cmp     al,'T'
@@ -171,6 +173,14 @@ command_k:
                 cmp exit_now,1
                 jne loop1
                 call    turnoff_kb_irq
+                jmp     debug_loop
+
+command_f:
+                call    gethex4
+                and     eax,0ffffh
+                mov     framerate,eax
+                mov     on_off,eax
+                call    crlf
                 jmp     debug_loop
 
 command_b:

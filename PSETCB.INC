@@ -133,7 +133,7 @@ psetCBxx:
 	psetCB83: dd prinXX
 	psetCB84: dd prinXX
 	psetCB85: dd prinXX
-	psetCB86: dd prinXX
+	psetCB86: dd prinCB86
 	psetCB87: dd prinXX
 	psetCB88: dd prinXX
 	psetCB89: dd prinXX
@@ -141,7 +141,7 @@ psetCBxx:
 	psetCB8B: dd prinXX
 	psetCB8C: dd prinXX
 	psetCB8D: dd prinXX
-	psetCB8E: dd prinXX
+	psetCB8E: dd prinCB8E
 	psetCB8F: dd prinCB8F
 	psetCB90: dd prinXX
 	psetCB91: dd prinXX
@@ -149,7 +149,7 @@ psetCBxx:
 	psetCB93: dd prinXX
 	psetCB94: dd prinXX
 	psetCB95: dd prinXX
-	psetCB96: dd prinXX
+	psetCB96: dd prinCB96
 	psetCB97: dd prinXX
 	psetCB98: dd prinXX
 	psetCB99: dd prinXX
@@ -157,7 +157,7 @@ psetCBxx:
 	psetCB9B: dd prinXX
 	psetCB9C: dd prinXX
 	psetCB9D: dd prinXX
-	psetCB9E: dd prinXX
+	psetCB9E: dd prinCB9E
 	psetCB9F: dd prinXX
 	psetCBA0: dd prinXX
 	psetCBA1: dd prinXX
@@ -165,7 +165,7 @@ psetCBxx:
 	psetCBA3: dd prinXX
 	psetCBA4: dd prinXX
 	psetCBA5: dd prinXX
-	psetCBA6: dd prinXX
+	psetCBA6: dd prinCBA6
 	psetCBA7: dd prinXX
 	psetCBA8: dd prinCBA8
 	psetCBA9: dd prinCBA9

@@ -34,7 +34,7 @@ isetFDxx:
 	isetFD20: dd emulXX
 	isetFD21: dd emulFD21
 	isetFD22: dd emulFD22
-	isetFD23: dd emulXX
+	isetFD23: dd emulFD23
 	isetFD24: dd emulXX
 	isetFD25: dd emulXX
 	isetFD26: dd emulXX

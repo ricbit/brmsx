@@ -21,11 +21,15 @@ public clear
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
 include screen0.inc
 include scr2fore.inc
 include scr2back.inc
 include scr2frcl.inc
 include scr2bkcl.inc
+
+align 4
 
 enabled         dd      1
 lastscreen      db      0
@@ -250,7 +254,7 @@ render22:       push    ebp
 
                 ; fetch the pattern for that subline
                 mov     dl,[ebx+eax*8]
-                
+
                 ; get the foreground mask
                 mov     ebp,[offset foregroundmask+edx*8]
                 

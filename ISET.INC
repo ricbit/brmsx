@@ -152,12 +152,12 @@ iset:
 	iset96: dd emul96
 	iset97: dd emul97
 	iset98: dd emul98
-	iset99: dd emulXX
+	iset99: dd emul99
 	iset9A: dd emul9A
-	iset9B: dd emulXX
+	iset9B: dd emul9B
 	iset9C: dd emul9C
-	iset9D: dd emulXX
-	iset9E: dd emulXX
+	iset9D: dd emul9D
+	iset9E: dd emul9E
 	iset9F: dd emul9F
 	isetA0: dd emulA0
 	isetA1: dd emulA1
@@ -205,7 +205,7 @@ iset:
 	isetCB: dd emulCB
 	isetCC: dd emulCC
 	isetCD: dd emulCD
-	isetCE: dd emulXX
+	isetCE: dd emulCE
 	isetCF: dd emulCF
 	isetD0: dd emulD0
 	isetD1: dd emulD1

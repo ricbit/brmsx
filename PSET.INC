@@ -152,12 +152,12 @@ pset:
 	pset96: dd prin96
 	pset97: dd prin97
 	pset98: dd prin98
-	pset99: dd prinXX
+	pset99: dd prin99
 	pset9A: dd prin9A
-	pset9B: dd prinXX
+	pset9B: dd prin9B
 	pset9C: dd prin9C
-	pset9D: dd prinXX
-	pset9E: dd prinXX
+	pset9D: dd prin9D
+	pset9E: dd prin9E
 	pset9F: dd prin9F
 	psetA0: dd prinA0
 	psetA1: dd prinA1
@@ -205,7 +205,7 @@ pset:
 	psetCB: dd prinCB
 	psetCC: dd prinCC
 	psetCD: dd prinCD
-	psetCE: dd prinXX
+	psetCE: dd prinCE
 	psetCF: dd prinCF
 	psetD0: dd prinD0
 	psetD1: dd prinD1

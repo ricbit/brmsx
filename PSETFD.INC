@@ -34,7 +34,7 @@ psetFDxx:
 	psetFD20: dd prinXX
 	psetFD21: dd prinFD21
 	psetFD22: dd prinFD22
-	psetFD23: dd prinXX
+	psetFD23: dd prinFD23
 	psetFD24: dd prinXX
 	psetFD25: dd prinXX
 	psetFD26: dd prinXX

@@ -19,3 +19,5 @@ extrn turnoff_kb_irq: near
 extrn read_size_file: near
 extrn blit: near
 extrn exit_now: dword
+extrn framerate: dword
+extrn on_off: dword

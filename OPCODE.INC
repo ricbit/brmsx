@@ -37,9 +37,9 @@ SRLREG          macro   opcode,reg
 
 emul&opcode:                
                 inc     edi
-                mov     al,reg
-                mov     dl,[offset SRL_table+eax]
+                mov     dl,reg
                 shr     reg,1
+                and     dl,1
                 mov     al,reg
                 mov     ebp,8
                 or      dl,[offset LOGICAL_table+eax]
@@ -74,6 +74,22 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RESHL - RES nn,(HL)
+
+RESHL          macro   opcode,bit
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                and     al,NBIT_&bit
+                call    writemem
+                mov     ebp,15
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; XORREG - XOR rr rr=[a,b,c,d,e,h,l]
 
 XORREG          macro   opcode,reg
@@ -96,14 +112,227 @@ ADCREG          macro   opcode,reg
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     bh,reg                          ; clock 1 V
-                jmp     adcreg
+                mov     ebp,4
+                jmp     opadcreg
 
                 endm
 
-adcreg:
+; --------------------------------------------------------------------
+; ADCAHL - ADC A,(HL)
+
+ADCAHL          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opadcreg
+
+                endm
+
+; --------------------------------------------------------------------
+; ADCIMM - ADC A,dd
+
+ADCIMM          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                mov     bh,al
+                mov     ebp,7
+                jmp     opadcreg
+
+                endm
+
+opadcreg:
                 shr     dl,1                            ; clock 2 U
                 mov     ch,dh                           ; clock 2 V
                 adc     dh,bh                           ; clock 3 U
+                mov     cl,0                            ; clock 3 V
+                mov     al,dh                           ; clock 4 V
+                adc     cl,cl                           ; clock 5 U
+                xor     bh,dh                           ; clock 5 V
+                mov     dl,[offset ARITP_table+eax]     ; clock 6 U
+                xor     bh,ch                           ; clock 6 V
+                or      dl,cl                           ; clock 7 U
+                mov     al,cl                           ; clock 7 V
+                or      al,bh                           ; clock 8 U
+                and     bh,BIT_4                        ; clock 8 V
+                or      dl,bh                           ; clock 9
+                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
+                ret
+
+; --------------------------------------------------------------------
+; SBCREG - SBC A,rr rr=[a,b,c,d,e,h,l]
+
+SBCREG          macro   opcode,reg
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     bh,reg                          ; clock 1 V
+                mov     ebp,4
+                jmp     opsbcreg
+
+                endm
+
+; --------------------------------------------------------------------
+; SBCAHL - SBC A,(HL)
+
+SBCAHL          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsbcreg
+
+                endm
+
+; --------------------------------------------------------------------
+; SBCIMM - SBC A,dd
+
+SBCIMM          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsbcreg
+
+                endm
+
+opsbcreg:
+                shr     dl,1                            ; clock 2 U
+                mov     ch,dh                           ; clock 2 V
+                sbb     dh,bh                           ; clock 3 U
+                mov     cl,0                            ; clock 3 V
+                mov     al,dh                           ; clock 4 V
+                adc     cl,cl                           ; clock 5 U
+                xor     bh,dh                           ; clock 5 V
+                mov     dl,[offset ARITN_table+eax]     ; clock 6 U
+                xor     bh,ch                           ; clock 6 V
+                or      dl,cl                           ; clock 7 U
+                mov     al,cl                           ; clock 7 V
+                or      al,bh                           ; clock 8 U
+                and     bh,BIT_4                        ; clock 8 V
+                or      dl,bh                           ; clock 9
+                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
+                ret
+
+; --------------------------------------------------------------------
+; SUBREG - SUB rr rr=[a,b,c,d,e,h,l]
+
+SUBREG          macro   opcode,reg
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     bh,reg                          ; clock 1 V
+                mov     ebp,4
+                jmp     opsubreg
+
+                endm
+
+; --------------------------------------------------------------------
+; SUBAHL - SUB (HL)
+
+SUBAHL          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsubreg
+
+                endm
+
+; --------------------------------------------------------------------
+; SUBIMM - SUB dd
+
+SUBIMM          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsubreg
+
+                endm
+
+opsubreg:
+                mov     ch,dh                           ; clock 2 V
+                sub     dh,bh                           ; clock 3 U
+                mov     cl,0                            ; clock 3 V
+                mov     ebp,4                           ; clock 4 U
+                mov     al,dh                           ; clock 4 V
+                adc     cl,cl                           ; clock 5 U
+                xor     bh,dh                           ; clock 5 V
+                mov     dl,[offset ARITN_table+eax]     ; clock 6 U
+                xor     bh,ch                           ; clock 6 V
+                or      dl,cl                           ; clock 7 U
+                mov     al,cl                           ; clock 7 V
+                or      al,bh                           ; clock 8 U
+                and     bh,BIT_4                        ; clock 8 V
+                or      dl,bh                           ; clock 9
+                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
+                ret
+
+; --------------------------------------------------------------------
+; ADDREG - ADD A,rr rr=[a,b,c,d,e,h,l]
+
+ADDREG          macro   opcode,reg
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     bh,reg                          ; clock 1 V
+                mov     ebp,4
+                jmp     opaddreg
+
+                endm
+
+; --------------------------------------------------------------------
+; ADDAHL - ADD A,(HL)
+
+ADDAHL          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opaddreg
+
+                endm
+
+; --------------------------------------------------------------------
+; ADDIMM - ADD A,dd
+
+ADDIMM          macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                mov     bh,al
+                mov     ebp,7
+                jmp     opaddreg
+
+                endm
+
+opaddreg:
+                mov     ch,dh                           ; clock 2 
+                add     dh,bh                           ; clock 3 U
                 mov     cl,0                            ; clock 3 V
                 mov     ebp,4                           ; clock 4 U
                 mov     al,dh                           ; clock 4 V
@@ -172,6 +401,122 @@ emul&opcode:
                 mov     al,reg
                 call    writemem
                 mov     ebp,19
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPDAA - DAA
+
+OPDAA           macro   opcode
+
+emul&opcode:
+                inc     edi
+                xor     ecx,ecx
+                mov     al,dh
+                mov     cl,dl
+                mov     dl,0
+                add     dx,[offset DAA_table+ecx*2]
+                mov     ebx,[offset DAA_select_table+ecx*4]
+                add     dx,[ebx+eax*2]
+                mov     cl,dh
+                or      dl,[offset LOGICAL_table+ecx]
+                and     edx,0ffffh
+                mov     ebp,4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; INCREG - INC rr rr=[a,b,c,d,e,h,l]
+
+INCREG          macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                inc     reg
+                and     dl,1
+                mov     al,reg
+                mov     ebp,4
+                or      dl,[offset INC_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; INCHL - INC (HL)
+
+INCHL           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                inc     al
+                call    writemem
+                and     dl,1
+                mov     ebp,11
+                or      dl,[offset INC_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; INCIY - INC (IY+dd)
+
+INCIY           macro   opcode
+
+emul&opcode:
+                inc     edi
+                call    fetch
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,ax
+                call    readmem
+                inc     al
+                call    writemem
+                and     dl,1
+                mov     ebp,23
+                or      dl,[offset INC_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; INCWREG - INC rr rr=[bc,de,hl,sp,ix,iy]
+
+INCWREG         macro   opcode,reg,tcycles
+
+emul&opcode:
+                inc     edi
+                inc     reg
+                mov     ebp,tcycles
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRRD - RRD
+
+OPRRD           macro   opcode
+
+emul&opcode:
+                inc     edi                            
+                mov     ecx,regehl                    
+                call    readmem                       
+                mov     bl,al                         
+                shr     al,4
+                and     bl,0fh                        
+                mov     bh,dh                         
+                and     dh,0f0h
+                shl     bh,4
+                or      dh,bl
+                or      al,bh
+                call    writemem
+                mov     al,dh
+                and     dl,1
+                mov     ebp,18
+                or      dl,[offset LOGICAL_table+eax]
                 ret
 
                 endm

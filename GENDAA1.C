@@ -13,12 +13,12 @@
 
 void main (void) {
   int i;
-  unsigned char k;
+  unsigned short k;
 
-  printf ("ARITN_table:\n");
+  printf ("DAA1_table:\n");
   for (i=0; i<256; i++) {
-    k=(i&BIT_5)|(i&BIT_3)|(i==0?BIT_6:0)|(i&BIT_7)|BIT_1;
-    printf ("\t\tdb\t0%02xh\t;%02x\n",k,i);
+    k=((i)<0x0a)? 0:0x0600;
+    printf ("\t\tdw\t0%04xh\t;%02x\n",k,i);
   }
 }
 
