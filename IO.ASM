@@ -61,7 +61,7 @@ oldkbpirqvect   dd      0
 oldkbrirqvect   dd      0
 
 align 4
-framerate       dd      2
+framerate       dd      1
 exit_now        dd      0
 on_off          dd      1
 
