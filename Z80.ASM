@@ -32,6 +32,7 @@ include pmode.inc
 include gui.inc
 
 public fetch
+public fetch1
 public fetchw
 public readmem
 public writemem
@@ -388,19 +389,48 @@ setflag_cpl     macro
                 
                 endm
 
+; FETCHMACRO ---------------------------------------------------------
+; fetch a byte from Z80 memory (macro version)
+; in, edi: address
+; out, al: byte
+; affect: esi,ebx
+
+FETCHMACRO      macro   skip
+                
+                lea     esi,[edi+skip]                  ; clock 1 U
+                lea     ebx,[edi+skip]                  ; clock 1 V
+                shr     esi,13                          ; clock 2 U
+                and     ebx,01fffh                      ; clock 2 V
+                mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
+                mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
+
+                endm
+
 ; fetch --------------------------------------------------------------
 ; fetch a byte from Z80 memory
 ; in, edi: address
 ; out, al: byte
 ; affect: esi,ebx
 
-fetch:          mov     esi,edi                         ; clock 1 U
-                mov     ebx,edi                         ; clock 1 V
-                shr     esi,13                          ; clock 2 U
-                and     ebx,01fffh                      ; clock 2 V
-                mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
-                mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
+fetch:          
+                FETCHMACRO 0
                 ret
+
+; fetch1 -------------------------------------------------------------
+; fetch the next byte from Z80 memory
+; in, edi: (address-1)
+; out, al: byte
+; affect: esi,ebx
+
+fetch1:
+                FETCHMACRO 1
+                ret
+
+; fetchw -------------------------------------------------------------
+; fetch a word from Z80 memory
+; in, edi: address
+; out, ax: word
+; affect: esi,ebx
 
 fetchw:         mov     esi,edi                         ; clock 1 U
                 mov     ebx,edi                         ; clock 1 V
@@ -552,14 +582,14 @@ EMULATE         macro   emtype,brtype
 
 EMULABEL        loop,emtype,brtype
 
-                and     edi,0ffffh
+                ;and     edi,0ffffh
                 
                 if      brtype EQ BREAK
                 cmp     edi,breakpoint
                 JUMP    je,exit,emtype,brtype
                 endif
 
-                call    fetch
+                FETCHMACRO 0
                 inc     rcounter
                 call    [offset iset + eax*4]
                 
@@ -740,9 +770,9 @@ LDREGIMM        0E,regc
 OPRRCA          0F      
 
 ; 10 - DJNZ dd
-emul10:         inc     edi
-                call    fetch
-                inc     edi
+emul10:         
+                call    fetch1
+                add     edi,2
                 dec     regb
                 jz      emul10a
                 movsx   ebx,al
@@ -785,16 +815,15 @@ LDREGIMM        16,regd
 OPRLA           17
 
 ; 18 - JR dd
-emul18:         inc     edi
-                call    fetch
+emul18:         
+                call    fetch1
                 cmp     al,0FEh
                 je      emul18a
                 movsx   ebx,al
                 mov     ebp,12+2
-                lea     edi,[edi+ebx+1]
+                lea     edi,[edi+ebx+2]
                 ret
 emul18a:
-                dec     edi
                 mov     clockcounter,60000
                 ret
 
@@ -1912,6 +1941,8 @@ outemul98:      mov     ecx,msxvram
                 js      outemul98_2_pat
                 cmp     esi,32*24
                 jge     outemul98_2_pat
+                cmp     [ecx+eax],bl  ;;
+                je      outemul98_ret ;;
                 add     esi,dirtyname
                 mov     byte ptr [esi],1
                 mov     [ecx+eax],bl

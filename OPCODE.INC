@@ -32,9 +32,8 @@ emul&opcode:
 ADCIMM          macro   opcode
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     bh,al
                 mov     ebp,7+2
                 jmp     opadcreg
@@ -47,11 +46,10 @@ emul&opcode:
 ADCAII          macro   opcode,regii
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ecx,regii
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 mov     bh,al
@@ -125,9 +123,8 @@ emul&opcode:
 ADDIMM          macro   opcode
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     bh,al
                 mov     ebp,7+2
                 jmp     opaddreg
@@ -140,11 +137,10 @@ emul&opcode:
 ADDAII          macro   opcode,regii
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ecx,regii
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 mov     bh,al
@@ -220,10 +216,9 @@ emul&opcode:
 ANDIMM           macro   opcode
 
 emul&opcode:                
-                inc     edi
-                call    fetch
+                call    fetch1
                 and     dh,al
-                inc     edi
+                add     edi,2
                 mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
                 mov     ebp,7+2
@@ -238,9 +233,8 @@ emul&opcode:
 ANDII           macro   opcode,regii
 
 emul&opcode:                
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     ecx,regii
                 movsx   ebx,al  
                 add     cx,bx
@@ -340,9 +334,8 @@ emul&opcode:
 CPIMM           macro   opcode
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 xor     ebx,ebx
                 mov     ebp,7+2
                 jmp     opcpreg
@@ -355,11 +348,10 @@ emul&opcode:
 CPII            macro   opcode,itype
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
                 mov     ecx,itype
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 xor     ebx,ebx
@@ -430,10 +422,9 @@ emul&opcode:
 DECII           macro   opcode,reg
 
 emul&opcode:
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
-                inc     edi
+                add     edi,2
                 mov     ecx,reg
                 add     cx,bx
                 call    readmem
@@ -465,9 +456,8 @@ emul&opcode:
 INADD           macro   opcode
 
 emul&opcode:
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 call    [offset inportxx+eax*4]
                 and     ebx,0ffh
                 and     dl,1
@@ -536,10 +526,9 @@ emul&opcode:
 INCII           macro   opcode,reg
 
 emul&opcode:
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
-                inc     edi
+                add     edi,2
                 mov     ecx,reg
                 add     cx,bx
                 call    readmem
@@ -591,11 +580,10 @@ JRCC            macro   opcode,jcc,flagtype
 emul&opcode:    
                 test    dl,flagtype
                 jcc     emul&opcode&a    
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ebp,12+2
-                lea     edi,[edi+ebx+1]
+                lea     edi,[edi+ebx+2]
                 ret
 emul&opcode&a:  mov     ebp,7+2
                 add     edi,2
@@ -664,9 +652,8 @@ emul&opcode:
 LDREGIMM        macro   opcode,reg
 
 emul&opcode:
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     reg,al
                 mov     ebp,7+2
                 ret
@@ -679,9 +666,8 @@ emul&opcode:
 LDREGIIDD       macro   opcode,reg,regii
 
 emul&opcode:
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 movsx   ebx,al
                 mov     ecx,regii
                 add     cx,bx
@@ -713,11 +699,10 @@ emul&opcode:
 LDIIDDREG       macro   opcode,reg,itype
 
 emul&opcode:
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ecx,itype
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 mov     al,reg
                 call    writemem
@@ -732,9 +717,8 @@ emul&opcode:
 LDHLIMM         macro   opcode
 
 emul&opcode:
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     ecx,regehl
                 mov     ebp,10+3
                 call    writemem
@@ -748,12 +732,11 @@ emul&opcode:
 LDIIDDNN        macro   opcode,itype
 
 emul&opcode:
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ecx,itype
                 add     cx,bx
-                inc     edi
+                add     edi,2
                 call    fetch
                 inc     edi
                 call    writemem
@@ -904,9 +887,8 @@ emul&opcode:
 ORIMM           macro   opcode
 
 emul&opcode:                
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 or      dh,al
                 mov     al,dh
                 mov     ebp,7+2
@@ -921,11 +903,10 @@ emul&opcode:
 ORII            macro   opcode,regii
 
 emul&opcode:                
-                inc     edi
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
                 mov     ecx,regii
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 or      dh,al
@@ -941,9 +922,9 @@ emul&opcode:
 
 OUTIMM          macro   opcode
 
-emul&opcode:    inc     edi
-                call    fetch
-                inc     edi
+emul&opcode:    
+                call    fetch1
+                add     edi,2
                 mov     bl,dh
                 mov     ebp,11+2
                 jmp     [offset outportxx+eax*4]
@@ -1398,9 +1379,8 @@ emul&opcode:
 SBCIMM          macro   opcode
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     bh,al
                 mov     ebp,7+2
                 jmp     opsbcreg
@@ -1413,9 +1393,8 @@ emul&opcode:
 SBCAII          macro   opcode,regii
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 movsx   ebx,al
                 mov     ecx,regii
                 add     cx,bx
@@ -1646,9 +1625,8 @@ emul&opcode:
 SUBIMM          macro   opcode
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 mov     bh,al
                 mov     ebp,7+2
                 jmp     opsubreg
@@ -1661,11 +1639,10 @@ emul&opcode:
 SUBII           macro   opcode,itype
 
 emul&opcode:                
-                inc     edi                             ; clock 1 U
                 mov     ecx,itype
-                call    fetch
+                call    fetch1
                 movsx   ebx,al
-                inc     edi
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 mov     bh,al
@@ -1712,9 +1689,8 @@ emul&opcode:
 XORIMM          macro   opcode
 
 emul&opcode:                
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 xor     dh,al
                 mov     al,dh
                 mov     ebp,7+2
@@ -1729,9 +1705,8 @@ emul&opcode:
 XORII           macro   opcode,regii
 
 emul&opcode:                
-                inc     edi
-                call    fetch
-                inc     edi
+                call    fetch1
+                add     edi,2
                 movsx   ebx,al
                 mov     ecx,regii
                 add     cx,bx

@@ -1,6 +1,14 @@
+release 1.49:
+
+- fixed bug on ADC and SBC (8-bit): they weren't setting V flag correctly
+- optimized "EMULATE" macro
+- added new "fetch1" routine: this should save 1 clock for each opcode
+- optimized yet again the screen 2 renderer: now even penguin adv.
+  and the nemesis are very fast.
+
 release 1.48:
 
-- dynamic CPU optimizer: auto-detect konami combo
+- dynamic CPU optimizer: auto-detect konami end-of-interrupt
 
 release 1.47:
 

@@ -27,6 +27,7 @@ opadcreg:
                 xor     bh,ch                           ; clock 6 V
                 or      dl,cl                           ; clock 7 U
                 mov     al,cl                           ; clock 7 V
+                and     bh,0FEh
                 or      al,bh                           ; clock 8 U
                 and     bh,BIT_4                        ; clock 8 V
                 or      dl,bh                           ; clock 9
@@ -62,6 +63,7 @@ opsbcreg:
                 xor     bh,ch                           ; clock 6 V
                 or      dl,cl                           ; clock 7 U
                 mov     al,cl                           ; clock 7 V
+                and     bh,0FEh
                 or      al,bh                           ; clock 8 U
                 and     bh,BIT_4                        ; clock 8 V
                 or      dl,bh                           ; clock 9

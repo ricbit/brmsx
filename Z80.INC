@@ -1,6 +1,7 @@
 extrn mem: near
 extrn trace: near
 extrn fetch: near
+extrn fetch1: near
 extrn fetchw: near
 extrn emulate: near
 extrn emulate_break: near
