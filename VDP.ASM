@@ -78,7 +78,7 @@ render_screen0:
                 mov     esi,msxvram                
                 lea     ebx,[esi+0800h]
                 mov     edi,blitbuffer
-                add     edi,40
+                add     edi,8
                 mov     ecx,0
                 mov     edx,0
                 
@@ -91,29 +91,41 @@ render06:
                 ; draw a line
 
 render05:
+                ; draw two chars
+
                 mov     cl,[esi]
+                mov     dl,[ebx+ecx*8]
                 
-                ; draw a char
+                irp     i,<0,1,2,3,4,5,6,7>
                 
+                mov     eax,[offset screen0_table+edx*8]
+                mov     [edi+i*256],eax
+                mov     ax,[offset screen0_table+edx*8+4]
+                mov     dl,[ebx+ecx*8+i+1]
+                mov     [edi+4+i*256],ax
+
+                endm
+
+                mov     cl,[esi+1]
                 mov     dl,[ebx+ecx*8]
                 
                 irp     i,<0,1,2,3,4,5,6,7>
                 
                 mov     ax,[offset screen0_table+edx*8]
-                mov     [edi+i*320],ax
+                mov     [edi+6+i*256],ax
                 mov     eax,[offset screen0_table+edx*8+2]
                 mov     dl,[ebx+ecx*8+i+1]
-                mov     [edi+2+i*320],eax
+                mov     [edi+8+i*256],eax
 
                 endm
 
-                inc     esi
-                add     edi,6
-                dec     ebp
+                add     esi,2
+                add     edi,12
+                sub     ebp,2
                 jnz     render05
 
                 pop     ebp
-                add     edi,320*7+80
+                add     edi,256*7+16
                 dec     ebp
                 jnz     render06
 
@@ -145,7 +157,6 @@ render_screen1:
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
-                add     edi,32
 
                 ; mask the temporary registers
                 xor     edx,edx
@@ -200,7 +211,7 @@ render11:       push    ebp
                 mov     esi,[offset backgroundmask+edx*8+4]
 
                 ; display the subline
-                mov     [edi+i*320],ebp
+                mov     [edi+i*256],ebp
 
                 ; do it again for the next four pixels
                 mov     ebp,[offset foregroundmask+edx*8+4]
@@ -208,7 +219,7 @@ render11:       push    ebp
                 and     ebp,eax
                 or      ebp,esi
                 mov     dl,[ebx+i+1]
-                mov     [edi+4+i*320],ebp
+                mov     [edi+4+i*256],ebp
 
                 endm
 
@@ -224,7 +235,7 @@ render11:       push    ebp
                 dec     ebp
                 jnz     render11
 
-                sub     edi,8*32-320*8
+                add     edi,256*7
 
                 pop     ebp
                 dec     ebp
@@ -259,7 +270,7 @@ PIPE2_DOS       macro
                 mov     dl,[ebx+eax*8+i]
 
                 mov     cl,[esp+eax*8+i]
-                mov     [edi+i*320],ebp
+                mov     [edi+i*256],ebp
                 
                 mov     ebp,[offset foregroundmask+edx*8+4]
                 mov     esi,[offset backgroundmask+edx*8+4]
@@ -271,7 +282,7 @@ PIPE2_DOS       macro
                 mov     dl,[ebx+eax*8+(i+1)]
                 
                 mov     cl,[esp+eax*8+(i+1)]
-                mov     [edi+4+i*320],ebp
+                mov     [edi+4+i*256],ebp
 
                 endm
                 
@@ -355,7 +366,6 @@ render_screen2:
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
-                add     edi,32
 
                 ; mask the temporary registers
                 xor     eax,eax
@@ -399,7 +409,7 @@ render21:
                 jnz     render21
 
                 pop     ebp
-                sub     edi,32*8-320*8
+                add     edi,256*7
                 dec     ebp
                 jnz     render20
 
@@ -447,7 +457,6 @@ sprite16N:
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
-                add     edi,32
 
                 ; mask temporary registers
                 xor     eax,eax
@@ -495,9 +504,8 @@ sprite16N1:     push    ecx
                 push    edi
                 xor     ebx,ebx
                 mov     bl,ah
-                lea     ebx,[ebx+ebx*4]
                 and     eax,0ffh
-                shl     ebx,6
+                shl     ebx,8
                 add     ebx,eax
                 add     edi,ebx
 
@@ -572,7 +580,7 @@ sprite16N4:
 
 sprite16N8:
 
-                add     edi,320
+                add     edi,256
                 inc     ecx
                 dec     edx
                 jnz     sprite16N4
@@ -648,12 +656,13 @@ clear:
                 mov     es,ax
                 mov     eax,0
                 mov     edi,blitbuffer
-                mov     ecx,16000
+                mov     ecx,320*200/4
                 rep     stosd
                 mov     dx,03C8h
                 mov     al,1
                 out     dx,al
                 inc     dx
+                mov     al,0
                 out     dx,al
                 out     dx,al
                 out     dx,al

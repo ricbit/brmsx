@@ -33,6 +33,8 @@ msgmode01       db      'emulation mode set to FAST',13,10,'$'
 msgmode02       db      'emulation mode set to TURBO',13,10,'$'
 msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
+msgvideo00      db      'video mode set to 320x200',13,10,'$'
+msgvideo01      db      'video mode set to 256x200',13,10,'$'
 
 ; showreg ------------------------------------------------------------
 ; show the contents of Z80 registers
@@ -145,6 +147,19 @@ changemode3:
 
 ; --------------------------------------------------------------------
 
+changevideomode:
+                xor     videomode,1
+                jnz     changevideomode1
+                mov     eax,offset msgvideo00
+                call    printmsg
+                ret
+changevideomode1:
+                mov     eax,offset msgvideo01
+                call    printmsg
+                ret
+
+; --------------------------------------------------------------------
+
 change_megamode:
                 xor     megarommode,5
                 cmp     megarommode,0
@@ -188,8 +203,8 @@ debug_loop:
                 je      command_b
                 cmp     al,'F'
                 je      command_f
-                cmp     al,'K'
-                je      command_k
+                ;cmp     al,'K'
+                ;je      command_k
                 cmp     al,'R'
                 je      command_r
                 cmp     al,'T'
@@ -198,6 +213,8 @@ debug_loop:
                 je      command_1
                 cmp     al,'2'
                 je      command_2
+                cmp     al,'V'
+                je      command_v
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -218,6 +235,9 @@ command_f:
                 mov     framerate,eax
                 mov     on_off,eax
                 call    crlf
+                jmp     debug_loop
+
+command_v:      call    changevideomode
                 jmp     debug_loop
 
 command_m:      
@@ -261,6 +281,7 @@ command_0:
                 jmp     debug_loop
 
 command_s:      call    setgraphmode
+                call    clear
                 call    turnon_kb_irq
                 call    turnon_irq
                 call    emulate

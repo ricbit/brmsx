@@ -1,3 +1,15 @@
+release 1.36:
+
+- added a tweaked-vga mode to do 256x200 resolution
+  with this, the msx screen uses all the monitor area
+  and as a bonus we get another 19% in speed gain,
+  in all the screens!!
+- added a new debug key: "V" - changes the resolution 
+  available now are 320x200 and 256x200
+  default is 320x200
+- disabled "K" key since it is not working yet
+- optimized again the screen 0 renderer: speed gain is 10%
+
 release 1.35:
 
 - did more optimization on screen 2 renderer
@@ -19,6 +31,7 @@ release 1.33:
 - optimized OR (HL)
 - optimized ADC A,(II+DD)
 - optimized the screen 2 renderer: speed gain is 21%
+- now brmsx has two executables: one for DOS and one for windows
 
 release 1.32:
 

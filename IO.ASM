@@ -39,6 +39,7 @@ public on_off
 public reset_sb
 public set_border_color
 public palette
+public videomode
 
 ; DATA ---------------------------------------------------------------
 
@@ -66,6 +67,7 @@ align 4
 framerate       dd      1
 exit_now        dd      0
 on_off          dd      1
+videomode       dd      0
 
 msg00           db      13,10,'$'
 
@@ -181,6 +183,20 @@ toupper:
 toupper1:
         ret
 
+; SET_VGA_REG ---------------------------------------------------------
+; set a vga register
+
+SET_VGA_REG     macro   reg,index,value
+
+                mov     dx,reg
+                mov     al,index
+                out     dx,al
+                inc     dx
+                mov     al,value
+                out     dx,al
+
+                endm
+
 ; setgraphmode --------------------------------------------------------
 ; set video mode 13h (320x200x256)
 
@@ -201,13 +217,32 @@ setgraphmode1:
                 inc     ebx
                 loop    setgraphmode1
 
+                cmp     videomode,0
+                je      _ret
+
+                mov     edx,03D4h
+                mov     al,11h
+                out     dx,al
+                inc     edx
+                in      al,dx
+                and     al,07Fh
+                out     dx,al
+
+                SET_VGA_REG 03D4h,0,77
+                SET_VGA_REG 03D4h,1,63
+                SET_VGA_REG 03D4h,2,64
+                SET_VGA_REG 03D4h,3,128+3
+                SET_VGA_REG 03D4h,4,68
+                SET_VGA_REG 03D4h,5,0
+                SET_VGA_REG 03D4h,013h,32
+
                 ret
 
 ; set_border_color ----------------------------------------------------
 ; set color 0 of VGA as VDP border color
 
 set_border_color:
-                pushad
+                push    eax ebx edx
                 movzx   eax,byte ptr [offset vdpregs+7]
                 and     eax,0fh
                 lea     ebx,[offset palette+eax+eax*2]
@@ -224,7 +259,7 @@ set_border_color:
                 mov     al,[ebx+2]
                 shr     al,2
                 out     dx,al
-                popad
+                pop     edx ebx eax
                 ret
 
 ; settextmode ---------------------------------------------------------
@@ -500,13 +535,30 @@ read_size_file:
 ; copy the contents of blit buffer to pentium video memory
 
 blit:              
+                cmp     videomode,0
+                je      blit0
                 push    es
                 mov     ax,cs:_selzero
                 mov     es,ax
                 mov     edi,0a0000h
                 mov     esi,blitbuffer
-                mov     ecx,64000/4
+                mov     ecx,256*192/4
                 rep     movsd
+                pop     es
+                ret
+blit0:
+                push    es
+                mov     ax,cs:_selzero
+                mov     es,ax
+                mov     esi,blitbuffer
+                mov     edi,0a0000h+32
+                mov     edx,192
+blit0_0:
+                mov     ecx,256/4
+                rep     movsd
+                add     edi,64
+                dec     edx
+                jnz     blit0_0
                 pop     es
                 ret
 

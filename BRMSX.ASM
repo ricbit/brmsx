@@ -25,7 +25,7 @@ extrn detect_cpu: near
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.35',13,10
+msg00           db      'BrMSX 1.36',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
