@@ -78,7 +78,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.174',13,10
+msg00           db      'BrMSX 1.175',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -102,7 +102,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 1.174',13,10
+msg22           db      'BrMSX 1.175',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -130,7 +130,7 @@ msg37           db      13,10,'This ROM is a bad dump.',13,10
                 db      'You can get SMSFIX at the BrMSX home page:',13,10
                 db      'http://www.lsi.usp.br/~ricardo/brmsx.htm',13,10,'$'
 msg38           db      'VESA2 not found',13,10,'$'
-msg39           db      'DISK2.ROM invalid or not found',13,10,'$'
+msg39           db      'DOS2.ROM invalid or not found',13,10,'$'
 msg40           db      'MSX2.ROM invalid or not found',13,10,'$'
 msg41           db      'MSX2EXT.ROM invalid or not found',13,10,'$'
 msg42           db      'VESA2 640x480x8 not found',13,10,'$'
@@ -213,7 +213,7 @@ help_message3   db      13
                 db      '-speaq <n>     select quality for PC speaker sound'
                 db      ' (range is 1 to 9)',13,10
                 db      '-dos2          enable MSX-DOS 2 emulation '
-                db      '(require DISK2.ROM)',13,10
+                db      '(require DOS2.ROM)',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
@@ -259,7 +259,7 @@ msgMMX           db      '(MMX)$'
 msgpoint         db      '.$'
 rom_name         db      'MSX.ROM',0
 disk_rom_name    db      'DISK.ROM',0
-disk2_rom_name   db      'DISK2.ROM',0
+dos2_rom_name   db      'DOS2.ROM',0
 msxhan_name      db      'MSXHAN.ROM',0
 msx2_rom_name    db      'MSX2.ROM',0
 msx2ext_rom_name db      'MSX2EXT.ROM',0
@@ -1307,7 +1307,7 @@ disk_rom_error:
                 call    printmsg
                 jmp     _exit
 
-disk2_rom_error:
+dos2_rom_error:
                 mov     eax,offset msg39
                 call    printmsg
                 jmp     _exit
@@ -2822,14 +2822,14 @@ _main_port:
                 cmp     dos2enabled,1
                 jne     _ret
 
-                ; read disk2.rom from disk
-                mov     edx,offset disk2_rom_name
+                ; read dos2.rom from disk
+                mov     edx,offset dos2_rom_name
                 call    open_file
-                jc      disk2_rom_error
+                jc      dos2_rom_error
 
                 call    read_size_file
                 cmp     eax,10000h
-                jne     disk2_rom_error
+                jne     dos2_rom_error
 
                 irp     i,<0,1,2,3>
                 mov     edx,transf_buffer
@@ -2860,7 +2860,7 @@ _main_port:
                 shr     ebp,6
                 mov     dword ptr [offset megadump+ebp*4],ecx
 
-                ; patch the DISK2.ROM to make it run on msx-1 machines
+                ; patch the DOS2.ROM to make it run on msx-1 machines
                 mov     eax,cart1
                 add     eax,07DEh
                 mov     byte ptr [eax],0

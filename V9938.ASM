@@ -40,6 +40,7 @@ public dirty_palette
 align 4
 include screen0l.inc
 include screen6.inc
+include adjust.inc
 
 align 4
 
@@ -54,6 +55,7 @@ dirty_palette   db      16 dup (1)
 save_ebp        dd      0
 save_esi        dd      0
 vdp_page        dd      0
+adjustbuffer    dd      0
 
 size_hx         dd      0
 and_hx          dd      0
@@ -217,8 +219,8 @@ outemul99b_msx2:
 register_action:
                 cmp     bl,7
                 je      change_border_color
-                cmp     bl,9
-                je      change_total_lines
+                ;cmp     bl,9
+                ;je      change_total_lines
                 cmp     bl,1
                 je      outemul99_checkirq_msx2
                 cmp     bl,17
@@ -1796,18 +1798,32 @@ vdp_command_vLINE_inner:
 
                 jmp     vdp_command_LINE_exit
 
+; set_adjust ---------------------------------------------------------
+; perform the correction on blitbuffer 
+; in order to apply the set adjust
+
+set_adjust:
+                movzx   ecx,byte ptr [offset vdpregs+18]
+                mov     edx,[offset set_adjust_table_512+ecx*4]
+                mov     eax,blitbuffer
+                sub     eax,edx
+                mov     adjustbuffer,eax
+                ret
+
 ; render_screen0_80 --------------------------------------------------
 ; render a screen 0 page
 ; MSX2 version: 80 columns
 
 render_screen0_80:                
+                call    set_adjust
+
                 mov     esi,msxvram                
                 add     esi,nametable
                 
                 mov     ebx,msxvram
                 add     ebx,patterntable
                 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 add     edi,16
 
                 mov     ecx,0
@@ -1868,10 +1884,12 @@ render05_80:
 ; render the SCREEN 5
 
 render_screen5:
+                call    set_adjust
+
                 cmp     enginetype,0
                 jne     render_screen5_mmx
 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
@@ -1932,7 +1950,7 @@ render_screen5_inner:
 ; render the SCREEN 5 using MMX
 
 render_screen5_mmx:
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
@@ -2040,10 +2058,12 @@ render_screen5_mmx_inner:
 ; render the SCREEN 6
 
 render_screen6:
+                call    set_adjust
+
                 cmp     videomode,7
                 je      render_screen6_sizedown
 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
@@ -2093,7 +2113,7 @@ render_screen6_inner:
                 ret
 
 render_screen6_sizedown:
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,7
@@ -2156,13 +2176,15 @@ render_screen6_inner_sizedown:
 ; render the SCREEN 7
 
 render_screen7:
+                call    set_adjust
+
                 cmp     videomode,7
                 je      render_screen7_sizedown
                 
                 cmp     enginetype,0
                 jne     render_screen7_mmx
 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,8
@@ -2223,7 +2245,7 @@ render_screen7_inner:
 ; render the SCREEN 7 using MMX
 
 render_screen7_mmx:
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,8
@@ -2334,7 +2356,7 @@ render_screen7_sizedown:
                 cmp     enginetype,0
                 jne     render_screen7_sizedown_mmx
 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,8
@@ -2377,7 +2399,7 @@ render_screen7_inner_sizedown:
 ; render the SCREEN 7 in "-res 7" using MMX
 
 render_screen7_sizedown_mmx:
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,8
@@ -2455,10 +2477,9 @@ render_screen7_inner_sizedown_mmx:
 ; render the SCREEN 8
 
 render_screen8:
-                ;cmp     enginetype,0
-                ;jne     render_screen7_mmx
+                call    set_adjust
 
-                mov     edi,blitbuffer
+                mov     edi,adjustbuffer
                 mov     esi,nametable
                 movzx   eax,byte ptr [offset vdpregs+23]
                 shl     eax,8
@@ -2557,7 +2578,7 @@ sprite_positive_2:
                 sal     edi,8
                 add     edi,ecx
                 mov     ebp,edi
-                add     edi,blitbuffer
+                add     edi,adjustbuffer
                 add     ebp,redbuffer
 
                 ; check for unusual size
@@ -2570,7 +2591,7 @@ sprite_positive_2:
                 cmp     ecx,256-16
                 jge     sprite_render_next_msx2
                 
-                ; draw the sprite in blitbuffer
+                ; draw the sprite in adjustbuffer
                 
                 mov     ecx,offset falsesprite
                 push    esi
@@ -2660,7 +2681,7 @@ sprite_positive_2_clear:
                 sal     edi,8
                 add     edi,ecx
                 mov     ebp,edi
-                add     edi,blitbuffer
+                add     edi,adjustbuffer
                 add     ebp,redbuffer
 
                 ; check for crop
@@ -2669,7 +2690,7 @@ sprite_positive_2_clear:
                 cmp     ecx,256-16
                 jge     sprite_render_next_clear
                 
-                ; draw the sprite in blitbuffer
+                ; draw the sprite in adjustbuffer
                 
                 push    esi
                 sub     esi,msxvram

@@ -14,6 +14,7 @@ include pmode.inc
 include vdp.inc
 include io.inc
 include vesa.inc
+include bit.inc
 
 extrn blitbuffer: dword
 extrn redbuffer: dword
@@ -1649,13 +1650,8 @@ blit7:
                 cmp     text_columns,80
                 je      blit7_sizedown
 
-                ;cmp     actualscreen,0
-                ;jbe     blit7_start
-                ;cmp     actualscreen,5
-                ;jb      blit7_retouch
-
 blit7_start:
-
+                mov     edx,200
                 mov     esi,blitbuffer
                 mov     edi,0A0000h+32
                 sub     edi,_code32a
@@ -1769,32 +1765,25 @@ blit7_sizedown_inner_mmx:
 ; --------------------------------------------------------------------
 
 eval_bottom_field_7:
-                mov     edx,total_lines
-                cmp     edx,200
-                jbe     eval_bottom_field_7_check
-                mov     edx,200
-eval_bottom_field_7_check:
-                cmp     clear_bottom_field,1
-                jne     _ret
+                test    byte ptr [offset vdpregs+9],BIT_7
+                jnz     _ret
 
-                mov     edi,0A0000h
-                sub     edi,_code32a
-                add     edi,320*192
-                mov     ecx,12*320/4
-                mov     al,byte ptr [offset vdpregs+7]
-                and     al,0Fh
-                shl     eax,8
-                mov     al,byte ptr [offset vdpregs+7]
-                and     al,0Fh
-                shl     eax,8
-                mov     al,byte ptr [offset vdpregs+7]
-                and     al,0Fh
-                shl     eax,8
-                mov     al,byte ptr [offset vdpregs+7]
-                and     al,0Fh
+                cmp     text_columns,80
+                je      eval_bottom_field_7_512
+
+                mov     edi,blitbuffer
+                add     edi,192*256
+                mov     ecx,(200-192)*256/4
+                mov     eax,0
                 rep     stosd
+                ret
 
-                mov     clear_bottom_field,0
+eval_bottom_field_7_512:
+                mov     edi,blitbuffer
+                add     edi,192*512
+                mov     ecx,(200-192)*512/4
+                mov     eax,0
+                rep     stosd
                 ret
 
 ; linear 512x384 -----------------------------------------------------
@@ -2241,6 +2230,8 @@ blit9_inner_loop_mmx:
 ; MSX2 VERSION
 
 blit11:
+                call    eval_bottom_field_11
+
                 cmp     actualscreen,6
                 je      blit11_single
 
@@ -2596,6 +2587,36 @@ blit11_skip_mmx:
                 cmp     ebp,212
                 jnz     blit11_outer_loop_mmx
 
+                ret
+
+; --------------------------------------------------------------------
+
+eval_bottom_field_11:
+                test    byte ptr [offset vdpregs+9],BIT_7
+                jnz     _ret
+
+                cmp     text_columns,80
+                je      eval_bottom_field_11_512
+
+                cmp     actualscreen,6
+                je      eval_bottom_field_11_512
+
+                cmp     actualscreen,7
+                je      eval_bottom_field_11_512
+
+                mov     edi,blitbuffer
+                add     edi,192*256
+                mov     ecx,(212-192)*256/4
+                mov     eax,0
+                rep     stosd
+                ret
+
+eval_bottom_field_11_512:
+                mov     edi,blitbuffer
+                add     edi,192*512
+                mov     ecx,(212-192)*512/4
+                mov     eax,0
+                rep     stosd
                 ret
 
 code32          ends
