@@ -20,11 +20,7 @@ public isetEDxx
 ; --------------------------------------------------------------------
 
 ; ED 41 - OUT (C),B
-emulED41:       inc     edi
-                mov     bl,regb
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                ret
+OUTCREG         ED41,regb
 
 ; ED 42 - SBC HL,BC
 SBCHLWREG       ED42,regc,regb
@@ -45,6 +41,9 @@ emulED43:       inc     edi
 ; ED 44 - NEG
 OPNEG           ED44
 
+; ED 49 - OUT (C),C
+OUTCREG         ED49,regc
+
 ; ED 4A - ADC HL,BC
 ADCHLWREG       ED4A,regc,regb
 
@@ -64,6 +63,9 @@ emulED4B:       inc     edi
 ; ED 4D - RETI
 emulED4D:       mov     iff1,1
                 jmp     emulC9
+
+; ED 51 - OUT (C),D
+OUTCREG         ED51,regd
 
 ; ED 52 - SBC HL,DE
 SBCHLWREG       ED52,rege,regd
@@ -88,6 +90,9 @@ emulED56:       inc     edi
 ; ED 57 - LD A,I
 LDAI            ED57
 
+; ED 59 - OUT (C),E
+OUTCREG         ED59,rege
+
 ; ED 5A - ADC HL,DE
 ADCHLWREG       ED5A,rege,regd
 
@@ -107,11 +112,17 @@ emulED5B:       inc     edi
 ; ED 5F - LD A,R
 LDAR            ED5F    
 
+; ED 61 - OUT (C),H
+OUTCREG         ED61,regh
+
 ; ED 62 - SBC HL,HL
 SBCHLWREG       ED62,regl,regh
 
 ; ED 67 - RRD
 OPRRD           ED67
+
+; ED 69 - OUT (C),L
+OUTCREG         ED69,regl
 
 ; ED 6A - ADC HL,HL
 ADCHLWREG       ED6A,regl,regh
@@ -149,11 +160,7 @@ emulED78:       inc     edi
                 ret
 
 ; ED 79 - OUT (C),A
-emulED79:       inc     edi
-                mov     bl,dh
-                mov     al,regc
-                call    [offset outportxx+eax*4]
-                ret
+OUTCREG         ED79,dh
 
 ; ED 7A - ADC HL,SP
 ADCHLWREG       ED7A,regspl,regsph

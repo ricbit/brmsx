@@ -11,11 +11,12 @@ include io.inc
 include pset.inc
 include psetDD.inc
 include psetDDCB.inc
-include psetED.inc
 include psetFD.inc
+include psetFDCB.inc
 include print.inc
 
 extrn psetCBxx: near
+extrn psetEDxx: near
 
 public pset
 public prinXX
@@ -99,6 +100,13 @@ prinFD:         movzx   edi,regpc
                 call    fetch
                 dec     edi
                 jmp     [offset psetFDxx+eax*4]
+
+prinFDCB:       movzx   edi,regpc
+                add     edi,3
+                call    fetch
+                sub     edi,3
+                jmp     [offset psetFDCBxx+eax*4]
+
 
 PRINTOP100      00,'NOP$'
 PRINTOP312      01,'LD BC,$'
@@ -377,6 +385,7 @@ PRINTOP321      DD75,'LD (IX+$','),L$'
 PRINTOP321      DD77,'LD (IX+$','),A$'
 PRINTOP321      DD7E,'LD A,(IX+$',')$'
 PRINTOP321      DD86,'ADD A,(IX+$',')$'
+PRINTOP321      DD8E,'ADC A,(IX+$',')$'
 PRINTOP321      DD96,'SUB (IX+$',')$'
 PRINTOP321      DDA6,'AND (IX+$',')$'
 PRINTOP321      DDAE,'XOR (IX+$',')$'
@@ -411,38 +420,6 @@ PRINTOP42X      DDCBE6,'SET 4,(IX+$',')$'
 PRINTOP42X      DDCBEE,'SET 5,(IX+$',')$'
 PRINTOP42X      DDCBF6,'SET 6,(IX+$',')$'
 PRINTOP42X      DDCBFE,'SET 7,(IX+$',')$'
-PRINTOP200      ED41,'OUT (C),B$'
-PRINTOP200      ED42,'SBC HL,DE$'
-PRINTOP422      ED43,'LD ($','),BC$'
-PRINTOP200      ED44,'NEG$'
-PRINTOP200      ED4A,'ADC HL,BC$'
-PRINTOP422      ED4B,'LD BC,($',')$'
-PRINTOP200      ED4D,'RETI$'
-PRINTOP200      ED52,'SBC HL,DE$'
-PRINTOP422      ED53,'LD ($','),DE$'
-PRINTOP200      ED56,'IM 1$'
-PRINTOP200      ED57,'LD A,I$'
-PRINTOP200      ED5A,'ADC HL,DE$'
-PRINTOP422      ED5B,'LD DE,($',')$'
-PRINTOP200      ED5F,'LD A,R$'
-PRINTOP200      ED62,'SBC HL,HL$'
-PRINTOP200      ED67,'RRD$'
-PRINTOP200      ED6A,'ADC HL,HL$'
-PRINTOP200      ED6F,'RLD$'
-PRINTOP200      ED72,'SBC HL,SP$'
-PRINTOP422      ED73,'LD ($','),SP$'
-PRINTOP200      ED78,'IN A,(C)$'
-PRINTOP200      ED79,'OUT (C),A$'
-PRINTOP200      ED7A,'ADC HL,SP$'
-PRINTOP422      ED7B,'LD SP,($',')$'
-PRINTOP200      EDA0,'LDI$'
-PRINTOP200      EDA3,'OUTI$'
-PRINTOP200      EDA8,'LDD$'
-PRINTOP200      EDB0,'LDIR$'
-PRINTOP200      EDB1,'CPIR$'
-PRINTOP200      EDB8,'LDDR$'
-PRINTOP200      EDB9,'CPDR$'
-PRINTOP200      EDFF,'PATCH$'
 PRINTOP200      FD09,'ADD IY,BC$'
 PRINTOP200      FD19,'ADD IY,DE$'
 PRINTOP412      FD21,'LD IY,$'
@@ -475,6 +452,30 @@ PRINTOP321      FDBE,'CP (IY+$',')$'
 PRINTOP200      FDE1,'POP IY$'
 PRINTOP200      FDE5,'PUSH IY$'
 PRINTOP200      FDE9,'JP (IY)$'
+PRINTOP42X      FDCB46,'BIT 0,(IY+$',')$'
+PRINTOP42X      FDCB4E,'BIT 1,(IY+$',')$'
+PRINTOP42X      FDCB56,'BIT 2,(IY+$',')$'
+PRINTOP42X      FDCB5E,'BIT 3,(IY+$',')$'
+PRINTOP42X      FDCB66,'BIT 4,(IY+$',')$'
+PRINTOP42X      FDCB6E,'BIT 5,(IY+$',')$'
+PRINTOP42X      FDCB76,'BIT 6,(IY+$',')$'
+PRINTOP42X      FDCB7E,'BIT 7,(IY+$',')$'
+PRINTOP42X      FDCB86,'RES 0,(IY+$',')$'
+PRINTOP42X      FDCB8E,'RES 1,(IY+$',')$'
+PRINTOP42X      FDCB96,'RES 2,(IY+$',')$'
+PRINTOP42X      FDCB9E,'RES 3,(IY+$',')$'
+PRINTOP42X      FDCBA6,'RES 4,(IY+$',')$'
+PRINTOP42X      FDCBAE,'RES 5,(IY+$',')$'
+PRINTOP42X      FDCBB6,'RES 6,(IY+$',')$'
+PRINTOP42X      FDCBBE,'RES 7,(IY+$',')$'
+PRINTOP42X      FDCBC6,'SET 0,(IY+$',')$'
+PRINTOP42X      FDCBCE,'SET 1,(IY+$',')$'
+PRINTOP42X      FDCBD6,'SET 2,(IY+$',')$'
+PRINTOP42X      FDCBDE,'SET 3,(IY+$',')$'
+PRINTOP42X      FDCBE6,'SET 4,(IY+$',')$'
+PRINTOP42X      FDCBEE,'SET 5,(IY+$',')$'
+PRINTOP42X      FDCBF6,'SET 6,(IY+$',')$'
+PRINTOP42X      FDCBFE,'SET 7,(IY+$',')$'
 PRINTOP100      XX,'not emulated yet$'
 
 ; --------------------------------------------------------------------

@@ -18,23 +18,6 @@ public isetDDxx
 
 ; --------------------------------------------------------------------
 
-; setflag_bit --------------------------------------------------------
-; sets the z80 flags after bit operations
-
-setflag_bit     macro
-
-                pushfd
-                pop     ecx
-                and     dl,10111101b
-                and     cl,01000000b
-                or      dl,cl
-                or      dl,00010000b
-
-                endm
-
-; setflag_rlc --------------------------------------------------------
-; sets the z80 flags after rlc operations
-
 setflag_rlc     macro
 
                 pushfd
@@ -43,9 +26,6 @@ setflag_rlc     macro
                 and     dl,11000101b
 
                 endm
-
-; setflag_rr ---------------------------------------------------------
-; sets the z80 flags after rr operations
 
 setflag_rr      macro
 
@@ -66,27 +46,6 @@ setflag_add2    macro
                 
                 endm
 
-setflag_add     macro
-
-                pushfd
-                pop     ecx
-                and     ecx,0000100011000001b
-                shr     ch,1
-                mov     dl,cl
-                or      dl,ch
-                
-                endm
-
-setflag_and     macro
-
-                pushfd
-                pop     ecx
-                mov     dl,cl
-                and     dl,11000100b
-                or      dl,00010000b
-
-                endm
-
 setflag_cp      macro
 
                 pushfd
@@ -98,6 +57,8 @@ setflag_cp      macro
                 or      dl,00000010b
                 
                 endm
+
+; --------------------------------------------------------------------
 
 ; DD 09 - ADD IX,BC
 emulDD09:       inc     edi
@@ -268,31 +229,16 @@ emulDD7E:       inc     edi
                 ret
 
 ; DD 86 - ADD A,(IX+dd)
-emulDD86:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                add     dh,al
-                setflag_add
-                ret
+ADDAII          DD86,regeix
+
+; DD 8E - ADC A,(IX+dd)
+ADCAII          DD8E,regeix
 
 ; DD 96 - SUB (IX+dd)
 SUBII           DD96,regeix
 
 ; DD A6 - AND (IX+dd)
-emulDDA6:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                and     dh,al
-                setflag_and
-                ret
+ANDII           DDA6,regeix
 
 ; DD AE - XOR (IX+dd)
 XORII           DDAE,regeix

@@ -141,7 +141,7 @@ psetDDxx:
 	psetDD8B: dd prinXX
 	psetDD8C: dd prinXX
 	psetDD8D: dd prinXX
-	psetDD8E: dd prinXX
+	psetDD8E: dd prinDD8E
 	psetDD8F: dd prinXX
 	psetDD90: dd prinXX
 	psetDD91: dd prinXX

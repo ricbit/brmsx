@@ -27,6 +27,25 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; ADCAII - ADC A,(II+dd)
+
+ADCAII          macro   opcode,regii
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                movsx   ebx,al
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     bh,al
+                mov     ebp,19
+                jmp     opadcreg
+
+                endm
+
+; --------------------------------------------------------------------
 ; ADCIMM - ADC A,dd
 
 ADCIMM          macro   opcode
@@ -62,6 +81,25 @@ ADDAHL          macro   opcode
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opaddreg
+
+                endm
+
+; --------------------------------------------------------------------
+; ADDAII - ADD A,(II+dd)
+
+ADDAII          macro   opcode,regii
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                movsx   ebx,al
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 mov     bh,al
                 mov     ebp,7
@@ -292,6 +330,33 @@ emul&opcode:
                 inc     reg
                 mov     ebp,tcycles
                 ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OUTIMM - OUT (dd),A
+
+OUTIMM          macro   opcode
+
+emul&opcode:    inc     edi
+                call    fetch
+                inc     edi
+                mov     bl,dh
+                mov     ebp,11
+                jmp     [offset outportxx+eax*4]
+
+                endm
+
+; --------------------------------------------------------------------
+; OUTCREG - OUT (C),rr
+
+OUTCREG         macro   opcode,reg
+
+emul&opcode:    mov     al,regc
+                inc     edi
+                mov     ebp,11
+                mov     bl,reg
+                jmp     [offset outportxx+eax*4]
 
                 endm
 
@@ -827,6 +892,23 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; XORIMM - XOR dd
+
+XORIMM          macro   opcode
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                inc     edi
+                xor     dh,al
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; XORHL - XOR (HL)
 
 XORHL           macro   opcode
@@ -880,6 +962,23 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; ORIMM - OR dd
+
+ORIMM           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                inc     edi
+                or      dh,al
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; ANDREG - AND rr rr=[a,b,c,d,e,h,l]
 
 ANDREG           macro   opcode,reg
@@ -896,6 +995,24 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; ANDIMM - AND dd
+
+ANDIMM           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                inc     edi
+                and     dh,al
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                or      dl,BIT_4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; ANDHL - AND (HL)
 
 ANDHL           macro   opcode
@@ -903,6 +1020,28 @@ ANDHL           macro   opcode
 emul&opcode:                
                 inc     edi
                 mov     ecx,regehl
+                call    readmem
+                and     dh,al
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                or      dl,BIT_4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; ANDII - AND (II+dd)
+
+ANDII           macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                inc     edi
+                movsx   ebx,al  
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 and     dh,al
                 mov     al,dh

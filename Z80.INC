@@ -13,6 +13,7 @@ extrn regde: word
 extrn regsp: word
 extrn regpc: word
 extrn regix: word
+extrn regiy: word
 extrn breakpoint: dword
 extrn iff1: dword
 extrn interrupt: dword
@@ -54,6 +55,8 @@ extrn regsph: byte
 extrn regspl: byte
 extrn regixh: byte
 extrn regixl: byte
+extrn regiyh: byte
+extrn regiyl: byte
 extrn regeaf: dword
 extrn regebc: dword
 extrn regede: dword
@@ -73,3 +76,6 @@ extrn rcounter: dword
 extrn rmask: byte
 extrn regi: byte
 extrn opsubreg: near
+extrn opadcreg: near
+extrn opsbcreg: near
+extrn opaddreg: near

@@ -202,7 +202,7 @@ psetFDxx:
 	psetFDC8: dd prinXX
 	psetFDC9: dd prinXX
 	psetFDCA: dd prinXX
-	psetFDCB: dd prinXX
+	psetFDCB: dd prinFDCB
 	psetFDCC: dd prinXX
 	psetFDCD: dd prinXX
 	psetFDCE: dd prinXX

@@ -202,7 +202,7 @@ isetFDxx:
 	isetFDC8: dd emulXX
 	isetFDC9: dd emulXX
 	isetFDCA: dd emulXX
-	isetFDCB: dd emulXX
+	isetFDCB: dd emulFDCB
 	isetFDCC: dd emulXX
 	isetFDCD: dd emulXX
 	isetFDCE: dd emulXX

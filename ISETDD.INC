@@ -141,7 +141,7 @@ isetDDxx:
 	isetDD8B: dd emulXX
 	isetDD8C: dd emulXX
 	isetDD8D: dd emulXX
-	isetDD8E: dd emulXX
+	isetDD8E: dd emulDD8E
 	isetDD8F: dd emulXX
 	isetDD90: dd emulXX
 	isetDD91: dd emulXX

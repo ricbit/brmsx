@@ -9,11 +9,13 @@ code32  segment para public use32
 include z80.inc
 include io.inc
 include psetCB.inc
+include psetED.inc
 include print.inc
 
 extrn prinXX: near
 
 public psetCBxx
+public psetEDxx
 
 ; --------------------------------------------------------------------
 
@@ -312,6 +314,43 @@ PRINTOP200      CBFC,'SET 7,H$'
 PRINTOP200      CBFD,'SET 7,L$'
 PRINTOP200      CBFE,'SET 7,(HL)$'
 PRINTOP200      CBFF,'SET 7,A$'
+PRINTOP200      ED41,'OUT (C),B$'
+PRINTOP200      ED42,'SBC HL,DE$'
+PRINTOP422      ED43,'LD ($','),BC$'
+PRINTOP200      ED44,'NEG$'
+PRINTOP200      ED49,'OUT (C),C$'
+PRINTOP200      ED4A,'ADC HL,BC$'
+PRINTOP422      ED4B,'LD BC,($',')$'
+PRINTOP200      ED4D,'RETI$'
+PRINTOP200      ED51,'OUT (C),D$'
+PRINTOP200      ED52,'SBC HL,DE$'
+PRINTOP422      ED53,'LD ($','),DE$'
+PRINTOP200      ED56,'IM 1$'
+PRINTOP200      ED57,'LD A,I$'
+PRINTOP200      ED59,'OUT (C),E$'
+PRINTOP200      ED5A,'ADC HL,DE$'
+PRINTOP422      ED5B,'LD DE,($',')$'
+PRINTOP200      ED5F,'LD A,R$'
+PRINTOP200      ED61,'OUT (C),H$'
+PRINTOP200      ED62,'SBC HL,HL$'
+PRINTOP200      ED67,'RRD$'
+PRINTOP200      ED69,'OUT (C),L$'
+PRINTOP200      ED6A,'ADC HL,HL$'
+PRINTOP200      ED6F,'RLD$'
+PRINTOP200      ED72,'SBC HL,SP$'
+PRINTOP422      ED73,'LD ($','),SP$'
+PRINTOP200      ED78,'IN A,(C)$'
+PRINTOP200      ED79,'OUT (C),A$'
+PRINTOP200      ED7A,'ADC HL,SP$'
+PRINTOP422      ED7B,'LD SP,($',')$'
+PRINTOP200      EDA0,'LDI$'
+PRINTOP200      EDA3,'OUTI$'
+PRINTOP200      EDA8,'LDD$'
+PRINTOP200      EDB0,'LDIR$'
+PRINTOP200      EDB1,'CPIR$'
+PRINTOP200      EDB8,'LDDR$'
+PRINTOP200      EDB9,'CPDR$'
+PRINTOP200      EDFF,'PATCH$'
 
 ; --------------------------------------------------------------------
 
