@@ -163,21 +163,18 @@ render_screen2:
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
-                mov     eax,1800h ;;
                 lea     esi,[offset msxvram+eax]
 
                 ; ebx = character pattern table
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,04h
                 shl     eax,11
-                mov     eax,0 ;;
                 lea     ebx,[offset msxvram+eax]
 
                 ; ecx = color table
                 movzx   eax,byte ptr [offset vdpregs+3]
                 and     eax,080h
                 shl     eax,6
-                mov     eax,2000h ;;
                 lea     ecx,[offset msxvram+eax]
 
                 ; edi = pentium video memory

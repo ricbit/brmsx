@@ -8,7 +8,7 @@ isetFDxx:
 	isetFD06: dd emulXX
 	isetFD07: dd emulXX
 	isetFD08: dd emulXX
-	isetFD09: dd emulXX
+	isetFD09: dd emulFD09
 	isetFD0A: dd emulXX
 	isetFD0B: dd emulXX
 	isetFD0C: dd emulXX
@@ -32,8 +32,8 @@ isetFDxx:
 	isetFD1E: dd emulXX
 	isetFD1F: dd emulXX
 	isetFD20: dd emulXX
-	isetFD21: dd emulXX
-	isetFD22: dd emulXX
+	isetFD21: dd emulFD21
+	isetFD22: dd emulFD22
 	isetFD23: dd emulXX
 	isetFD24: dd emulXX
 	isetFD25: dd emulXX
@@ -41,8 +41,8 @@ isetFDxx:
 	isetFD27: dd emulXX
 	isetFD28: dd emulXX
 	isetFD29: dd emulXX
-	isetFD2A: dd emulXX
-	isetFD2B: dd emulXX
+	isetFD2A: dd emulFD2A
+	isetFD2B: dd emulFD2B
 	isetFD2C: dd emulXX
 	isetFD2D: dd emulXX
 	isetFD2E: dd emulXX
@@ -69,7 +69,7 @@ isetFDxx:
 	isetFD43: dd emulXX
 	isetFD44: dd emulXX
 	isetFD45: dd emulXX
-	isetFD46: dd emulXX
+	isetFD46: dd emulFD46
 	isetFD47: dd emulXX
 	isetFD48: dd emulXX
 	isetFD49: dd emulXX
@@ -85,7 +85,7 @@ isetFDxx:
 	isetFD53: dd emulXX
 	isetFD54: dd emulXX
 	isetFD55: dd emulXX
-	isetFD56: dd emulXX
+	isetFD56: dd emulFD56
 	isetFD57: dd emulXX
 	isetFD58: dd emulXX
 	isetFD59: dd emulXX
@@ -93,7 +93,7 @@ isetFDxx:
 	isetFD5B: dd emulXX
 	isetFD5C: dd emulXX
 	isetFD5D: dd emulXX
-	isetFD5E: dd emulXX
+	isetFD5E: dd emulFD5E
 	isetFD5F: dd emulXX
 	isetFD60: dd emulXX
 	isetFD61: dd emulXX
@@ -125,7 +125,7 @@ isetFDxx:
 	isetFD7B: dd emulXX
 	isetFD7C: dd emulXX
 	isetFD7D: dd emulXX
-	isetFD7E: dd emulXX
+	isetFD7E: dd emulFD7E
 	isetFD7F: dd emulXX
 	isetFD80: dd emulXX
 	isetFD81: dd emulXX

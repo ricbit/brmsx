@@ -8,7 +8,7 @@ psetDDxx:
 	psetDD06: dd prinXX
 	psetDD07: dd prinXX
 	psetDD08: dd prinXX
-	psetDD09: dd prinXX
+	psetDD09: dd prinDD09
 	psetDD0A: dd prinXX
 	psetDD0B: dd prinXX
 	psetDD0C: dd prinXX
@@ -34,7 +34,7 @@ psetDDxx:
 	psetDD20: dd prinXX
 	psetDD21: dd prinDD21
 	psetDD22: dd prinXX
-	psetDD23: dd prinXX
+	psetDD23: dd prinDD23
 	psetDD24: dd prinXX
 	psetDD25: dd prinXX
 	psetDD26: dd prinXX
@@ -112,11 +112,11 @@ psetDDxx:
 	psetDD6E: dd prinDD6E
 	psetDD6F: dd prinXX
 	psetDD70: dd prinXX
-	psetDD71: dd prinXX
+	psetDD71: dd prinDD71
 	psetDD72: dd prinXX
-	psetDD73: dd prinXX
-	psetDD74: dd prinXX
-	psetDD75: dd prinXX
+	psetDD73: dd prinDD73
+	psetDD74: dd prinDD74
+	psetDD75: dd prinDD75
 	psetDD76: dd prinXX
 	psetDD77: dd prinDD77
 	psetDD78: dd prinXX
