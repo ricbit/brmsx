@@ -527,9 +527,9 @@ readmemw_slow:
 ; eax = block number
 
 megarom0_switchbank:
-                mov     dword ptr [offset megablock+esi*4],eax
                 mov     ebx,eax
-                and     ebx,0ffh
+                and     ebx,01Fh ; only 256kb by now
+                mov     dword ptr [offset megablock+esi*4],ebx
                 shl     ebx,13
                 add     ebx,cart1
                 mov     dword ptr [offset mem+esi*4],ebx
@@ -1031,6 +1031,27 @@ print:
 
 outemulXX:      ret
 
+outemul8E:
+                irp     i,<2,3,4,5>
+                mov     dword ptr [offset slot1+i*8+4],2
+                endm
+                mov     bl,prim_slotreg
+                shr     ebx,2
+                and     ebx,3
+                cmp     ebx,1
+                jne     outemul8E_page2
+                mov     dword ptr [offset memlock+2*4],2
+                mov     dword ptr [offset memlock+3*4],2
+outemul8E_page2:
+                mov     bl,prim_slotreg
+                shr     ebx,4
+                and     ebx,3
+                cmp     ebx,1
+                jne     _ret
+                mov     dword ptr [offset memlock+2*4],2
+                mov     dword ptr [offset memlock+3*4],2
+                ret
+
 outemul98:      mov     esi,msxvram
                 mov     ecx,vdpaddresse
                 inc     vdpaddress
@@ -1140,6 +1161,27 @@ outemulAA:      mov     ppic,bl
 ; byte to be inputed returns in bl register
 
 inemulXX:       ret
+
+inemul8E:
+                irp     i,<2,3,4,5>
+                mov     dword ptr [offset slot1+i*8+4],0
+                endm
+                mov     bl,prim_slotreg
+                shr     ebx,2
+                and     ebx,3
+                cmp     ebx,1
+                jne     inemul8E_page2
+                mov     dword ptr [offset memlock+2*4],0
+                mov     dword ptr [offset memlock+3*4],0
+inemul8E_page2:
+                mov     bl,prim_slotreg
+                shr     ebx,4
+                and     ebx,3
+                cmp     ebx,1
+                jne     _ret
+                mov     dword ptr [offset memlock+2*4],0
+                mov     dword ptr [offset memlock+3*4],0
+                ret
 
 inemul98:       mov     ecx,msxvram
                 add     ecx,vdpaddresse

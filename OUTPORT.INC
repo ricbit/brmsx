@@ -284,7 +284,7 @@ outportxx:
 	; 8D
  dd outemulXX
 	; 8E
- dd outemulXX
+ dd outemul8E
 	; 8F
  dd outemulXX
 	; 90

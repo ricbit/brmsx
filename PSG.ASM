@@ -428,8 +428,8 @@ compose_soundstream_loop:
 compose_soundstream_levelzero_&channel:
 
                 movzx    eax,byte ptr [offset PSGreg+8+channel]
-                cmp      eax,0Fh
-                ja       compose_soundstream_envelope_&channel
+                test     eax,00010000b
+                jnz      compose_soundstream_envelope_&channel
                 and      eax,0Fh
                 add      eax,eax
                 mov      dword ptr [offset PSGstate+channel*4],eax

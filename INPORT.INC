@@ -284,7 +284,7 @@ inportxx:
 	; 8D
  dd inemulXX
 	; 8E
- dd inemulXX
+ dd inemul8E
 	; 8F
  dd inemulXX
 	; 90

@@ -41,7 +41,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.101',13,10
+msg00           db      'BrMSX 1.102',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
