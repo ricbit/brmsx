@@ -819,10 +819,9 @@ OPRLCA          07
 
 ; 08 - EX AF,AF'
 emul08:         inc     edi
-                mov     ebx,edx
                 mov     ecx,regeafl
+                mov     regeafl,edx
                 mov     edx,ecx
-                mov     regeafl,ebx
                 mov     ebp,4+1
                 ret
 
@@ -859,8 +858,8 @@ emul10:
                 dec     regb
                 jz      emul10a
                 movsx   ebx,al
-                add     edi,ebx
                 mov     ebp,13+2
+                add     edi,ebx
                 ret
 emul10a:        mov     ebp,8+2
                 ret
@@ -949,18 +948,7 @@ emul21:
                 ret
 
 ; 22 - LD (dddd),HL
-emul22:         
-                call    fetchw1
-                add     edi,3
-                mov     ecx,eax
-                mov     al,regl
-                call    writemem
-                inc     cx
-                mov     al,regh
-                call    writemem
-                xor     eax,eax
-                mov     ebp,16+5
-                ret
+LDDDDDREGW      22,regehl
 
 ; 23 - INC HL
 INCWREG         23,reghl,6
@@ -984,18 +972,7 @@ JRCC            28,jz,ZERO_FLAG
 ADDREGWREGW     29,regl,regh,regl,regh,11
 
 ; 2A - LD HL,(dddd)
-emul2A:         
-                call    fetchw1
-                mov     ecx,eax
-                call    readmem
-                mov     regl,al
-                inc     cx
-                call    readmem
-                mov     regh,al
-                xor     eax,eax
-                add     edi,3
-                mov     ebp,16+5
-                ret
+LDREGWDDDD      2A,regehl
 
 ; 2B - DEC HL
 DECWREG         2B,reghl,6
@@ -1567,20 +1544,7 @@ emulCD:
 ADCIMM          CE
 
 ; CF - RST 08
-emulCF:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,008h
-                xor     eax,eax
-                mov     ebp,11+3
-                ret
+OPRST           CF,08h
 
 ; D0 - RET NC
 emulD0:         inc     edi
@@ -1612,20 +1576,7 @@ PUSHREGW        D5,regede
 SUBIMM          D6
 
 ; D7 - RST 10
-emulD7:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,010h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           D7,010h
 
 ; D8 - RET C
 emulD8:         inc     edi
@@ -1674,20 +1625,7 @@ emulDD:         inc     edi
 SBCIMM          DE
 
 ; DF - RST 18
-emulDF:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,018h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           DF,018h
 
 ; E0 - RET PO
 emulE0:         test    dl,PARITY_FLAG
@@ -1703,20 +1641,16 @@ POPREGW         E1,regehl
 JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
-emulE3:         inc     edi
+emulE3:         
                 mov     ecx,regesp
-                call    readmem
-                mov     bl,regl
-                mov     regl,al
-                mov     al,bl
-                call    writemem
-                inc     cx
-                call    readmem
-                mov     bl,regh
-                mov     regh,al
-                mov     al,bl
-                call    writemem
+                call    readmemw
+                mov     ebx,regehl
+                mov     regehl,eax
+                mov     eax,ebx
+                call    writememw
                 mov     ebp,19+3
+                inc     edi
+                xor     eax,eax
                 ret
 
 ; E4 - CALL PO,dddd
@@ -1733,20 +1667,7 @@ PUSHREGW        E5,regehl
 ANDIMM          E6
 
 ; E7 - RST 20
-emulE7:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,020h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           E7,020h
 
 ; E8 - RET PE
 emulE8:         test    dl,PARITY_FLAG
@@ -1789,20 +1710,7 @@ emulED:         inc     edi
 XORIMM          EE
 
 ; EF - RST 28
-emulEF:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,028h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           EF,028h
 
 ; F0 - RET P
 emulF0:         inc     edi
@@ -1837,20 +1745,8 @@ PUSHREGW        F5,edx
 ORIMM           F6
 
 ; F7 - RST 30
-emulF7:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,030h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           F7,030h
+
 ; F8 - RET M
 emulF8:         inc     edi
                 test    dl,SIGN_FLAG
@@ -1891,20 +1787,7 @@ emulFD:         inc     edi
 CPIMM           FE
 
 ; FF - RST 38
-emulFF:         inc     edi
-                mov     eax,edi
-                mov     ecx,regesp
-                dec     cx
-                mov     al,ah
-                call    writemem
-                mov     eax,edi
-                dec     cx
-                call    writemem
-                mov     regesp,ecx
-                mov     edi,038h
-                xor     eax,eax
-                mov     ebp,7+3
-                ret
+OPRST           FF,038h
 
 ; XX - not found
 emulXX:         mov     error,1
@@ -1928,11 +1811,10 @@ outemul98:      mov     ecx,msxvram
                 ; screen 2
                 mov     esi,eax
                 sub     esi,nametable
-                js      outemul98_2_pat
                 cmp     esi,32*24
-                jge     outemul98_2_pat
-                cmp     [ecx+eax],bl  ;;
-                je      outemul98_ret ;;
+                jae     outemul98_2_pat
+                cmp     [ecx+eax],bl  
+                je      outemul98_ret 
                 add     esi,dirtyname
                 mov     byte ptr [esi],1
                 mov     [ecx+eax],bl
@@ -1941,9 +1823,8 @@ outemul98:      mov     ecx,msxvram
 outemul98_2_pat:
                 mov     esi,eax
                 sub     esi,patterntable
-                js      outemul98_2_col
                 cmp     esi,256*3*8
-                jge     outemul98_2_col
+                jae     outemul98_2_col
                 shr     esi,3
                 add     esi,dirtypattern
                 mov     byte ptr [esi],1
@@ -1953,9 +1834,8 @@ outemul98_2_pat:
 outemul98_2_col:
                 mov     esi,eax
                 sub     esi,colortable
-                js      outemul98_2_spr
                 cmp     esi,256*3*8
-                jge     outemul98_2_spr
+                jae     outemul98_2_spr
                 shr     esi,3
                 add     esi,dirtypattern
                 mov     byte ptr [esi],1
@@ -1965,9 +1845,8 @@ outemul98_2_col:
 outemul98_2_spr:
                 mov     esi,eax
                 sub     esi,sprattrtable
-                js      outemul98_ret
                 cmp     esi,128
-                jge     outemul98_ret
+                jae     outemul98_ret
                 mov     esi,eax
                 and     esi,0FFFFFFFCh
                 add     esi,ecx
@@ -1987,9 +1866,8 @@ outemul98_1:
                 ; screen 1
                 mov     eax,esi
                 sub     esi,nametable
-                js      outemul98_ret
                 cmp     esi,32*24
-                jge     outemul98_ret
+                jae     outemul98_ret
                 add     esi,dirtyname
                 mov     byte ptr [esi],1
 outemul98_ret:

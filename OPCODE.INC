@@ -424,8 +424,8 @@ DECII           macro   opcode,reg
 emul&opcode:
                 call    fetch1
                 movsx   ebx,al
-                add     edi,2
                 mov     ecx,reg
+                add     edi,2
                 add     cx,bx
                 call    readmem
                 dec     al
@@ -459,11 +459,11 @@ emul&opcode:
                 call    fetch1
                 add     edi,2
                 call    [offset inportxx+eax*4]
-                and     ebx,0ffh
                 and     dl,1
+                mov     al,bl
                 mov     dh,bl
                 mov     ebp,11+2
-                or      dl,[offset LOGICAL_table+ebx]
+                or      dl,[offset LOGICAL_table+eax]
                 ret
 
                 endm
@@ -726,6 +726,40 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; LDREGWDDDD - LD rr,(dddd)     rr=[bc,de,hl,ix,iy]
+
+LDREGWDDDD       macro   opcode,reg
+
+emul&opcode:
+                call    fetchw1
+                mov     ecx,eax
+                call    readmemw
+                mov     reg,eax
+                add     edi,3
+                xor     eax,eax
+                mov     ebp,16+5
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDDDDDREGW - LD (dddd),rr     rr=[bc,de,hl,ix,iy]
+
+LDDDDDREGW      macro   opcode,reg
+
+emul&opcode:
+                call    fetchw1
+                add     edi,3
+                mov     ecx,eax
+                mov     eax,reg
+                call    writememw
+                xor     eax,eax
+                mov     ebp,16+5
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDIIDDNN - LD (II+dd),nn     rr=[a,b,c,d,e,h,l]
 
 LDIIDDNN        macro   opcode,itype
@@ -854,8 +888,8 @@ emul&opcode:
 ORREG           macro   opcode,reg
 
 emul&opcode:                
-                inc     edi
                 or      dh,reg
+                inc     edi
                 mov     al,dh
                 mov     ebp,4+1
                 mov     dl,[offset LOGICAL_table+eax]
@@ -869,12 +903,12 @@ emul&opcode:
 ORHL            macro   opcode
 
 emul&opcode:                
-                inc     edi
                 mov     ecx,regehl
                 call    readmem
                 or      dh,al
-                mov     ebp,7+2
                 mov     al,dh
+                inc     edi
+                mov     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -887,8 +921,8 @@ ORIMM           macro   opcode
 
 emul&opcode:                
                 call    fetch1
-                add     edi,2
                 or      dh,al
+                add     edi,2
                 mov     al,dh
                 mov     ebp,7+2
                 mov     dl,[offset LOGICAL_table+eax]
@@ -909,8 +943,8 @@ emul&opcode:
                 add     cx,bx
                 call    readmem
                 or      dh,al
-                mov     al,dh
                 mov     ebp,19+4
+                mov     al,dh
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -995,7 +1029,7 @@ emul&opcode:
 ; --------------------------------------------------------------------
 ; RESHL - RES nn,(HL)
 
-RESHL          macro   opcode,bit
+RESHL           macro   opcode,bit
 
 emul&opcode:                
                 inc     edi
@@ -1376,6 +1410,24 @@ emul&opcode:
                 and     dl,1
                 mov     ebp,18+4
                 or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRST - RST dd
+
+OPRST           macro   opcode,addr
+
+emul&opcode:                
+                mov     ecx,regesp
+                lea     eax,[edi+1]
+                sub     ecx,2
+                call    writememw
+                mov     regesp,ecx
+                mov     edi,addr
+                xor     eax,eax
+                mov     ebp,7+3
                 ret
 
                 endm

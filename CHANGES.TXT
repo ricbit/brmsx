@@ -1,3 +1,7 @@
+release 1.51:
+
+- optimized a lot of opcodes
+
 release 1.50:
 
 - optimized the sprite check in block mode

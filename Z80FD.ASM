@@ -38,18 +38,7 @@ emulFD21:
                 ret
 
 ; FD 22 - LD (dddd),IY
-emulFD22:       
-                call    fetchw1
-                add     edi,3
-                mov     ecx,eax
-                mov     al,regiyl
-                call    writemem
-                inc     cx
-                mov     al,regiyh
-                call    writemem
-                xor     eax,eax
-                mov     ebp,20+6
-                ret
+LDDDDDREGW      FD22,regeiy
 
 ; FD 23 - INC IY
 INCWREG         FD23,regiy,10+1
@@ -58,18 +47,7 @@ INCWREG         FD23,regiy,10+1
 ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15+1
 
 ; FD 2A - LD IY,(dddd)
-emulFD2A:       
-                call    fetchw1
-                mov     ecx,eax
-                call    readmem
-                mov     regiyl,al
-                inc     cx
-                call    readmem
-                mov     regiyh,al
-                xor     eax,eax
-                add     edi,3
-                mov     ebp,20+6
-                ret
+LDREGWDDDD      FD2A,regeiy
 
 ; FD 2B - DEC IY
 DECWREG         FD2B,regiy,10+1

@@ -38,18 +38,7 @@ emulDD21:
                 ret
 
 ; DD 22 - LD (dddd),IX
-emulDD22:       
-                call    fetchw1
-                add     edi,3
-                mov     ecx,eax
-                mov     al,regixl
-                call    writemem
-                inc     cx
-                mov     al,regixh
-                call    writemem
-                xor     eax,eax
-                mov     ebp,20+6
-                ret
+LDDDDDREGW      DD22,regeix
 
 ; DD 23 - INC IX
 INCWREG         DD23,regix,10+1
@@ -58,18 +47,7 @@ INCWREG         DD23,regix,10+1
 ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15+1
 
 ; DD 2A - LD IX,(dddd)
-emulDD2A:       
-                call    fetchw1
-                mov     ecx,eax
-                call    readmem
-                mov     regixl,al
-                inc     cx
-                call    readmem
-                mov     regixh,al
-                xor     eax,eax
-                add     edi,3
-                mov     ebp,20+6
-                ret
+LDREGWDDDD      DD2A,regeix
 
 ; DD 2B - DEC IX
 DECWREG         DD2B,regix,10+1
