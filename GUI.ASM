@@ -17,6 +17,7 @@ include vdp.inc
 include blit.inc
 include mouse.inc
 include debug.inc
+include saveload.inc
 
 extrn blitbuffer: dword
 extrn filenamelist: dword
@@ -81,7 +82,7 @@ lastmouse       dd      0
 
 menu_selected   dd      0
 menu_last       dd      0
-menu_number     dd      5
+menu_number     dd      7
 menu_locked     dd      0
 menu_child      dd      0
 
@@ -91,12 +92,16 @@ menu_callback:
                 dd      offset load_rom
                 dd      offset changebargraph
                 dd      offset change_sound
+                dd      offset save_sta
+                dd      offset load_sta
                 dd      offset quit_emulator
 
 msg_reset       db      'Reset',0
 msg_load_cart   db      'Load ROM',0
 msg_bargraph    db      'Bar Graph',0
 msg_sound       db      'Sound',0
+msg_save_sta    db      'Save State',0
+msg_load_sta    db      'Load State',0
 msg_quit        db      'Quit',0
 
 ; vars for load rom menu
@@ -486,34 +491,37 @@ dirty_mouse:
 
 draw_main_menu:
                 mov     eax,0808h
-                mov     ebx,7849h
+                mov     ebx,784Ah
                 call    draw_box
 
                 call    check_selection
 
                 mov     eax,offset msg_reset
                 mov     ebx,1010h
-
                 call    printgr_shaded
                 
                 mov     eax,offset msg_load_cart
                 mov     ebx,1810h
-
                 call    printgr_shaded
 
                 mov     eax,offset msg_bargraph
                 mov     ebx,2010h
-
                 call    printgr_shaded
 
                 mov     eax,offset msg_sound
                 mov     ebx,2810h
+                call    printgr_shaded
 
+                mov     eax,offset msg_save_sta
+                mov     ebx,3010h
+                call    printgr_shaded
+
+                mov     eax,offset msg_load_sta
+                mov     ebx,3810h
                 call    printgr_shaded
 
                 mov     eax,offset msg_quit
-                mov     ebx,3010h
-
+                mov     ebx,4010h
                 call    printgr_shaded
 
                 call    draw_menu_child
@@ -657,7 +665,7 @@ check_selection:
                 mov     ecx,mousex
                 sub     ecx,12
                 js      check_selection_none
-                cmp     ecx,049h-8
+                cmp     ecx,04Ah-8
                 ja      check_selection_none
 
                 mov     ebx,eax                
@@ -679,10 +687,10 @@ check_selection_drawbar:
                 mov     eax,0D2D2D2D2h
 
 check_selection_draw:
-                mov     ecx,(049h-4)
+                mov     ecx,(04Ah-4)
                 rep     stosb
 
-                add     edi,256-(049h-4)
+                add     edi,256-(04Ah-4)
                 dec     edx
                 jnz     check_selection_draw
 
@@ -755,7 +763,8 @@ load_rom_now:
                 ; perform the load
                 mov     edx,offset name_buffer
                 call    read_rom
-                jmp     reset_cpu_now
+                jnc     reset_cpu_now
+                ret
 
 load_rom_perform_scroll:
                 cmp     load_rom_scroll,0
@@ -1070,6 +1079,24 @@ quit_emulator:
                 mov     exit_now,1
                 mov     cpupaused,0
                 ret
+
+; save_sta -----------------------------------------------------------
+; save the current state in a file called BRMSX.STA     
+
+save_sta:
+                call    release_button
+                mov     reset_flag,1
+                mov     cpupaused,0
+                jmp     save_state
+
+; load_sta -----------------------------------------------------------
+; load the current state from a file called BRMSX.STA     
+
+load_sta:
+                call    release_button
+                mov     reset_flag,1
+                mov     cpupaused,0
+                jmp     load_state
 
 ; --------------------------------------------------------------------
 

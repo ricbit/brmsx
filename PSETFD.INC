@@ -1,68 +1,68 @@
 psetFDxx:
-	psetFD00: dd prinXX
-	psetFD01: dd prinXX
-	psetFD02: dd prinXX
-	psetFD03: dd prinXX
-	psetFD04: dd prinXX
-	psetFD05: dd prinXX
-	psetFD06: dd prinXX
-	psetFD07: dd prinXX
-	psetFD08: dd prinXX
+	psetFD00: dd prinFDNULL
+	psetFD01: dd prinFDNULL
+	psetFD02: dd prinFDNULL
+	psetFD03: dd prinFDNULL
+	psetFD04: dd prinFDNULL
+	psetFD05: dd prinFDNULL
+	psetFD06: dd prinFDNULL
+	psetFD07: dd prinFDNULL
+	psetFD08: dd prinFDNULL
 	psetFD09: dd prinFD09
-	psetFD0A: dd prinXX
-	psetFD0B: dd prinXX
-	psetFD0C: dd prinXX
-	psetFD0D: dd prinXX
-	psetFD0E: dd prinXX
-	psetFD0F: dd prinXX
-	psetFD10: dd prinXX
-	psetFD11: dd prinXX
-	psetFD12: dd prinXX
-	psetFD13: dd prinXX
-	psetFD14: dd prinXX
-	psetFD15: dd prinXX
-	psetFD16: dd prinXX
-	psetFD17: dd prinXX
-	psetFD18: dd prinXX
+	psetFD0A: dd prinFDNULL
+	psetFD0B: dd prinFDNULL
+	psetFD0C: dd prinFDNULL
+	psetFD0D: dd prinFDNULL
+	psetFD0E: dd prinFDNULL
+	psetFD0F: dd prinFDNULL
+	psetFD10: dd prinFDNULL
+	psetFD11: dd prinFDNULL
+	psetFD12: dd prinFDNULL
+	psetFD13: dd prinFDNULL
+	psetFD14: dd prinFDNULL
+	psetFD15: dd prinFDNULL
+	psetFD16: dd prinFDNULL
+	psetFD17: dd prinFDNULL
+	psetFD18: dd prinFDNULL
 	psetFD19: dd prinFD19
-	psetFD1A: dd prinXX
-	psetFD1B: dd prinXX
-	psetFD1C: dd prinXX
-	psetFD1D: dd prinXX
-	psetFD1E: dd prinXX
-	psetFD1F: dd prinXX
-	psetFD20: dd prinXX
+	psetFD1A: dd prinFDNULL
+	psetFD1B: dd prinFDNULL
+	psetFD1C: dd prinFDNULL
+	psetFD1D: dd prinFDNULL
+	psetFD1E: dd prinFDNULL
+	psetFD1F: dd prinFDNULL
+	psetFD20: dd prinFDNULL
 	psetFD21: dd prinFD21
 	psetFD22: dd prinFD22
 	psetFD23: dd prinFD23
 	psetFD24: dd prinFD24
 	psetFD25: dd prinFD25
 	psetFD26: dd prinFD26
-	psetFD27: dd prinXX
-	psetFD28: dd prinXX
+	psetFD27: dd prinFDNULL
+	psetFD28: dd prinFDNULL
 	psetFD29: dd prinFD29
 	psetFD2A: dd prinFD2A
 	psetFD2B: dd prinFD2B
 	psetFD2C: dd prinFD2C
 	psetFD2D: dd prinFD2D
 	psetFD2E: dd prinFD2E
-	psetFD2F: dd prinXX
-	psetFD30: dd prinXX
-	psetFD31: dd prinXX
-	psetFD32: dd prinXX
-	psetFD33: dd prinXX
+	psetFD2F: dd prinFDNULL
+	psetFD30: dd prinFDNULL
+	psetFD31: dd prinFDNULL
+	psetFD32: dd prinFDNULL
+	psetFD33: dd prinFDNULL
 	psetFD34: dd prinFD34
 	psetFD35: dd prinFD35
 	psetFD36: dd prinFD36
-	psetFD37: dd prinXX
-	psetFD38: dd prinXX
+	psetFD37: dd prinFDNULL
+	psetFD38: dd prinFDNULL
 	psetFD39: dd prinFD39
-	psetFD3A: dd prinXX
-	psetFD3B: dd prinXX
-	psetFD3C: dd prinXX
-	psetFD3D: dd prinXX
-	psetFD3E: dd prinXX
-	psetFD3F: dd prinXX
+	psetFD3A: dd prinFDNULL
+	psetFD3B: dd prinFDNULL
+	psetFD3C: dd prinFDNULL
+	psetFD3D: dd prinFDNULL
+	psetFD3E: dd prinFDNULL
+	psetFD3F: dd prinFDNULL
 	psetFD40: dd prinFD40
 	psetFD41: dd prinFD41
 	psetFD42: dd prinFD42
@@ -127,131 +127,131 @@ psetFDxx:
 	psetFD7D: dd prinFD7D
 	psetFD7E: dd prinFD7E
 	psetFD7F: dd prinFD7F
-	psetFD80: dd prinXX
-	psetFD81: dd prinXX
-	psetFD82: dd prinXX
-	psetFD83: dd prinXX
+	psetFD80: dd prinFDNULL
+	psetFD81: dd prinFDNULL
+	psetFD82: dd prinFDNULL
+	psetFD83: dd prinFDNULL
 	psetFD84: dd prinFD84
 	psetFD85: dd prinFD85
 	psetFD86: dd prinFD86
-	psetFD87: dd prinXX
-	psetFD88: dd prinXX
-	psetFD89: dd prinXX
-	psetFD8A: dd prinXX
-	psetFD8B: dd prinXX
+	psetFD87: dd prinFDNULL
+	psetFD88: dd prinFDNULL
+	psetFD89: dd prinFDNULL
+	psetFD8A: dd prinFDNULL
+	psetFD8B: dd prinFDNULL
 	psetFD8C: dd prinFD8C
 	psetFD8D: dd prinFD8D
 	psetFD8E: dd prinFD8E
-	psetFD8F: dd prinXX
-	psetFD90: dd prinXX
-	psetFD91: dd prinXX
-	psetFD92: dd prinXX
-	psetFD93: dd prinXX
+	psetFD8F: dd prinFDNULL
+	psetFD90: dd prinFDNULL
+	psetFD91: dd prinFDNULL
+	psetFD92: dd prinFDNULL
+	psetFD93: dd prinFDNULL
 	psetFD94: dd prinFD94
 	psetFD95: dd prinFD95
 	psetFD96: dd prinFD96
-	psetFD97: dd prinXX
-	psetFD98: dd prinXX
-	psetFD99: dd prinXX
-	psetFD9A: dd prinXX
-	psetFD9B: dd prinXX
+	psetFD97: dd prinFDNULL
+	psetFD98: dd prinFDNULL
+	psetFD99: dd prinFDNULL
+	psetFD9A: dd prinFDNULL
+	psetFD9B: dd prinFDNULL
 	psetFD9C: dd prinFD9C
 	psetFD9D: dd prinFD9D
 	psetFD9E: dd prinFD9E
-	psetFD9F: dd prinXX
-	psetFDA0: dd prinXX
-	psetFDA1: dd prinXX
-	psetFDA2: dd prinXX
-	psetFDA3: dd prinXX
+	psetFD9F: dd prinFDNULL
+	psetFDA0: dd prinFDNULL
+	psetFDA1: dd prinFDNULL
+	psetFDA2: dd prinFDNULL
+	psetFDA3: dd prinFDNULL
 	psetFDA4: dd prinFDA4
 	psetFDA5: dd prinFDA5
 	psetFDA6: dd prinFDA6
-	psetFDA7: dd prinXX
-	psetFDA8: dd prinXX
-	psetFDA9: dd prinXX
-	psetFDAA: dd prinXX
-	psetFDAB: dd prinXX
+	psetFDA7: dd prinFDNULL
+	psetFDA8: dd prinFDNULL
+	psetFDA9: dd prinFDNULL
+	psetFDAA: dd prinFDNULL
+	psetFDAB: dd prinFDNULL
 	psetFDAC: dd prinFDAC
 	psetFDAD: dd prinFDAD
 	psetFDAE: dd prinFDAE
-	psetFDAF: dd prinXX
-	psetFDB0: dd prinXX
-	psetFDB1: dd prinXX
-	psetFDB2: dd prinXX
-	psetFDB3: dd prinXX
+	psetFDAF: dd prinFDNULL
+	psetFDB0: dd prinFDNULL
+	psetFDB1: dd prinFDNULL
+	psetFDB2: dd prinFDNULL
+	psetFDB3: dd prinFDNULL
 	psetFDB4: dd prinFDB4
 	psetFDB5: dd prinFDB5
 	psetFDB6: dd prinFDB6
-	psetFDB7: dd prinXX
-	psetFDB8: dd prinXX
-	psetFDB9: dd prinXX
-	psetFDBA: dd prinXX
-	psetFDBB: dd prinXX
+	psetFDB7: dd prinFDNULL
+	psetFDB8: dd prinFDNULL
+	psetFDB9: dd prinFDNULL
+	psetFDBA: dd prinFDNULL
+	psetFDBB: dd prinFDNULL
 	psetFDBC: dd prinFDBC
 	psetFDBD: dd prinFDBD
 	psetFDBE: dd prinFDBE
-	psetFDBF: dd prinXX
-	psetFDC0: dd prinXX
-	psetFDC1: dd prinXX
-	psetFDC2: dd prinXX
-	psetFDC3: dd prinXX
-	psetFDC4: dd prinXX
-	psetFDC5: dd prinXX
-	psetFDC6: dd prinXX
-	psetFDC7: dd prinXX
-	psetFDC8: dd prinXX
-	psetFDC9: dd prinXX
-	psetFDCA: dd prinXX
+	psetFDBF: dd prinFDNULL
+	psetFDC0: dd prinFDNULL
+	psetFDC1: dd prinFDNULL
+	psetFDC2: dd prinFDNULL
+	psetFDC3: dd prinFDNULL
+	psetFDC4: dd prinFDNULL
+	psetFDC5: dd prinFDNULL
+	psetFDC6: dd prinFDNULL
+	psetFDC7: dd prinFDNULL
+	psetFDC8: dd prinFDNULL
+	psetFDC9: dd prinFDNULL
+	psetFDCA: dd prinFDNULL
 	psetFDCB: dd prinFDCB
-	psetFDCC: dd prinXX
-	psetFDCD: dd prinXX
-	psetFDCE: dd prinXX
-	psetFDCF: dd prinXX
-	psetFDD0: dd prinXX
-	psetFDD1: dd prinXX
-	psetFDD2: dd prinXX
-	psetFDD3: dd prinXX
-	psetFDD4: dd prinXX
-	psetFDD5: dd prinXX
-	psetFDD6: dd prinXX
-	psetFDD7: dd prinXX
-	psetFDD8: dd prinXX
-	psetFDD9: dd prinXX
-	psetFDDA: dd prinXX
-	psetFDDB: dd prinXX
-	psetFDDC: dd prinXX
-	psetFDDD: dd prinXX
-	psetFDDE: dd prinXX
-	psetFDDF: dd prinXX
-	psetFDE0: dd prinXX
+	psetFDCC: dd prinFDNULL
+	psetFDCD: dd prinFDNULL
+	psetFDCE: dd prinFDNULL
+	psetFDCF: dd prinFDNULL
+	psetFDD0: dd prinFDNULL
+	psetFDD1: dd prinFDNULL
+	psetFDD2: dd prinFDNULL
+	psetFDD3: dd prinFDNULL
+	psetFDD4: dd prinFDNULL
+	psetFDD5: dd prinFDNULL
+	psetFDD6: dd prinFDNULL
+	psetFDD7: dd prinFDNULL
+	psetFDD8: dd prinFDNULL
+	psetFDD9: dd prinFDNULL
+	psetFDDA: dd prinFDNULL
+	psetFDDB: dd prinFDNULL
+	psetFDDC: dd prinFDNULL
+	psetFDDD: dd prinFDNULL
+	psetFDDE: dd prinFDNULL
+	psetFDDF: dd prinFDNULL
+	psetFDE0: dd prinFDNULL
 	psetFDE1: dd prinFDE1
-	psetFDE2: dd prinXX
+	psetFDE2: dd prinFDNULL
 	psetFDE3: dd prinFDE3
-	psetFDE4: dd prinXX
+	psetFDE4: dd prinFDNULL
 	psetFDE5: dd prinFDE5
-	psetFDE6: dd prinXX
-	psetFDE7: dd prinXX
-	psetFDE8: dd prinXX
+	psetFDE6: dd prinFDNULL
+	psetFDE7: dd prinFDNULL
+	psetFDE8: dd prinFDNULL
 	psetFDE9: dd prinFDE9
-	psetFDEA: dd prinXX
-	psetFDEB: dd prinXX
-	psetFDEC: dd prinXX
-	psetFDED: dd prinXX
-	psetFDEE: dd prinXX
-	psetFDEF: dd prinXX
-	psetFDF0: dd prinXX
-	psetFDF1: dd prinXX
-	psetFDF2: dd prinXX
-	psetFDF3: dd prinXX
-	psetFDF4: dd prinXX
-	psetFDF5: dd prinXX
-	psetFDF6: dd prinXX
-	psetFDF7: dd prinXX
-	psetFDF8: dd prinXX
+	psetFDEA: dd prinFDNULL
+	psetFDEB: dd prinFDNULL
+	psetFDEC: dd prinFDNULL
+	psetFDED: dd prinFDNULL
+	psetFDEE: dd prinFDNULL
+	psetFDEF: dd prinFDNULL
+	psetFDF0: dd prinFDNULL
+	psetFDF1: dd prinFDNULL
+	psetFDF2: dd prinFDNULL
+	psetFDF3: dd prinFDNULL
+	psetFDF4: dd prinFDNULL
+	psetFDF5: dd prinFDNULL
+	psetFDF6: dd prinFDNULL
+	psetFDF7: dd prinFDNULL
+	psetFDF8: dd prinFDNULL
 	psetFDF9: dd prinFDF9
-	psetFDFA: dd prinXX
-	psetFDFB: dd prinXX
-	psetFDFC: dd prinXX
-	psetFDFD: dd prinXX
-	psetFDFE: dd prinXX
-	psetFDFF: dd prinXX
+	psetFDFA: dd prinFDNULL
+	psetFDFB: dd prinFDNULL
+	psetFDFC: dd prinFDNULL
+	psetFDFD: dd prinFDNULL
+	psetFDFE: dd prinFDNULL
+	psetFDFF: dd prinFDNULL

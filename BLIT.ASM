@@ -299,50 +299,29 @@ blit2_dirty_char:
 
                 push    ebx edx
 
+                cmp     edx,32
+                je      blit2_dirty_char_border
+
                 irp     j,<0,1,2,3,4,5,6,7>
 
                 irp     i,<-2,0,2,4,6>
-
-                ; esi = 0A0B0C0D
-
+                
                 mov     ebx,dword ptr [esi+j*256+i]
                 mov     edx,ebx
-                ; ebx=edx=0D0C0B0A
-
                 shl     ebx,8
                 and     ebx,000FF0000h
-                ; ebx = 000B0000
-
                 or      bl,dl
                 mov     eax,ebx
-                ; ebx=eax=000B000A
-
                 shl     ebx,4
                 or      eax,ebx
-                ; ebx=00B000A0
-                ; eax=00BB00AA
-
                 shl     ebx,4
                 or      eax,ebx
-                ; ebx=0B000A00
-                ; eax=0BBB0AAA
-
                 shr     ebx,12
                 or      eax,ebx
-                ; ebx=0000B000
-                ; eax=0BBBBAAA
-
                 shl     edx,12
-                ; edx=C0B0A000
-
                 and     edx,0F0000000h
-                ; edx=C0000000
-
                 or      eax,edx
-                ; eax=CBBBBAAA
-
                 mov     dword ptr [edi+j*512*2+i*2],eax
-
                 and     eax,0F0F0F0Fh
                 or      eax,10101010h
                 mov     dword ptr [edi+j*512*2+i*2+512],eax
@@ -350,6 +329,40 @@ blit2_dirty_char:
                 endm
 
                 endm
+
+                jmp     blit2_dirty_char_end
+
+blit2_dirty_char_border:
+                
+                irp     j,<0,1,2,3,4,5,6,7>
+
+                irp     i,<0,2,4,6>
+                
+                mov     ebx,dword ptr [esi+j*256+i]
+                mov     edx,ebx
+                shl     ebx,8
+                and     ebx,000FF0000h
+                or      bl,dl
+                mov     eax,ebx
+                shl     ebx,4
+                or      eax,ebx
+                shl     ebx,4
+                or      eax,ebx
+                shr     ebx,12
+                or      eax,ebx
+                shl     edx,12
+                and     edx,0F0000000h
+                or      eax,edx
+                mov     dword ptr [edi+j*512*2+i*2],eax
+                and     eax,0F0F0F0Fh
+                or      eax,10101010h
+                mov     dword ptr [edi+j*512*2+i*2+512],eax
+
+                endm
+
+                endm
+
+blit2_dirty_char_end:
 
                 pop     edx ebx
 

@@ -65,6 +65,7 @@ public outemulA8
 public megarom0_switchbank
 public histogr
 public error
+public imtype
 
 public opsubreg
 public opsbcreg
@@ -180,17 +181,8 @@ include aritn.inc
 include pvs53.inc
 include pvn53.inc
 include neg.inc
-
-;include daa.inc
-;include daa1.inc
-;include daa2.inc
-;include daa3.inc
-;include daa4.inc
-;include daas.inc
-
 include daa.inc
 include daas.inc
-
 include inc.inc
 include dec.inc
 include int.inc
@@ -314,6 +306,7 @@ megarommode     dd      0
 z80counter      db      8 dup (0)
 z80rate         dd      0
 reset_flag      dd      0
+imtype          dd      1
 rmask           db      0
 regi            db      0
 
@@ -577,6 +570,7 @@ writemem1:
                 jb      _ret
                 cmp     esi,8000h
                 jae     _ret
+                sub     esi,6000h
                 and     esi,1000h
                 shr     esi,11
                 add     esi,2
@@ -794,8 +788,6 @@ EMULABEL        vsyncskip,emtype,brtype
                 mov     eax,dword ptr [offset blitcounter]
                 mov     blitrate,eax
 
-                or      vdpstatus,10000000b
-                
                 pop     edi edx eax
 
 EMULABEL        nextint,emtype,brtype
@@ -806,6 +798,7 @@ EMULABEL        nextint,emtype,brtype
                 xor     eax,eax
                 mov     ebp,59659
                 mov     interrupt,0
+                or      vdpstatus,10000000b
                 
                 cmp     error,1
                 JUMP    je,exit,emtype,brtype
@@ -818,10 +811,8 @@ EMULABEL        nextint,emtype,brtype
                 JUMP    jne,loop,emtype,brtype
                 
                 mov     iff1,0 
-                dec     edi
-                and     edi,0ffffh
                 inc     rcounter
-                call    emulFF
+                call    z80_interrupt
                 JUMP    jmp,loop,emtype,brtype
 
 EMULABEL        exit,emtype,brtype
@@ -831,6 +822,31 @@ EMULABEL        exit,emtype,brtype
                 ret
 
                 endm
+
+; z80_interrupt ------------------------------------------------------
+; perform a Z80 interrupt
+; this is sensitive to IM 1 and IM 2 differences
+
+z80_interrupt:
+                cmp     imtype,2
+                je      z80_interrupt_im2
+
+                ; IM 1
+                call    emulIM
+                mov     edi,038h
+                ret
+
+z80_interrupt_im2:
+                ; IM 2
+                call    emulIM
+                mov     ch,regi
+                mov     cl,0FFh
+                call    readmemw
+                mov     edi,eax
+                mov     eax,0
+                ret
+
+PUSHREGW        IM,edi,0
 
 ; check_mouse --------------------------------------------------------
 ; if the mouse button is pressed, then start the GUI 

@@ -250,13 +250,19 @@ render11d:      push    ebp
 
                 mov     al,[edx]
                 or      al,al
-                jz      render12d
+                jnz     render1_dirty_draw
 
+                movzx   eax,byte ptr [esi]
+                cmp     byte ptr [offset dirtypattern+eax],1
+                jne     render1_dirty_next
+                mov     byte ptr [edx],1
+
+render1_dirty_draw:
                 push    edx
                 PIPE1
                 pop     edx
 
-render12d:
+render1_dirty_next:
 
                 add     edi,8
                 inc     esi
@@ -1165,7 +1171,7 @@ eval_base_address:
                 mov     eax,01010101h
                 mov     edi,nametable
                 shr     edi,6
-                mov     ecx,32*24/4
+                mov     ecx,32*24/64/4
                 add     edi,offset vrammapping
                 rep     stosd
 
@@ -1382,8 +1388,6 @@ dirty_screen2_sprpatt:
 ; these are the functions to perform dirty operations on screen 1
 
 dirty_screen1_nothing:
-dirty_screen1_pattern:
-dirty_screen1_color:
                 mov     [ecx+esi],bl
                 ret
 
@@ -1394,6 +1398,26 @@ dirty_screen1_name:
                 sub     ecx,nametable
                 mov     [eax+esi],bl
                 mov     byte ptr [offset dirtyname+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen1_pattern:
+                mov     eax,ecx
+                sub     ecx,patterntable
+                shr     ecx,3
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtypattern+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen1_color:
+                mov     eax,ecx
+                sub     ecx,colortable
+                shl     ecx,3
+                mov     [eax+esi],bl
+                mov     ebx,01010101h
+                mov     dword ptr [offset dirtypattern+ecx],ebx
+                mov     dword ptr [offset dirtypattern+ecx+4],ebx
                 xor     eax,eax
                 ret
 

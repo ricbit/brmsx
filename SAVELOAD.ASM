@@ -180,6 +180,8 @@ save_state:
 
                 mov     al,1
                 WRITE_IMM
+
+                mov     eax,imtype
                 WRITE_IMM
 
 ; --------------------------------------------------------------------
@@ -300,6 +302,8 @@ load_state:
 
                 READ_IMM
                 READ_IMM
+                and     eax,0FFh
+                mov     imtype,eax
 
 ; --------------------------------------------------------------------
                 
@@ -377,7 +381,7 @@ load_state_mega_&i:
                 call    eval_base_address
                 mov     firstscreen,1
                 mov     enabled,0
-                mov     imagetype,0
+                ;mov     imagetype,0
 
 ; --------------------------------------------------------------------
                 

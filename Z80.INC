@@ -108,3 +108,4 @@ extrn vsyncflag: dword
 extrn reset_flag: dword
 extrn reset_cpu: near
 extrn LDI_table: byte
+extrn imtype: dword

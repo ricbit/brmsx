@@ -1,68 +1,68 @@
 isetFDxx:
-	isetFD00: dd emulXX
-	isetFD01: dd emulXX
-	isetFD02: dd emulXX
-	isetFD03: dd emulXX
-	isetFD04: dd emulXX
-	isetFD05: dd emulXX
-	isetFD06: dd emulXX
-	isetFD07: dd emulXX
-	isetFD08: dd emulXX
+	isetFD00: dd emulFDNULL
+	isetFD01: dd emulFDNULL
+	isetFD02: dd emulFDNULL
+	isetFD03: dd emulFDNULL
+	isetFD04: dd emulFDNULL
+	isetFD05: dd emulFDNULL
+	isetFD06: dd emulFDNULL
+	isetFD07: dd emulFDNULL
+	isetFD08: dd emulFDNULL
 	isetFD09: dd emulFD09
-	isetFD0A: dd emulXX
-	isetFD0B: dd emulXX
-	isetFD0C: dd emulXX
-	isetFD0D: dd emulXX
-	isetFD0E: dd emulXX
-	isetFD0F: dd emulXX
-	isetFD10: dd emulXX
-	isetFD11: dd emulXX
-	isetFD12: dd emulXX
-	isetFD13: dd emulXX
-	isetFD14: dd emulXX
-	isetFD15: dd emulXX
-	isetFD16: dd emulXX
-	isetFD17: dd emulXX
-	isetFD18: dd emulXX
+	isetFD0A: dd emulFDNULL
+	isetFD0B: dd emulFDNULL
+	isetFD0C: dd emulFDNULL
+	isetFD0D: dd emulFDNULL
+	isetFD0E: dd emulFDNULL
+	isetFD0F: dd emulFDNULL
+	isetFD10: dd emulFDNULL
+	isetFD11: dd emulFDNULL
+	isetFD12: dd emulFDNULL
+	isetFD13: dd emulFDNULL
+	isetFD14: dd emulFDNULL
+	isetFD15: dd emulFDNULL
+	isetFD16: dd emulFDNULL
+	isetFD17: dd emulFDNULL
+	isetFD18: dd emulFDNULL
 	isetFD19: dd emulFD19
-	isetFD1A: dd emulXX
-	isetFD1B: dd emulXX
-	isetFD1C: dd emulXX
-	isetFD1D: dd emulXX
-	isetFD1E: dd emulXX
-	isetFD1F: dd emulXX
-	isetFD20: dd emulXX
+	isetFD1A: dd emulFDNULL
+	isetFD1B: dd emulFDNULL
+	isetFD1C: dd emulFDNULL
+	isetFD1D: dd emulFDNULL
+	isetFD1E: dd emulFDNULL
+	isetFD1F: dd emulFDNULL
+	isetFD20: dd emulFDNULL
 	isetFD21: dd emulFD21
 	isetFD22: dd emulFD22
 	isetFD23: dd emulFD23
 	isetFD24: dd emulFD24
 	isetFD25: dd emulFD25
 	isetFD26: dd emulFD26
-	isetFD27: dd emulXX
-	isetFD28: dd emulXX
+	isetFD27: dd emulFDNULL
+	isetFD28: dd emulFDNULL
 	isetFD29: dd emulFD29
 	isetFD2A: dd emulFD2A
 	isetFD2B: dd emulFD2B
 	isetFD2C: dd emulFD2C
 	isetFD2D: dd emulFD2D
 	isetFD2E: dd emulFD2E
-	isetFD2F: dd emulXX
-	isetFD30: dd emulXX
-	isetFD31: dd emulXX
-	isetFD32: dd emulXX
-	isetFD33: dd emulXX
+	isetFD2F: dd emulFDNULL
+	isetFD30: dd emulFDNULL
+	isetFD31: dd emulFDNULL
+	isetFD32: dd emulFDNULL
+	isetFD33: dd emulFDNULL
 	isetFD34: dd emulFD34
 	isetFD35: dd emulFD35
 	isetFD36: dd emulFD36
-	isetFD37: dd emulXX
-	isetFD38: dd emulXX
+	isetFD37: dd emulFDNULL
+	isetFD38: dd emulFDNULL
 	isetFD39: dd emulFD39
-	isetFD3A: dd emulXX
-	isetFD3B: dd emulXX
-	isetFD3C: dd emulXX
-	isetFD3D: dd emulXX
-	isetFD3E: dd emulXX
-	isetFD3F: dd emulXX
+	isetFD3A: dd emulFDNULL
+	isetFD3B: dd emulFDNULL
+	isetFD3C: dd emulFDNULL
+	isetFD3D: dd emulFDNULL
+	isetFD3E: dd emulFDNULL
+	isetFD3F: dd emulFDNULL
 	isetFD40: dd emulFD40
 	isetFD41: dd emulFD41
 	isetFD42: dd emulFD42
@@ -127,131 +127,131 @@ isetFDxx:
 	isetFD7D: dd emulFD7D
 	isetFD7E: dd emulFD7E
 	isetFD7F: dd emulFD7F
-	isetFD80: dd emulXX
-	isetFD81: dd emulXX
-	isetFD82: dd emulXX
-	isetFD83: dd emulXX
+	isetFD80: dd emulFDNULL
+	isetFD81: dd emulFDNULL
+	isetFD82: dd emulFDNULL
+	isetFD83: dd emulFDNULL
 	isetFD84: dd emulFD84
 	isetFD85: dd emulFD85
 	isetFD86: dd emulFD86
-	isetFD87: dd emulXX
-	isetFD88: dd emulXX
-	isetFD89: dd emulXX
-	isetFD8A: dd emulXX
-	isetFD8B: dd emulXX
+	isetFD87: dd emulFDNULL
+	isetFD88: dd emulFDNULL
+	isetFD89: dd emulFDNULL
+	isetFD8A: dd emulFDNULL
+	isetFD8B: dd emulFDNULL
 	isetFD8C: dd emulFD8C
 	isetFD8D: dd emulFD8D
 	isetFD8E: dd emulFD8E
-	isetFD8F: dd emulXX
-	isetFD90: dd emulXX
-	isetFD91: dd emulXX
-	isetFD92: dd emulXX
-	isetFD93: dd emulXX
+	isetFD8F: dd emulFDNULL
+	isetFD90: dd emulFDNULL
+	isetFD91: dd emulFDNULL
+	isetFD92: dd emulFDNULL
+	isetFD93: dd emulFDNULL
 	isetFD94: dd emulFD94
 	isetFD95: dd emulFD95
 	isetFD96: dd emulFD96
-	isetFD97: dd emulXX
-	isetFD98: dd emulXX
-	isetFD99: dd emulXX
-	isetFD9A: dd emulXX
-	isetFD9B: dd emulXX
+	isetFD97: dd emulFDNULL
+	isetFD98: dd emulFDNULL
+	isetFD99: dd emulFDNULL
+	isetFD9A: dd emulFDNULL
+	isetFD9B: dd emulFDNULL
 	isetFD9C: dd emulFD9C
 	isetFD9D: dd emulFD9D
 	isetFD9E: dd emulFD9E
-	isetFD9F: dd emulXX
-	isetFDA0: dd emulXX
-	isetFDA1: dd emulXX
-	isetFDA2: dd emulXX
-	isetFDA3: dd emulXX
+	isetFD9F: dd emulFDNULL
+	isetFDA0: dd emulFDNULL
+	isetFDA1: dd emulFDNULL
+	isetFDA2: dd emulFDNULL
+	isetFDA3: dd emulFDNULL
 	isetFDA4: dd emulFDA4
 	isetFDA5: dd emulFDA5
 	isetFDA6: dd emulFDA6
-	isetFDA7: dd emulXX
-	isetFDA8: dd emulXX
-	isetFDA9: dd emulXX
-	isetFDAA: dd emulXX
-	isetFDAB: dd emulXX
+	isetFDA7: dd emulFDNULL
+	isetFDA8: dd emulFDNULL
+	isetFDA9: dd emulFDNULL
+	isetFDAA: dd emulFDNULL
+	isetFDAB: dd emulFDNULL
 	isetFDAC: dd emulFDAC
 	isetFDAD: dd emulFDAD
 	isetFDAE: dd emulFDAE
-	isetFDAF: dd emulXX
-	isetFDB0: dd emulXX
-	isetFDB1: dd emulXX
-	isetFDB2: dd emulXX
-	isetFDB3: dd emulXX
+	isetFDAF: dd emulFDNULL
+	isetFDB0: dd emulFDNULL
+	isetFDB1: dd emulFDNULL
+	isetFDB2: dd emulFDNULL
+	isetFDB3: dd emulFDNULL
 	isetFDB4: dd emulFDB4
 	isetFDB5: dd emulFDB5
 	isetFDB6: dd emulFDB6
-	isetFDB7: dd emulXX
-	isetFDB8: dd emulXX
-	isetFDB9: dd emulXX
-	isetFDBA: dd emulXX
-	isetFDBB: dd emulXX
+	isetFDB7: dd emulFDNULL
+	isetFDB8: dd emulFDNULL
+	isetFDB9: dd emulFDNULL
+	isetFDBA: dd emulFDNULL
+	isetFDBB: dd emulFDNULL
 	isetFDBC: dd emulFDBC
 	isetFDBD: dd emulFDBD
 	isetFDBE: dd emulFDBE
-	isetFDBF: dd emulXX
-	isetFDC0: dd emulXX
-	isetFDC1: dd emulXX
-	isetFDC2: dd emulXX
-	isetFDC3: dd emulXX
-	isetFDC4: dd emulXX
-	isetFDC5: dd emulXX
-	isetFDC6: dd emulXX
-	isetFDC7: dd emulXX
-	isetFDC8: dd emulXX
-	isetFDC9: dd emulXX
-	isetFDCA: dd emulXX
+	isetFDBF: dd emulFDNULL
+	isetFDC0: dd emulFDNULL
+	isetFDC1: dd emulFDNULL
+	isetFDC2: dd emulFDNULL
+	isetFDC3: dd emulFDNULL
+	isetFDC4: dd emulFDNULL
+	isetFDC5: dd emulFDNULL
+	isetFDC6: dd emulFDNULL
+	isetFDC7: dd emulFDNULL
+	isetFDC8: dd emulFDNULL
+	isetFDC9: dd emulFDNULL
+	isetFDCA: dd emulFDNULL
 	isetFDCB: dd emulFDCB
-	isetFDCC: dd emulXX
-	isetFDCD: dd emulXX
-	isetFDCE: dd emulXX
-	isetFDCF: dd emulXX
-	isetFDD0: dd emulXX
-	isetFDD1: dd emulXX
-	isetFDD2: dd emulXX
-	isetFDD3: dd emulXX
-	isetFDD4: dd emulXX
-	isetFDD5: dd emulXX
-	isetFDD6: dd emulXX
-	isetFDD7: dd emulXX
-	isetFDD8: dd emulXX
-	isetFDD9: dd emulXX
-	isetFDDA: dd emulXX
-	isetFDDB: dd emulXX
-	isetFDDC: dd emulXX
-	isetFDDD: dd emulXX
-	isetFDDE: dd emulXX
-	isetFDDF: dd emulXX
-	isetFDE0: dd emulXX
+	isetFDCC: dd emulFDNULL
+	isetFDCD: dd emulFDNULL
+	isetFDCE: dd emulFDNULL
+	isetFDCF: dd emulFDNULL
+	isetFDD0: dd emulFDNULL
+	isetFDD1: dd emulFDNULL
+	isetFDD2: dd emulFDNULL
+	isetFDD3: dd emulFDNULL
+	isetFDD4: dd emulFDNULL
+	isetFDD5: dd emulFDNULL
+	isetFDD6: dd emulFDNULL
+	isetFDD7: dd emulFDNULL
+	isetFDD8: dd emulFDNULL
+	isetFDD9: dd emulFDNULL
+	isetFDDA: dd emulFDNULL
+	isetFDDB: dd emulFDNULL
+	isetFDDC: dd emulFDNULL
+	isetFDDD: dd emulFDNULL
+	isetFDDE: dd emulFDNULL
+	isetFDDF: dd emulFDNULL
+	isetFDE0: dd emulFDNULL
 	isetFDE1: dd emulFDE1
-	isetFDE2: dd emulXX
+	isetFDE2: dd emulFDNULL
 	isetFDE3: dd emulFDE3
-	isetFDE4: dd emulXX
+	isetFDE4: dd emulFDNULL
 	isetFDE5: dd emulFDE5
-	isetFDE6: dd emulXX
-	isetFDE7: dd emulXX
-	isetFDE8: dd emulXX
+	isetFDE6: dd emulFDNULL
+	isetFDE7: dd emulFDNULL
+	isetFDE8: dd emulFDNULL
 	isetFDE9: dd emulFDE9
-	isetFDEA: dd emulXX
-	isetFDEB: dd emulXX
-	isetFDEC: dd emulXX
-	isetFDED: dd emulXX
-	isetFDEE: dd emulXX
-	isetFDEF: dd emulXX
-	isetFDF0: dd emulXX
-	isetFDF1: dd emulXX
-	isetFDF2: dd emulXX
-	isetFDF3: dd emulXX
-	isetFDF4: dd emulXX
-	isetFDF5: dd emulXX
-	isetFDF6: dd emulXX
-	isetFDF7: dd emulXX
-	isetFDF8: dd emulXX
+	isetFDEA: dd emulFDNULL
+	isetFDEB: dd emulFDNULL
+	isetFDEC: dd emulFDNULL
+	isetFDED: dd emulFDNULL
+	isetFDEE: dd emulFDNULL
+	isetFDEF: dd emulFDNULL
+	isetFDF0: dd emulFDNULL
+	isetFDF1: dd emulFDNULL
+	isetFDF2: dd emulFDNULL
+	isetFDF3: dd emulFDNULL
+	isetFDF4: dd emulFDNULL
+	isetFDF5: dd emulFDNULL
+	isetFDF6: dd emulFDNULL
+	isetFDF7: dd emulFDNULL
+	isetFDF8: dd emulFDNULL
 	isetFDF9: dd emulFDF9
-	isetFDFA: dd emulXX
-	isetFDFB: dd emulXX
-	isetFDFC: dd emulXX
-	isetFDFD: dd emulXX
-	isetFDFE: dd emulXX
-	isetFDFF: dd emulXX
+	isetFDFA: dd emulFDNULL
+	isetFDFB: dd emulFDNULL
+	isetFDFC: dd emulFDNULL
+	isetFDFD: dd emulFDNULL
+	isetFDFE: dd emulFDNULL
+	isetFDFF: dd emulFDNULL

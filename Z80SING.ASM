@@ -819,6 +819,7 @@ OPRST           FF,038h
 ; XX - not found
 emulXX:         mov     error,1
                 mov     interrupt,1
+                mov     ebp,0
                 ret
 
 

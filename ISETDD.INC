@@ -1,68 +1,68 @@
 isetDDxx:
-	isetDD00: dd emulXX
-	isetDD01: dd emulXX
-	isetDD02: dd emulXX
-	isetDD03: dd emulXX
-	isetDD04: dd emulXX
-	isetDD05: dd emulXX
-	isetDD06: dd emulXX
-	isetDD07: dd emulXX
-	isetDD08: dd emulXX
+	isetDD00: dd emulDDNULL
+	isetDD01: dd emulDDNULL
+	isetDD02: dd emulDDNULL
+	isetDD03: dd emulDDNULL
+	isetDD04: dd emulDDNULL
+	isetDD05: dd emulDDNULL
+	isetDD06: dd emulDDNULL
+	isetDD07: dd emulDDNULL
+	isetDD08: dd emulDDNULL
 	isetDD09: dd emulDD09
-	isetDD0A: dd emulXX
-	isetDD0B: dd emulXX
-	isetDD0C: dd emulXX
-	isetDD0D: dd emulXX
-	isetDD0E: dd emulXX
-	isetDD0F: dd emulXX
-	isetDD10: dd emulXX
-	isetDD11: dd emulXX
-	isetDD12: dd emulXX
-	isetDD13: dd emulXX
-	isetDD14: dd emulXX
-	isetDD15: dd emulXX
-	isetDD16: dd emulXX
-	isetDD17: dd emulXX
-	isetDD18: dd emulXX
+	isetDD0A: dd emulDDNULL
+	isetDD0B: dd emulDDNULL
+	isetDD0C: dd emulDDNULL
+	isetDD0D: dd emulDDNULL
+	isetDD0E: dd emulDDNULL
+	isetDD0F: dd emulDDNULL
+	isetDD10: dd emulDDNULL
+	isetDD11: dd emulDDNULL
+	isetDD12: dd emulDDNULL
+	isetDD13: dd emulDDNULL
+	isetDD14: dd emulDDNULL
+	isetDD15: dd emulDDNULL
+	isetDD16: dd emulDDNULL
+	isetDD17: dd emulDDNULL
+	isetDD18: dd emulDDNULL
 	isetDD19: dd emulDD19
-	isetDD1A: dd emulXX
-	isetDD1B: dd emulXX
-	isetDD1C: dd emulXX
-	isetDD1D: dd emulXX
-	isetDD1E: dd emulXX
-	isetDD1F: dd emulXX
-	isetDD20: dd emulXX
+	isetDD1A: dd emulDDNULL
+	isetDD1B: dd emulDDNULL
+	isetDD1C: dd emulDDNULL
+	isetDD1D: dd emulDDNULL
+	isetDD1E: dd emulDDNULL
+	isetDD1F: dd emulDDNULL
+	isetDD20: dd emulDDNULL
 	isetDD21: dd emulDD21
 	isetDD22: dd emulDD22
 	isetDD23: dd emulDD23
 	isetDD24: dd emulDD24
 	isetDD25: dd emulDD25
 	isetDD26: dd emulDD26
-	isetDD27: dd emulXX
-	isetDD28: dd emulXX
+	isetDD27: dd emulDDNULL
+	isetDD28: dd emulDDNULL
 	isetDD29: dd emulDD29
 	isetDD2A: dd emulDD2A
 	isetDD2B: dd emulDD2B
 	isetDD2C: dd emulDD2C
 	isetDD2D: dd emulDD2D
 	isetDD2E: dd emulDD2E
-	isetDD2F: dd emulXX
-	isetDD30: dd emulXX
-	isetDD31: dd emulXX
-	isetDD32: dd emulXX
-	isetDD33: dd emulXX
+	isetDD2F: dd emulDDNULL
+	isetDD30: dd emulDDNULL
+	isetDD31: dd emulDDNULL
+	isetDD32: dd emulDDNULL
+	isetDD33: dd emulDDNULL
 	isetDD34: dd emulDD34
 	isetDD35: dd emulDD35
 	isetDD36: dd emulDD36
-	isetDD37: dd emulXX
-	isetDD38: dd emulXX
+	isetDD37: dd emulDDNULL
+	isetDD38: dd emulDDNULL
 	isetDD39: dd emulDD39
-	isetDD3A: dd emulXX
-	isetDD3B: dd emulXX
-	isetDD3C: dd emulXX
-	isetDD3D: dd emulXX
-	isetDD3E: dd emulXX
-	isetDD3F: dd emulXX
+	isetDD3A: dd emulDDNULL
+	isetDD3B: dd emulDDNULL
+	isetDD3C: dd emulDDNULL
+	isetDD3D: dd emulDDNULL
+	isetDD3E: dd emulDDNULL
+	isetDD3F: dd emulDDNULL
 	isetDD40: dd emulDD40
 	isetDD41: dd emulDD41
 	isetDD42: dd emulDD42
@@ -127,131 +127,131 @@ isetDDxx:
 	isetDD7D: dd emulDD7D
 	isetDD7E: dd emulDD7E
 	isetDD7F: dd emulDD7F
-	isetDD80: dd emulXX
-	isetDD81: dd emulXX
-	isetDD82: dd emulXX
-	isetDD83: dd emulXX
+	isetDD80: dd emulDDNULL
+	isetDD81: dd emulDDNULL
+	isetDD82: dd emulDDNULL
+	isetDD83: dd emulDDNULL
 	isetDD84: dd emulDD84
 	isetDD85: dd emulDD85
 	isetDD86: dd emulDD86
-	isetDD87: dd emulXX
-	isetDD88: dd emulXX
-	isetDD89: dd emulXX
-	isetDD8A: dd emulXX
-	isetDD8B: dd emulXX
+	isetDD87: dd emulDDNULL
+	isetDD88: dd emulDDNULL
+	isetDD89: dd emulDDNULL
+	isetDD8A: dd emulDDNULL
+	isetDD8B: dd emulDDNULL
 	isetDD8C: dd emulDD8C
 	isetDD8D: dd emulDD8D
 	isetDD8E: dd emulDD8E
-	isetDD8F: dd emulXX
-	isetDD90: dd emulXX
-	isetDD91: dd emulXX
-	isetDD92: dd emulXX
-	isetDD93: dd emulXX
+	isetDD8F: dd emulDDNULL
+	isetDD90: dd emulDDNULL
+	isetDD91: dd emulDDNULL
+	isetDD92: dd emulDDNULL
+	isetDD93: dd emulDDNULL
 	isetDD94: dd emulDD94
 	isetDD95: dd emulDD95
 	isetDD96: dd emulDD96
-	isetDD97: dd emulXX
-	isetDD98: dd emulXX
-	isetDD99: dd emulXX
-	isetDD9A: dd emulXX
-	isetDD9B: dd emulXX
+	isetDD97: dd emulDDNULL
+	isetDD98: dd emulDDNULL
+	isetDD99: dd emulDDNULL
+	isetDD9A: dd emulDDNULL
+	isetDD9B: dd emulDDNULL
 	isetDD9C: dd emulDD9C
 	isetDD9D: dd emulDD9D
 	isetDD9E: dd emulDD9E
-	isetDD9F: dd emulXX
-	isetDDA0: dd emulXX
-	isetDDA1: dd emulXX
-	isetDDA2: dd emulXX
-	isetDDA3: dd emulXX
+	isetDD9F: dd emulDDNULL
+	isetDDA0: dd emulDDNULL
+	isetDDA1: dd emulDDNULL
+	isetDDA2: dd emulDDNULL
+	isetDDA3: dd emulDDNULL
 	isetDDA4: dd emulDDA4
 	isetDDA5: dd emulDDA5
 	isetDDA6: dd emulDDA6
-	isetDDA7: dd emulXX
-	isetDDA8: dd emulXX
-	isetDDA9: dd emulXX
-	isetDDAA: dd emulXX
-	isetDDAB: dd emulXX
+	isetDDA7: dd emulDDNULL
+	isetDDA8: dd emulDDNULL
+	isetDDA9: dd emulDDNULL
+	isetDDAA: dd emulDDNULL
+	isetDDAB: dd emulDDNULL
 	isetDDAC: dd emulDDAC
 	isetDDAD: dd emulDDAD
 	isetDDAE: dd emulDDAE
-	isetDDAF: dd emulXX
-	isetDDB0: dd emulXX
-	isetDDB1: dd emulXX
-	isetDDB2: dd emulXX
-	isetDDB3: dd emulXX
+	isetDDAF: dd emulDDNULL
+	isetDDB0: dd emulDDNULL
+	isetDDB1: dd emulDDNULL
+	isetDDB2: dd emulDDNULL
+	isetDDB3: dd emulDDNULL
 	isetDDB4: dd emulDDB4
 	isetDDB5: dd emulDDB5
 	isetDDB6: dd emulDDB6
-	isetDDB7: dd emulXX
-	isetDDB8: dd emulXX
-	isetDDB9: dd emulXX
-	isetDDBA: dd emulXX
-	isetDDBB: dd emulXX
+	isetDDB7: dd emulDDNULL
+	isetDDB8: dd emulDDNULL
+	isetDDB9: dd emulDDNULL
+	isetDDBA: dd emulDDNULL
+	isetDDBB: dd emulDDNULL
 	isetDDBC: dd emulDDBC
 	isetDDBD: dd emulDDBD
 	isetDDBE: dd emulDDBE
-	isetDDBF: dd emulXX
-	isetDDC0: dd emulXX
-	isetDDC1: dd emulXX
-	isetDDC2: dd emulXX
-	isetDDC3: dd emulXX
-	isetDDC4: dd emulXX
-	isetDDC5: dd emulXX
-	isetDDC6: dd emulXX
-	isetDDC7: dd emulXX
-	isetDDC8: dd emulXX
-	isetDDC9: dd emulXX
-	isetDDCA: dd emulXX
+	isetDDBF: dd emulDDNULL
+	isetDDC0: dd emulDDNULL
+	isetDDC1: dd emulDDNULL
+	isetDDC2: dd emulDDNULL
+	isetDDC3: dd emulDDNULL
+	isetDDC4: dd emulDDNULL
+	isetDDC5: dd emulDDNULL
+	isetDDC6: dd emulDDNULL
+	isetDDC7: dd emulDDNULL
+	isetDDC8: dd emulDDNULL
+	isetDDC9: dd emulDDNULL
+	isetDDCA: dd emulDDNULL
 	isetDDCB: dd emulDDCB
-	isetDDCC: dd emulXX
-	isetDDCD: dd emulXX
-	isetDDCE: dd emulXX
-	isetDDCF: dd emulXX
-	isetDDD0: dd emulXX
-	isetDDD1: dd emulXX
-	isetDDD2: dd emulXX
-	isetDDD3: dd emulXX
-	isetDDD4: dd emulXX
-	isetDDD5: dd emulXX
-	isetDDD6: dd emulXX
-	isetDDD7: dd emulXX
-	isetDDD8: dd emulXX
-	isetDDD9: dd emulXX
-	isetDDDA: dd emulXX
-	isetDDDB: dd emulXX
-	isetDDDC: dd emulXX
-	isetDDDD: dd emulXX
-	isetDDDE: dd emulXX
-	isetDDDF: dd emulXX
-	isetDDE0: dd emulXX
+	isetDDCC: dd emulDDNULL
+	isetDDCD: dd emulDDNULL
+	isetDDCE: dd emulDDNULL
+	isetDDCF: dd emulDDNULL
+	isetDDD0: dd emulDDNULL
+	isetDDD1: dd emulDDNULL
+	isetDDD2: dd emulDDNULL
+	isetDDD3: dd emulDDNULL
+	isetDDD4: dd emulDDNULL
+	isetDDD5: dd emulDDNULL
+	isetDDD6: dd emulDDNULL
+	isetDDD7: dd emulDDNULL
+	isetDDD8: dd emulDDNULL
+	isetDDD9: dd emulDDNULL
+	isetDDDA: dd emulDDNULL
+	isetDDDB: dd emulDDNULL
+	isetDDDC: dd emulDDNULL
+	isetDDDD: dd emulDDNULL
+	isetDDDE: dd emulDDNULL
+	isetDDDF: dd emulDDNULL
+	isetDDE0: dd emulDDNULL
 	isetDDE1: dd emulDDE1
-	isetDDE2: dd emulXX
+	isetDDE2: dd emulDDNULL
 	isetDDE3: dd emulDDE3
-	isetDDE4: dd emulXX
+	isetDDE4: dd emulDDNULL
 	isetDDE5: dd emulDDE5
-	isetDDE6: dd emulXX
-	isetDDE7: dd emulXX
-	isetDDE8: dd emulXX
+	isetDDE6: dd emulDDNULL
+	isetDDE7: dd emulDDNULL
+	isetDDE8: dd emulDDNULL
 	isetDDE9: dd emulDDE9
-	isetDDEA: dd emulXX
-	isetDDEB: dd emulXX
-	isetDDEC: dd emulXX
-	isetDDED: dd emulXX
-	isetDDEE: dd emulXX
-	isetDDEF: dd emulXX
-	isetDDF0: dd emulXX
-	isetDDF1: dd emulXX
-	isetDDF2: dd emulXX
-	isetDDF3: dd emulXX
-	isetDDF4: dd emulXX
-	isetDDF5: dd emulXX
-	isetDDF6: dd emulXX
-	isetDDF7: dd emulXX
-	isetDDF8: dd emulXX
+	isetDDEA: dd emulDDNULL
+	isetDDEB: dd emulDDNULL
+	isetDDEC: dd emulDDNULL
+	isetDDED: dd emulDDNULL
+	isetDDEE: dd emulDDNULL
+	isetDDEF: dd emulDDNULL
+	isetDDF0: dd emulDDNULL
+	isetDDF1: dd emulDDNULL
+	isetDDF2: dd emulDDNULL
+	isetDDF3: dd emulDDNULL
+	isetDDF4: dd emulDDNULL
+	isetDDF5: dd emulDDNULL
+	isetDDF6: dd emulDDNULL
+	isetDDF7: dd emulDDNULL
+	isetDDF8: dd emulDDNULL
 	isetDDF9: dd emulDDF9
-	isetDDFA: dd emulXX
-	isetDDFB: dd emulXX
-	isetDDFC: dd emulXX
-	isetDDFD: dd emulXX
-	isetDDFE: dd emulXX
-	isetDDFF: dd emulXX
+	isetDDFA: dd emulDDNULL
+	isetDDFB: dd emulDDNULL
+	isetDDFC: dd emulDDNULL
+	isetDDFD: dd emulDDNULL
+	isetDDFE: dd emulDDNULL
+	isetDDFF: dd emulDDNULL

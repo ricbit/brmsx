@@ -39,7 +39,12 @@ emulEDFF:
                 cmp     edi,04016h+1
                 je      patch_GETDPB
 
-                jmp     emulC9
+                ; patch not found
+                inc     edi
+                sub     ebp,4
+                ret
+; --------------------------------------------------------------------
+; PHYDIO: read/write sectors
 
 patch_PHYDIO:
                 mov     iff1,1
@@ -51,10 +56,6 @@ patch_PHYDIO:
                 ; if regb=0 then exit [security trap]
                 cmp     regb,0
                 je      emulC9
-
-                ; read or write?
-                and     dl,1
-                jnz     patch_PHYDIO_readonly
 
                 push    ebp
 
@@ -72,6 +73,10 @@ patch_PHYDIO:
                 mov     ecx,regehl
                 mov     al,regb
                 push    eax
+
+                ; read or write?
+                and     dl,1
+                jnz     patch_PHYDIO_writesector
 
 patch_PHYDIO1:
 
@@ -91,6 +96,7 @@ patch_PHYDIO2:
                 dec     regb
                 jnz     patch_PHYDIO1
 
+patch_PHYDIO_done:  
                 pop     eax
                 mov     regb,al
                 mov     edx,0
@@ -114,11 +120,36 @@ patch_PHYDIO_readonly:
                 mov     regb,0
                 jmp     emulC9
 
+patch_PHYDIO_writesector:
+
+                mov     ebp,512
+
+patch_PHYDIO_writesector_loop:
+
+                push    esi
+                call    readmem
+                pop     esi
+                mov     byte ptr [esi],al
+                inc     esi
+                inc     cx
+                dec     ebp
+                jnz     patch_PHYDIO_writesector_loop
+
+                dec     regb
+                jnz     patch_PHYDIO_writesector
+
+                jmp     patch_PHYDIO_done
+
+; --------------------------------------------------------------------
+; DSKCHG: update DPB when disk has changed
 
 patch_DSKCHG:
                 mov     regb,0
                 mov     iff1,1
                 jmp     patch_GETDPB
+
+; --------------------------------------------------------------------
+; GETDPB: adjust DPB by looking the data on boot sector
 
 patch_GETDPB:
                 mov     ecx,regehl
@@ -213,6 +244,7 @@ patch_GETDPB:
                 
                 jmp     emulC9
 
+; --------------------------------------------------------------------
 
 code32          ends
                 end

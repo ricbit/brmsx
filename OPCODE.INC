@@ -875,6 +875,23 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; INFLAG - IN (C) 
+
+INFLAG          macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                and     ebx,0ffh
+                and     dl,1
+                or      dl,[offset LOGICAL_table+ebx]
+                sub     ebp,12+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; INCREG - INC rr rr=[a,b,c,d,e,h,l]
 
 INCREG          macro   opcode,reg
@@ -965,6 +982,91 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPINIR - INIR
+
+OPINIR          macro   opcode
+
+emul&opcode:
+                inc     edi
+emul&opcode&loop:
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                inc     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                test    dl,01000000b
+                jz      emul&opcode&loop
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPINDR - INDR
+
+OPINDR          macro   opcode
+
+emul&opcode:
+                inc     edi
+emul&opcode&loop:
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                dec     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                test    dl,01000000b
+                jz      emul&opcode&loop
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPIND - IND
+
+OPIND           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                dec     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPIM0 - IM 0
+
+OPIM0           macro   opcode
+
+emul&opcode:
+                inc     edi
+                sub     ebp,8+2
+                mov     imtype,0
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPIM1 - IM 1 
 
 OPIM1           macro   opcode
@@ -972,6 +1074,20 @@ OPIM1           macro   opcode
 emul&opcode:
                 inc     edi
                 sub     ebp,8+2
+                mov     imtype,1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPIM2 - IM 2
+
+OPIM2           macro   opcode
+
+emul&opcode:
+                inc     edi
+                sub     ebp,8+2
+                mov     imtype,2
                 ret
 
                 endm
@@ -1360,6 +1476,25 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; LDIA - LD I,A
+
+LDIA            macro   opcode
+
+emul&opcode:    
+                inc     edi
+                mov     regi,dh
+                sub     ebp,9+2
+                mov     al,dh
+                and     dl,1
+                mov     bl,byte ptr [offset iff1]
+                shl     bl,2
+                or      dl,[offset INTERRUPT_table+eax]
+                or      dl,bl
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDAR - LD A,R
 
 LDAR            macro   opcode
@@ -1369,6 +1504,27 @@ emul&opcode:
                 mov     dh,byte ptr [offset rcounter]
                 and     dh,07fh
                 or      dh,rmask
+                sub     ebp,9+2
+                mov     al,dh
+                and     dl,1
+                mov     bl,byte ptr [offset iff1]
+                shl     bl,2
+                or      dl,[offset INTERRUPT_table+eax]
+                or      dl,bl
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDRA - LD R,A
+
+LDRA            macro   opcode
+
+emul&opcode:    
+                inc     edi
+                mov     byte ptr [offset rcounter],dh
+                mov     rmask,dh
+                and     rmask,07Fh
                 sub     ebp,9+2
                 mov     al,dh
                 and     dl,1
@@ -1598,6 +1754,19 @@ emul&opcode:    mov     al,regc
                 endm
 
 ; --------------------------------------------------------------------
+; OUTC0 - OUT (C),0
+
+OUTC0           macro   opcode
+
+emul&opcode:    mov     al,regc
+                inc     edi
+                sub     ebp,12+2
+                mov     bl,0
+                jmp     [offset outportxx+eax*4]
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPOUTI - OUTI
 
 OPOUTI          macro   opcode
@@ -1615,6 +1784,78 @@ emul&opcode:
                 mov     al,regb
                 or      dl,[offset DEC_table+eax]
                 sub     ebp,16+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPOUTD - OUTD
+
+OPOUTD          macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     al,regc
+                call    [offset outportxx+eax*4]
+                dec     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPOTIR - OTIR
+
+OPOTIR          macro   opcode
+
+emul&opcode:                
+                inc     edi
+emul&opcode&loop:
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     al,regc
+                call    [offset outportxx+eax*4]
+                inc     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                test    dl,01000000b
+                jz      emul&opcode&loop
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPOTDR - OTDR
+
+OPOTDR          macro   opcode
+
+emul&opcode:                
+                inc     edi
+emul&opcode&loop:
+                mov     ecx,regehl
+                call    readmem
+                mov     bl,al
+                mov     al,regc
+                call    [offset outportxx+eax*4]
+                dec     reghl
+                dec     regb
+                and     dl,1
+                mov     al,regb
+                or      dl,[offset DEC_table+eax]
+                sub     ebp,16+2
+                test    dl,01000000b
+                jz      emul&opcode&loop
                 ret
 
                 endm
@@ -1643,6 +1884,9 @@ emul&opcode:
 PUSHREGW        macro   opcode,reg,cycles
 
 emul&opcode:                
+                ; note: this opcode is used by the IM2 handler2
+                ; and the "inc edi" must always be done
+                ; AFTER the "writememw"
                 mov     ecx,regesp
                 sub     ecx,2
                 mov     eax,reg
@@ -1697,6 +1941,25 @@ emul&opcode:
                 call    readmem
                 and     al,NBIT_&bit
                 call    writemem
+                sub     ebp,23+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RESCOMBO - LD REG,RES nn,(II+dd)
+
+RESCOMBO        macro   opcode,bit,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                and     al,NBIT_&bit
+                call    writemem
+                mov     regcombo,al
                 sub     ebp,23+3
                 ret
 
@@ -1799,6 +2062,29 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RLCOMBO - LD REG,RL (II+dd)
+
+RLCOMBO         macro   opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                shr     dl,1
+                mov     dl,0
+                rcl     al,1
+                adc     dl,dl
+                call    writemem
+                mov     regcombo,al
+                sub     ebp,23+3
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPRLA - RLA
 
 OPRLA           macro   opcode
@@ -1868,6 +2154,28 @@ emul&opcode:
                 call    readmem
                 rol     al,1
                 call    writemem
+                mov     dl,al
+                and     dl,1
+                sub     ebp,23+3
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RLCCOMBO - LD REG,RLC (II+dd)
+
+RLCCOMBO         macro opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                rol     al,1
+                call    writemem
+                mov     regcombo,al
                 mov     dl,al
                 and     dl,1
                 sub     ebp,23+3
@@ -1986,6 +2294,29 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RRCOMBO - LD REG,RR (II+dd)
+
+RRCOMBO         macro   opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                shr     dl,1
+                mov     dl,al
+                rcr     al,1
+                and     dl,1
+                call    writemem
+                mov     regcombo,al
+                sub     ebp,23+3
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPRRA - RRA
 
 OPRRA           macro   opcode
@@ -2056,6 +2387,28 @@ emul&opcode:
                 mov     dl,al
                 ror     al,1
                 call    writemem
+                and     dl,1
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RRCCOMBO - LD REG,RRC (II+dd)
+
+RRCCOMBO        macro opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,al
+                ror     al,1
+                call    writemem
+                mov     regcombo,al
                 and     dl,1
                 sub     ebp,15+2
                 or      dl,[offset LOGICAL_table+eax]
@@ -2292,6 +2645,25 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SETCOMBO - LD REG,SET nn,(II+dd)
+
+SETCOMBO        macro   opcode,bit,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                or      al,BIT_&bit
+                call    writemem
+                mov     regcombo,al
+                sub     ebp,23+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SLAREG - SLA rr rr=[a,b,c,d,e,h,l]
 
 SLAREG          macro   opcode,reg
@@ -2343,6 +2715,28 @@ emul&opcode:
                 adc     dl,dl
                 sub     ebp,15+2
                 call    writemem
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLACOMBO - LD REG,SLA (II+dd)
+
+SLACOMBO        macro   opcode,regii,regcombo
+
+emul&opcode:
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                adc     dl,dl
+                sub     ebp,15+2
+                call    writemem
+                mov     regcombo,al
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -2409,6 +2803,29 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SLLCOMBO - LD REG,SLL (II+dd)
+
+SLLCOMBO        macro   opcode,regii,regcombo
+
+emul&opcode:
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                adc     dl,dl
+                or      eax,1
+                sub     ebp,15+2
+                call    writemem
+                mov     regcombo,al
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SRAREG - SRA rr rr=[a,b,c,d,e,h,l]
 
 SRAREG          macro   opcode,reg
@@ -2466,6 +2883,28 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SRACOMBO - LD REG,SRA (II+dd)
+
+SRACOMBO        macro   opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,al
+                sar     al,1
+                and     dl,1
+                call    writemem
+                mov     regcombo,al
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SRLREG - SRL rr rr=[a,b,c,d,e,h,l]
 
 SRLREG          macro   opcode,reg
@@ -2516,6 +2955,28 @@ emul&opcode:
                 shr     al,1
                 and     dl,1
                 call    writemem
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SRLCOMBO - LD REG,SRL (II+dd)
+
+SRLCOMBO        macro   opcode,regii,regcombo
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,al
+                shr     al,1
+                and     dl,1
+                call    writemem
+                mov     regcombo,al
                 sub     ebp,15+2
                 or      dl,[offset LOGICAL_table+eax]
                 ret
@@ -2657,6 +3118,18 @@ XNULL           macro   opcode
 
 emul&opcode:                
                 sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; XNULL2 - used in a ED prefix unknown
+
+XNULL2          macro   opcode
+
+emul&opcode:                
+                inc     edi
+                sub     ebp,(4+1)+(4+1)
                 ret
 
                 endm

@@ -41,11 +41,11 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.100',13,10
+msg00           db      'BrMSX 1.101',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
-msg02           db      'Cartridge not supported',13,10,'$'
+msg02           db      'Error in ROM file',13,10,'$'
 msg03           db      'Disk size not supported',13,10,'$'
 msg04           db      'Low memory free: $'
 msg05           db      'High memory free: $'
@@ -97,6 +97,7 @@ filenamelist    dd      ?
 vesaheader      dd      ?
 vesamodeinfo    dd      ?
 diskrom         dd      ?
+diskenabled     dd      0
 
 ; --------------------------------------------------------------------
 
@@ -241,6 +242,7 @@ _main0:
                 mov     edx,msxrom
                 mov     ecx,32768
                 call    read_file
+                call    close_file
                 
                 ; allocate 16kb to msx vram
                 mov     eax,16384
@@ -284,6 +286,7 @@ _main0:
                 ; read cartridge 1 from disk
                 mov     edx,offset emptyspace
                 call    read_rom
+                jc      error_in_rom
                 
                 ; allocate 64kb to blit buffer
                 mov     eax,65536
@@ -313,6 +316,8 @@ _main0:
                 mov     edx,offset drivea_name
                 call    open_file
                 jc      _main_nodrive
+
+                mov     diskenabled,1
                 call    read_size_file
                 cmp     eax,720*1024
                 jne     disk_size_not_supported
@@ -323,19 +328,20 @@ _main0:
                 jc      no_memory
                 mov     diskimage,eax
                 
-                mov     ebx,720/32
+                mov     ebx,720/16
                 mov     edi,diskimage
 _main4:               
-                mov     ecx,32768
+                mov     ecx,16384
                 mov     edx,transf_buffer
                 push    ebx
                 call    read_file
                 pop     ebx
                 mov     esi,transf_buffer
-                mov     ecx,32768/4
+                mov     ecx,16384/4
                 rep     movsd
                 dec     ebx
                 jnz     _main4
+                call    close_file
 
                 ; allocate 16kb for disk.rom
                 mov     eax,16*1024
@@ -349,6 +355,7 @@ _main4:
                 mov     edx,diskrom
                 mov     ecx,16*1024
                 call    read_file
+                call    close_file
 
                 mov     eax,diskrom
                 mov     dword ptr [offset slot3+16],eax
@@ -465,10 +472,15 @@ _main_novesa:
                 call    debug
 
                 cmp     mmxfound,1
-                jne     main_exit
+                jne     main_nommx
                 emms
+main_nommx:
 
-main_exit:
+                cmp     diskenabled,1
+                jne     main_exit_nodisk
+                call    flush_dsk
+main_exit_nodisk:
+
                 ; exit to dos
                 jmp     _exit
 
@@ -477,7 +489,7 @@ no_memory:
                 call    printmsg
                 jmp     _exit
 
-cartridge_not_supported:
+error_in_rom:
                 mov     eax,offset msg02
                 call    printmsg
                 jmp     _exit
@@ -674,8 +686,11 @@ parse_command_line_none:
                 
 read_rom:
                 call    open_file
-                jc      _ret
+                jc      read_rom_ok
                 call    read_size_file
+                mov     ebx,eax
+                and     ebx,03FFFh
+                jnz     read_rom_error
                 push    eax
                 mov     eax,cart1
                 mov     ebx,1
@@ -699,17 +714,33 @@ read_rom:
 read_rom1:
                 mov     edx,transf_buffer
                 mov     ecx,eax
+                mov     ebp,eax
                 call    read_file
+                call    close_file
                 mov     ecx,eax
                 mov     esi,transf_buffer
                 mov     edi,cart1
                 rep     movsb
                 mov     eax,cart1
+                cmp     word ptr [eax+2],08000h
+                jae     read_rom_8000
                 cmp     word ptr [eax+2],0
                 jne     _ret
                 cmp     word ptr [eax+8],0
                 jne     read_rom_basic
-                ret
+                jmp     read_rom_ok
+
+read_rom_8000:
+                cmp     ebp,04000h
+                jne     _ret
+                mov     ecx,msxrom
+                mov     dword ptr [offset slot1+16],ecx
+                mov     dword ptr [offset slot1+16+8],ecx
+                mov     ecx,cart1
+                mov     dword ptr [offset slot1+32],ecx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
+                jmp     read_rom_ok
 
 read_rom_basic:
                 mov     ecx,msxrom
@@ -719,7 +750,7 @@ read_rom_basic:
                 mov     dword ptr [offset slot1+32],ecx
                 add     ecx,2000h
                 mov     dword ptr [offset slot1+32+8],ecx
-                ret
+                jmp     read_rom_ok
 
 read_megarom:
                 shr     eax,15
@@ -734,6 +765,7 @@ read_megarom1:
                 dec     eax
                 or      eax,eax
                 jnz     read_megarom1
+                call    close_file
                 mov     ecx,cart1
                 add     ecx,4000h
                 mov     dword ptr [offset slot1+32],ecx
@@ -745,6 +777,38 @@ read_megarom1:
                 mov     dword ptr [offset slot1+16+4+16],eax
                 mov     dword ptr [offset slot1+16+4+24],eax
 
+read_rom_ok:
+                or      eax,eax
+                ret
+
+read_rom_error:
+                stc
+                ret
+
+; flush_dsk ----------------------------------------------------------
+; flush the DSK image to the disk
+                
+flush_dsk:
+
+                mov     edx,offset drivea_name
+                call    create_file
+
+                mov     ebx,720/16
+                mov     esi,diskimage
+flush_dsk_loop:               
+                mov     edi,transf_buffer
+                mov     ecx,16384/4
+                rep     movsd
+
+                mov     ecx,16384
+                mov     edx,transf_buffer
+                push    ebx
+                call    write_file
+                pop     ebx
+
+                dec     ebx
+                jnz     flush_dsk_loop
+                call    close_file
                 ret
                 
 code32          ends

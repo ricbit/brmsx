@@ -3,6 +3,17 @@ Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
 
+release 1.101:
+
+- DSK images are no longer write-protected
+- full Z80 emulation, including all documented and undocumented opcodes
+- IM 2 emulation
+- fully operational SCREEN 1 video cache
+- fully operational save and load state
+- save and load state through the GUI
+- fixed minor bug in TV-emulation VESA2 mode
+- support for #8000 cartridges
+
 release 1.73:
 
 - removed a stupid warning in VDP.ASM

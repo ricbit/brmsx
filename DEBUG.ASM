@@ -74,6 +74,8 @@ com1            db      '1$'
 com2            db      '2$'
 com3            db      '3$'
 com4            db      '4$'
+imode1          db      'IM1$'
+imode2          db      'IM2$'
 sessionsingle   db      'SINGLE$'
 sessionserver   db      'SERVER$'
 sessionclient   db      'CLIENT$'
@@ -697,6 +699,20 @@ print_iff1:
                 mov     eax,offset intdi
 print_iff0:
                 COORD   51,10
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; print interrupt mode
+
+                cmp     imtype,2
+                je      print_im2
+                mov     eax,offset imode1
+                jmp     print_im_print
+print_im2:
+                mov     eax,offset imode2
+print_im_print:
+                COORD   55,10
                 call    printmsgd
 
 ; --------------------------------------------------------------------
