@@ -1278,6 +1278,7 @@ noise_sound:
 ; enter: ebx = a random seed
 
 draw_noise_screen:
+                add     ebx,noise_counter
                 and     ebx,16383
                 mov     ecx,13
                 mov     eax,0

@@ -22,3 +22,4 @@ extrn dirtypattern: byte
 extrn enabled: dword
 extrn enginetype: dword
 extrn everyframe: dword
+extrn all_sprites: dword

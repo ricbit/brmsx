@@ -65,6 +65,7 @@ public set_keyboard_leds
 public vdpaddress
 public vdpaccess
 public speaker
+public fakejoy
 
 public fetch
 public fetch1
@@ -391,6 +392,7 @@ psgclocks       dd      0
 psgpos          dd      0
 psgclear        dd      1
 speaker         dd      0
+fakejoy         dd      0
 psgselect       db      0
 psgreg          db      16 dup (0)
 psgjoya         db      00111111b
@@ -1186,6 +1188,9 @@ set_keyboard_leds_exit:
 ; check the joystick status
 
 check_joystick:
+                cmp     fakejoy,1
+                je      check_joystick_fake
+
                 cmp     joyenable,0
                 je      _ret
 
@@ -1200,6 +1205,46 @@ check_joystick_b:
                 mov     psgjoyb,al
 
 check_joystick_exit:
+                pop     eax
+                ret
+
+check_joystick_fake:
+                ; b a dir esq ret fre
+                push    eax
+                mov     al,0
+
+                ; ALT = button B
+                mov     ah,byte ptr [offset keymatrix+6]
+                shr     ah,3
+                adc     al,al
+
+                ; CONTROL = button A
+                mov     ah,byte ptr [offset keymatrix+6]
+                shr     ah,2
+                adc     al,al
+
+                ; right = right
+                mov     ah,byte ptr [offset keymatrix+8]
+                shr     ah,8
+                adc     al,al
+
+                ; left = left
+                mov     ah,byte ptr [offset keymatrix+8]
+                shr     ah,5
+                adc     al,al
+
+                ; down = down
+                mov     ah,byte ptr [offset keymatrix+8]
+                shr     ah,7
+                adc     al,al
+
+                ; up = up
+                mov     ah,byte ptr [offset keymatrix+8]
+                shr     ah,6
+                adc     al,al
+
+                mov     psgjoya,al
+
                 pop     eax
                 ret
 
@@ -1487,20 +1532,6 @@ outemul99_update:
                 jmp     eval_base_address
 
 outemul99_checkirq:
-                ;test    cl,BIT_5
-                ;jnz     outemul99_update
-                ;test    al,BIT_5
-                ;jz      outemul99_update
-                ;;and     vdpstatus,NBIT_7
-                ;;;
-                ;cmp     iline,0
-                ;je      outemul99_update
-                ;mov     clocksleft,ebp
-                ;mov     fakeirq,1
-                ;mov     ebp,0
-                ;;;;
-                ;jmp     outemul99_update
-                ;
                 cmp     iline,0
                 je      outemul99_turnedoff
 
@@ -1531,7 +1562,7 @@ outemul99_turnedoff:
                 mov     ebp,0
 
                 jmp     outemul99_update
-                
+
 outemulA0:      
                 and     bl,0Fh
                 mov     psgselect,bl
@@ -1708,7 +1739,7 @@ inemul98:       mov     ecx,msxvram
                 ret
 
 inemul99:       mov     bl,vdpstatus
-                and     vdpstatus,01111111b
+                and     vdpstatus,00111111b
                 mov     vdpcond,0
                 mov     iline,0
                 ret

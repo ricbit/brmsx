@@ -1,4 +1,4 @@
-BrMSX 1.141
+BrMSX 1.142
 by Ricardo Bittencourt
 
 The user's manual for version v1.141 is 

@@ -37,6 +37,7 @@ public compose_speaker
 public speaker_shutup
 public noise_table
 public sb_flushed
+public noise_counter
 
 ; DATA ---------------------------------------------------------------
 

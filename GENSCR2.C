@@ -4,14 +4,13 @@ void main (void) {
   int i,j;
   int b;
 
-  printf ("backgroundcolor_MMX:\n");
+  printf ("background_zoom:\n\t");
   for (i=0; i<256; i++) {
-    printf ("\tdb\t");
-    b=(i)&0xf;
+    printf ("db\t");
     for (j=0; j<8; j++) {
-      printf ("0%02xh",b);
-      if (j==7) 
-        printf ("\t; %2x\n",i);
+      printf ("0%02xh,0%02xh",0xff*(!!((i^0xff)&(1<<(7-j)))),0xff*(!!((i^0xff)&(1<<(7-j)))));
+      if (j==7 || j==3) 
+        printf ("\t; %2x\n\t%s",i,j==3?"db\t":"");
       else
         printf (",");
     }

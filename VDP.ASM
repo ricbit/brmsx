@@ -12,6 +12,7 @@ include pmode.inc
 include pentium.inc
 include bit.inc
 include io.inc
+include z80.inc
 
 extrn msxvram: dword
 extrn vdpregs: near
@@ -42,6 +43,7 @@ public dirtypattern
 public enabled
 public enginetype
 public everyframe
+public all_sprites
 
 ; DATA ---------------------------------------------------------------
 
@@ -54,6 +56,8 @@ include scr2frcl.inc
 include scr2bkcl.inc
 include scr2frmx.inc
 include scr2bkmx.inc
+include scr2frzm.inc
+include scr2bkzm.inc
 
 align 4
 
@@ -71,6 +75,8 @@ sprattrtable    dd      0
 sprpatttable    dd      0
 firstscreen     dd      1
 everyframe      dd      0
+spr_occult      dd      255
+all_sprites     dd      0
 scr2inc         dd      offset scr2undoc_table+3*12
 scr2inc_color   dd      offset scr2undoc_table+3*12
 scr2offset      dd      0
@@ -83,9 +89,12 @@ screenselect    dd      ? ; nothing
                 dd      ? ; sprite image table
 dirtyname       db      32*24 dup (0)
 dirtypattern    db      256*3 dup (0)
-dirtysprite     db      32 dup (0)
-falsesprite     db      2*256 dup (0)
-spriteline      db      192 dup (0)
+dirtysprite     db      256 dup (0)
+dirtysprattr    db      32 dup (0)
+dirtysprattrold db      32 dup (0)
+falsesprite     db      32*32*2 dup (0)
+spritemask      db      192 dup (01Fh)
+spritecounter   db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
 enginetype      dd      1
@@ -320,6 +329,9 @@ render1_dirty_next:
 ; render a screen 1 page
 
 render_screen1:
+                cmp     everyframe,1
+                je      render_screen1_linear
+
                 cmp     imagetype,1
                 je      render_screen1_dirty
 
@@ -894,447 +906,251 @@ render_screen3_innerloop_&i:
 align 4
 
 sprite_render:
+                ; check for sprites enabled
                 cmp     spriteenable,1
                 jne     _ret
 
+                ; check for screen enabled
                 test    byte ptr [offset vdpregs+1],BIT_6
                 jz      _ret
 
-                test    byte ptr [offset vdpregs+1],BIT_1
-                jnz     sprite16
-                jmp     sprite8
-
-sprite16:       
-                test    byte ptr [offset vdpregs+1],BIT_0
-                jz      sprite16N
-                ret
-
-                ; sprites 16x16 without magnification
-
-sprite16N:
-                ; clear sprite line buffer
-                ;call    clear_sprite_buffer
-                
                 ; esi = sprite attribute table
                 mov     esi,msxvram
                 add     esi,sprattrtable
 
-                ; ecx = sprite image table
-                mov     ecx,msxvram
-                add     ecx,sprpatttable
-
-                ; edi = blit buffer
-                mov     edi,blitbuffer
-
-                ; mask temporary registers
-                xor     eax,eax
-                xor     ebx,ebx
-
                 ; find last sprite
                 mov     ebp,32
-sprite16N5:
+sprite_render_find_loop:
                 mov     ah,[esi]
                 cmp     ah,0D0h
-                je      sprite16N6
+                je      sprite_render_found
+
                 add     esi,4
                 dec     ebp
-                jnz     sprite16N5
-sprite16N6:     
+                jnz     sprite_render_find_loop
+sprite_render_found:
                 sub     esi,4
                 mov     eax,32
                 sub     eax,ebp
                 mov     ebp,eax
                 jz      _ret
 
-                ; for each sprite
-sprite16N1:     push    ecx eax
+                ; at this point
+                ; esi = pointer to last sprite's attribute table
+                ; ebp = number of sprites
 
-                ; check if the sprite is transparent
-                mov     cl,[esi+3]
-                and     cl,0Fh
-                jz      sprite16N3
-
-                call    eval_sprite_coords
-                cmp     ecx,0
-                js      sprite_crop
-                cmp     ecx,256-16
-                jge     sprite_crop
-                cmp     eax,0
-                jl      sprite_crop
-                cmp     eax,192-16
-                jge     sprite_crop
-
-                mov     ch,al
-                mov     edi,blitbuffer
-                add     edi,ecx
-                
-                ; load effective initial address in edi
-                push    edi
-
-                ; load address of sprite image in ecx
-                mov     al,[esi+2]
-                and     al,11111100b
-                mov     ecx,sprpatttable
-                add     ecx,msxvram
-                lea     ecx,[ecx+eax*8]
-
-                ; for each subline
-                xor     ebx,ebx
-                xor     eax,eax
-                mov     edx,16
-                push    esi
+sprite_render_outer:
                 push    ebp
-                mov     al,[esi+3]
-                mov     eax,[offset backgroundcolor+eax*4]
-sprite16N4:
 
-                ; fetch the image for the subline
-                mov     bl,[ecx]
+                ; check for transparent sprite
+                mov     cl,byte ptr [esi+3]
+                and     cl,0Fh
+                jz      sprite_render_next
 
-                ; get the contents of blit buffer
-                mov     esi,[edi]
+                ; draw sprite image in false sprite buffer
+                call    draw_sprite_image
 
-                ; blend with the sprite image
-                and     esi,[offset backgroundmask+ebx*8]
-
-                ; get the sprite color
-                mov     ebp,eax
-
-                ; blend with the sprite image
-                and     ebp,[offset foregroundmask+ebx*8]
-
-                ; mix the sprite color with the sprite image
-                or      esi,ebp
-
-                ; put back to screen
-                mov     [edi],esi
-
-                ; do it again for the next four pixels
-                mov     esi,[edi+4]
-                and     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                or      esi,ebp
-                mov     [edi+4],esi
-                
-                ; and one more time for the next eight pixels
-                mov     bl,[ecx+16]
-                mov     esi,[edi+8]
-                and     esi,[offset backgroundmask+ebx*8]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8]
-                or      esi,ebp
-                mov     [edi+8],esi
-                mov     esi,[edi+12]
-                and     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                or      esi,ebp
-                mov     [edi+12],esi
-
-sprite16N8:
-
-                add     edi,256
-                inc     ecx
-                dec     edx
-                jnz     sprite16N4
-
-                pop     ebp
-                pop     esi
-                pop     edi
-
-sprite16N3:
-                pop     eax ecx
-                sub     esi,4
-                dec     ebp
-                jnz     sprite16N1
-                ret
-
-sprite_crop:
-                ; address of sprite image
-                movzx   eax,byte ptr [esi+2]
-                and     al,11111100b
-                mov     ecx,sprpatttable
-                add     ecx,msxvram
-                lea     ecx,[ecx+eax*8]
-
-                ; color mask
-                mov     al,[esi+3]
-                mov     eax,[offset backgroundcolor+eax*4]
-
-                mov     edx,16
-                mov     edi,offset falsesprite
-                mov     ebx,0
-
-                push    esi ebp
-                
-sprite_crop_loop:
-
-                ; fetch the image for the subline
-                mov     bl,[ecx]
-
-                ; get the sprite mask
-                mov     esi,[offset backgroundmask+ebx*8]
-
-                ; get the sprite color
-                mov     ebp,eax
-
-                ; blend with the sprite image
-                and     ebp,[offset foregroundmask+ebx*8]
-
-                ; put back to screen
-                mov     [edi],esi
-                mov     [edi+4],ebp
-
-                ; do it again for the next four pixels
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                mov     [edi+8],esi
-                mov     [edi+4+8],ebp
-                
-                ; do it again for the next eight pixels
-                
-                mov     bl,[ecx+16]
-                
-                mov     esi,[offset backgroundmask+ebx*8]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8]
-                mov     [edi+16],esi
-                mov     [edi+4+16],ebp
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                mov     [edi+16+8],esi
-                mov     [edi+4+16+8],ebp
-                
-                add     edi,32
-                inc     ecx
-                dec     edx
-                jnz     sprite_crop_loop
-
-                pop     ebp esi
-
-                call    eval_sprite_coords                
-                push    esi ebp
-                mov     esi,offset falsesprite
-                mov     edx,16
+                ; eval sprite coordinates
+                call    eval_sprite_coords
                 mov     edi,eax
                 sal     edi,8
-                add     edi,blitbuffer
                 add     edi,ecx
-                cmp     ecx,256-16
-                jae     sprite_crop_draw_x
+                add     edi,blitbuffer
 
-sprite_crop_draw:
-                cmp     eax,192
-                jae     sprite_crop_draw_nextline
+                ; check for unusual size
+                cmp     edx,16
+                jne     sprite_render_line_slow
                 
-                irp     i,<0,1,2,3>
+                ; check for crop
+                cmp     ecx,0
+                jl      sprite_render_line_slow
+                cmp     ecx,256-16
+                jge     sprite_render_line_slow
+                cmp     eax,0
+                jl      sprite_render_line_slow
+                cmp     eax,192-16
+                jge     sprite_render_line_slow
 
-                mov     ebp,[edi+i*4]
-                and     ebp,[esi+i*8]
-                or      ebp,[esi+i*8+4]
-                mov     [edi+i*4],ebp
+                ; draw the sprite in blitbuffer
+                
+                mov     ecx,offset falsesprite
+                push    esi
+                sub     esi,msxvram
+                sub     esi,sprattrtable
+                shr     esi,2
+                xchg    eax,esi
 
+sprite_render_line:
+                cmp     al,byte ptr [offset spritemask+esi]
+                ja      sprite_render_next_line
+
+                irp     i,<0,4,8,12>
+                mov     ebx,[edi+i]              
+                and     ebx,[ecx+i]
+                or      ebx,[ecx+32+i]
+                mov     [edi+i],ebx
                 endm
-
-sprite_crop_draw_nextline:
-                add     esi,32
+sprite_render_next_line:
+                inc     esi
+                add     ecx,64
                 add     edi,256
-                inc     eax
                 dec     edx
-                jnz     sprite_crop_draw
+                jnz     sprite_render_line
 
-                pop     ebp esi
-                jmp     sprite16N3
+                pop     esi
 
-sprite_crop_draw_x:
+sprite_render_next:
+                pop     ebp
+                sub     esi,4
+                dec     ebp   
+                jnz     sprite_render_outer
+
+                ret
+
+; --------------------------------------------------------------------
+
+                ; pixel by pixel sprite engine
+                ; used in case of crop or unusual sprites 
+                ; (8x8 unzoomed or 16x16 zoomed)
+
+sprite_render_line_slow:
+                push    esi
+                sub     esi,msxvram
+                sub     esi,sprattrtable
+                ;shr     esi,2
+                shl     esi,6
+                mov     ebx,esi
+                mov     esi,offset falsesprite
+                mov     ebp,edx
+
+                ; draw the sprite in blitbuffer
+sprite_render_line_slow_outer:
+                cmp     eax,0
+                jl      sprite_render_line_slow_next
                 cmp     eax,192
-                jae     sprite_crop_draw_x_nextline
+                jge     sprite_render_line_exit
 
-                mov     ebp,0
-                mov     bh,4
+                cmp     bh,byte ptr [offset spritemask+eax]
+                ja      sprite_render_line_slow_next
+                
+                push    ecx ebp
+sprite_render_line_slow_inner:
+                cmp     ecx,0
+                jl      sprite_render_line_slow_skip
+                cmp     ecx,256
+                jge     sprite_render_line_slow_skip
 
-sprite_crop_draw_x_loop:
-                push    ecx
-                add     ecx,ebp
-                cmp     ecx,255
-                ja      sprite_crop_draw_x_nextpixel
-
-                mov     bl,[edi]
+                mov     bl,[edi]              
                 and     bl,[esi]
-                or      bl,[esi+4]
+                or      bl,[esi+32]
                 mov     [edi],bl
 
-sprite_crop_draw_x_nextpixel:
-                dec     bh
-                jnz     sprite_crop_draw_x_nocorrection
-                add     esi,4
-                mov     bh,4
-
-sprite_crop_draw_x_nocorrection:
-                pop     ecx                
-                inc     esi
+sprite_render_line_slow_skip:
                 inc     edi
-                inc     ebp
-                cmp     ebp,16
-                jne     sprite_crop_draw_x_loop
-
-sprite_crop_draw_x_nextline:
-                add     edi,256-16
-                inc     eax
-                dec     edx
-                jnz     sprite_crop_draw_x
-
-                pop     ebp esi
-                jmp     sprite16N3
-
-sprite16N2:
-                pop     ecx
-sprite16N7:
-                ret
-
-sprite8:       
-                test    byte ptr [offset vdpregs+1],BIT_0
-                jz      sprite8N
-                ret
-
-                ; sprites 8x8 without magnification
-
-sprite8N:
-                ; clear sprite line buffer
-                ;call    clear_sprite_buffer
-                
-                ; esi = sprite attribute table
-                mov     esi,msxvram
-                add     esi,sprattrtable
-
-                ; ecx = sprite image table
-                mov     ecx,msxvram
-                add     ecx,sprpatttable
-
-                ; edi = blit buffer
-                mov     edi,blitbuffer
-
-                ; mask temporary registers
-                xor     eax,eax
-                xor     ebx,ebx
-
-                ; find last sprite
-                mov     ebp,32
-sprite8N5:
-                mov     ah,[esi]
-                cmp     ah,0D0h
-                je      sprite8N6
-                add     esi,4
-                dec     ebp
-                jnz     sprite8N5
-sprite8N6:     
-                sub     esi,4
-                mov     eax,32
-                sub     eax,ebp
-                mov     ebp,eax
-                jz      _ret
-
-                ; for each sprite
-sprite8N1:     push    ecx eax
-
-                ; check if the sprite is transparent
-                mov     cl,[esi+3]
-                and     cl,0Fh
-                jz      sprite8N3
-
-                call    eval_sprite_coords
-                cmp     ecx,0
-                js      sprite8N3
-                cmp     ecx,256-8
-                jge     sprite8N3
-                cmp     eax,0
-                jl      sprite8N3
-                cmp     eax,192-16
-                jge     sprite8N3
-
-                mov     ch,al
-                mov     edi,blitbuffer
-                add     edi,ecx
-                
-                ; load effective initial address in edi
-                push    edi
-
-                ; load address of sprite image in ecx
-                mov     al,[esi+2]
-                mov     ecx,sprpatttable
-                add     ecx,msxvram
-                lea     ecx,[ecx+eax*8]
-
-                ; for each subline
-                xor     ebx,ebx
-                xor     eax,eax
-                mov     edx,8
-                push    esi
-                push    ebp
-                mov     al,[esi+3]
-                mov     eax,[offset backgroundcolor+eax*4]
-sprite8N4:
-
-                ; fetch the image for the subline
-                mov     bl,[ecx]
-
-                ; get the contents of blit buffer
-                mov     esi,[edi]
-
-                ; blend with the sprite image
-                and     esi,[offset backgroundmask+ebx*8]
-
-                ; get the sprite color
-                mov     ebp,eax
-
-                ; blend with the sprite image
-                and     ebp,[offset foregroundmask+ebx*8]
-
-                ; mix the sprite color with the sprite image
-                or      esi,ebp
-
-                ; put back to screen
-                mov     [edi],esi
-
-                ; do it again for the next four pixels
-                mov     esi,[edi+4]
-                and     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                or      esi,ebp
-                mov     [edi+4],esi
-                
-sprite8N8:
-                add     edi,256
+                inc     esi
                 inc     ecx
+                dec     ebp 
+                jnz     sprite_render_line_slow_inner
+                
+                pop     ebp ecx
+                sub     edi,ebp
+                sub     esi,ebp
+
+sprite_render_line_slow_next:
+                inc     eax
+                add     esi,64
+                add     edi,256
                 dec     edx
-                jnz     sprite8N4
+                jnz     sprite_render_line_slow_outer
 
-                pop     ebp
+sprite_render_line_exit:
                 pop     esi
-                pop     edi
-
-sprite8N3:
-                pop     eax ecx
-                sub     esi,4
-                dec     ebp
-                jnz     sprite8N1
-                ret
+                jmp     sprite_render_next
 
 ; clear_sprite_buffer ------------------------------------------------
+; clear the buffer for 5th sprite ocultation
 
 clear_sprite_buffer:
 
+                mov     eax,01F1F1F1Fh
+                mov     ecx,192/4
+                mov     edi,offset spritemask
+                rep     stosd
+
                 mov     eax,0
                 mov     ecx,192/4
-                mov     edi,offset spriteline
+                mov     edi,offset spritecounter
                 rep     stosd
+
                 ret
+
+; mark_sprite --------------------------------------------------------
+; mark a sprite in the ocultation buffer
+; enter: esi = attribute of current sprite
+; must preserve esi and ebp
+
+mark_sprite:
+                ; eval number of rows of sprite
+                
+                ; 8x8 or 16x16
+                mov     cl,byte ptr [offset vdpregs+1]
+                shr     cl,1
+                and     cl,1
+                mov     edx,8
+                shl     edx,cl
+
+                ; zoomed/unzoomed
+                mov     cl,byte ptr [offset vdpregs+1]
+                and     cl,1
+                shl     edx,cl
+
+                ; at this point edx = number of rows
+                ; now we will evaluate the y coord of sprite
+                movzx   ecx,byte ptr [esi]
+                cmp     ecx,0F0h 
+                jbe     mark_sprite_positive
+                movsx   ecx,cl
+mark_sprite_positive:
+                inc     ecx
+
+                ; at this point
+                ; edx = number of rows
+                ; ecx = starting Y coord (signed)
+mark_sprite_loop:
+
+                cmp     ecx,0
+                jl      mark_sprite_next
+                cmp     ecx,192
+                jge     mark_sprite_exit
+
+                mov     al,[offset spritecounter+ecx]
+                cmp     al,4
+                jae     mark_sprite_ocult
+
+                inc     al
+                mov     [offset spritecounter+ecx],al
+                mov     ebx,32
+                sub     ebx,ebp             
+                mov     [offset spritemask+ecx],bl
+
+mark_sprite_next:
+                inc     ecx
+                dec     edx
+                jnz     mark_sprite_loop
+
+mark_sprite_exit:
+                ret
+
+mark_sprite_ocult:
+                mov     ebx,32
+                sub     ebx,ebp             
+                mov     byte ptr [offset dirtysprattr+ebx],1
+                cmp     spr_occult,255
+                jne     mark_sprite_next
+                mov     spr_occult,ebx
+                or      vdpstatus,bl
+                or      vdpstatus,BIT_6
+                jmp     mark_sprite_next
 
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM
@@ -1403,6 +1219,10 @@ render_draw:
                 cmp     bl,0
                 je      render_screen0
 
+                push    ebx
+                call    prepare_ocultation
+                pop     ebx
+
                 cmp     bl,1
                 je      render_screen1
 
@@ -1450,27 +1270,262 @@ eval_sprite_coords1:
                 inc     eax
                 ret
                 
+; draw_sprite_image --------------------------------------------------
+; draw a sprite image in the false buffer
+; enter: esi = start of sprite attribute in vram
+; exit: false sprite buffer filled with sprite image
+;       edx = number of lines/rows of sprite
+
+draw_sprite_image:
+                test    byte ptr [offset vdpregs+1],BIT_1
+                jz      draw_sprite_image_8
+
+draw_sprite_image_16:       
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     draw_sprite_image_16Z
+                
+; --------------------------------------------------------------------
+
+draw_sprite_image_16N:
+
+                ; eval address of sprite image
+                movzx   eax,byte ptr [esi+2]
+                and     eax,11111100b
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+                lea     ecx,[ecx+eax*8]
+
+                ; eval color mask of sprite
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+
+                mov     edx,16
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+                push    esi
+                
+draw_sprite_image_16N_loop:                     
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                ; get the sprite mask
+                mov     esi,[offset backgroundmask+ebx*8]
+
+                ; get the sprite color
+                mov     ebp,eax
+
+                ; blend with the sprite image
+                and     ebp,[offset foregroundmask+ebx*8]
+
+                ; put back to screen
+                mov     [edi],esi
+                mov     [edi+32],ebp
+
+                ; do it again for the next four pixels
+                
+                mov     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                mov     [edi+4],esi
+                mov     [edi+4+32],ebp
+                
+                ; do it again for the next eight pixels
+                
+                mov     bl,[ecx+16]
+                
+                mov     esi,[offset backgroundmask+ebx*8]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8]
+                mov     [edi+8],esi
+                mov     [edi+8+32],ebp
+                
+                mov     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                mov     [edi+12],esi
+                mov     [edi+12+32],ebp
+                
+                add     edi,64
+                inc     ecx
+                dec     edx
+                jnz     draw_sprite_image_16N_loop
+
+                pop     esi
+                mov     edx,16
+                ret
+
+; --------------------------------------------------------------------
+
+draw_sprite_image_16Z:
+
+                ; eval address of sprite image
+                movzx   eax,byte ptr [esi+2]
+                and     eax,11111100b
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+                lea     ecx,[ecx+eax*8]
+
+                ; eval color mask of sprite
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+
+                mov     edx,16
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+                push    esi
+                
+draw_sprite_image_16Z_loop:                     
+                ; fetch the image for the subline
+                movzx   ebx,byte ptr [ecx]
+                shl     ebx,4
+
+                irp     i,<0,4,8,12>
+                mov     esi,[offset background_zoom+ebx+i]
+                mov     ebp,eax
+                and     ebp,[offset foreground_zoom+ebx+i]
+                mov     [edi+i],esi
+                mov     [edi+i+32],ebp
+                mov     [edi+i+64],esi
+                mov     [edi+i+32+64],ebp
+                endm
+
+                ; do it again for the next eight pixels
+                
+                movzx   ebx,byte ptr [ecx+16]
+                shl     ebx,4
+
+                irp     i,<0,4,8,12>
+                mov     esi,[offset background_zoom+ebx+i]
+                mov     ebp,eax
+                and     ebp,[offset foreground_zoom+ebx+i]
+                mov     [edi+i+16],esi
+                mov     [edi+i+16+32],ebp
+                mov     [edi+i+16+64],esi
+                mov     [edi+i+16+32+64],ebp
+                endm
+
+                add     edi,128
+                inc     ecx
+                dec     edx
+                jnz     draw_sprite_image_16Z_loop
+
+                pop     esi
+                mov     edx,32
+                ret
+
+; --------------------------------------------------------------------
+
+draw_sprite_image_8:       
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     draw_sprite_image_8Z 
+                
+draw_sprite_image_8N:
+
+                ; eval address of sprite image
+                movzx   eax,byte ptr [esi+2]
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+                lea     ecx,[ecx+eax*8]
+
+                ; eval color mask of sprite
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+
+                mov     edx,8
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+                push    esi
+                
+draw_sprite_image_8N_loop:                     
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                irp     i,<0,4>
+                mov     esi,[offset backgroundmask+ebx*8+i]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+i]
+                mov     [edi+i],esi
+                mov     [edi+i+32],ebp
+                endm
+
+                add     edi,64
+                inc     ecx
+                dec     edx
+                jnz     draw_sprite_image_8N_loop
+
+                pop     esi
+                mov     edx,8
+                ret
+
+; --------------------------------------------------------------------
+
+draw_sprite_image_8Z:
+
+                ; eval address of sprite image
+                movzx   eax,byte ptr [esi+2]
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+                lea     ecx,[ecx+eax*8]
+
+                ; eval color mask of sprite
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+
+                mov     edx,8
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+                push    esi
+                
+draw_sprite_image_8Z_loop:                     
+                ; fetch the image for the subline
+                movzx   ebx,byte ptr [ecx]
+                shl     ebx,4
+
+                irp     i,<0,4,8,12>
+                mov     esi,[offset background_zoom+ebx+i]
+                mov     ebp,eax
+                and     ebp,[offset foreground_zoom+ebx+i]
+                mov     [edi+i],esi
+                mov     [edi+i+32],ebp
+                mov     [edi+i+64],esi
+                mov     [edi+i+32+64],ebp
+                endm
+
+                add     edi,128
+                inc     ecx
+                dec     edx
+                jnz     draw_sprite_image_8Z_loop
+
+                pop     esi
+                mov     edx,16
+                ret
+
 ; CHECK --------------------------------------------------------------
 ; mark one block as dirty
 
 CHECK           macro   offx,offy,name
+                local   check_sprite_exit
 
                 push    ecx eax
 
                 add     eax,offy
-                js      check_sprite_&name&_exit
+                js      check_sprite_exit
                 cmp     eax,24
-                jge     check_sprite_&name&_exit
+                jge     check_sprite_exit
                 add     ecx,offx
-                js      check_sprite_&name&_exit
+                js      check_sprite_exit
                 cmp     ecx,32
-                jge     check_sprite_&name&_exit
+                jge     check_sprite_exit
                 shl     eax,5
                 add     eax,ecx
                 add     eax,offset dirtyname
                 mov     byte ptr [eax],1
 
-check_sprite_&name&_exit:
+check_sprite_exit:
                 pop     eax ecx
 
                 endm
@@ -1502,15 +1557,15 @@ dirty_sprite_crop_ecx:
                 sar     ecx,3
 dirty_sprite_crop_all:
 
-                CHECK   0,0,0
-                CHECK   1,0,1
-                CHECK   2,0,2
-                CHECK   0,1,3
-                CHECK   1,1,4
-                CHECK   2,1,5
-                CHECK   0,2,6
-                CHECK   1,2,7
-                CHECK   2,2,8
+                CHECK   0,0
+                CHECK   1,0
+                CHECK   2,0
+                CHECK   0,1
+                CHECK   1,1
+                CHECK   2,1
+                CHECK   0,2
+                CHECK   1,2
+                CHECK   2,2
 
                 ret
 
@@ -1521,10 +1576,19 @@ eval_base_address:
 
                 mov     everyframe,0
 
+                ; zoomed sprites always turn off the video cache
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jz      eval_base_address_begin
+
+                mov     everyframe,1
+
+eval_base_address_begin:
                 ; first we need to determine the actual screen
 
                 test    byte ptr [offset vdpregs+0],BIT_1
                 jz      eval_base_address_scr1
+
+; --------------------------------------------------------------------
 
                 ; M3 set - screen 2
 
@@ -1583,18 +1647,18 @@ eval_base_address:
                 add     edi,offset vrammapping
                 rep     stosd
 
-                mov     eax,04040404h
-                mov     edi,sprattrtable
-                shr     edi,6
-                add     edi,offset vrammapping
-                mov     [edi],ax
-
                 mov     eax,05050505h
                 mov     edi,sprpatttable
                 shr     edi,6
                 mov     ecx,256*8/64/4
                 add     edi,offset vrammapping
                 rep     stosd
+
+                mov     eax,04040404h
+                mov     edi,sprattrtable
+                shr     edi,6
+                add     edi,offset vrammapping
+                mov     [edi],ax
 
                 mov     eax,offset dirty_screen2_nothing
                 mov     dword ptr [offset screenselect+0*4],eax
@@ -1648,10 +1712,14 @@ eval_base_address_scr2_doc:
                 xor     eax,eax
                 ret
 
+; --------------------------------------------------------------------
+
 eval_base_address_scr1:
 
                 test    byte ptr [offset vdpregs+1],(BIT_4 OR BIT_3)
                 jnz     eval_base_address_scr0
+
+; --------------------------------------------------------------------
 
                 ; M3,M2,M1 reset - screen 1
 
@@ -1708,12 +1776,6 @@ eval_base_address_scr1:
                 add     edi,offset vrammapping
                 mov     [edi],al
 
-                mov     eax,04040404h
-                mov     edi,sprattrtable
-                shr     edi,6
-                add     edi,offset vrammapping
-                mov     [edi],ax
-
                 mov     eax,05050505h
                 mov     edi,sprpatttable
                 shr     edi,6
@@ -1721,6 +1783,12 @@ eval_base_address_scr1:
                 add     edi,offset vrammapping
                 rep     stosd
                 
+                mov     eax,04040404h
+                mov     edi,sprattrtable
+                shr     edi,6
+                add     edi,offset vrammapping
+                mov     [edi],ax
+
                 mov     eax,offset dirty_screen1_nothing
                 mov     dword ptr [offset screenselect+0*4],eax
                 mov     eax,offset dirty_screen1_name
@@ -1739,9 +1807,13 @@ eval_base_address_scr1:
                 xor     eax,eax
                 ret
 
+; --------------------------------------------------------------------
+
 eval_base_address_scr0:
                 test    byte ptr [offset vdpregs+1],BIT_4
                 jz      eval_base_address_scr3
+
+; --------------------------------------------------------------------
 
                 ; M3,M1 set, M2 reset - screen 0
 
@@ -1795,6 +1867,8 @@ eval_base_address_scr0:
 
                 xor     eax,eax
                 ret
+
+; --------------------------------------------------------------------
 
 eval_base_address_scr3:
                 
@@ -2020,34 +2094,88 @@ dirty_screen3_sprattr:
 ; by passing the condition to the screen behind it
 
 wash_sprite:
-
+                mov     spr_occult,255
                 mov     edx,32
                 mov     esi,sprattrtable
                 add     esi,msxvram
-                xor     eax,eax
+                mov     eax,0
+                mov     ebx,0
 
 wash_sprite_loop:
-                ;cmp     byte ptr [esi],0D0h
-                ;je      wash_sprite_end
+                cmp     byte ptr [offset dirtysprattr+ebx],1
+                je      wash_sprite_now
+                cmp     byte ptr [offset dirtysprattrold+ebx],1
+                je      wash_sprite_now
                 mov     al,[esi+2]
                 shr     al,2
                 cmp     byte ptr [offset dirtysprite+eax],1
                 jne     wash_sprite_next
 
+wash_sprite_now:
+                push    ebx
                 call    eval_sprite_coords
                 call    dirty_sprite
+                pop     ebx
 
 wash_sprite_next:
                 add     esi,4
+                inc     ebx
                 dec     edx
                 jnz     wash_sprite_loop
 
 wash_sprite_end:
                 mov     edi,offset dirtysprite
                 mov     eax,0
+                mov     ecx,256/4
+                rep     stosd
+                
+                ; the double buffering is used when a sprite 
+                ; was occulted, but one sprite before it
+                ; has moved and unocculted it
+                mov     edi,offset dirtysprattrold
+                mov     esi,offset dirtysprattr
+                mov     ecx,32/4
+                rep     movsd
+                
+                mov     edi,offset dirtysprattr
+                mov     eax,0
                 mov     ecx,32/4
                 rep     stosd
+                
                 ret
+
+; prepare_ocultation -------------------------------------------------
+; this function init the ocultation tables
+; and mark all ocultated sprites as "dirty"
+; must be called before wash_sprite
+
+prepare_ocultation:
+                cmp     all_sprites,1
+                je      _ret
+
+                call    clear_sprite_buffer
+
+                ; esi = sprite attribute table
+                mov     esi,msxvram
+                add     esi,sprattrtable
+
+                ; find last sprite
+                mov     ebp,32
+prepare_ocultation_loop:
+                mov     ah,[esi]
+                cmp     ah,0D0h
+                je      _ret
+
+                call    mark_sprite
+
+                add     esi,4
+                dec     ebp
+                jnz     prepare_ocultation_loop
+                
+                ret
+
+; --------------------------------------------------------------------
 
 code32          ends
                 end
+

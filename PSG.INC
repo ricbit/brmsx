@@ -15,3 +15,4 @@ extrn compose_speaker: near
 extrn speaker_shutup: near
 extrn noise_table: byte
 extrn sb_flushed: dword
+extrn noise_counter: dword

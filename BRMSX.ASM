@@ -55,7 +55,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.141',13,10
+msg00           db      'BrMSX 1.142',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -79,7 +79,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.141',13,10
+msg22           db      'BrMSX 1.142',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -131,6 +131,7 @@ help_message    db      'Usage: BRMSX [-options] '
 help_message2   db      13
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
+                db      '-allspr        disable 5th sprite ocultation',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
@@ -146,6 +147,8 @@ help_message2   db      13
                 db      '-joy           enable joystick emulation',13,10
                 db      '-joysens <n>   adjust joystick sensibility '
                 db      '(range is 0 to 7, default is 3)',13,10
+                db      '-fakejoy       make the keyboard act as '
+                db      'joystick A',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
@@ -157,6 +160,9 @@ help_message2   db      13
                 db      '-noenter       disable enter pressing at '
                 db      'start',13,10
                 db      '-help          show this help page',13,10
+                db      'Press enter to continue.$'
+help_message3   db      13
+                db      '                           '
                 db      '$'
 msgnocpuid      db      '486 or below $'
 msg386          db      '386 $'
@@ -219,6 +225,8 @@ switch_green    db      '-green',0
 switch_roma     db      '-roma',0
 switch_romb     db      '-romb',0
 switch_speaker  db      '-speaker',0
+switch_allspr   db      '-allspr',0
+switch_fakejoy  db      '-fakejoy',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -256,8 +264,10 @@ switch_table:
                 dd      offset switch_roma
                 dd      offset switch_romb
                 dd      offset switch_speaker
+                dd      offset switch_allspr
+                dd      offset switch_fakejoy
 
-switch_total    dd      35
+switch_total    dd      37
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -295,6 +305,8 @@ switch_callback:
                 dd      offset callback_roma
                 dd      offset callback_romb
                 dd      offset callback_speaker
+                dd      offset callback_allspr
+                dd      offset callback_fakejoy
 
 align 4
 
@@ -1359,6 +1371,9 @@ callback_help:
                 call    getchar
                 mov     eax,offset help_message2
                 call    printmsg
+                call    getchar
+                mov     eax,offset help_message3
+                call    printmsg
                 jmp     _exit
 
 callback_diska:
@@ -1662,6 +1677,14 @@ callback_romb_second_5:
 callback_speaker:
                 mov     nosound,1
                 mov     speaker,1
+                ret
+
+callback_allspr:
+                mov     all_sprites,1
+                ret
+
+callback_fakejoy:
+                mov     fakejoy,1
                 ret
 
 ; read_rom -----------------------------------------------------------

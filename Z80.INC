@@ -139,3 +139,4 @@ extrn vdpaddress: word
 extrn psgselect: byte
 extrn vdpaccess: dword
 extrn speaker: dword
+extrn fakejoy: dword

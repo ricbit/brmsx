@@ -2,7 +2,7 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
-release 1.139:
+release 1.142:
 
 - faster fetch on CB DD ED FD opcodes
 - dynamic recompiler (disabled)
@@ -17,9 +17,12 @@ release 1.139:
 - now the debug screen is updated after a load state
 - new debug command: "0" to watch the current MSX screen
 - 3-channel sound through the speaker (option "-speaker")
-- fixed a problem in video cache ("River Raid" ,"Pay Load")
+- fixed two problems in video cache ("River Raid","K. Tyme")
 - fixed some problems in RESET and LOAD ROM options of the GUI
 - new option in the GUI: "TURN OFF" (hard reset)
+- new sprite engine: 16x16N 8x8N 16x16Z 8x8Z (with full crop)
+- support to 5th sprite ocultation (including the relevant vdp status bits)
+- option "-fakejoy" remaps the keyboard into the joystick
 
 release 1.136: 
 
