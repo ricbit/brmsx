@@ -1,0 +1,11 @@
+extrn outemul98_msx2: near
+extrn outemul99_msx2: near
+extrn inemul99_msx2: near
+extrn inemul98_msx2: near
+extrn outemul9B_msx2: near
+extrn outemul9A_msx2: near
+extrn render_screen0_80: near
+extrn render_screen5: near
+extrn render_screen6: near
+extrn render_screen7: near
+extrn sprite_render_msx2: near

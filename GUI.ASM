@@ -19,6 +19,7 @@ include blit.inc
 include mouse.inc
 include debug.inc
 include saveload.inc
+include mount.inc
 
 extrn blitbuffer: dword
 extrn filenamelist: dword
@@ -26,6 +27,9 @@ extrn read_rom: near
 extrn cart1: dword
 extrn rommapper: dword
 extrn rommappera: dword
+extrn load_disk_image: near
+extrn drivea_name: byte
+extrn msxmodel: dword
 
 public rendercounter
 public spritecounter
@@ -86,12 +90,13 @@ framenumber     dd      0
 lastmouse       dd      0
 psggraph        dd      0
 turnoff_flag    dd      0
+msx2_cpu_mask   dd      0
 
 ; vars for main menu
 
 menu_selected   dd      0
 menu_last       dd      0
-menu_number     dd      9
+menu_number     dd      10
 menu_locked     dd      0
 menu_child      dd      0
 
@@ -101,6 +106,7 @@ menu_callback:
 menu_callback_xxx:
                 dd      offset turn_off_now
                 dd      offset load_rom
+                dd      offset load_dsk
                 dd      offset changebargraph
                 dd      offset change_psggraph
                 dd      offset change_sound
@@ -112,6 +118,7 @@ menu_msg:
                 dd      offset msg_reset
                 dd      offset msg_turn_xxx
                 dd      offset msg_load_cart
+                dd      offset msg_load_dsk
                 dd      offset msg_bargraph
                 dd      offset msg_psggraph
                 dd      offset msg_sound
@@ -122,6 +129,7 @@ menu_msg:
 msg_reset       db      'Reset',0
 msg_turn_xxx    db      'Turn OFF',0
 msg_load_cart   db      'Load ROM',0
+msg_load_dsk    db      'Load DSK',0
 msg_bargraph    db      'CPU Graph',0
 msg_psggraph    db      'PSG Graph',0
 msg_sound       db      'Sound',0
@@ -141,9 +149,13 @@ load_rom_last           dd      0
 load_rom_scroll         dd      0
 firstrom                dd      0        
 totalrom                dd      0
+gui_mask                dd      0
+actual_mask             dd      offset rom_mask
 name_buffer             db      16 dup (0)
 rom_mask                db      '*.ROM',0
+dsk_mask                db      '*.DSK',0
 rom_extension           db      '.ROM',0
+dsk_extension           db      '.DSK',0
 
 ; psg color bars
 
@@ -376,6 +388,11 @@ draw_psggraph_channel_next:
 ; draw a single bar in blitbuffer
 
 drawline:
+                mov     msx2_cpu_mask,0
+                cmp     msxmodel,1
+                jb      drawline_msx1
+                mov     msx2_cpu_mask,1010h
+drawline_msx1:
                 mov     ebx,100
                 mul     ebx                
                 xor     edx,edx
@@ -387,6 +404,7 @@ drawline:
                 shl     edi,8
                 add     edi,blitbuffer
                 mov     ebx,0F0Dh
+                or      ebx,msx2_cpu_mask
 drawline1:      
                 cmp     ecx,esi
                 jbe     drawline2
@@ -402,6 +420,8 @@ drawline_loop:
                 inc     edi
                 dec     ecx
                 jnz     drawline1
+
+
 
                 mov     eax,ebp
                 sub     edi,33
@@ -891,6 +911,8 @@ load_rom:
                 mov     menu_locked,1
                 mov     eax,offset draw_load_rom
                 mov     menu_child,eax
+                mov     eax,offset rom_mask
+                mov     actual_mask,eax
                 mov     firstscreen,1
                 mov     firstrom,0
                 ret
@@ -969,6 +991,97 @@ load_rom_unlock:
                 call    clear
                 mov     firstscreen,1
                 ret
+
+; load_dsk -----------------------------------------------------------
+; prepare the gui to open the "load dsk" window
+
+load_dsk:
+                cmp     menu_locked,1
+                je      load_dsk_now
+                mov     menu_locked,1
+                mov     eax,offset draw_load_rom
+                mov     menu_child,eax
+                mov     eax,offset dsk_mask
+                mov     actual_mask,eax
+                mov     firstscreen,1
+                mov     firstrom,0
+                ret
+
+load_dsk_now:
+                cmp     load_rom_selected,0
+                je      load_dsk_perform_scroll
+                
+                ; clear name buffer
+                mov     ecx,16/4
+                mov     edi,offset name_buffer
+                mov     eax,0
+                rep     stosd
+                
+                ; copy the name of the rom
+                mov     eax,load_rom_selected
+                add     eax,firstrom
+                dec     eax
+                shl     eax,3
+                add     eax,filenamelist
+                mov     ebx,[eax]
+                mov     dword ptr [offset name_buffer],ebx
+                mov     ebx,[eax+4]
+                mov     dword ptr [offset name_buffer+4],ebx
+                
+                ; search the first zero of the name
+                mov     al,0
+                mov     edi,offset name_buffer
+                mov     ecx,16
+                repnz   scasb
+                
+                ; append ".DSK" to the name
+                dec     edi
+                mov     esi,offset dsk_extension
+                mov     ecx,1
+                rep     movsd
+                
+                ; perform the load
+                call    flush_dsk
+                mov     esi,offset name_buffer
+                mov     edi,offset drivea_name
+                mov     ecx,16/4
+                rep     movsd
+                call    load_disk_image
+                mov     cpupaused,0
+                ret
+
+load_dsk_perform_scroll:
+                cmp     load_rom_scroll,0
+                je      load_dsk_unlock
+
+                cmp     load_rom_scroll,1
+                jne     load_dsk_perform_scroll_down
+
+                cmp     totalrom,15
+                jbe     _ret
+                
+                mov     eax,firstrom
+                add     eax,15
+                cmp     eax,totalrom
+                je      _ret
+
+                inc     firstrom
+                mov     firstscreen,1
+                ret
+
+load_dsk_perform_scroll_down:
+                cmp     firstrom,0
+                je      _ret
+                dec     firstrom
+                mov     firstscreen,1
+                ret
+
+load_dsk_unlock:
+                mov     menu_locked,0
+                call    clear
+                mov     firstscreen,1
+                ret
+
 
 ; draw_menu_child ----------------------------------------------------
 ; draw the child menu if the parent is locked
@@ -1192,7 +1305,7 @@ search_directory:
                 
                 mov     ebx,0
                 mov     ebp,filenamelist
-                mov     edi,offset rom_mask
+                mov     edi,actual_mask
                 mov     edx,offset name_buffer
                 call    find_first
 
@@ -1223,7 +1336,7 @@ search_directory_point:
 
 search_directory_no_point:
                 inc     ebx
-                mov     edi,offset rom_mask
+                mov     edi,actual_mask
                 mov     edx,offset name_buffer
                 call    find_next
 

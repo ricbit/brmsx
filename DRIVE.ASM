@@ -42,7 +42,7 @@ extrn disksize: dword
 
 align 4
 
-portenabled     dd      1
+portenabled     dd      0
 
 driveD0         db      0
 driveD1         db      0
@@ -372,6 +372,7 @@ inemulD4:
 
 inemul_disabled:
                 ret
+
 
 code32          ends
                 end

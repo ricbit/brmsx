@@ -13,6 +13,7 @@ include pentium.inc
 include bit.inc
 include io.inc
 include z80.inc
+include v9938.inc
 
 extrn msxvram: dword
 extrn vdpregs: near
@@ -51,6 +52,10 @@ public sprite_collision
 public direct_color
 public eval_base_address_msx2
 public text_columns
+public spriteenable
+public foregroundmask
+public backgroundmask
+public backgroundcolor
 
 ; DATA ---------------------------------------------------------------
 
@@ -67,7 +72,6 @@ include scr2frzm.inc
 include scr2bkzm.inc
 include scr2und.inc
 include sprzoom.inc
-include screen5.inc
 
 align 4
 
@@ -99,6 +103,7 @@ y_factor        dd      0
 x_factor        dd      0
 direct_color    dd      0
 text_columns    dd      40
+sprite_number   dd      0
 
 scr2inc         dd      offset scr2undoc_table+3*12
 scr2inc_color   dd      offset scr2undoc_table+3*12
@@ -116,6 +121,7 @@ dirtysprite     db      256 dup (0)
 dirtysprattr    db      32 dup (0)
 dirtysprattrold db      32 dup (0)
 falsesprite     db      32*32*2 dup (0)
+prioritymask    db      32 dup (0)
 spritemask      db      192 dup (01Fh)
 spritecounter   db      192 dup (0)
 lastscreen      db      0
@@ -203,78 +209,6 @@ render0_psgbugfix:
                 add     edi,256
                 dec     ecx
                 jnz     render0_psgbugfix
-
-                ret
-
-; render_screen0_80 --------------------------------------------------
-; render a screen 0 page
-; MSX2 version: 80 columns
-
-render_screen0_80:                
-                mov     esi,msxvram                
-                add     esi,nametable
-                
-                mov     ebx,msxvram
-                add     ebx,patterntable
-                
-                mov     edi,blitbuffer
-                add     edi,16
-
-                mov     ecx,0
-                mov     edx,0
-                
-                mov     ebp,24
-                ; draw a screen
-
-render06_80:
-                push    ebp
-                mov     ebp,80
-                ; draw a line
-
-render05_80:
-                ; draw two chars
-
-                mov     cl,[esi]
-                mov     dl,[ebx+ecx*8]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-                
-                mov     eax,[offset screen0_table1_msx2+edx*8]
-                mov     [edi+i*1024],eax
-                mov     [edi+i*1024+512],eax
-                mov     eax,[offset screen0_table1_msx2+edx*8+4]
-                mov     dl,[ebx+ecx*8+i+1]
-                mov     [edi+4+i*1024],eax
-                mov     [edi+4+i*1024+512],eax
-
-                endm
-
-                mov     cl,[esi+1]
-                mov     dl,[ebx+ecx*8]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-                
-                mov     eax,[offset screen0_table2_msx2+edx*8]
-                mov     [edi+6+i*1024],ax
-                mov     [edi+6+i*1024+512],ax
-                mov     eax,[offset screen0_table2_msx2+edx*8+4]
-                mov     dl,[ebx+ecx*8+i+1]
-                mov     [edi+8+i*1024],eax
-                mov     [edi+8+i*1024+512],eax
-
-                endm
-
-                add     esi,2
-                add     edi,12
-                sub     ebp,2
-                jnz     render05_80
-
-                pop     ebp
-                add     edi,512*15+32
-                dec     ebp
-                jnz     render06_80
-
-                mov     spriteenable,0
 
                 ret
 
@@ -874,6 +808,16 @@ render_screen2:
 render_screen2_mmx:
                 RENDER_SCREEN2_MACRO MMX_ENGINE
 
+; render_screen4 -----------------------------------------------------
+; render a screen 4 page
+; WARNING: this function must ALWAYS be 
+;          called with interrupts DISABLED
+
+render_screen4:
+                call    render_screen2
+                mov     spriteenable,2
+                ret
+
 ; render_screen3 -----------------------------------------------------
 ; render a screen 3 page
 
@@ -1101,132 +1045,6 @@ sprite_render_line_slow_next:
 sprite_render_line_exit:
                 pop     esi
                 jmp     sprite_render_next
-
-; sprite_render_msx2 -------------------------------------------------
-; draw the sprites directly on the blit buffer
-; MSX2 version - sprites mode 2
-
-align 4
-
-sprite_render_msx2:
-                ; check for screen enabled
-                test    byte ptr [offset vdpregs+1],BIT_6
-                jz      _ret
-
-                ; esi = sprite attribute table
-                mov     esi,msxvram
-                add     esi,sprattrtable
-
-                ; find last sprite
-                mov     ebp,32
-sprite_render_find_loop_msx2:
-                mov     ah,[esi]
-                cmp     ah,0D8h
-                je      sprite_render_found_msx2
-
-                add     esi,4
-                dec     ebp
-                jnz     sprite_render_find_loop_msx2
-sprite_render_found_msx2:
-                sub     esi,4
-                mov     eax,32
-                sub     eax,ebp
-                mov     ebp,eax
-                jz      _ret
-
-                ; at this point
-                ; esi = pointer to last sprite's attribute table
-                ; ebp = number of sprites
-
-sprite_render_outer_msx2:
-                push    ebp
-
-                ; check for transparent sprite
-                ;mov     cl,byte ptr [esi+3]
-                ;and     cl,0Fh
-                ;jz      sprite_render_next
-
-                ; draw sprite image in false sprite buffer
-                call    draw_sprite_image_msx2
-
-                ; eval sprite coordinates
-                call    eval_sprite_coords_msx2
-                mov     edi,eax
-                sal     edi,10
-                add     edi,ecx
-                add     edi,ecx
-                add     edi,blitbuffer
-
-                ; check for unusual size
-                cmp     edx,16
-                jne     sprite_render_next_msx2
-                
-                ; check for crop
-                cmp     ecx,0
-                jl      sprite_render_next_msx2
-                cmp     ecx,256-16
-                jge     sprite_render_next_msx2
-                cmp     eax,0
-                jl      sprite_render_next_msx2
-                cmp     eax,212-16
-                jge     sprite_render_next_msx2
-
-                ; draw the sprite in blitbuffer
-                
-                mov     ecx,offset falsesprite
-                push    esi
-                sub     esi,msxvram
-                sub     esi,sprattrtable
-                shr     esi,2
-                xchg    eax,esi
-
-sprite_render_line_msx2:
-                ;cmp     al,byte ptr [offset spritemask+esi]
-                ;ja      sprite_render_next_line_msx2
-
-                ;irp     i,<0,4,8,12>
-                ;mov     ebx,[edi+i]              
-                ;and     ebx,[ecx+i]
-                ;or      ebx,[ecx+32+i]
-                ;mov     [edi+i],ebx
-                ;endm
-                irp     i,<0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15>
-                mov     bl,[edi+i*2]
-                and     bl,[ecx+i]
-                or      bl,[ecx+32+i]
-                mov     [edi+i*2],bl
-                
-                mov     bl,[edi+i*2+1]
-                and     bl,[ecx+i]
-                or      bl,[ecx+32+i]
-                mov     [edi+i*2+1],bl
-                
-                mov     bl,[edi+i*2+512]
-                and     bl,[ecx+i]
-                or      bl,[ecx+32+i]
-                mov     [edi+i*2+512],bl
-                
-                mov     bl,[edi+i*2+512+1]
-                and     bl,[ecx+i]
-                or      bl,[ecx+32+i]
-                mov     [edi+i*2+512+1],bl
-                endm
-sprite_render_next_line_msx2:
-                inc     esi
-                add     ecx,64
-                add     edi,1024 ;256
-                dec     edx
-                jnz     sprite_render_line_msx2
-
-                pop     esi
-
-sprite_render_next_msx2:
-                pop     ebp
-                sub     esi,4
-                dec     ebp   
-                jnz     sprite_render_outer_msx2
-
-                ret
 
 ; clear_sprite_buffer ------------------------------------------------
 ; clear the buffer for 5th sprite ocultation
@@ -1829,36 +1647,6 @@ render_col_inner:
 
                 ret
 
-; render_screen 5-----------------------------------------------------
-; render the SCREEN 5
-
-render_screen5:
-                mov     edi,blitbuffer
-                mov     esi,nametable
-                add     esi,msxvram
-                mov     ecx,192
-
-render_screen5_outer:
-                mov     edx,128
-
-render_screen5_inner:
-                movzx   eax,byte ptr [esi]
-                inc     esi
-                mov     ebx,dword ptr [offset screen5_table+eax*4]
-                mov     dword ptr [edi],ebx
-                mov     dword ptr [edi+512],ebx
-                add     edi,4
-                dec     edx
-                jnz     render_screen5_inner
-
-                add     edi,512
-                dec     ecx
-                jnz     render_screen5_outer
-
-                mov     spriteenable,2
-
-                ret
-
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM
 
@@ -1939,8 +1727,17 @@ render_draw:
                 cmp     bl,3
                 je      render_screen3
 
+                cmp     bl,4
+                je      render_screen4
+
                 cmp     bl,5
                 je      render_screen5
+
+                cmp     bl,6
+                je      render_screen6
+
+                cmp     bl,7
+                je      render_screen7
 
                 ret
 
@@ -1980,180 +1777,6 @@ eval_sprite_coords1:
                 inc     eax
                 ret
                 
-; eval_sprite_coords_msx2 --------------------------------------------
-; evaluate sprite coordinates
-; MSX2 version
-; enter: esi = start of sprite attribute in vram
-; exit: eax = offset y ; ecx = offset x (both are signed numbers)
-
-eval_sprite_coords_msx2:
-                xor     ecx,ecx
-                mov     cl,[esi+1]      ; x coordinate
-
-                movzx   eax,byte ptr [esi]        ; y coordinate
-                cmp     eax,0BEh         ; 0F0h ??
-                jbe     eval_sprite_coords1_msx2
-                movsx   eax,al
-
-eval_sprite_coords1_msx2:
-                inc     eax
-                ret
-                
-; draw_sprite_image_msx2 ---------------------------------------------
-; draw a sprite image in the false buffer
-; MSX2 version
-; enter: esi = start of sprite attribute in vram
-; exit: false sprite buffer filled with sprite image
-;       edx = number of lines/rows of sprite
-
-draw_sprite_image_msx2:
-                test    byte ptr [offset vdpregs+1],BIT_1
-                jz      _ret
-
-draw_sprite_image_16_msx2:       
-                test    byte ptr [offset vdpregs+1],BIT_0
-                jnz     _ret
-                
-                ; only 16x16N is supported
-                
-                ; eval address of sprite image
-                movzx   eax,byte ptr [esi+2]
-                and     eax,11111100b
-                mov     ecx,msxvram
-                add     ecx,sprpatttable
-                lea     ecx,[ecx+eax*8]
-
-                ; eval color mask of sprite
-                mov     al,[esi+3]
-                mov     eax,[offset backgroundcolor+eax*4]
-
-                mov     edx,0
-                mov     edi,offset falsesprite
-                mov     ebx,0
-
-draw_sprite_image_16N_loop_msx2:                     
-                push    esi
-
-                mov     eax,esi
-                sub     eax,sprattrtable
-                sub     eax,msxvram
-                shr     eax,2
-                shl     eax,4
-                add     eax,sprattrtable
-                add     eax,msxvram
-                sub     eax,512
-                mov     al,[eax+edx]
-
-                and     eax,0Fh
-                mov     eax,[offset backgroundcolor+eax*4]
-                
-                ; fetch the image for the subline
-                mov     bl,[ecx]
-
-                ; get the sprite mask
-                mov     esi,[offset backgroundmask+ebx*8]
-
-                ; get the sprite color
-                mov     ebp,eax
-
-                ; blend with the sprite image
-                and     ebp,[offset foregroundmask+ebx*8]
-
-                ; put back to screen
-                mov     [edi],esi
-                mov     [edi+32],ebp
-
-                ; do it again for the next four pixels
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                mov     [edi+4],esi
-                mov     [edi+4+32],ebp
-                
-                ; do it again for the next eight pixels
-                
-                mov     bl,[ecx+16]
-                
-                mov     esi,[offset backgroundmask+ebx*8]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8]
-                mov     [edi+8],esi
-                mov     [edi+8+32],ebp
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                mov     [edi+12],esi
-                mov     [edi+12+32],ebp
-
-                pop     esi
-                
-                add     edi,64
-                inc     ecx
-                inc     edx
-                cmp     edx,16
-                jne     draw_sprite_image_16N_loop_msx2
-
-                mov     edx,16
-                ret
-
-draw_sprite_image_16N_loop_msx2_or:
-                and     eax,0Fh
-                mov     eax,[offset backgroundcolor+eax*4]
-                
-                ; fetch the image for the subline
-                mov     bl,[ecx]
-
-                ; get the sprite mask
-                mov     esi,[offset backgroundmask+ebx*8]
-
-                ; get the sprite color
-                mov     ebp,eax
-
-                ; blend with the sprite image
-                and     ebp,[offset foregroundmask+ebx*8]
-
-                ; put back to screen
-                or      [edi],esi
-                or      [edi+32],ebp
-
-                ; do it again for the next four pixels
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                or      [edi+4],esi
-                or      [edi+4+32],ebp
-                
-                ; do it again for the next eight pixels
-                
-                mov     bl,[ecx+16]
-                
-                mov     esi,[offset backgroundmask+ebx*8]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8]
-                or      [edi+8],esi
-                or      [edi+8+32],ebp
-                
-                mov     esi,[offset backgroundmask+ebx*8+4]
-                mov     ebp,eax
-                and     ebp,[offset foregroundmask+ebx*8+4]
-                or      [edi+12],esi
-                or      [edi+12+32],ebp
-
-                pop     esi
-                
-                add     edi,64
-                inc     ecx
-                inc     edx
-                cmp     edx,16
-                jne     draw_sprite_image_16N_loop_msx2
-
-                mov     edx,16
-                ret
-
-
 ; draw_sprite_image --------------------------------------------------
 ; draw a sprite image in the false buffer
 ; enter: esi = start of sprite attribute in vram
@@ -2522,13 +2145,19 @@ eval_base_address_begin_msx2:
                 je      eval_screen1
 
                 cmp     al,00001b
-                je      eval_screen2
+                je      eval_screen2_msx2
                 
                 cmp     al,00010b
-                je      eval_screen2
+                je      eval_screen4
                 
                 cmp     al,00011b
                 je      eval_screen5
+                
+                cmp     al,00100b
+                je      eval_screen6
+                
+                cmp     al,00101b
+                je      eval_screen7
                 
                 jmp     eval_screen0_msx2
 
@@ -2666,6 +2295,288 @@ eval_base_address_scr2_check_color:
                 mov     scr2inc_color,ecx
 
 eval_base_address_scr2_doc:
+                
+                pop     edi ecx eax
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen2_msx2:
+                ; M3 set - screen 2
+
+                mov     actualscreen,2
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,07Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     al,80h
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,04h
+                shl     eax,11
+                mov     patterntable,eax
+
+                mov     al,byte ptr [offset vdpregs+5]
+                mov     ah,byte ptr [offset vdpregs+11]
+                and     eax,03F8h
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,03Fh
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    eax ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,01010101h
+                mov     edi,nametable
+                shr     edi,6
+                mov     ecx,32*24/64 
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,02020202h
+                mov     ecx,32*24*8/64 
+                mov     edi,patterntable
+                shr     edi,6
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,03030303h
+                mov     ecx,32*24*8/64 
+                mov     edi,colortable
+                shr     edi,6
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,05050505h
+                mov     edi,sprpatttable
+                shr     edi,6
+                mov     ecx,256*8/64 
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,04040404h
+                mov     edi,sprattrtable
+                shr     edi,6
+                add     edi,offset vrammapping
+                mov     ecx,2
+                call    fill_vram_table
+
+                mov     eax,offset dirty_screen2_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen2_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen2_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen2_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen2_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen2_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+
+                mov     eax,offset scr2undoc_table+3*12
+                mov     scr2inc,eax
+                mov     scr2inc_color,eax
+
+                ; perform undocumented correction in color table
+                ; used in the "atselous" demo
+                mov     al,byte ptr [offset vdpregs+3]
+                and     al,3
+                mov     bitmask,al
+                
+                mov     al,byte ptr [offset vdpregs+3]
+                shr     al,2
+                and     al,7
+                shl     al,5
+                or      al,00011100b
+                
+                or      bitmask,al
+
+                ; check for the undocumented feature in image table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,3
+                cmp     eax,3
+                je      eval_base_address_scr2_check_color_msx2
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc,ecx
+
+eval_base_address_scr2_check_color_msx2:
+                ; check for the undocumented feature in color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     eax,127
+                cmp     eax,127
+                je      eval_base_address_scr2_doc_msx2
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                shr     eax,5
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc_color,ecx
+
+eval_base_address_scr2_doc_msx2:
+                
+                pop     edi ecx eax
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen4:
+                ; screen 4
+
+                mov     actualscreen,4
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,07Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     al,80h
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,04h
+                shl     eax,11
+                mov     patterntable,eax
+
+                mov     al,byte ptr [offset vdpregs+5]
+                mov     ah,byte ptr [offset vdpregs+11]
+                and     eax,03FCh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,03Fh
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    eax ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,01010101h
+                mov     edi,nametable
+                shr     edi,6
+                mov     ecx,32*24/64 
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,02020202h
+                mov     ecx,32*24*8/64 
+                mov     edi,patterntable
+                shr     edi,6
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,03030303h
+                mov     ecx,32*24*8/64 
+                mov     edi,colortable
+                shr     edi,6
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,05050505h
+                mov     edi,sprpatttable
+                shr     edi,6
+                mov     ecx,256*8/64 
+                add     edi,offset vrammapping
+                call    fill_vram_table
+
+                mov     eax,04040404h
+                mov     edi,sprattrtable
+                shr     edi,6
+                add     edi,offset vrammapping
+                mov     ecx,2
+                call    fill_vram_table
+
+                mov     eax,offset dirty_screen2_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen2_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen2_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen2_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen2_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen2_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+
+                mov     eax,offset scr2undoc_table+3*12
+                mov     scr2inc,eax
+                mov     scr2inc_color,eax
+
+                ; perform undocumented correction in color table
+                ; used in the "atselous" demo
+                mov     al,byte ptr [offset vdpregs+3]
+                and     al,3
+                mov     bitmask,al
+                
+                mov     al,byte ptr [offset vdpregs+3]
+                shr     al,2
+                and     al,7
+                shl     al,5
+                or      al,00011100b
+                
+                or      bitmask,al
+
+                ; check for the undocumented feature in image table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,3
+                cmp     eax,3
+                je      eval_base_address_scr4_check_color
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc,ecx
+
+eval_base_address_scr4_check_color:
+                ; check for the undocumented feature in color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                and     eax,127
+                cmp     eax,127
+                je      eval_base_address_scr4_doc
+
+                ; undocumented mode is on
+                mov     everyframe,1
+
+                shr     eax,5
+                lea     eax,[eax+eax*2]
+                lea     ecx,[offset scr2undoc_table+eax*4]
+                mov     scr2inc_color,ecx
+
+eval_base_address_scr4_doc:
                 
                 pop     edi ecx eax
 
@@ -2941,6 +2852,122 @@ eval_screen5:
 
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     al,01100000b
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,03Fh
+                shl     eax,11
+                mov     patterntable,eax
+
+                mov     al,byte ptr [offset vdpregs+5]
+                mov     ah,byte ptr [offset vdpregs+11]
+                and     eax,03FCh
+                shl     eax,7
+                ;mov     eax,0F600h
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,03Fh
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen0_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen0_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen0_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen0_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen0_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen0_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen6:
+                ; screen 6
+
+                mov     actualscreen,6
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,01100000b
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,03Fh
+                shl     eax,11
+                mov     patterntable,eax
+
+                mov     al,byte ptr [offset vdpregs+5]
+                mov     ah,byte ptr [offset vdpregs+11]
+                and     eax,03FCh
+                shl     eax,7
+                ;mov     eax,0F600h
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,03Fh
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen0_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen0_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen0_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen0_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen0_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen0_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen7:
+                ; screen 7
+
+                mov     actualscreen,7
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,01000000b
                 shl     eax,10
                 mov     nametable,eax
 

@@ -423,6 +423,9 @@ setgraphmode:
                 cmp     videomode,0
                 je      _ret
 
+                cmp     videomode,7
+                je      _ret
+
                 cmp     videomode,3
                 je      setgraph_256x192
 
@@ -1675,6 +1678,7 @@ set_palette_color:
                 mov     dx,03C8h
                 out     dx,al
                 inc     dx
+                and     eax,0Fh
                 lea     ecx,[offset msx2palette+eax*2]
                 
                 ; R

@@ -30,3 +30,7 @@ extrn direct_color: dword
 extrn eval_base_address_msx2: near
 extrn text_columns: dword
 extrn actualscreen: byte
+extrn spriteenable: dword
+extrn foregroundmask: byte
+extrn backgroundmask: byte
+extrn backgroundcolor: byte

@@ -20,6 +20,8 @@ extrn redbuffer: dword
 extrn bluebuffer: dword
 
 public blit
+public total_lines
+public clear_bottom_field
 
 ; DATA ---------------------------------------------------------------
 
@@ -38,6 +40,10 @@ ENGINE_MMX      EQU     2
                         db      32 dup (0)
 dirtyname_parrot        db      32*24+32 dup (0)
 
+align 4
+total_lines             dd      192
+clear_bottom_field      dd      0
+
 ; CODE ---------------------------------------------------------------
 
 ; blit ---------------------------------------------------------------
@@ -52,6 +58,9 @@ blit:
 
                 cmp     videomode,6
                 je      blit6
+
+                cmp     videomode,7
+                je      blit7
 
                 cmp     imagetype,1
                 je      blit_dirty_256
@@ -196,12 +205,6 @@ blit_dirty_256_next:
                 ret
 
 blit2:
-                cmp     text_columns,80                
-                je      blit2_msx2
-
-                cmp     actualscreen,5
-                je      blit2_msx2
-
                 cmp     cpupaused,1
                 je      blit2_slow
                 
@@ -1622,6 +1625,89 @@ blit2_msx2_outer_loop:
                 cmp     eax,3
                 jne     blit2_msx2_outer_loop
 
+                ret
+
+; linear 320x200 -----------------------------------------------------
+; MSX2 VERSION
+
+blit7:
+                call    eval_bottom_field_7
+
+                cmp     actualscreen,6
+                je      blit7_sizedown
+
+                cmp     actualscreen,7
+                je      blit7_sizedown
+
+                cmp     text_columns,80
+                je      blit7_sizedown
+
+                mov     esi,blitbuffer
+                mov     edi,0A0000h+32
+                sub     edi,_code32a
+
+blit7_outer:
+                mov     ecx,256/4
+                rep     movsd
+
+                add     edi,64
+                dec     edx
+                jnz     blit7_outer
+                
+                ret
+
+; --------------------------------------------------------------------
+
+blit7_sizedown:
+                mov     esi,blitbuffer
+                mov     ecx,200
+                mov     edi,0A0000h+32
+                sub     edi,_code32a
+
+blit7_sizedown_outer:
+                mov     edx,256
+
+blit7_sizedown_inner:
+                mov     al,[esi]
+                add     esi,2
+                mov     [edi],al
+                inc     edi
+                dec     edx
+                jnz     blit7_sizedown_inner
+
+                add     edi,64
+                dec     ecx
+                jnz     blit7_sizedown_outer
+                
+                ret
+
+eval_bottom_field_7:
+                mov     edx,total_lines
+                cmp     edx,200
+                jbe     eval_bottom_field_7_check
+                mov     edx,200
+eval_bottom_field_7_check:
+                cmp     clear_bottom_field,1
+                jne     _ret
+
+                mov     edi,0A0000h
+                sub     edi,_code32a
+                add     edi,320*192
+                mov     ecx,12*320/4
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                shl     eax,8
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                shl     eax,8
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                shl     eax,8
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                rep     stosd
+
+                mov     clear_bottom_field,0
                 ret
 
 code32          ends

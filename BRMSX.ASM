@@ -24,6 +24,7 @@ include serial.inc
 include z80core.inc
 include mount.inc
 include symdeb.inc
+include v9938.inc
 
 public _main
 public msxram
@@ -60,6 +61,8 @@ public dos2enabled
 public extendedrom
 public msxmodel
 public vdplog
+public drivea_name
+public load_disk_image
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -71,7 +74,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.165',13,10
+msg00           db      'BrMSX 1.166',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -95,7 +98,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.165',13,10
+msg22           db      'BrMSX 1.166',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -916,31 +919,23 @@ main_nocart2:
                 mov     eax,0
                 rep     stosd
 
+                ; print drive A name
+                mov     eax,offset msg25
+                call    printmsg
+                mov     al,'"'
+                call    printasc
+                mov     eax,offset drivea_name
+                call    printnul
+                mov     al,'"'
+                call    printasc
+                call    crlf
+
                 ; load disk image from disk
                 call    load_disk_image
                 jc      invalid_disk_image
 
                 call    read_disk_rom
 
-                cmp     portenabled,1
-                je      _main_port
-
-                ; patch for PHYDIO
-                mov     edi,cart2slot
-                mov     eax,dword ptr [edi+16]
-                mov     byte ptr [eax+010h],0edh
-                mov     byte ptr [eax+011h],0ffh
-
-                ; patch for DSKCHG
-                mov     byte ptr [eax+013h],0edh
-                mov     byte ptr [eax+014h],0ffh
-
-                ; patch for GETDPB
-                mov     byte ptr [eax+016h],0edh
-                mov     byte ptr [eax+017h],0ffh
-                jmp     _main_nodrive
-
-_main_port:
                 ;; fix the error present in all interfaces
                 ;; based on the CDX-2
                 ;; (this means all brazilian interfaces)
@@ -1670,6 +1665,8 @@ callback_res_second:
                 je      callback_res_256x192
                 cmp     bl,'6'
                 je      callback_res_512x384_parrot
+                cmp     bl,'7'
+                je      callback_res_320x200xmsx2
                 mov     videomode,0
                 ret
 
@@ -1687,6 +1684,10 @@ callback_res_256x192:
 
 callback_res_512x384_parrot:
                 mov     videomode,6
+                ret
+
+callback_res_320x200xmsx2:
+                mov     videomode,7
                 ret
 
 callback_disklow:
@@ -2344,32 +2345,6 @@ enable_rom:
                 mov     dword ptr [ebp+16+4+24],eax
                 ret
 
-; flush_dsk ----------------------------------------------------------
-; flush the DSK image to the disk
-                
-flush_dsk:
-
-                mov     edx,offset drivea_name
-                call    create_file
-
-                mov     ebx,disksize 
-                mov     esi,diskimage
-flush_dsk_loop:               
-                mov     edi,transf_buffer
-                mov     ecx,4096/4 
-                rep     movsd
-
-                mov     ecx,4096 
-                mov     edx,transf_buffer
-                push    ebx
-                call    write_file
-                pop     ebx
-
-                dec     ebx
-                jnz     flush_dsk_loop
-                call    close_file
-                ret
-
 ; read_tape ----------------------------------------------------------
 ; read tape image from disk
 
@@ -2627,17 +2602,6 @@ load_disk_image:
                 cmp     diskenabled,2
                 je      mount_disk_image
 
-                ; print drive A name
-                mov     eax,offset msg25
-                call    printmsg
-                mov     al,'"'
-                call    printasc
-                mov     eax,offset drivea_name
-                call    printnul
-                mov     al,'"'
-                call    printasc
-                call    crlf
-
                 ; read disk image from file
                 mov     edx,offset drivea_name
                 call    open_file
@@ -2747,6 +2711,9 @@ check_bad_dump_exit:
 ; --------------------------------------------------------------------
                 
 read_disk_rom:
+                ;cmp     msxmodel,1
+                ;jae     read_disk_rom_msx2
+
                 ; allocate 16kb for disk.rom
                 mov     eax,16*1024
                 call    _getmem
@@ -2775,6 +2742,24 @@ read_disk_rom:
                 add     eax,2000h
                 mov     dword ptr [edi+16+8],eax
 
+                cmp     portenabled,1
+                je      _main_port
+
+                ; patch for PHYDIO
+                mov     edi,cart2slot
+                mov     eax,dword ptr [edi+16]
+                mov     byte ptr [eax+010h],0edh
+                mov     byte ptr [eax+011h],0ffh
+
+                ; patch for DSKCHG
+                mov     byte ptr [eax+013h],0edh
+                mov     byte ptr [eax+014h],0ffh
+
+                ; patch for GETDPB
+                mov     byte ptr [eax+016h],0edh
+                mov     byte ptr [eax+017h],0ffh
+
+_main_port:
                 ; check for MSXDOS-2 emulation
                 cmp     dos2enabled,1
                 jne     _ret
@@ -2810,6 +2795,13 @@ read_disk_rom:
                 add     ecx,2000h
                 endm
 
+                ; fill the megadump
+                mov     ecx,cart1
+                mov     ebp,cart2slot
+                sub     ebp,offset slot0
+                shr     ebp,6
+                mov     dword ptr [offset megadump+ebp*4],ecx
+
                 ; patch the DISK2.ROM to make it run on msx-1 machines
                 mov     eax,cart1
                 add     eax,07DEh
@@ -2821,7 +2813,7 @@ read_disk_rom:
 
 read_msx_rom:
                 cmp     msxmodel,1
-                je      read_msx_rom_msx2
+                jae     read_msx_rom_msx2
 
                 ; allocate 32kb to msx rom
                 mov     eax,32768
@@ -2969,6 +2961,13 @@ read_msx_rom_msx2:
 
                 ; turn off video cache
                 mov     imagetype,0
+
+                ; check for valid videomodes
+                cmp     videomode,7
+                jae     msx2_videomode_valid
+                mov     videomode,7
+msx2_videomode_valid:
+
                
                 ret
 

@@ -17,8 +17,11 @@ extrn mountdir_name: byte
 extrn diskimage: dword
 extrn transf_buffer: dword
 extrn dos2enabled: dword
+extrn disksize: dword
+extrn drivea_name: byte
 
 public mount_disk_image
+public flush_dsk
 
 ; DATA ---------------------------------------------------------------
 
@@ -305,6 +308,32 @@ mount_disk_ret_disk_full:
                 mov     eax,offset msg5
                 call    printmsg
                 stc
+                ret
+
+; flush_dsk ----------------------------------------------------------
+; flush the DSK image to the disk
+                
+flush_dsk:
+
+                mov     edx,offset drivea_name
+                call    create_file
+
+                mov     ebx,disksize 
+                mov     esi,diskimage
+flush_dsk_loop:               
+                mov     edi,transf_buffer
+                mov     ecx,4096/4 
+                rep     movsd
+
+                mov     ecx,4096 
+                mov     edx,transf_buffer
+                push    ebx
+                call    write_file
+                pop     ebx
+
+                dec     ebx
+                jnz     flush_dsk_loop
+                call    close_file
                 ret
 
 

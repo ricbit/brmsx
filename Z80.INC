@@ -158,10 +158,7 @@ extrn inemul98: dword
 extrn mapper_banks: byte
 extrn extended_slot_0: byte
 extrn memlock: byte
-extrn outemul98_msx2: near
-extrn outemul99_msx2: near
-extrn inemul99_msx2: near
-extrn inemul98_msx2: near
-extrn outemul9B_msx2: near
-extrn outemul9A_msx2: near
 extrn msx2palette: byte
+extrn vdpaddressh: byte
+extrn vdpaddressl: byte
+extrn vdpaddresse: dword

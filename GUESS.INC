@@ -1,4 +1,9 @@
 guess_table:
+        dd      0A4F1FB29h
+        dd      2+2
+        dd      offset name_solid_snake_english
+        
+        
         dd      08E150C70h
         dd      2+1
         dd      offset name_msxdos2
@@ -174,6 +179,9 @@ guess_table:
         dd      0
 
 ; name table
+
+name_solid_snake_english:
+        db      'Solid Snake (english)$'
 
 name_msxdos2:
         db      'MSX-DOS 2$'
