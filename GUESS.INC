@@ -160,6 +160,10 @@ guess_table:
         dd      5+2
         dd      offset name_eggerland_mystery_2
 
+        dd      0E299715Fh
+        dd      5+2
+        dd      offset name_eggerland_mystery_2
+
         dd      061E72787h
         dd      2+2
         dd      offset name_f1_spirit

@@ -80,8 +80,8 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 2.2',13,10
-                db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
+msg00           db      'BrMSX 2.3',13,10
+                db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Error in ROM file',13,10,'$'
@@ -104,8 +104,8 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 2.2',13,10
-                db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
+msg22           db      'BrMSX 2.3',13,10
+                db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
                 db      '~ricardo/brmsx.htm',13,10
@@ -139,15 +139,14 @@ msg42           db      'VESA2 640x480x8 not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
-                db      '-msx1          select MSX-1 emulation '
+                db      '-msx1          select MSX 1 emulation '
                 db      '(default)',13,10
-                db      '-msx2          select MSX-2 emulation',13,10
+                db      '-msx2          select MSX 2 emulation',13,10
+                db      '-msx2+         select MSX 2+ emulation',13,10
                 db      '-normal        normal emulation speed '
                 db      '(default)',13,10
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
-                db      '-ifreq <n>     change interrupt frequency '
-                db      '(default is 60)',13,10
                 db      '-roma <n>      select MegaROM Mapper for '
                 db      'cartridge A (default=autodetect)',13,10
                 db      '-romb <n>      select MegaROM Mapper for '
@@ -164,6 +163,8 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '               9=Konami with 8-bit DAC',13,10
                 db      'Press enter to continue.$'
 help_message2   db      13
+                db      '-ifreq <n>     change interrupt frequency '
+                db      '(default is 60)',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
                 db      '-korean        enable korean memory layout '
@@ -176,22 +177,24 @@ help_message2   db      13
                 db      '               0=64kb 1=128kb 2=256kb 3=512kb '
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-res <mode>    select screen resolution',13,10 
-                db      '               0 =320x200x8  MSX-1 default',13,10
-                db      '               1 =256x200x8  MSX-1 large screen'
+                db      '               0 =320x200x8  MSX 1 default',13,10
+                db      '               1 =256x200x8  MSX 1 large screen'
                 db      13,10
-                db      '               2 =512x384x8  MSX-1 TV emulation '
+                db      '               2 =512x384x8  MSX 1 TV emulation '
                 db      '(interpolation+scanlines)',13,10
-                db      '               3 =256x192x8  MSX-1 square pixels'
+                db      '               3 =256x192x8  MSX 1 square pixels'
                 db      13,10
-                db      '               6 =512x384x15 MSX-1 Parrot engine'
+                db      '               6 =512x384x15 MSX 1 Parrot engine'
                 db      13,10
-                db      '               7 =320x200x8  MSX-2 default',13,10
-                db      '               8 =512x384x8  MSX-2 full width '
+                db      '               7 =320x200x8  MSX 2 default',13,10
+                db      '               8 =512x384x8  MSX 2 full width '
                 db      'support',13,10
-                db      '               9 =512x384x8  MSX-2 full width '
+                db      '               9 =512x384x8  MSX 2 full width '
                 db      'support with black scanlines',13,10
-                db      '               11=640x480x8  MSX-2 full screen '
+                db      '               11=640x480x8  MSX 2 full screen '
                 db      'support with black scanlines',13,10
+                db      '               12=512x384x15 MSX 2+ with support '
+                db      'to YJK system',13,10
                 db      '-vsync         sync with the monitor and the '
                 db      'internal timer',13,10
                 db      '-truevsync     sync with the monitor only '
@@ -202,10 +205,10 @@ help_message2   db      13
                 db      '-allspr        disable 5th sprite ocultation',13,10
                 db      '-nosprcol      disable sprite collision '
                 db      'detection',13,10
-                db      '-vdptiming     enable emulation of VDP timing',13,10
-                db      '-nocache       disable video cache',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-vdptiming     enable emulation of VDP timing',13,10
+                db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
@@ -235,15 +238,15 @@ help_message3   db      13
                 db      '(range is 0 to 7, default is 3)',13,10
                 db      '-snespad       enable SNES pad connected in '
                 db      'LPT1',13,10
-                db      '-fakejoy       make the keyboard act as '
-                db      'joystick A',13,10
                 db      '-autofire      enable the automatic fire',13,10
                 db      '-autorun       enable the automatic run',13,10
                 db      '-autospeed <n> adjust speed for autofire '
                 db      '(range is 0 to 9, default is 5)',13,10
-                db      '-nomouse       disable mouse driver detection',13,10
                 db      'Press enter to continue.$'
 help_message4   db      13
+                db      '-fakejoy       make the keyboard act as '
+                db      'joystick A',13,10
+                db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
@@ -255,24 +258,28 @@ help_message4   db      13
                 db      'start',13,10
                 db      '-help          show this help page',13,10
                 db      '$'
-
-msgnocpuid       db      '486 or below $'
-msg386           db      '386 $'
-msg486           db      '486 $'
-msg586           db      'Pentium $'
-msg686           db      'Pentium Pro or better $'
-msgMMX           db      '(MMX)$'
-msgpoint         db      '.$'
-rom_name         db      'MSX.ROM',0
-disk_rom_name    db      'DISK.ROM',0
-disk2_rom_name   db      'DISK2.ROM',0
-dos2_rom_name    db      'DOS2.ROM',0
-msxhan_name      db      'MSXHAN.ROM',0
-msx2_rom_name    db      'MSX2.ROM',0
-msx2ext_rom_name db      'MSX2EXT.ROM',0
-blasterenv       db      'BLASTER',0
-addrstr          db      3 dup (0)
-model_diskrom    dd     disk_rom_name
+                  
+msgnocpuid        db      '486 or below $'
+msg386            db      '386 $'
+msg486            db      '486 $'
+msg586            db      'Pentium $'
+msg686            db      'Pentium Pro or better $'
+msgMMX            db      '(MMX)$'
+msgpoint          db      '.$'
+rom_name          db      'MSX.ROM',0
+disk_rom_name     db      'DISK.ROM',0
+disk2_rom_name    db      'DISK2.ROM',0
+dos2_rom_name     db      'DOS2.ROM',0
+msxhan_name       db      'MSXHAN.ROM',0
+msx2_rom_name     db      'MSX2.ROM',0
+msx2ext_rom_name  db      'MSX2EXT.ROM',0
+msx2p_rom_name    db      'MSX2P.ROM',0
+msx2pext_rom_name db      'MSX2PEXT.ROM',0
+blasterenv        db      'BLASTER',0
+addrstr           db      3 dup (0)
+model_diskrom     dd     offset disk_rom_name
+model_mainrom     dd     offset msx2_rom_name
+model_subrom      dd     offset msx2ext_rom_name
 
 emptyspace      db      128 dup (0)
 argnumber       dd      0
@@ -343,6 +350,8 @@ switch_prn       db      '-prn',0
 switch_msx2      db      '-msx2',0
 switch_vdplog    db      '-vdplog',0
 switch_truevsync db      '-truevsync',0
+switch_joynet    db      '-joynet',0
+switch_msx2p     db      '-msx2+',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -398,8 +407,10 @@ switch_table:
                 dd      offset switch_msx2
                 dd      offset switch_vdplog
                 dd      offset switch_truevsync
+                dd      offset switch_joynet
+                dd      offset switch_msx2p
 
-switch_total    dd      53
+switch_total    dd      55
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -455,6 +466,8 @@ switch_callback:
                 dd      offset callback_msx2
                 dd      offset callback_vdplog
                 dd      offset callback_truevsync
+                dd      offset callback_joynet
+                dd      offset callback_msx2p
 
 cart1table:
                 dd      128*1024
@@ -752,7 +765,7 @@ _main_idlerom:
                 mov     edi,msxvram
                 mov     ecx,vramsize
                 shr     ecx,2
-                mov     eax,055555555h
+                mov     eax,0 ;055555555h
                 rep     stosd
 
                 ; allocate 16kb to cartridge sram
@@ -1725,6 +1738,8 @@ callback_res_set:
                 je      callback_res_512x384xmsx2_scanlines
                 cmp     bl,11
                 je      callback_res_640x480xmsx2_scanlines
+                cmp     bl,12
+                je      callback_res_512x384x16_scanlines
                 mov     videomode,0
                 ret
 
@@ -1758,6 +1773,10 @@ callback_res_512x384xmsx2_scanlines:
 
 callback_res_640x480xmsx2_scanlines:
                 mov     videomode,11
+                ret
+
+callback_res_512x384x16_scanlines:
+                mov     videomode,12
                 ret
 
 callback_disklow:
@@ -2149,6 +2168,16 @@ callback_vdplog:
 
 callback_truevsync:
                 mov     truevsync,1
+                ret
+
+callback_joynet:
+                mov     joynet,1
+                ret
+
+callback_msx2p:
+                mov     msxmodel,2
+                mov     model_mainrom,offset msx2p_rom_name
+                mov     model_subrom,offset msx2pext_rom_name
                 ret
 
 ; read_rom -----------------------------------------------------------
@@ -2921,7 +2950,6 @@ read_msx_rom:
                 ret
 
 read_msx_rom_msx2:
-
                 ; allocate 32kb to msx2 rom
                 mov     eax,32768
                 call    _getmem
@@ -2934,7 +2962,7 @@ read_msx_rom_msx2:
                 endm
 
                 ; read msx2 rom from disk
-                mov     edx,offset msx2_rom_name
+                mov     edx,model_mainrom ;offset msx2_rom_name
                 call    open_file
                 jc      msx2_rom_error
                 call    read_size_file
@@ -2998,7 +3026,7 @@ read_msx_rom_msx2:
                 endm
 
                 ; read msx2ext rom from disk
-                mov     edx,offset msx2ext_rom_name
+                mov     edx,model_subrom ;offset msx2ext_rom_name
                 call    open_file
                 jc      msx2ext_rom_error
                 call    read_size_file
@@ -3121,6 +3149,7 @@ check_video_mode_640_ok:
                 CHECK_VIDEOMODE 8,1
                 CHECK_VIDEOMODE 9,1
                 CHECK_VIDEOMODE 11,4
+                CHECK_VIDEOMODE 12,2
 
                 cmp     msxmodel,0
                 jne     check_video_mode_msx2

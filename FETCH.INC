@@ -50,6 +50,7 @@ FETCH1SX        macro   opcode
                 jne     emul_fetch 
 
                 call    fetch1
+                movsx   ebx,al
                 jmp     emul_continue 
 
 emul_fetch:

@@ -518,6 +518,9 @@ setgraphmode:
                 cmp     videomode,11
                 je      setgraphmode_vesa_msx2
 
+                cmp     videomode,12
+                je      setgraphmode_vesa_512_15
+
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
@@ -545,12 +548,19 @@ setgraphmode:
                 and     al,07Fh
                 out     dx,al
 
-                SET_VGA_REG 03D4h,0,77
-                SET_VGA_REG 03D4h,1,63
-                SET_VGA_REG 03D4h,2,64
-                SET_VGA_REG 03D4h,3,128+3
-                SET_VGA_REG 03D4h,4,68
-                SET_VGA_REG 03D4h,5,0
+                ;SET_VGA_REG 03D4h,0,77
+                ;SET_VGA_REG 03D4h,1,63
+                ;SET_VGA_REG 03D4h,2,64
+                ;SET_VGA_REG 03D4h,3,128+3
+                ;SET_VGA_REG 03D4h,4,68
+                ;SET_VGA_REG 03D4h,5,0
+                ;SET_VGA_REG 03D4h,013h,32
+                SET_VGA_REG 03D4h,0,04Eh
+                SET_VGA_REG 03D4h,1,03Fh
+                SET_VGA_REG 03D4h,2,040h
+                SET_VGA_REG 03D4h,3,091h
+                SET_VGA_REG 03D4h,4,042h
+                SET_VGA_REG 03D4h,5,000h
                 SET_VGA_REG 03D4h,013h,32
 
                 ret

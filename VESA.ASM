@@ -459,6 +459,9 @@ set_vesa_mode:
                 cmp     videomode,11
                 je      set_vesa_mode_640
 
+                cmp     videomode,12
+                je      set_vesa_mode_512_15
+
                 mov     ebx,vesamodenumber512
                 jmp     set_vesa_mode_now
 

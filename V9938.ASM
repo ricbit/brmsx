@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------- 
 ; BrMSX v:1.32                                                         
 ; Copyright (C) 1997 by Ricardo Bittencourt                            
-; module: 
+; module: V9938.ASM
 ; -------------------------------------------------------------------- 
 
         .386p
@@ -22,6 +22,7 @@ extrn msxvram: dword
 extrn vdplog: dword
 extrn blitbuffer: dword
 extrn redbuffer: dword
+extrn msxmodel: dword
 
 public outemul98_msx2
 public outemul99_msx2
@@ -415,6 +416,9 @@ inemul99_msx2_reg1:
                 mov     bl,byte ptr [offset vdpstatus+1]
                 and     byte ptr [offset vdpstatus+1],0FEh
                 mov     iline,0
+                cmp     msxmodel,2
+                jb      _ret
+                or      bl,BIT_2
                 ret
 
 inemul99_msx2_reg7:

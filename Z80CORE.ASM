@@ -339,7 +339,7 @@ emulate_loop:
                 jne     emulate_continue
 
                 ;cmp     ebx,212
-                ;ja      emulate_continue
+                ;je      emulate_continue
 
                 test    byte ptr [offset vdpregs+0],BIT_4
                 jz      emulate_continue
@@ -371,6 +371,10 @@ skip_render:
                 mov     fakeirq,0
                 inc     rcounter
                 call    z80_interrupt
+
+                mov     ebx,current_line
+                cmp     ebx,212
+                je      emulate_nextline
                 jmp     emulate_loop
 
 emulate_continue:

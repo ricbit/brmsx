@@ -19,6 +19,7 @@ include bit.inc
 extrn blitbuffer: dword
 extrn redbuffer: dword
 extrn bluebuffer: dword
+extrn msxmodel: dword
 
 public blit
 public total_lines
@@ -49,6 +50,8 @@ align 4
 total_lines             dd      192
 clear_bottom_field      dd      0
 
+high_palette            dd      32*4 dup (0)
+
 ; CODE ---------------------------------------------------------------
 
 ; blit ---------------------------------------------------------------
@@ -75,6 +78,9 @@ blit:
 
                 cmp     videomode,11
                 je      blit11
+
+                cmp     videomode,12
+                je      blit12
 
                 cmp     imagetype,1
                 je      blit_dirty_256
@@ -2617,6 +2623,617 @@ eval_bottom_field_11_512:
                 mov     ecx,(212-192)*512/4
                 mov     eax,0
                 rep     stosd
+                ret
+
+; --------------------------------------------------------------------
+; blit12 - 512x384x16
+
+blit12:
+                cmp     actualscreen,8
+                je      blit12_screen8
+
+                cmp     actualscreen,6
+                jae     blit12_screen6
+
+                cmp     text_columns,80
+                je      blit12_screen6
+
+                call    init_high_palette
+
+                cmp     enginetype,2
+                je      blit12_mmx
+
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_double_bank:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+
+blit12_double_outer:
+                push    edx
+                mov     ecx,256
+
+blit12_double_inner:
+                movzx   eax,byte ptr [esi]
+                inc     esi
+                mov     edx,dword ptr [offset high_palette+eax*4]
+                mov     [edi],edx
+                add     edi,4
+                dec     ecx
+                jnz     blit12_double_inner
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_double_outer
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_double_bank
+                ret
+
+blit12_mmx:
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_double_bank_mmx:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+
+blit12_double_outer_mmx:
+                push    edx
+                mov     ecx,256/4
+
+blit12_double_inner_mmx:
+                mov     ebx,dword ptr [esi]
+                movzx   eax,bh
+                mov     edx,dword ptr [offset high_palette+eax*4]
+
+                ;movd    MM0,edx
+                movd
+                db      11000010b
+
+                movzx   eax,bl
+
+                ;psllq    MM0,32
+                psllq   
+                db      11110000b
+                db      32
+
+                add     esi,2
+                mov     edx,dword ptr [offset high_palette+eax*4]
+
+                ;movd    MM1,edx
+                movd
+                db      11001010b
+
+                ;por     MM0,MM1
+                por
+                db      11000001b
+
+                shr     ebx,16
+
+                ; movq_st [edi],MM0
+                movq_st
+                db      00000111b
+
+                add     edi,8
+
+                movzx   eax,bh
+                mov     edx,dword ptr [offset high_palette+eax*4]
+
+                ;movd    MM0,edx
+                movd
+                db      11000010b
+
+                movzx   eax,bl
+
+                ;psllq    MM0,32
+                psllq   
+                db      11110000b
+                db      32
+
+                add     esi,2
+                mov     edx,dword ptr [offset high_palette+eax*4]
+
+                ;movd    MM1,edx
+                movd
+                db      11001010b
+
+                ;por     MM0,MM1
+                por
+                db      11000001b
+
+                ; movq_st [edi],MM0
+                movq_st
+                db      00000111b
+
+                add     edi,8
+
+                dec     ecx
+                jnz     blit12_double_inner_mmx
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_double_outer_mmx
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_double_bank_mmx
+
+                ret
+
+; --------------------------------------------------------------------
+
+blit12_screen6:
+                call    init_high_palette
+
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_double_bank_screen6:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+
+blit12_double_outer_screen6:
+                push    edx
+                mov     ecx,256
+
+blit12_double_inner_screen6:
+                movzx   eax,byte ptr [esi+1]
+                movzx   edx,word ptr [offset high_palette+eax*4]
+                shl     edx,16
+                movzx   eax,byte ptr [esi]
+                add     esi,2
+                mov     dx,word ptr [offset high_palette+eax*4]
+                mov     [edi],edx
+                add     edi,4
+                dec     ecx
+                jnz     blit12_double_inner_screen6
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_double_outer_screen6
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_double_bank_screen6
+                ret
+
+; --------------------------------------------------------------------
+
+init_high_palette:
+                ; init the msx1 palette
+                mov     edi,offset high_palette
+                mov     esi,offset sg1000_high_palette
+                mov     ecx,16
+init_msx1_high_palette:
+                mov     ax,word ptr [esi]
+                mov     word ptr [edi],ax
+                mov     word ptr [edi+2],ax
+                add     esi,2
+                add     edi,4
+                dec     ecx
+                jnz     init_msx1_high_palette
+
+                cmp     actualscreen,0
+                je      init_high_palette_scr0
+
+                mov     ebp,0
+                mov     esi,offset msx2palette
+                mov     edi,offset high_palette+16*4
+init_msx2_high_palette:
+                mov     ax,word ptr [esi]
+                add     esi,2
+
+                mov     bl,al
+                shr     bl,4
+                and     bl,7
+                mov     bh,bl
+                shr     bh,1
+                shl     bl,2
+                or      bl,bh
+                and     ebx,31
+                mov     edx,ebx
+
+                mov     bl,ah
+                and     bl,111b
+                mov     bh,bl
+                shr     bh,1
+                shl     bl,2
+                or      bl,bh
+                shl     edx,5
+                or      dl,bl
+
+                mov     bl,al
+                and     bl,111b
+                mov     bh,bl
+                shr     bh,1
+                shl     bl,2
+                or      bl,bh
+                shl     edx,5
+                or      dl,bl
+
+                mov     ebx,edx
+                shl     edx,16
+                or      edx,ebx
+
+                mov     dword ptr [edi],edx
+                add     edi,4
+                inc     ebp
+                cmp     ebp,16
+                jnz     init_msx2_high_palette
+
+                test    byte ptr [offset vdpregs+8],BIT_5
+                jnz     _ret
+
+                ; init color 0
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,15
+                mov     ebx,dword ptr [offset high_palette+eax*4]
+                mov     dword ptr [offset high_palette],ebx
+                mov     ebx,dword ptr [offset high_palette+eax*4+16*4]
+                mov     dword ptr [offset high_palette+16*4],ebx
+
+                ret
+
+init_high_palette_scr0:
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                mov     ebx,dword ptr [offset high_palette+eax*4]
+                mov     dword ptr [offset high_palette+16*4],ebx
+
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                and     eax,0Fh
+                mov     ebx,dword ptr [offset high_palette+eax*4]
+                mov     dword ptr [offset high_palette+16*4+4],ebx
+
+                ret
+
+; --------------------------------------------------------------------
+
+blit12_screen8:
+                test    byte ptr [offset vdpregs+25],BIT_3
+                jnz     blit12_yjk
+
+blit12_screen8_start:
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_scr8_bank:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+
+blit12_scr8_outer:
+                push    edx
+                mov     ecx,256
+
+blit12_scr8_inner:
+                movzx   eax,byte ptr [esi]
+
+                mov     bl,al
+                shr     bl,2
+                and     ebx,7
+                shl     ebx,2
+                mov     edx,ebx
+
+                mov     bl,al
+                shr     bl,5
+                and     ebx,7
+                shl     ebx,2
+                shl     edx,5
+                or      edx,ebx
+
+                mov     bl,al
+                and     ebx,3
+                shl     ebx,3
+                shl     edx,5
+                or      edx,ebx
+
+                mov     ebx,edx
+                shl     edx,16
+                or      edx,ebx
+
+                inc     esi
+                mov     [edi],edx
+                add     edi,4
+                dec     ecx
+                jnz     blit12_scr8_inner
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_scr8_outer
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_scr8_bank
+                ret
+
+; --------------------------------------------------------------------
+
+blit12_yjk:
+                cmp     msxmodel,2
+                jb      blit12_screen8_start
+
+                test    byte ptr [offset vdpregs+25],BIT_4
+                jnz     blit12_scr11
+
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_scr12_bank:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+
+blit12_scr12_outer:
+                push    edx
+                mov     ecx,256/4
+
+blit12_scr12_inner:
+                ; ebx = K (signed)
+                mov     bl,[esi+1]
+                and     bl,7
+                shl     bl,3
+                mov     bh,[esi]
+                and     bh,7
+                or      bl,bh
+                shl     bl,2
+                movsx   ebx,bl
+                sar     ebx,2
+
+                ; edx = J (signed)
+                mov     dl,[esi+3]
+                and     dl,7
+                shl     dl,3
+                mov     dh,[esi+2]
+                and     dh,7
+                or      dl,dh
+                shl     dl,2
+                movsx   edx,dl
+                sar     edx,2
+
+                irp     i,<0,1,2,3>
+                local   clipr_0,clipr_255
+                local   clipg_0,clipg_255
+                local   clipb_0,clipb_255
+
+                mov     eax,0
+
+                ; evaluate R=8Y+8J
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F8h
+                lea     ebp,[ebp+edx*8]
+                cmp     ebp,0
+                jge     clipr_0
+                mov     ebp,0        
+clipr_0:
+                cmp     ebp,255
+                jle     clipr_255
+                mov     ebp,255
+clipr_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                ; evaluate G=8Y+8K
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F8h
+                lea     ebp,[ebp+ebx*8]
+                cmp     ebp,0
+                jge     clipg_0
+                mov     ebp,0        
+clipg_0:
+                cmp     ebp,255
+                jle     clipg_255
+                mov     ebp,255
+clipg_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                ; evaluate B=10Y-4J-2K
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F8h
+                shr     ebp,2
+                lea     ebp,[ebp+ebp*4]
+                neg     ebp
+                lea     ebp,[ebp+edx*4]
+                lea     ebp,[ebp+ebx*2]
+                neg     ebp
+                cmp     ebp,0
+                jge     clipb_0
+                mov     ebp,0        
+clipb_0:
+                cmp     ebp,255
+                jle     clipb_255
+                mov     ebp,255
+clipb_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                mov     ebp,eax
+                shl     eax,16
+                or      eax,ebp
+                mov     [edi],eax
+                add     edi,4
+
+                endm
+                add     esi,4
+
+                dec     ecx
+                jnz     blit12_scr12_inner
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_scr12_outer
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_scr12_bank
+                ret
+
+; --------------------------------------------------------------------
+
+blit12_scr11:
+                call    init_high_palette
+
+                mov     eax,0
+                mov     esi,blitbuffer
+blit12_scr11_bank:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                push    eax
+                mov     edx,192/6
+           
+blit12_scr11_outer:
+                push    edx
+                mov     ecx,256/4
+
+blit12_scr11_inner:
+                ; ebx = K (signed)
+                mov     bl,[esi+1]
+                and     bl,7
+                shl     bl,3
+                mov     bh,[esi]
+                and     bh,7
+                or      bl,bh
+                shl     bl,2
+                movsx   ebx,bl
+                sar     ebx,2
+
+                ; edx = J (signed)
+                mov     dl,[esi+3]
+                and     dl,7
+                shl     dl,3
+                mov     dh,[esi+2]
+                and     dh,7
+                or      dl,dh
+                shl     dl,2
+                movsx   edx,dl
+                sar     edx,2
+
+                irp     i,<0,1,2,3>
+                local   clipr_0,clipr_255
+                local   clipg_0,clipg_255
+                local   clipb_0,clipb_255
+                local   draw_yjk,draw_next
+
+                test    byte ptr [esi+i],BIT_3
+                jz      draw_yjk
+
+                movzx   ebp,byte ptr [esi+i]
+                shr     ebp,4
+                mov     eax,[offset high_palette+16*4+ebp*4]
+                mov     [edi],eax
+                add     edi,4
+                jmp     draw_next
+
+draw_yjk:
+                mov     eax,0
+
+                ; evaluate R=8Y+8J
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F0h
+                lea     ebp,[ebp+edx*8]
+                cmp     ebp,0
+                jge     clipr_0
+                mov     ebp,0        
+clipr_0:
+                cmp     ebp,255
+                jle     clipr_255
+                mov     ebp,255
+clipr_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                ; evaluate G=8Y+8K
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F0h
+                lea     ebp,[ebp+ebx*8]
+                cmp     ebp,0
+                jge     clipg_0
+                mov     ebp,0        
+clipg_0:
+                cmp     ebp,255
+                jle     clipg_255
+                mov     ebp,255
+clipg_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                ; evaluate B=10Y-4J-2K
+                movzx   ebp,byte ptr [esi+i]
+                and     ebp,0F0h
+                shr     ebp,2
+                lea     ebp,[ebp+ebp*4]
+                neg     ebp
+                lea     ebp,[ebp+edx*4]
+                lea     ebp,[ebp+ebx*2]
+                neg     ebp
+                cmp     ebp,0
+                jge     clipb_0
+                mov     ebp,0        
+clipb_0:
+                cmp     ebp,255
+                jle     clipb_255
+                mov     ebp,255
+clipb_255:
+                shr     ebp,3
+                shl     eax,5
+                or      eax,ebp
+
+                mov     ebp,eax
+                shl     eax,16
+                or      eax,ebp
+                mov     [edi],eax
+                add     edi,4
+draw_next:
+                endm
+                add     esi,4
+
+                dec     ecx
+                jnz     blit12_scr11_inner
+
+                pop     edx
+                add     edi,512*2
+                dec     edx
+                jnz     blit12_scr11_outer
+
+                pop     eax
+                inc     eax
+                cmp     eax,6
+                jnz     blit12_scr11_bank
                 ret
 
 code32          ends

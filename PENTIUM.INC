@@ -22,6 +22,10 @@ movq            macro
                 db 0fh,06fh
                 endm
 
+movd            macro
+                db 0fh,06eh
+                endm
+
 movq_st         macro
                 db 0fh,07fh
                 endm
@@ -83,6 +87,10 @@ paddw           macro
                 endm
 
 psrlq           macro
+                db      0fh,073h
+                endm
+
+psllq           macro
                 db      0fh,073h
                 endm
 

@@ -288,7 +288,7 @@ search_next_file:
 mount_disk_ret:
                 mov     esi,diskimage
                 add     esi,512
-                mov     edi,diskimage
+                mov     edi,esi ;diskimage
                 add     edi,3*512
                 mov     ecx,3*512/4
                 rep     movsd

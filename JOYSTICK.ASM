@@ -16,6 +16,8 @@ public calibrate_joystick
 public read_joystick
 public joysens
 public snespad
+public write_joynet
+public read_joynet
 
 ; DATA ---------------------------------------------------------------
 
@@ -224,6 +226,54 @@ read_snes_byte:
                 shr     al,6
                 or      al,0FEh
 
+                ret
+
+; read_joynet --------------------------------------------------------
+; emulate the joynet through the parallel port
+; this routine is called from inside emulation
+
+read_joynet:
+                test    byte ptr [offset psgreg+15],BIT_6
+                jnz     read_joynet_b
+                
+                ; joynet a is not implemented yet
+                mov     bl,0
+                ret
+
+read_joynet_b:
+                push    edx
+                mov     edx,0379h
+                in      al,dx
+                shr     al,4
+                or      al,0F8h
+                mov     bl,al
+                pop     edx
+                ret
+
+; write_joynet -------------------------------------------------------
+; emulate the joynet through the parallel port
+; this routine is called from inside emulation
+
+write_joynet:
+                test    byte ptr [offset psgreg+15],BIT_6
+                jnz     write_joynet_b
+
+                ; joynet a is not implemented yet
+                mov     bl,0
+                ret
+
+write_joynet_b:
+                push    edx
+                mov     edx,0378h
+                mov     bh,bl
+                shr     bl,2
+                shr     bh,3
+                and     bh,100b
+                and     bl,11b
+                or      bl,bh
+                mov     al,bl
+                out     dx,al
+                pop     edx
                 ret
 
 code32          ends

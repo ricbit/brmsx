@@ -194,6 +194,7 @@ public regepc
 public vdpregs
 public vsyncflag
 public truevsync
+public joynet
 public reset_cpu
 public reset_cpu_hard
 public ramslot
@@ -505,6 +506,7 @@ fmregister      dd      0
 ; PPI registers
 align 4
 
+joynet          dd      0
 prim_slotreg    db      0
 keyboard_line   db      0
 ppic            db      0
@@ -2266,6 +2268,7 @@ outemulA0:
 
 outemulA1:      mov     al,psgselect        
                 mov     [offset psgreg+eax],bl
+
                 cmp     al,15
                 je      outemulA1_kana
                 cmp     al,13
@@ -2274,9 +2277,10 @@ outemulA1:      mov     al,psgselect
                 jmp     sound_buffer
 
 outemulA1_kana:
+                push    ebx
                 and     bl,80h
                 cmp     psgkana,bl
-                je      _ret
+                je      check_joynet
                 
                 ; Kana LED
                 mov     psgkana,bl
@@ -2285,7 +2289,13 @@ outemulA1_kana:
                 shr     bl,6
                 and     newleds,NBIT_1
                 or      newleds,bl
-                
+
+check_joynet:
+                pop     ebx
+
+                cmp     joynet,1
+                je      write_joynet
+
                 ret
 
 ; --------------------------------------------------------------------
@@ -2554,7 +2564,10 @@ inemulA2:       mov     al,psgselect
                 je      inemulA2a
                 mov     bl,[offset psgreg+eax]
                 ret
-inemulA2a:      
+inemulA2a:
+                cmp     joynet,1
+                je      read_joynet
+
                 mov     al,byte ptr [offset psgreg+15]
                 test    al,BIT_6
                 jnz     inemulA2b
