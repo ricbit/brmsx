@@ -27,6 +27,9 @@ tabregsp        db      ' SP=$'
 tabregpc        db      ' PC=$'
 tabspace        db      ' $'
 tabprompt       db      '> $'
+msgmode00       db      'emulation mode set to NORMAL',13,10,'$'
+msgmode01       db      'emulation mode set to FAST',13,10,'$'
+msgmode02       db      'emulation mode set to TURBO',13,10,'$'
 
 ; showreg ------------------------------------------------------------
 ; show the contents of Z80 registers
@@ -119,6 +122,26 @@ dumpmem4:       call    printasc
 
 ; --------------------------------------------------------------------
 
+changemode:
+                inc     emulatemode
+                cmp     emulatemode,3
+                je      changemode0
+                cmp     emulatemode,1
+                je      changemode1
+                mov     eax,offset msgmode02
+                jmp     changemode3
+changemode0:
+                mov     emulatemode,0
+                mov     eax,offset msgmode00
+                jmp     changemode3
+changemode1:
+                mov     eax,offset msgmode01
+changemode3:
+                call    printmsg
+                ret
+
+; --------------------------------------------------------------------
+
 debug:          
                 call    showreg
 debug_loop:                
@@ -130,10 +153,10 @@ debug_loop:
                 call    crlf
                 cmp     al,'D'
                 je      command_d      
-                cmp     al,'K'
-                je      command_k
                 cmp     al,'V'
                 je      command_v
+                cmp     al,'M'
+                je      command_m
                 cmp     al,'S'
                 je      command_s
                 cmp     al,'B'
@@ -144,10 +167,6 @@ debug_loop:
                 je      command_r
                 cmp     al,'T'
                 je      command_t
-                cmp     al,'X'
-                je      command_x
-                cmp     al,'P'
-                je      command_p
                 cmp     al,'1'
                 je      command_1
                 cmp     al,'2'
@@ -166,21 +185,16 @@ command_d:
                 call    dumpmem
                 jmp     debug_loop
 
-command_k:      
-                call    turnon_kb_irq
-                mov exit_now,0
-                loop1:
-                cmp exit_now,1
-                jne loop1
-                call    turnoff_kb_irq
-                jmp     debug_loop
-
 command_f:
                 call    gethex4
                 and     eax,0ffffh
                 mov     framerate,eax
                 mov     on_off,eax
                 call    crlf
+                jmp     debug_loop
+
+command_m:      
+                call    changemode
                 jmp     debug_loop
 
 command_b:
@@ -260,17 +274,6 @@ command_2:
 
 command_r:
                 call    showreg
-                jmp     debug_loop
-
-command_x:      call    emulate
-                call    crlf
-                jmp     command_r
-
-command_p:      call    gethex4
-                and     eax,0ffffh
-                mov     breakpoint,eax
-                call    crlf
-                call    emulate_echo
                 jmp     debug_loop
 
 command_t:

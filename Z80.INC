@@ -79,3 +79,4 @@ extrn opsubreg: near
 extrn opadcreg: near
 extrn opsbcreg: near
 extrn opaddreg: near
+extrn emulatemode: dword

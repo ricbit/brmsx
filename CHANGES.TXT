@@ -1,3 +1,21 @@
+release 1.29:
+
+- added three levels of syncronization:
+  NORMAL MODE: syncronizes on every interrupt
+  FAST MODE: doest not syncronize, but ints are generated at 60 Hz
+  TURBO MODE: ints are generated more than 60 Hz
+  "M" key switches between the modes
+- removed useless debug commands: X, P, K
+
+release 1.28:
+
+- new unificated "emulate" pipeline
+- msxvram is now allocated in real time, it reduces the executable size
+  and will make life easier when I'll implement msx2 emulation
+- fixed timing of automatic opcodes  
+- RETI does not enable interrupts now, because of this megarom games 
+  doesn't lock anymore
+
 release 1.27:
 
 - changed the memory model to 8k banks instead of 16k banks

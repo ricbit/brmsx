@@ -9,7 +9,7 @@ code32  segment para public use32
 include pmode.inc
 include bit.inc
 
-extrn msxvram: near
+extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
 extrn palette: near
@@ -69,8 +69,8 @@ render_screen0:
                 shr     al,2
                 out     dx,al
 
-                mov     esi,offset msxvram                
-                mov     ebx,offset msxvram+0800h
+                mov     esi,msxvram                
+                lea     ebx,[esi+0800h]
                 mov     edi,blitbuffer
                 add     edi,40
                 mov     ecx,0
@@ -122,18 +122,21 @@ render_screen1:
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
-                lea     esi,[offset msxvram+eax]
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,07h
                 shl     eax,11
-                lea     ebx,[offset msxvram+eax]
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
 
                 ; ecx = color table
                 movzx   eax,byte ptr [offset vdpregs+3]
                 shl     eax,6
-                lea     ecx,[offset msxvram+eax]
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
@@ -230,19 +233,22 @@ render_screen2:
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
-                lea     esi,[offset msxvram+eax]
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
 
                 ; ebx = character pattern table
                 movzx   eax,byte ptr [offset vdpregs+4]
                 and     eax,04h
                 shl     eax,11
-                lea     ebx,[offset msxvram+eax]
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
 
                 ; ecx = color table
                 movzx   eax,byte ptr [offset vdpregs+3]
                 and     eax,080h
                 shl     eax,6
-                lea     ecx,[offset msxvram+eax]
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
@@ -361,13 +367,15 @@ sprite16N:
                 movzx   eax,byte ptr [offset vdpregs+5]
                 and     eax,07fh
                 shl     eax,7
-                lea     esi,[offset msxvram+eax]
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
 
                 ; ecx = sprite image table
                 movzx   eax,byte ptr [offset vdpregs+6]
                 and     eax,07h
                 shl     eax,11
-                lea     ecx,[offset msxvram+eax]
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer

@@ -7,7 +7,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 extrn msxrom: near
-extrn msxvram: near
+extrn msxvram: dword
 extrn cart1: dword
 extrn pset: near
 extrn isetCBxx: near
@@ -31,7 +31,6 @@ public trace
 public print
 public emulate
 public emulate_break
-public emulate_echo
 public emulXX
 public emulC9
 public outemulXX
@@ -52,6 +51,7 @@ public keymatrix
 public rcounter
 public rmask
 public regi
+public emulatemode
 
 public slot0
 public slot1
@@ -245,6 +245,7 @@ rcounter        dd      0
 rmask           db      0
 regi            db      0
 clockcounter    dd      0
+emulatemode     dd      0
 
 ; VDP registers
 align 4
@@ -451,9 +452,28 @@ trace:
                 ret
 
 ; emulate ------------------------------------------------------------
-; starts emulation, stop with any error
 
-emulate:
+BREAK           EQU     0
+NOBREAK         EQU     1
+
+NORMAL          EQU     0
+FAST            EQU     1       
+TURBO           EQU     2       
+
+JUMP            macro   jump,jpoint,emtype,brtype
+
+                jump    emulate_&emtype&_&brtype&_&jpoint
+
+                endm
+
+EMULABEL        macro   point,emtype,brtype
+
+                emulate_&emtype&_&brtype&_&point&:
+
+                endm
+
+EMULATE         macro   emtype,brtype
+
                 mov     eax,0
                 mov     ecx,0
                 mov     error,0
@@ -462,102 +482,87 @@ emulate:
                 mov     clockcounter,0
                 movzx   edi,regpc
                 movzx   edx,regaf
-emulate_loop:
+
+EMULABEL        loop,emtype,brtype
+
                 and     edi,0ffffh
+                
+                if      brtype EQ BREAK
+                cmp     edi,breakpoint
+                JUMP    je,exit,emtype,brtype
+                endif
+
                 call    fetch
                 inc     rcounter
                 call    [offset iset + eax*4]
                 cmp     interrupt,1
-                je      emulate_interrupt
+                JUMP    je,interrupt,emtype,brtype
                 add     clockcounter,ebp
                 cmp     error,1
-                je      emulate_exit
+                JUMP    je,exit,emtype,brtype
+
+                if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
                 cmp     clockcounter,59659
-                jb      emulate_loop
-emulate_synch:  
-  ;              je      emulate_loop
+                JUMP    jb,loop,emtype,brtype
+                endif
+
+                if      emtype EQ FAST
+                JUMP    jmp,loop,emtype,brtype
+                endif
+
+EMULABEL        synch,emtype,brtype
+                
+                if      emtype EQ NORMAL
                 cmp     interrupt,1
-                jne     emulate_synch
-emulate_interrupt:
+                JUMP    jne,synch,emtype,brtype
+                endif
+
+EMULABEL        interrupt,emtype,brtype
+
                 mov     clockcounter,0
                 mov     interrupt,0
                 cmp     exit_now,1
-                je      emulate_exit
+                JUMP    je,exit,emtype,brtype
                 cmp     iff1,1
-                jne     emulate_loop
+                JUMP    jne,loop,emtype,brtype
                 mov     iff1,0 
                 dec     edi
                 and     edi,0ffffh
                 inc     rcounter
                 call    emulFF
-                jmp     emulate_loop
-emulate_exit:
+                JUMP    jmp,loop,emtype,brtype
+
+EMULABEL        exit,emtype,brtype
+                
                 mov     regpc,di
                 mov     regaf,dx
                 ret
+
+                endm
+
+; emulate ------------------------------------------------------------
+; starts emulation, stop with any error
+
+emulate:        
+                cmp     emulatemode,NORMAL
+                jne     emulate1
+                EMULATE NORMAL,NOBREAK
+emulate1:       cmp     emulatemode,FAST
+                jne     emulate2
+                EMULATE FAST,NOBREAK
+emulate2:       EMULATE TURBO,NOBREAK
 
 ; emulate_break ------------------------------------------------------
 ; starts emulation with breakpoint, stop with any error
 
-emulate_break:
-                mov     eax,0
-                mov     ecx,0
-                mov     error,0
-                mov     exit_now,0
-                mov     interrupt,0
-                movzx   edi,regpc
-                movzx   edx,regaf
-emulate_break_loop:
-                and     edi,0ffffh
-                cmp     edi,breakpoint
-                je      emulate_break_exit
-                call    fetch
-                call    [offset iset + eax*4]
-                cmp     interrupt,1
-                je      emulate_break_interrupt
-                cmp     error,1
-                jne     emulate_break_loop
-emulate_break_exit:
-                mov     regpc,di
-                mov     regaf,dx
-                ret
-emulate_break_interrupt:
-                cmp     exit_now,1
-                je      emulate_break_exit
-                cmp     iff1,1
-                jne     emulate_break_loop
-                and     edi,0ffffh
-                dec     edi
-                mov     interrupt,0
-                call    emulFF
-                jmp     emulate_break_loop
-
-; emulate_echo -------------------------------------------------------
-; starts emulation with echo, stop with any error
-
-emulate_echo:
-                call    crlf
-                mov     eax,0
-                mov     error,0
-                movzx   edi,regpc
-                movzx   edx,regaf
-emulate_echo_loop:
-                pushad
-                mov     regpc,di
-                mov     regaf,dx
-                call    showreg
-                popad
-                and     edi,0ffffh
-                cmp     edi,breakpoint
-                je      emulate_echo_end
-                call    fetch
-                call    [offset iset + eax*4]
-                cmp     error,1
-                jne     emulate_echo_loop
-emulate_echo_end:
-                mov     regpc,di
-                mov     regaf,dx
-                ret
+emulate_break:        
+                cmp     emulatemode,NORMAL
+                jne     emulate1_break
+                EMULATE NORMAL,BREAK
+emulate1_break: cmp     emulatemode,FAST
+                jne     emulate2_break
+                EMULATE FAST,BREAK
+emulate2_break: EMULATE TURBO,BREAK
 
 ; print --------------------------------------------------------------
 ; prints only the next instruction
@@ -1914,8 +1919,9 @@ emulXX:         mov     error,1
 
 outemulXX:      ret
 
-outemul98:      mov     ecx,vdpaddresse
-                mov     [offset msxvram+ecx],bl
+outemul98:      mov     ecx,msxvram
+                add     ecx,vdpaddresse
+                mov     [ecx],bl
                 inc     vdpaddress
                 ret
 
@@ -2009,8 +2015,9 @@ outemulAA:      and     bl,0fh
 
 inemulXX:       ret
 
-inemul98:       mov     ecx,vdpaddresse
-                mov     bl,[offset msxvram+ecx]
+inemul98:       mov     ecx,msxvram
+                add     ecx,vdpaddresse
+                mov     bl,[ecx]
                 inc     vdpaddress
                 ret
 

@@ -13,13 +13,14 @@ include debug.inc
 
 public _main
 public msxram
+public msxvram
 public blitbuffer
 public diskimage
 public cart1
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.28',13,10
+msg00           db      'BrMSX 1.29',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -29,6 +30,7 @@ cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
 
 msxram          dd      ?
+msxvram         dd      ?
 blitbuffer      dd      ?
 msxrom          dd      ?
 cart1           dd      ?
@@ -43,10 +45,6 @@ _main:          sti
                 mov     eax,offset msg00
                 call    printmsg
 
-                mov     eax,esp
-                call    printhex4
-                call    crlf
-                
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem
@@ -76,6 +74,12 @@ _main0:
                 mov     ecx,32768
                 call    read_file
                 
+                ; allocate 16kb to msx vram
+                mov     eax,16384
+                call    _getmem
+                jc      no_memory
+                mov     msxvram,eax
+
                 ; allocate 64kb to msx ram
                 mov     eax,65536
                 call    _getmem
