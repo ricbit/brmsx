@@ -254,4 +254,4 @@ psetEDxx:
 	psetEDFC: dd prinXX
 	psetEDFD: dd prinXX
 	psetEDFE: dd prinXX
-	psetEDFF: dd prinXX
+	psetEDFF: dd prinEDFF

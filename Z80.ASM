@@ -11,6 +11,7 @@ extrn msxvram: near
 extrn cart1: near
 extrn pset: near
 extrn isetCBxx: near
+extrn emulEDFF: near
 
 include io.inc
 include debug.inc
@@ -28,6 +29,7 @@ public emulate
 public emulate_break
 public emulate_echo
 public emulXX
+public emulC9
 
 public breakpoint
 public iff1
@@ -722,7 +724,7 @@ emulate_interrupt:
                 je      emulate_exit
                 cmp     iff1,1
                 jne     emulate_loop
-                mov     iff1,0 ; this is a test
+                mov     iff1,0 
                 and     edi,0ffffh
                 dec     edi
                 mov     interrupt,0
@@ -1448,54 +1450,28 @@ SBCAHL          9E
 SBCREG          9F,dh
 
 ; A0 - AND B
-emulA0:         inc     edi
-                and     dh,regb
-                setflag_and
-                ret
+ANDREG          A0,regb
 
 ; A1 - AND C
-emulA1:         inc     edi
-                and     dh,regc
-                setflag_and
-                ret
+ANDREG          A1,regc
 
 ; A2 - AND D
-emulA2:         inc     edi
-                and     dh,regd
-                setflag_and
-                ret
+ANDREG          A2,regd
 
 ; A3 - AND E
-emulA3:         inc     edi
-                and     dh,rege
-                setflag_and
-                ret
+ANDREG          A3,rege
 
 ; A4 - AND H
-emulA4:         inc     edi
-                and     dh,regh
-                setflag_and
-                ret
+ANDREG          A4,regh
 
 ; A5 - AND L
-emulA5:         inc     edi
-                and     dh,regl
-                setflag_and
-                ret
+ANDREG          A5,regl
 
 ; A6 - AND (HL)
-emulA6:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                and     dh,al
-                setflag_and
-                ret
+ANDHL           A6
 
 ; A7 - AND A
-emulA7:         inc     edi
-                and     dh,dh
-                setflag_and
-                ret
+ANDREG          A7,dh
 
 ; A8 - XOR B
 XORREG          A8,regb
@@ -2563,7 +2539,8 @@ emulED4B:       inc     edi
                 ret
 
 ; ED 4D - RETI
-emulED4D:       jmp     emulC9
+emulED4D:       mov     iff1,1
+                jmp     emulC9
 
 ; ED 52 - SBC HL,DE
 SBCHLWREG       ED52,rege,regd
@@ -2864,6 +2841,28 @@ emulFD5E:       inc     edi
                 add     cx,bx
                 call    readmem
                 mov     rege,al
+                ret
+
+; FD 66 - LD H,(IY+dd)
+emulFD66:       inc     edi
+                call    fetch
+                movsx   ebx,al
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,bx
+                call    readmem
+                mov     regh,al
+                ret
+
+; FD 6E - LD L,(IY+dd)
+emulFD6E:       inc     edi
+                call    fetch
+                movsx   ebx,al
+                inc     edi
+                mov     ecx,regeiy
+                add     cx,bx
+                call    readmem
+                mov     regl,al
                 ret
 
 ; FD 70 - LD (IY+dd),B

@@ -804,6 +804,40 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; ANDREG - AND rr rr=[a,b,c,d,e,h,l]
+
+ANDREG           macro   opcode,reg
+
+emul&opcode:                
+                inc     edi
+                and     dh,reg
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                or      dl,BIT_4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; ANDHL - AND (HL)
+
+ANDHL           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                and     dh,al
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                or      dl,BIT_4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; ORHL - OR (HL)
 
 ORHL            macro   opcode
@@ -1138,6 +1172,7 @@ emul&opcode:
                 mov     dl,cl
                 or      dl,[offset ARITP_table+eax]
                 mov     al,cl
+                and     bl,NBIT_0
                 or      al,bl
                 and     bl,BIT_4
                 or      dl,bl
@@ -1168,6 +1203,7 @@ emul&opcode:
                 mov     dl,cl
                 or      dl,[offset ARITN_table+eax]
                 mov     al,cl
+                and     bl,NBIT_0
                 or      al,bl
                 and     bl,BIT_4
                 or      dl,bl

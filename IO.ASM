@@ -424,7 +424,8 @@ my_kb_irq_handler3:
 ; open a file
 ; in: edx = ASCIIZ filename
 ; out: v86r_bx = file handle
-                
+;      carry = 1 -> error                
+
 open_file:                
                 add     edx,_code32a
                 mov     eax,edx

@@ -101,7 +101,7 @@ isetFDxx:
 	isetFD63: dd emulXX
 	isetFD64: dd emulXX
 	isetFD65: dd emulXX
-	isetFD66: dd emulXX
+	isetFD66: dd emulFD66
 	isetFD67: dd emulXX
 	isetFD68: dd emulXX
 	isetFD69: dd emulXX
@@ -109,7 +109,7 @@ isetFDxx:
 	isetFD6B: dd emulXX
 	isetFD6C: dd emulXX
 	isetFD6D: dd emulXX
-	isetFD6E: dd emulXX
+	isetFD6E: dd emulFD6E
 	isetFD6F: dd emulXX
 	isetFD70: dd emulFD70
 	isetFD71: dd emulFD71

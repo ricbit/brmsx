@@ -254,4 +254,4 @@ isetEDxx:
 	isetEDFC: dd emulXX
 	isetEDFD: dd emulXX
 	isetEDFE: dd emulXX
-	isetEDFF: dd emulXX
+	isetEDFF: dd emulEDFF

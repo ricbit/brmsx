@@ -2,11 +2,10 @@
 #include <sys/movedata.h>
 
 void main (void) {
-  int i;
-  unsigned char b;
+  int i,j,s;
 
-  for (i=0; i<16; i++) {
-    dosmemget (0x18*16+i-0x80,1,&b);
-    printf ("%d %d\n",i,b);
-  }
+  s=512;
+  j=(s>>5)-1;
+  for (i=0;j&(1<<i);i++);
+  printf ("j=%d i=%d\n",j,i);
 }

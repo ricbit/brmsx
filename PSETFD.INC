@@ -101,7 +101,7 @@ psetFDxx:
 	psetFD63: dd prinXX
 	psetFD64: dd prinXX
 	psetFD65: dd prinXX
-	psetFD66: dd prinXX
+	psetFD66: dd prinFD66
 	psetFD67: dd prinXX
 	psetFD68: dd prinXX
 	psetFD69: dd prinXX
@@ -109,7 +109,7 @@ psetFDxx:
 	psetFD6B: dd prinXX
 	psetFD6C: dd prinXX
 	psetFD6D: dd prinXX
-	psetFD6E: dd prinXX
+	psetFD6E: dd prinFD6E
 	psetFD6F: dd prinXX
 	psetFD70: dd prinFD70
 	psetFD71: dd prinFD71

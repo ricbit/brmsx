@@ -14,6 +14,7 @@ include debug.inc
 public _main
 public msxram
 public blitbuffer
+public diskimage
 
 ; DATA ---------------------------------------------------------------
 
@@ -21,13 +22,17 @@ msg00           db      'BrMSX 1.0',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
+msg03           db      'Disk size not supported',13,10,'$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
+drivea_name     db      'DRIVEA.DSK',0
 
 msxram          dd      ?
 blitbuffer      dd      ?
 msxrom          dd      ?
 cart1           dd      ?
+transf_buffer   dd      ?
+diskimage       dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -91,6 +96,7 @@ _main0:
                 ; read cartridge 1 from disk
                 mov     edx,offset cart1_name
                 call    open_file
+                jc      _main2
                 call    read_size_file
                 cmp     eax,04000h
                 je     _main1
@@ -104,12 +110,60 @@ _main1:
                 mov     ecx,eax
                 call    read_file
 
+_main2:
                 ; allocate 64kb to blit buffer
                 mov     eax,65536
                 call    _getmem
                 jc      no_memory
                 mov     blitbuffer,eax
 
+                ; allocate 32kb to transfer buffer
+                mov     eax,32768
+                call    _getmem
+                jc      no_memory
+                mov     transf_buffer,eax
+                
+                ; allocate 720kb to disk image
+                mov     eax,720*1024
+                call    _gethimem
+                jc      no_memory
+                mov     diskimage,eax
+                
+                ; read disk image from file
+                mov     edx,offset drivea_name
+                call    open_file
+                jc      _main3
+                call    read_size_file
+                cmp     eax,720*1024
+                jne     disk_size_not_supported
+
+                mov     ebx,720/32
+                mov     edi,diskimage
+_main4:               
+                mov     ecx,32768
+                mov     edx,transf_buffer
+                call    read_file
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
+                add     edi,32768
+                dec     ebx
+                jnz     _main4
+
+                ; patch for PHYDIO
+                mov     eax,dword ptr [offset slot1+8]
+                mov     byte ptr [eax+010h],0edh
+                mov     byte ptr [eax+011h],0ffh
+
+                ; patch for DSKCHG
+                mov     byte ptr [eax+013h],0edh
+                mov     byte ptr [eax+014h],0ffh
+
+                ; patch for GETDPB
+                mov     byte ptr [eax+016h],0edh
+                mov     byte ptr [eax+017h],0ffh
+
+_main3:
                 ; enter debug mode
                 call    debug
 
@@ -123,6 +177,11 @@ no_memory:
 
 cartridge_not_supported:
                 mov     eax,offset msg02
+                call    printmsg
+                jmp     _exit
+
+disk_size_not_supported:
+                mov     eax,offset msg03
                 call    printmsg
                 jmp     _exit
 
