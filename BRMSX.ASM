@@ -28,7 +28,7 @@ extrn mmxfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.63',13,10
+msg00           db      'BrMSX 1.64',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -280,7 +280,7 @@ _main4:
                 jnz     _main4
 
                 ; patch for PHYDIO
-                mov     eax,dword ptr [offset slot1+8]
+                mov     eax,dword ptr [offset slot1+16]
                 mov     byte ptr [eax+010h],0edh
                 mov     byte ptr [eax+011h],0ffh
 

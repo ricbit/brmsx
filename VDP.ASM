@@ -93,26 +93,20 @@ render_screen0:
                 out     dx,al
                 inc     dx
                 mov     al,[ebx]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+1]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+2]
-                shr     al,2
                 out     dx,al
                 
                 movzx   eax,byte ptr [offset vdpregs+7]
                 shr     eax,4
                 lea     ebx,[offset palette+eax+eax*2]
                 mov     al,[ebx]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+1]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+2]
-                shr     al,2
                 out     dx,al
 
                 mov     esi,msxvram                

@@ -18,7 +18,10 @@ public emulEDFF
 
 ; DATA ---------------------------------------------------------------
 
+align 4
+
 boot:           db      512 dup (0)
+saveslot        db      0
 
 ; --------------------------------------------------------------------
 
@@ -27,15 +30,13 @@ boot:           db      512 dup (0)
 ; select patch through the PC
 
 emulEDFF:
-                dec     edi
-
-                cmp     edi,04010h
+                cmp     edi,04010h+1
                 je      patch_PHYDIO
 
-                cmp     edi,04013h
+                cmp     edi,04013h+1
                 je      patch_DSKCHG
 
-                cmp     edi,04016h
+                cmp     edi,04016h+1
                 je      patch_GETDPB
 
                 jmp     emulC9
@@ -45,13 +46,22 @@ patch_PHYDIO:
                 cmp     dh,0
                 jne     emulC9
 
-                ; if regb=0 then exit [secutiry trap]
+                ; if regb=0 then exit [security trap]
                 cmp     regb,0
                 je      emulC9
 
                 ; read or write?
                 and     dl,1
                 jnz     emulC9
+
+                push    ebp
+
+                ; enable all RAM
+                
+                mov     al,prim_slotreg
+                mov     saveslot,al
+                mov     bl,0AAh
+                call    outemulA8
 
                 ; find initial offset on disk image
                 mov     esi,regede
@@ -82,6 +92,12 @@ patch_PHYDIO2:
                 pop     eax
                 mov     regb,al
                 mov     edx,0
+
+                ; enable previous slot configuration
+                mov     bl,saveslot
+                call    outemulA8
+
+                pop     ebp
 
                 jmp     emulC9
 

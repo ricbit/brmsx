@@ -218,14 +218,13 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
-	db	229
-	db	233
-	db	233
-	db	233
-	db	233
-	db	233
-	db	233
+	db	222
+	db	222
+	db	228
+	db	228
+	db	228
+	db	228
+	db	222
 	db	0
 	db	0
 	db	0
@@ -301,9 +300,10 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
-	db	229
-	db	233
+	db	0
+	db	0
+	db	0
+	db	222
 	db	222
 	db	223
 	db	228
@@ -319,8 +319,6 @@ logo_bitmap:
 	db	226
 	db	226
 	db	222
-	db	233
-	db	233
 	db	0
 	db	0
 	db	0
@@ -387,8 +385,10 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
-	db	239
+	db	0
+	db	0
+	db	0
+	db	222
 	db	222
 	db	223
 	db	223
@@ -411,8 +411,6 @@ logo_bitmap:
 	db	222
 	db	222
 	db	225
-	db	239
-	db	229
 	db	0
 	db	0
 	db	0
@@ -473,7 +471,9 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
+	db	0
 	db	212
 	db	222
 	db	227
@@ -503,8 +503,6 @@ logo_bitmap:
 	db	225
 	db	225
 	db	225
-	db	239
-	db	229
 	db	0
 	db	0
 	db	0
@@ -560,7 +558,9 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
+	db	0
 	db	212
 	db	222
 	db	227
@@ -594,8 +594,8 @@ logo_bitmap:
 	db	225
 	db	231
 	db	231
-	db	239
-	db	229
+	db	0
+	db	0
 	db	0
 	db	0
 	db	0
@@ -685,7 +685,6 @@ logo_bitmap:
 	db	225
 	db	231
 	db	231
-	db	239
 	db	0
 	db	0
 	db	0
@@ -735,7 +734,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	241
 	db	224
@@ -776,7 +776,7 @@ logo_bitmap:
 	db	231
 	db	231
 	db	225
-	db	229
+	db	0
 	db	0
 	db	0
 	db	0
@@ -866,7 +866,7 @@ logo_bitmap:
 	db	231
 	db	225
 	db	231
-	db	239
+	db	0
 	db	0
 	db	0
 	db	0
@@ -956,7 +956,7 @@ logo_bitmap:
 	db	231
 	db	231
 	db	225
-	db	239
+	db	0
 	db	0
 	db	0
 	db	0
@@ -1046,7 +1046,7 @@ logo_bitmap:
 	db	212
 	db	225
 	db	225
-	db	239
+	db	0
 	db	0
 	db	0
 	db	0
@@ -1351,7 +1351,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	223
 	db	227
@@ -1406,7 +1406,7 @@ logo_bitmap:
 	db	231
 	db	226
 	db	226
-	db	229
+	db	0
 	db	0
 	db	0
 	db	0
@@ -1616,7 +1616,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	228
 	db	223
@@ -1675,7 +1675,6 @@ logo_bitmap:
 	db	222
 	db	226
 	db	226
-	db	229
 	db	0
 	db	0
 	db	0
@@ -1705,7 +1704,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	223
 	db	223
@@ -1764,7 +1764,7 @@ logo_bitmap:
 	db	212
 	db	228
 	db	226
-	db	233
+	db	0
 	db	0
 	db	0
 	db	0
@@ -1882,7 +1882,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	223
 	db	223
@@ -1943,7 +1943,7 @@ logo_bitmap:
 	db	231
 	db	228
 	db	228
-	db	233
+	db	0
 	db	0
 	db	0
 	db	0
@@ -2032,7 +2032,7 @@ logo_bitmap:
 	db	212
 	db	228
 	db	228
-	db	241
+	db	0
 	db	0
 	db	0
 	db	0
@@ -2237,7 +2237,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	228
 	db	228
@@ -2300,7 +2300,6 @@ logo_bitmap:
 	db	212
 	db	223
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2326,7 +2325,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	228
 	db	228
@@ -2389,7 +2389,6 @@ logo_bitmap:
 	db	212
 	db	228
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2415,7 +2414,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	228
 	db	228
@@ -2478,7 +2478,6 @@ logo_bitmap:
 	db	212
 	db	223
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2504,7 +2503,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	228
 	db	228
@@ -2567,7 +2567,6 @@ logo_bitmap:
 	db	212
 	db	223
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2593,7 +2592,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	226
 	db	228
@@ -2656,7 +2656,6 @@ logo_bitmap:
 	db	212
 	db	223
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2682,7 +2681,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	226
 	db	228
@@ -2745,7 +2745,6 @@ logo_bitmap:
 	db	212
 	db	223
 	db	223
-	db	234
 	db	0
 	db	0
 	db	0
@@ -2771,7 +2770,8 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
+	db	0
 	db	212
 	db	222
 	db	228
@@ -2834,7 +2834,7 @@ logo_bitmap:
 	db	222
 	db	223
 	db	223
-	db	230
+	db	0
 	db	0
 	db	0
 	db	0
@@ -3039,7 +3039,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	226
 	db	226
@@ -3128,7 +3128,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	226
 	db	226
@@ -3189,7 +3189,7 @@ logo_bitmap:
 	db	222
 	db	227
 	db	227
-	db	230
+	db	0
 	db	0
 	db	0
 	db	0
@@ -3307,7 +3307,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	229
+	db	0
 	db	212
 	db	226
 	db	226
@@ -3366,7 +3366,7 @@ logo_bitmap:
 	db	222
 	db	227
 	db	227
-	db	234
+	db	0
 	db	0
 	db	0
 	db	0
@@ -3486,7 +3486,7 @@ logo_bitmap:
 	db	230
 	db	230
 	db	0
-	db	229
+	db	0
 	db	212
 	db	222
 	db	226
@@ -3543,7 +3543,7 @@ logo_bitmap:
 	db	241
 	db	224
 	db	224
-	db	230
+	db	0
 	db	0
 	db	0
 	db	0
@@ -3665,7 +3665,7 @@ logo_bitmap:
 	db	223
 	db	224
 	db	222
-	db	229
+	db	0
 	db	212
 	db	222
 	db	226
@@ -3755,7 +3755,7 @@ logo_bitmap:
 	db	223
 	db	224
 	db	239
-	db	229
+	db	0
 	db	212
 	db	241
 	db	224
@@ -3844,8 +3844,8 @@ logo_bitmap:
 	db	227
 	db	224
 	db	228
-	db	229
-	db	229
+	db	0
+	db	0
 	db	241
 	db	224
 	db	227
@@ -3933,7 +3933,7 @@ logo_bitmap:
 	db	227
 	db	227
 	db	241
-	db	229
+	db	0
 	db	0
 	db	238
 	db	224
@@ -4069,11 +4069,11 @@ logo_bitmap:
 	db	212
 	db	224
 	db	232
-	db	232
+	db	224
 	db	238
 	db	224
 	db	230
-	db	242
+	db	0
 	db	239
 	db	224
 	db	224
@@ -4150,20 +4150,20 @@ logo_bitmap:
 	db	218
 	db	238
 	db	246
+	db	224
+	db	224
+	db	224
+	db	224
 	db	232
-	db	232
-	db	232
-	db	232
-	db	232
-	db	232
-	db	232
-	db	232
-	db	232
+	db	224
+	db	224
+	db	224
+	db	224
 	db	241
 	db	233
 	db	0
 	db	0
-	db	242
+	db	0
 	db	239
 	db	232
 	db	232
@@ -4253,7 +4253,7 @@ logo_bitmap:
 	db	0
 	db	0
 	db	0
-	db	242
+	db	0
 	db	239
 	db	246
 	db	235
@@ -4569,7 +4569,7 @@ logo_bitmap:
 	db	226
 	db	241
 	db	239
-	db	229
+	db	0
 	db	222
 	db	226
 	db	241
@@ -4660,7 +4660,7 @@ logo_bitmap:
 	db	245
 	db	0
 	db	0
-	db	229
+	db	0
 	db	238
 	db	241
 	db	226
@@ -4909,7 +4909,7 @@ logo_bitmap:
 	db	241
 	db	241
 	db	222
-	db	230
+	db	0
 	db	232
 	db	238
 	db	224
@@ -4997,7 +4997,7 @@ logo_bitmap:
 	db	226
 	db	226
 	db	239
-	db	229
+	db	0
 	db	0
 	db	238
 	db	231

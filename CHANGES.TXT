@@ -1,3 +1,8 @@
+release 1.64:
+
+- fixed disk-patchs, but msx-dos still doesn't work
+- fixed logo borders
+
 release 1.63:
 
 - optimized MMX renderer

@@ -71,22 +71,22 @@ void main (void) {
   getch ();
   
   /* palette generator */
-  
+  /*  
   printf ("gui_palette:\n");
   for (i=0; i<212; i++)
     printf ("\tdb\t0%03d,0%03d,0%03d\t\t; %02x \n",0,0,0,i);
   for (i=212; i<256; i++)
     printf ("\tdb\t0%03d,0%03d,0%03d\t\t; %02x \n",
             rgb[(i-212)%256].r,rgb[(i-212)%256].g,rgb[(i-212)%256].b,i);
-  
+  */
 
   /* logo generator */
-  /*
+  
   printf ("logo_bitmap:\n");
   for (j=132; j<=189; j++)
     for (i=4; i<=92; i++)
       printf ("\tdb\t%d\n",(b=getpixel (screen,i,j)+212)==221?0:b);
-  */
+  
 
   set_gfx_mode (GFX_TEXT,80,24,80,24);
   allegro_exit ();
