@@ -133,7 +133,7 @@ isetFDxx:
 	isetFD83: dd emulXX
 	isetFD84: dd emulXX
 	isetFD85: dd emulXX
-	isetFD86: dd emulXX
+	isetFD86: dd emulFD86
 	isetFD87: dd emulXX
 	isetFD88: dd emulXX
 	isetFD89: dd emulXX

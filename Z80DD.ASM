@@ -18,24 +18,6 @@ public isetDDxx
 
 ; --------------------------------------------------------------------
 
-setflag_rlc     macro
-
-                pushfd
-                pop     ecx
-                mov     dl,cl
-                and     dl,11000101b
-
-                endm
-
-setflag_rr      macro
-
-                pushfd
-                pop     ecx
-                mov     dl,cl
-                and     dl,11000101b
-
-                endm
-
 setflag_add2    macro
 
                 pushfd
@@ -131,70 +113,22 @@ DECII           DD35,regeix
 LDIIDDNN        DD36,regeix
 
 ; DD 46 - LD B,(IX+dd)
-emulDD46:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regb,al
-                ret
+LDREGIIDD       DD46,regb,regeix
 
 ; DD 4E - LD C,(IX+dd)
-emulDD4E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regc,al
-                ret
+LDREGIIDD       DD4E,regc,regeix
 
 ; DD 56 - LD D,(IX+dd)
-emulDD56:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regd,al
-                ret
+LDREGIIDD       DD56,regd,regeix
 
 ; DD 5E - LD E,(IX+dd)
-emulDD5E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     rege,al
-                ret
+LDREGIIDD       DD5E,rege,regeix
 
 ; DD 66 - LD H,(IX+dd)
-emulDD66:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regh,al
-                ret
+LDREGIIDD       DD66,regh,regeix
 
 ; DD 6E - LD L,(IX+dd)
-emulDD6E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     regl,al
-                ret
+LDREGIIDD       DD6E,regl,regeix
 
 ; DD 70 - LD (IX+dd),B
 LDIIDDREG       DD70,regb,regeix
@@ -218,15 +152,7 @@ LDIIDDREG       DD75,regl,regeix
 LDIIDDREG       DD77,dh,regeix
 
 ; DD 7E - LD A,(IX+dd)
-emulDD7E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     dh,al
-                ret
+LDREGIIDD       DD7E,dh,regeix
 
 ; DD 86 - ADD A,(IX+dd)
 ADDAII          DD86,regeix
@@ -236,6 +162,9 @@ ADCAII          DD8E,regeix
 
 ; DD 96 - SUB (IX+dd)
 SUBII           DD96,regeix
+
+; DD 9E - SBC A,(IX+dd)
+SBCAII          DD9E,regeix
 
 ; DD A6 - AND (IX+dd)
 ANDII           DDA6,regeix
@@ -296,32 +225,10 @@ emulDDE9:       mov     edi,regeix
                 ret
 
 ; DD CB 06 - RLC (IX+dd)
-emulDDCB06:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                rol     al,1
-                push    ecx
-                setflag_rlc
-                pop     ecx
-                call    writemem
-                ret
+RLCII           DDCB06,regeix
 
 ; DD CB 1E - RR (IX+dd)
-emulDDCB1E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     bl,dl
-                shr     bl,1
-                rcr     al,1
-                push    ecx
-                setflag_rr
-                pop     ecx
-                call    writemem
-                ret
+RRII            DDCB1E,regeix
 
 ; DD CB 46 - BIT 0,(IX+dd)
 BITII           DDCB46,0,regeix

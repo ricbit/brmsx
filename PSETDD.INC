@@ -157,7 +157,7 @@ psetDDxx:
 	psetDD9B: dd prinXX
 	psetDD9C: dd prinXX
 	psetDD9D: dd prinXX
-	psetDD9E: dd prinXX
+	psetDD9E: dd prinDD9E
 	psetDD9F: dd prinXX
 	psetDDA0: dd prinXX
 	psetDDA1: dd prinXX

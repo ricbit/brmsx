@@ -133,7 +133,7 @@ psetFDxx:
 	psetFD83: dd prinXX
 	psetFD84: dd prinXX
 	psetFD85: dd prinXX
-	psetFD86: dd prinXX
+	psetFD86: dd prinFD86
 	psetFD87: dd prinXX
 	psetFD88: dd prinXX
 	psetFD89: dd prinXX

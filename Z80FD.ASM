@@ -18,12 +18,6 @@ public isetFDxx
 
 ; --------------------------------------------------------------------
 
-; setflag_add2 -------------------------------------------------------
-; sets the z80 flags after add2 operations
-
-; setflag_cp ---------------------------------------------------------
-; sets the z80 flags after cp operations
-
 setflag_cp      macro
 
                 pushfd
@@ -45,6 +39,8 @@ setflag_add2    macro
                 or      dl,cl
                 
                 endm
+
+; --------------------------------------------------------------------
 
 ; FD 09 - ADD IY,BC
 emulFD09:       inc     edi
@@ -117,70 +113,22 @@ DECII           FD35,regeiy
 LDIIDDNN        FD36,regeiy
 
 ; FD 46 - LD B,(IY+dd)
-emulFD46:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     regb,al
-                ret
+LDREGIIDD       FD46,regb,regeiy
 
 ; FD 4E - LD C,(IY+dd)
-emulFD4E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     regc,al
-                ret
+LDREGIIDD       FD4E,regc,regeiy
 
 ; FD 56 - LD D,(IY+dd)
-emulFD56:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     regd,al
-                ret
+LDREGIIDD       FD56,regd,regeiy
 
 ; FD 5E - LD E,(IY+dd)
-emulFD5E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     rege,al
-                ret
+LDREGIIDD       FD5E,rege,regeiy
 
 ; FD 66 - LD H,(IY+dd)
-emulFD66:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     regh,al
-                ret
+LDREGIIDD       FD66,regh,regeiy
 
 ; FD 6E - LD L,(IY+dd)
-emulFD6E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     regl,al
-                ret
+LDREGIIDD       FD6E,regl,regeiy
 
 ; FD 70 - LD (IY+dd),B
 LDIIDDREG       FD70,regb,regeiy
@@ -204,15 +152,10 @@ LDIIDDREG       FD75,regl,regeiy
 LDIIDDREG       FD77,dh,regeiy
 
 ; FD 7E - LD A,(IY+dd)
-emulFD7E:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                mov     dh,al
-                ret
+LDREGIIDD       FD7E,dh,regeiy
+
+; FD 86 - ADD A,(IY+dd)
+ADDAII          FD86,regeiy
 
 ; FD 96 - SUB (IY+dd)
 SUBII           FD96,regeiy

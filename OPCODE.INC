@@ -571,8 +571,8 @@ OPRRA           macro   opcode
 emul&opcode:                
                 inc     edi
                 mov     bl,dl
-                shr     bl,1
                 and     dl,11000100b
+                shr     bl,1
                 mov     bl,dh
                 rcr     dh,1
                 and     bl,1
@@ -700,6 +700,28 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RRII - RR (II+dd)
+
+RRII            macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                shr     dl,1
+                mov     dl,al
+                rcr     al,1
+                and     dl,1
+                call    writemem
+                mov     ebp,15
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; RLCHL - RLC (HL)
 
 RLCHL           macro opcode
@@ -707,6 +729,27 @@ RLCHL           macro opcode
 emul&opcode:                
                 inc     edi
                 mov     ecx,regehl
+                call    readmem
+                rol     al,1
+                call    writemem
+                mov     dl,al
+                and     dl,1
+                mov     ebp,15
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RLCII - RLC (II+dd)
+
+RLCII           macro opcode,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 rol     al,1
                 call    writemem
@@ -739,6 +782,25 @@ SBCAHL          macro   opcode
 emul&opcode:                
                 inc     edi                             ; clock 1 U
                 mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsbcreg
+
+                endm
+
+; --------------------------------------------------------------------
+; SBCAII - SBC A,(II+dd)
+
+SBCAII          macro   opcode,regii
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                movsx   ebx,al
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 mov     bh,al
                 mov     ebp,7
@@ -1143,6 +1205,25 @@ emul&opcode:
                 add     cx,bx
                 mov     al,reg
                 call    writemem
+                mov     ebp,19
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDREGIIDD - LD rr,(II+dd)     rr=[a,b,c,d,e,h,l]
+
+LDREGIIDD       macro   opcode,reg,regii
+
+emul&opcode:
+                inc     edi
+                call    fetch
+                inc     edi
+                movsx   ebx,al
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     reg,al
                 mov     ebp,19
                 ret
 

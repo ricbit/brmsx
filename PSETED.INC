@@ -161,7 +161,7 @@ psetEDxx:
 	psetED9F: dd prinXX
 	psetEDA0: dd prinEDA0
 	psetEDA1: dd prinXX
-	psetEDA2: dd prinXX
+	psetEDA2: dd prinEDA2
 	psetEDA3: dd prinEDA3
 	psetEDA4: dd prinXX
 	psetEDA5: dd prinXX

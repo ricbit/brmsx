@@ -195,6 +195,22 @@ emulEDA0:       inc     edi
                 or      dl,cl
                 ret
 
+; ED A2 - INI
+emulEDA2:       inc     edi
+                mov     al,regc
+                call    [offset inportxx+eax*4]
+                mov     ecx,regehl
+                mov     al,bl
+                call    writemem
+                inc     reghl
+                dec     regb
+                pushfd
+                pop     ecx
+                and     dl,10111111b
+                and     cl,01000010b ;check
+                or      dl,cl
+                ret
+
 ; ED A3 - OUTI
 emulEDA3:       inc     edi
                 mov     ecx,regehl
