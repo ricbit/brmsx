@@ -1,0 +1,7 @@
+extrn emulC9: near
+extrn emulCB: near
+extrn emulDD: near
+extrn emulED: near
+extrn emulFD: near
+extrn emulFF: near
+extrn emulXX: near

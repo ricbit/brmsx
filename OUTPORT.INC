@@ -1,257 +1,513 @@
 outportxx:
-	outport00: dd outemulXX
-	outport01: dd outemulXX
-	outport02: dd outemulXX
-	outport03: dd outemulXX
-	outport04: dd outemulXX
-	outport05: dd outemulXX
-	outport06: dd outemulXX
-	outport07: dd outemulXX
-	outport08: dd outemulXX
-	outport09: dd outemulXX
-	outport0A: dd outemulXX
-	outport0B: dd outemulXX
-	outport0C: dd outemulXX
-	outport0D: dd outemulXX
-	outport0E: dd outemulXX
-	outport0F: dd outemulXX
-	outport10: dd outemulXX
-	outport11: dd outemulXX
-	outport12: dd outemulXX
-	outport13: dd outemulXX
-	outport14: dd outemulXX
-	outport15: dd outemulXX
-	outport16: dd outemulXX
-	outport17: dd outemulXX
-	outport18: dd outemulXX
-	outport19: dd outemulXX
-	outport1A: dd outemulXX
-	outport1B: dd outemulXX
-	outport1C: dd outemulXX
-	outport1D: dd outemulXX
-	outport1E: dd outemulXX
-	outport1F: dd outemulXX
-	outport20: dd outemulXX
-	outport21: dd outemulXX
-	outport22: dd outemulXX
-	outport23: dd outemulXX
-	outport24: dd outemulXX
-	outport25: dd outemulXX
-	outport26: dd outemulXX
-	outport27: dd outemulXX
-	outport28: dd outemulXX
-	outport29: dd outemulXX
-	outport2A: dd outemulXX
-	outport2B: dd outemulXX
-	outport2C: dd outemulXX
-	outport2D: dd outemulXX
-	outport2E: dd outemulXX
-	outport2F: dd outemulXX
-	outport30: dd outemulXX
-	outport31: dd outemulXX
-	outport32: dd outemulXX
-	outport33: dd outemulXX
-	outport34: dd outemulXX
-	outport35: dd outemulXX
-	outport36: dd outemulXX
-	outport37: dd outemulXX
-	outport38: dd outemulXX
-	outport39: dd outemulXX
-	outport3A: dd outemulXX
-	outport3B: dd outemulXX
-	outport3C: dd outemulXX
-	outport3D: dd outemulXX
-	outport3E: dd outemulXX
-	outport3F: dd outemulXX
-	outport40: dd outemulXX
-	outport41: dd outemulXX
-	outport42: dd outemulXX
-	outport43: dd outemulXX
-	outport44: dd outemulXX
-	outport45: dd outemulXX
-	outport46: dd outemulXX
-	outport47: dd outemulXX
-	outport48: dd outemulXX
-	outport49: dd outemulXX
-	outport4A: dd outemulXX
-	outport4B: dd outemulXX
-	outport4C: dd outemulXX
-	outport4D: dd outemulXX
-	outport4E: dd outemulXX
-	outport4F: dd outemulXX
-	outport50: dd outemulXX
-	outport51: dd outemulXX
-	outport52: dd outemulXX
-	outport53: dd outemulXX
-	outport54: dd outemulXX
-	outport55: dd outemulXX
-	outport56: dd outemulXX
-	outport57: dd outemulXX
-	outport58: dd outemulXX
-	outport59: dd outemulXX
-	outport5A: dd outemulXX
-	outport5B: dd outemulXX
-	outport5C: dd outemulXX
-	outport5D: dd outemulXX
-	outport5E: dd outemulXX
-	outport5F: dd outemulXX
-	outport60: dd outemulXX
-	outport61: dd outemulXX
-	outport62: dd outemulXX
-	outport63: dd outemulXX
-	outport64: dd outemulXX
-	outport65: dd outemulXX
-	outport66: dd outemulXX
-	outport67: dd outemulXX
-	outport68: dd outemulXX
-	outport69: dd outemulXX
-	outport6A: dd outemulXX
-	outport6B: dd outemulXX
-	outport6C: dd outemulXX
-	outport6D: dd outemulXX
-	outport6E: dd outemulXX
-	outport6F: dd outemulXX
-	outport70: dd outemulXX
-	outport71: dd outemulXX
-	outport72: dd outemulXX
-	outport73: dd outemulXX
-	outport74: dd outemulXX
-	outport75: dd outemulXX
-	outport76: dd outemulXX
-	outport77: dd outemulXX
-	outport78: dd outemulXX
-	outport79: dd outemulXX
-	outport7A: dd outemulXX
-	outport7B: dd outemulXX
-	outport7C: dd outemulXX
-	outport7D: dd outemulXX
-	outport7E: dd outemulXX
-	outport7F: dd outemulXX
-	outport80: dd outemulXX
-	outport81: dd outemulXX
-	outport82: dd outemulXX
-	outport83: dd outemulXX
-	outport84: dd outemulXX
-	outport85: dd outemulXX
-	outport86: dd outemulXX
-	outport87: dd outemulXX
-	outport88: dd outemulXX
-	outport89: dd outemulXX
-	outport8A: dd outemulXX
-	outport8B: dd outemulXX
-	outport8C: dd outemulXX
-	outport8D: dd outemulXX
-	outport8E: dd outemulXX
-	outport8F: dd outemulXX
-	outport90: dd outemulXX
-	outport91: dd outemulXX
-	outport92: dd outemulXX
-	outport93: dd outemulXX
-	outport94: dd outemulXX
-	outport95: dd outemulXX
-	outport96: dd outemulXX
-	outport97: dd outemulXX
-	outport98: dd outemul98
-	outport99: dd outemul99
-	outport9A: dd outemulXX
-	outport9B: dd outemulXX
-	outport9C: dd outemulXX
-	outport9D: dd outemulXX
-	outport9E: dd outemulXX
-	outport9F: dd outemulXX
-	outportA0: dd outemulA0
-	outportA1: dd outemulA1
-	outportA2: dd outemulXX
-	outportA3: dd outemulXX
-	outportA4: dd outemulXX
-	outportA5: dd outemulXX
-	outportA6: dd outemulXX
-	outportA7: dd outemulXX
-	outportA8: dd outemulA8
-	outportA9: dd outemulXX
-	outportAA: dd outemulAA
-	outportAB: dd outemulXX
-	outportAC: dd outemulXX
-	outportAD: dd outemulXX
-	outportAE: dd outemulXX
-	outportAF: dd outemulXX
-	outportB0: dd outemulXX
-	outportB1: dd outemulXX
-	outportB2: dd outemulXX
-	outportB3: dd outemulXX
-	outportB4: dd outemulXX
-	outportB5: dd outemulXX
-	outportB6: dd outemulXX
-	outportB7: dd outemulXX
-	outportB8: dd outemulXX
-	outportB9: dd outemulXX
-	outportBA: dd outemulXX
-	outportBB: dd outemulXX
-	outportBC: dd outemulXX
-	outportBD: dd outemulXX
-	outportBE: dd outemulXX
-	outportBF: dd outemulXX
-	outportC0: dd outemulXX
-	outportC1: dd outemulXX
-	outportC2: dd outemulXX
-	outportC3: dd outemulXX
-	outportC4: dd outemulXX
-	outportC5: dd outemulXX
-	outportC6: dd outemulXX
-	outportC7: dd outemulXX
-	outportC8: dd outemulXX
-	outportC9: dd outemulXX
-	outportCA: dd outemulXX
-	outportCB: dd outemulXX
-	outportCC: dd outemulXX
-	outportCD: dd outemulXX
-	outportCE: dd outemulXX
-	outportCF: dd outemulXX
-	outportD0: dd outemulXX
-	outportD1: dd outemulXX
-	outportD2: dd outemulXX
-	outportD3: dd outemulXX
-	outportD4: dd outemulXX
-	outportD5: dd outemulXX
-	outportD6: dd outemulXX
-	outportD7: dd outemulXX
-	outportD8: dd outemulXX
-	outportD9: dd outemulXX
-	outportDA: dd outemulXX
-	outportDB: dd outemulXX
-	outportDC: dd outemulXX
-	outportDD: dd outemulXX
-	outportDE: dd outemulXX
-	outportDF: dd outemulXX
-	outportE0: dd outemulXX
-	outportE1: dd outemulXX
-	outportE2: dd outemulXX
-	outportE3: dd outemulXX
-	outportE4: dd outemulXX
-	outportE5: dd outemulXX
-	outportE6: dd outemulXX
-	outportE7: dd outemulXX
-	outportE8: dd outemulXX
-	outportE9: dd outemulXX
-	outportEA: dd outemulXX
-	outportEB: dd outemulXX
-	outportEC: dd outemulXX
-	outportED: dd outemulXX
-	outportEE: dd outemulXX
-	outportEF: dd outemulXX
-	outportF0: dd outemulXX
-	outportF1: dd outemulXX
-	outportF2: dd outemulXX
-	outportF3: dd outemulXX
-	outportF4: dd outemulXX
-	outportF5: dd outemulXX
-	outportF6: dd outemulXX
-	outportF7: dd outemulXX
-	outportF8: dd outemulXX
-	outportF9: dd outemulXX
-	outportFA: dd outemulXX
-	outportFB: dd outemulXX
-	outportFC: dd outemulXX
-	outportFD: dd outemulXX
-	outportFE: dd outemulXX
-	outportFF: dd outemulXX
+	; 00
+ dd outemulXX
+	; 01
+ dd outemulXX
+	; 02
+ dd outemulXX
+	; 03
+ dd outemulXX
+	; 04
+ dd outemulXX
+	; 05
+ dd outemulXX
+	; 06
+ dd outemulXX
+	; 07
+ dd outemulXX
+	; 08
+ dd outemulXX
+	; 09
+ dd outemulXX
+	; 0A
+ dd outemulXX
+	; 0B
+ dd outemulXX
+	; 0C
+ dd outemulXX
+	; 0D
+ dd outemulXX
+	; 0E
+ dd outemulXX
+	; 0F
+ dd outemulXX
+	; 10
+ dd outemulXX
+	; 11
+ dd outemulXX
+	; 12
+ dd outemulXX
+	; 13
+ dd outemulXX
+	; 14
+ dd outemulXX
+	; 15
+ dd outemulXX
+	; 16
+ dd outemulXX
+	; 17
+ dd outemulXX
+	; 18
+ dd outemulXX
+	; 19
+ dd outemulXX
+	; 1A
+ dd outemulXX
+	; 1B
+ dd outemulXX
+	; 1C
+ dd outemulXX
+	; 1D
+ dd outemulXX
+	; 1E
+ dd outemulXX
+	; 1F
+ dd outemulXX
+	; 20
+ dd outemulXX
+	; 21
+ dd outemulXX
+	; 22
+ dd outemulXX
+	; 23
+ dd outemulXX
+	; 24
+ dd outemulXX
+	; 25
+ dd outemulXX
+	; 26
+ dd outemulXX
+	; 27
+ dd outemulXX
+	; 28
+ dd outemulXX
+	; 29
+ dd outemulXX
+	; 2A
+ dd outemulXX
+	; 2B
+ dd outemulXX
+	; 2C
+ dd outemulXX
+	; 2D
+ dd outemulXX
+	; 2E
+ dd outemulXX
+	; 2F
+ dd outemulXX
+	; 30
+ dd outemulXX
+	; 31
+ dd outemulXX
+	; 32
+ dd outemulXX
+	; 33
+ dd outemulXX
+	; 34
+ dd outemulXX
+	; 35
+ dd outemulXX
+	; 36
+ dd outemulXX
+	; 37
+ dd outemulXX
+	; 38
+ dd outemulXX
+	; 39
+ dd outemulXX
+	; 3A
+ dd outemulXX
+	; 3B
+ dd outemulXX
+	; 3C
+ dd outemulXX
+	; 3D
+ dd outemulXX
+	; 3E
+ dd outemulXX
+	; 3F
+ dd outemulXX
+	; 40
+ dd outemulXX
+	; 41
+ dd outemulXX
+	; 42
+ dd outemulXX
+	; 43
+ dd outemulXX
+	; 44
+ dd outemulXX
+	; 45
+ dd outemulXX
+	; 46
+ dd outemulXX
+	; 47
+ dd outemulXX
+	; 48
+ dd outemulXX
+	; 49
+ dd outemulXX
+	; 4A
+ dd outemulXX
+	; 4B
+ dd outemulXX
+	; 4C
+ dd outemulXX
+	; 4D
+ dd outemulXX
+	; 4E
+ dd outemulXX
+	; 4F
+ dd outemulXX
+	; 50
+ dd outemulXX
+	; 51
+ dd outemulXX
+	; 52
+ dd outemulXX
+	; 53
+ dd outemulXX
+	; 54
+ dd outemulXX
+	; 55
+ dd outemulXX
+	; 56
+ dd outemulXX
+	; 57
+ dd outemulXX
+	; 58
+ dd outemulXX
+	; 59
+ dd outemulXX
+	; 5A
+ dd outemulXX
+	; 5B
+ dd outemulXX
+	; 5C
+ dd outemulXX
+	; 5D
+ dd outemulXX
+	; 5E
+ dd outemulXX
+	; 5F
+ dd outemulXX
+	; 60
+ dd outemulXX
+	; 61
+ dd outemulXX
+	; 62
+ dd outemulXX
+	; 63
+ dd outemulXX
+	; 64
+ dd outemulXX
+	; 65
+ dd outemulXX
+	; 66
+ dd outemulXX
+	; 67
+ dd outemulXX
+	; 68
+ dd outemulXX
+	; 69
+ dd outemulXX
+	; 6A
+ dd outemulXX
+	; 6B
+ dd outemulXX
+	; 6C
+ dd outemulXX
+	; 6D
+ dd outemulXX
+	; 6E
+ dd outemulXX
+	; 6F
+ dd outemulXX
+	; 70
+ dd outemulXX
+	; 71
+ dd outemulXX
+	; 72
+ dd outemulXX
+	; 73
+ dd outemulXX
+	; 74
+ dd outemulXX
+	; 75
+ dd outemulXX
+	; 76
+ dd outemulXX
+	; 77
+ dd outemulXX
+	; 78
+ dd outemulXX
+	; 79
+ dd outemulXX
+	; 7A
+ dd outemulXX
+	; 7B
+ dd outemulXX
+	; 7C
+ dd outemulXX
+	; 7D
+ dd outemulXX
+	; 7E
+ dd outemulXX
+	; 7F
+ dd outemulXX
+	; 80
+ dd outemulXX
+	; 81
+ dd outemulXX
+	; 82
+ dd outemulXX
+	; 83
+ dd outemulXX
+	; 84
+ dd outemulXX
+	; 85
+ dd outemulXX
+	; 86
+ dd outemulXX
+	; 87
+ dd outemulXX
+	; 88
+ dd outemulXX
+	; 89
+ dd outemulXX
+	; 8A
+ dd outemulXX
+	; 8B
+ dd outemulXX
+	; 8C
+ dd outemulXX
+	; 8D
+ dd outemulXX
+	; 8E
+ dd outemulXX
+	; 8F
+ dd outemulXX
+	; 90
+ dd outemulXX
+	; 91
+ dd outemulXX
+	; 92
+ dd outemulXX
+	; 93
+ dd outemulXX
+	; 94
+ dd outemulXX
+	; 95
+ dd outemulXX
+	; 96
+ dd outemulXX
+	; 97
+ dd outemulXX
+	; 98
+ dd outemul98
+	; 99
+ dd outemul99
+	; 9A
+ dd outemulXX
+	; 9B
+ dd outemulXX
+	; 9C
+ dd outemulXX
+	; 9D
+ dd outemulXX
+	; 9E
+ dd outemulXX
+	; 9F
+ dd outemulXX
+	; A0
+ dd outemulA0
+	; A1
+ dd outemulA1
+	; A2
+ dd outemulXX
+	; A3
+ dd outemulXX
+	; A4
+ dd outemulXX
+	; A5
+ dd outemulXX
+	; A6
+ dd outemulXX
+	; A7
+ dd outemulXX
+	; A8
+ dd outemulA8
+	; A9
+ dd outemulXX
+	; AA
+ dd outemulAA
+	; AB
+ dd outemulXX
+	; AC
+ dd outemulXX
+	; AD
+ dd outemulXX
+	; AE
+ dd outemulXX
+	; AF
+ dd outemulXX
+	; B0
+ dd outemulXX
+	; B1
+ dd outemulXX
+	; B2
+ dd outemulXX
+	; B3
+ dd outemulXX
+	; B4
+ dd outemulXX
+	; B5
+ dd outemulXX
+	; B6
+ dd outemulXX
+	; B7
+ dd outemulXX
+	; B8
+ dd outemulXX
+	; B9
+ dd outemulXX
+	; BA
+ dd outemulXX
+	; BB
+ dd outemulXX
+	; BC
+ dd outemulXX
+	; BD
+ dd outemulXX
+	; BE
+ dd outemulXX
+	; BF
+ dd outemulXX
+	; C0
+ dd outemulXX
+	; C1
+ dd outemulXX
+	; C2
+ dd outemulXX
+	; C3
+ dd outemulXX
+	; C4
+ dd outemulXX
+	; C5
+ dd outemulXX
+	; C6
+ dd outemulXX
+	; C7
+ dd outemulXX
+	; C8
+ dd outemulXX
+	; C9
+ dd outemulXX
+	; CA
+ dd outemulXX
+	; CB
+ dd outemulXX
+	; CC
+ dd outemulXX
+	; CD
+ dd outemulXX
+	; CE
+ dd outemulXX
+	; CF
+ dd outemulXX
+	; D0
+ dd outemulXX
+	; D1
+ dd outemulXX
+	; D2
+ dd outemulXX
+	; D3
+ dd outemulXX
+	; D4
+ dd outemulXX
+	; D5
+ dd outemulXX
+	; D6
+ dd outemulXX
+	; D7
+ dd outemulXX
+	; D8
+ dd outemulXX
+	; D9
+ dd outemulXX
+	; DA
+ dd outemulXX
+	; DB
+ dd outemulXX
+	; DC
+ dd outemulXX
+	; DD
+ dd outemulXX
+	; DE
+ dd outemulXX
+	; DF
+ dd outemulXX
+	; E0
+ dd outemulXX
+	; E1
+ dd outemulXX
+	; E2
+ dd outemulXX
+	; E3
+ dd outemulXX
+	; E4
+ dd outemulXX
+	; E5
+ dd outemulXX
+	; E6
+ dd outemulXX
+	; E7
+ dd outemulXX
+	; E8
+ dd outemulXX
+	; E9
+ dd outemulXX
+	; EA
+ dd outemulXX
+	; EB
+ dd outemulXX
+	; EC
+ dd outemulXX
+	; ED
+ dd outemulXX
+	; EE
+ dd outemulXX
+	; EF
+ dd outemulXX
+	; F0
+ dd outemulXX
+	; F1
+ dd outemulXX
+	; F2
+ dd outemulXX
+	; F3
+ dd outemulXX
+	; F4
+ dd outemulXX
+	; F5
+ dd outemulXX
+	; F6
+ dd outemulXX
+	; F7
+ dd outemulXX
+	; F8
+ dd outemulXX
+	; F9
+ dd outemulXX
+	; FA
+ dd outemulXX
+	; FB
+ dd outemulXX
+	; FC
+ dd outemulXX
+	; FD
+ dd outemulXX
+	; FE
+ dd outemulXX
+	; FF
+ dd outemulXX

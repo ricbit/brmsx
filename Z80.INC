@@ -76,8 +76,6 @@ extrn readmem: near
 extrn readmemw: near
 extrn writemem: near
 extrn writememw: near
-extrn emulXX: near
-extrn emulC9: near
 extrn outemulXX: near
 extrn inemulXX: near
 extrn outportxx: near
@@ -106,9 +104,4 @@ extrn DAA_select_table: byte
 extrn CPL_table: byte
 extrn error: dword
 extrn z80counter: dword
-extrn emulFF: near
-extrn emulCB: near
-extrn emulDD: near
-extrn emulED: near
-extrn emulFD: near
-extrn iset: byte
+extrn vsyncflag: dword

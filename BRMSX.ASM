@@ -13,6 +13,8 @@ include pentium.inc
 include io.inc
 include z80.inc
 include debug.inc
+include psg.inc
+include mouse.inc
 
 public _main
 public msxram
@@ -23,12 +25,16 @@ public diskimage
 public cart1
 public dirtycode
 public compbuffer
+public dmabuffer
+public dmatemp
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
 extrn mmxfound: dword
 
 ; DATA ---------------------------------------------------------------
+
+DMABUFFERSIZE   equ     800*20
 
 msg00           db      'BrMSX 1.74',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
@@ -43,6 +49,14 @@ msg07           db      'Clock: $'
 msg08           db      ' Mhz',13,10,'$'
 msg09           db      ' kb',13,10,'$'
 msg10           db      'Press any key to start... $'
+msg11           db      'Cannot reset Sound Blaster',13,10,'$'
+msg12           db      'Sound Blaster reseted succesfully',13,10,'$'
+msg13           db      'Mouse driver detected',13,10,'$'
+msg14           db      'BLASTER environment string not found',13,10,'$'
+msg15           db      'Error in BLASTER environment string',13,10,'$'
+msg16           db      'Sound Blaster at base address $'
+msg17           db      'h, IRQ $'
+msg18           db      ', DMA $'
 msgnocpuid      db      '486 or below $'
 msg386          db      '386 $'
 msg486          db      '486 $'
@@ -52,6 +66,9 @@ msgMMX          db      '(MMX)$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
+blasterenv      db      'BLASTER',0
+addrstr         db      3 dup (0)
+emptyspace      db      128 dup (32),'$'
 
 align 4
 
@@ -64,6 +81,8 @@ transf_buffer   dd      ?
 diskimage       dd      ?
 compbuffer      dd      ?
 dirtycode       dd      ?
+dmabuffer       dd      ?
+dmatemp         dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -131,6 +150,41 @@ _main_cpuexit:
 _main_cpu_nommx:
                 call    crlf
 
+                ; allocate 757+ bytes of low memory to sound DMA transfer
+                ; these bytes must not cross a 64kb boundary
+
+                mov     eax,DMABUFFERSIZE
+                call    _getlomem
+                jc      no_memory
+                mov     dmabuffer,eax
+                mov     edx,eax
+                add     edx,_code32a
+                mov     ebx,edx
+                add     ebx,DMABUFFERSIZE
+                and     ebx,0F0000h
+                and     edx,0F0000h
+                xor     ebx,edx
+                test    ebx,(1 shl 16)
+                jz      main_getdma2
+
+                mov     eax,DMABUFFERSIZE
+                call    _getlomem
+                jc      no_memory
+                mov     dmabuffer,eax
+
+main_getdma2:
+                ; second dma buffer can be on any memory
+                mov     eax,DMABUFFERSIZE
+                call    _getmem
+                jc      no_memory
+                mov     dmatemp,eax
+
+                ; allocate 32kb to transfer buffer
+                mov     eax,32768
+                call    _getlomem
+                jc      no_memory
+                mov     transf_buffer,eax
+                
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem
@@ -187,12 +241,6 @@ _main0:
                 add     eax,2000h
                 mov     dword ptr [offset slot2+56],eax
 
-                ; allocate 32kb to transfer buffer
-                mov     eax,32768
-                call    _getmem
-                jc      no_memory
-                mov     transf_buffer,eax
-                
                 ; read cartridge 1 from disk
                 mov     edx,offset cart1_name
                 call    open_file
@@ -326,6 +374,48 @@ _main3:
 
 _main_dontmeasure:
 
+                ; init the mouse
+                call    init_mouse
+                cmp     mousedriver,0
+                je      _main_nomouse
+                mov     eax,offset msg13
+                call    printmsg
+_main_nomouse:
+
+                ;mov     esi,82h
+                ;add     esi,_pspa
+                ;sub     esi,_code32a
+
+                call    search_blaster
+                jc      blaster_not_found
+                call    parse_blaster_string
+                jc      error_in_blaster
+                mov     sounddetected,1
+                mov     soundenabled,1
+
+                mov     eax,offset msg16
+                call    printmsg
+                mov     eax,sbbaseaddr
+                call    printhex4
+                mov     eax,offset msg17
+                call    printmsg
+                mov     eax,sbirq
+                call    printhex2
+                mov     eax,offset msg18
+                call    printmsg
+                mov     eax,sbdma
+                call    printhex2
+                call    crlf
+
+                ; init the sound blaster
+                call    init_sound_blaster
+                jc      soundblaster_failed
+                mov     eax,offset msg12
+                call    printmsg
+                mov     sounddetected,1
+
+_main_nosound:
+
                 ; enter debug mode
                 
                 ; don't ask 
@@ -359,6 +449,137 @@ disk_size_not_supported:
                 mov     eax,offset msg03
                 call    printmsg
                 jmp     _exit
+
+soundblaster_failed:
+                mov     eax,offset msg11
+                call    printmsg
+                jmp     _main_nosound
+
+blaster_not_found:
+                mov     eax,offset msg14
+                call    printmsg
+                jmp     _main_nosound
+
+error_in_blaster:
+                mov     eax,offset msg15
+                call    printmsg
+                jmp     _main_nosound
+
+; search_blaster -----------------------------------------------------
+; search the environment vars for BLASTER settings
+; return: carry flag if BLASTER not found
+;         edi = address of first byte after "=" if BLASTER found
+
+search_blaster:
+
+                ; find the start address of environment strings
+                mov     esi,02Ch
+                add     esi,_pspa
+                sub     esi,_code32a
+                movzx   eax,word ptr [esi]
+                shl     eax,4
+                sub     eax,_code32a
+                mov     edi,eax
+
+search_blaster_loop:
+                mov     ebx,edi
+                mov     al,[edi]
+                or      al,al
+                jz      search_blaster_failed
+
+                mov     esi,offset blasterenv
+                mov     ecx,7
+                repz    cmpsb
+                or      ecx,ecx
+                jz      search_blaster_success
+
+                mov     edi,ebx
+search_blaster_skip0:
+                inc     edi
+                cmp     byte ptr [edi],0
+                jne     search_blaster_skip0
+                inc     edi
+                jmp     search_blaster_loop
+
+search_blaster_success:
+                inc     edi
+                or      eax,eax
+                ret
+
+search_blaster_failed:
+                stc
+                ret
+
+; parse_blaster_string -----------------------------------------------
+; parse the blaster string to get the parameters "A", "I" and "D"
+; enter edi = start of string
+; exit = c flag if error in blaster settings
+
+parse_blaster_string:
+                mov     esi,edi
+                mov     al,'A'
+
+parse_blaster_loop_A:
+                cmp     al,[esi]
+                je      parse_blaster_found_A
+                inc     esi
+                cmp     byte ptr [esi-1],0
+                je      parse_blaster_string_error
+                jmp     parse_blaster_loop_A
+
+parse_blaster_found_A:
+                mov     eax,0
+                movzx   edx,byte ptr [esi+1]
+                sub     edx,'0'
+                add     eax,edx
+                shl     eax,4
+                
+                movzx   edx,byte ptr [esi+2]
+                sub     edx,'0'
+                add     eax,edx
+                shl     eax,4
+                
+                movzx   edx,byte ptr [esi+3]
+                sub     edx,'0'
+                add     eax,edx
+                mov     sbbaseaddr,eax
+
+                mov     esi,edi
+                mov     al,'I'
+parse_blaster_loop_I:
+                cmp     al,[esi]
+                je      parse_blaster_found_I
+                inc     esi
+                cmp     byte ptr [esi-1],0
+                je      parse_blaster_string_error
+                jmp     parse_blaster_loop_I
+
+parse_blaster_found_I:
+                movzx   eax,byte ptr [esi+1]
+                sub     eax,'0'
+                mov     sbirq,eax
+                
+                mov     esi,edi
+                mov     al,'D'
+parse_blaster_loop_D:
+                cmp     al,[esi]
+                je      parse_blaster_found_D
+                inc     esi
+                cmp     byte ptr [esi-1],0
+                je      parse_blaster_string_error
+                jmp     parse_blaster_loop_D
+
+parse_blaster_found_D:
+                movzx   eax,byte ptr [esi+1]
+                sub     eax,'0'
+                mov     sbdma,eax
+                
+                or      eax,eax
+                ret
+
+parse_blaster_string_error:
+                stc
+                ret
 
 code32          ends
                 end

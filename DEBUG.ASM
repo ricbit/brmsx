@@ -18,6 +18,7 @@ include blit.inc
 include bit.inc
 include compiler.inc
 include serial.inc
+include psg.inc
 
 include debugsrc.inc
 include helpsrc.inc
@@ -228,8 +229,21 @@ changevideomode:
 
 ; --------------------------------------------------------------------
 
+change_sound:
+                mov     eax,sounddetected
+                xor     soundenabled,eax
+                ret
+
+; --------------------------------------------------------------------
+
 changebargraph:
                 xor     bargraphmode,1
+                ret
+
+; --------------------------------------------------------------------
+
+change_vsync:
+                xor     vsyncflag,1
                 ret
 
 ; --------------------------------------------------------------------
@@ -318,6 +332,34 @@ print_mode2:
                 mov     eax,offset modeturbo
 print_mode0:
                 COORD   73,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the vsync mode
+
+                cmp     vsyncflag,0
+                jne     print_vsync1
+                mov     eax,offset stateoff
+                jmp     print_vsync_done
+print_vsync1:
+                mov     eax,offset stateon
+print_vsync_done:
+                COORD   30,22
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the sound mode
+
+                cmp     soundenabled,0
+                jne     print_sound1
+                mov     eax,offset stateoff
+                jmp     print_sound_done
+print_sound1:
+                mov     eax,offset stateon
+print_sound_done:
+                COORD   18,22
                 call    printmsgd
 
 ; --------------------------------------------------------------------
@@ -834,6 +876,8 @@ debug_loop:
                 je      command_b
                 cmp     al,'P'
                 je      command_p
+                cmp     al,'Y'
+                je      command_y
                 cmp     al,'F'
                 je      command_f
                 cmp     al,'H'
@@ -893,6 +937,10 @@ command_d:
                 call    gethex4
                 and     eax,0FFFFh
                 mov     memdump,eax
+                jmp     debug_loop
+
+command_y:              
+                call    change_vsync
                 jmp     debug_loop
 
 command_z:
@@ -976,21 +1024,7 @@ command_b:
                 jmp     debug_loop
 
 command_p:
-                call    setgraphmode
-                call    turnon_irq
-                call    turnon_kb_irq
-                call    setup_profile
-                call    emulate_trap
-                call    end_profile
-                push    edx eax
-                call    turnoff_kb_irq
-                call    turnoff_irq
-                call    settextmode
-                pop     eax
-                call    write8
-                add     messagepointer,2
-                pop     eax
-                call    write8
+                call    change_sound
                 jmp     debug_loop
 
 command_h:
@@ -1059,7 +1093,9 @@ command_s_go:
                 call    clear
                 call    turnon_kb_irq
                 call    turnon_irq
+                call    sound_on
                 call    emulate
+                call    sound_off
                 call    turnoff_irq
                 call    turnoff_kb_irq
                 call    settextmode

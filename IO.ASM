@@ -19,6 +19,7 @@ include gui.inc
 include z80.inc
 include bit.inc
 include blit.inc
+include psg.inc
 
 public printmsg
 public printasc
@@ -46,6 +47,7 @@ public read_size_file
 public framerate
 public on_off
 public set_border_color
+public set_border_color_dark
 public palette
 public videomode
 public measurespeed
@@ -324,6 +326,30 @@ set_border_color:
                 pop     edx ebx eax
                 ret
 
+; set_border_color_dark -----------------------------------------------
+; set color 0 of VGA as VDP border color
+
+set_border_color_dark:
+                push    eax ebx edx
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0fh
+                lea     ebx,[offset palette+eax+eax*2]
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+                mov     al,[ebx]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+1]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+2]
+                shr     al,2
+                out     dx,al
+                pop     edx ebx eax
+                ret
+
 ; settextmode ---------------------------------------------------------
 ; set text mode 3h (80x25 color)
 
@@ -558,57 +584,18 @@ measure_handler_exit:
 
 my_irq_handler:
                 pushad
-                push    ds gs
-                mov     ds,cs:_seldata
-                mov     gs,cs:_selzero
-
-                cmp     cpupaused,1
-                je      my_irq_handler0
                 
-                dec     on_off
-                jnz     my_irq_handler0
-                mov     eax,framerate
-                mov     on_off,eax
-                cli
+                push    ds 
+                mov     ds,cs:_seldata
 
-                mov     eax,offset rendercounter
-                call    start_counter
-                call    render
-                mov     eax,offset rendercounter
-                call    end_counter
-                mov     eax,dword ptr [offset rendercounter]
-                mov     renderrate,eax
 
-                mov     eax,offset spritecounter
-                call    start_counter
-                call    sprite_render
-                mov     eax,offset spritecounter
-                call    end_counter
-                mov     eax,dword ptr [offset spritecounter]
-                mov     spriterate,eax
-
-                mov     eax,offset guicounter
-                call    start_counter
-                call    draw_gui
-                mov     eax,offset guicounter
-                call    end_counter
-                mov     eax,dword ptr [offset guicounter]
-                mov     guirate,eax
-
-                mov     eax,offset blitcounter
-                call    start_counter
-                call    blit
-                mov     eax,offset blitcounter
-                call    end_counter
-                mov     eax,dword ptr [offset blitcounter]
-                mov     blitrate,eax
-
-my_irq_handler0:
-                or      vdpstatus,10000000b
                 mov     interrupt,1
+                call    sound_ack
+
+                pop     ds
+                
                 mov     al,20h
                 out     20h,al
-                pop     gs ds
                 popad
                 sti
                 iretd

@@ -1,0 +1,10 @@
+extrn init_sound_blaster: near
+extrn sound_on: near
+extrn sound_off: near
+extrn compose_soundstream: near
+extrn soundenabled: dword
+extrn sound_ack: near
+extrn sbbaseaddr: dword
+extrn sbirq: dword
+extrn sbdma: dword
+extrn sounddetected: dword

@@ -5,8 +5,12 @@ extrn rendercounter: byte
 extrn spritecounter: byte
 extrn blitcounter: byte
 extrn guicounter: byte
+extrn psgcounter: byte
+extrn vsynccounter: byte
 
 extrn renderrate: dword
 extrn spriterate: dword
 extrn blitrate: dword
 extrn guirate: dword
+extrn psgrate: dword
+extrn vsyncrate: dword

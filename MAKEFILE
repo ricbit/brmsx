@@ -1,7 +1,7 @@
 OBJECTS = pmode.o brmsx.o debug.o patch.o \
 	  compiler.o compcb.o comped.o \
-	  io.o pentium.o saveload.o gui.o blit.o serial.o \
-	  z80.o z80cb.o z80dd.o z80ed.o z80fd.o \
+	  io.o pentium.o saveload.o gui.o blit.o serial.o psg.o mouse.o \
+	  z80.o z80sing.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o
 TASMFLAGS = /ml /m2 /q /la
 ECHO = rbecho

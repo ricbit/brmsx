@@ -58,3 +58,28 @@ por             macro
                 
                 endm
 
+paddd           macro
+
+                db 0fh,0feh
+                
+                endm
+
+pcmpgtd         macro
+
+                db 0fh,066h
+                
+                endm
+
+psubd           macro
+
+                db 0fh,0fah
+                
+                endm
+
+pxor            macro
+
+                db 0fh,0efh
+                
+                endm
+
+

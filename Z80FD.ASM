@@ -9,6 +9,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include z80.inc
+include z80sing.inc
 include opcode.inc
 include bit.inc
 include fetch.inc

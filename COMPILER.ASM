@@ -14,6 +14,7 @@ include cfetch.inc
 include flags.inc
 include io.inc
 include vdp.inc
+include z80sing.inc
 
 extrn compbuffer: dword
 extrn dirtycode: dword

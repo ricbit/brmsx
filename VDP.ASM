@@ -11,11 +11,11 @@ code32  segment para public use32
 include pmode.inc
 include pentium.inc
 include bit.inc
+include io.inc
 
 extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
-extrn palette: near
 
 public render_screen0
 public render_screen1
@@ -1030,6 +1030,7 @@ render0:
                 mov     edi,offset dirtyname
                 mov     ecx,32*24/4
                 rep     stosd
+                call    set_border_color
                 mov     firstscreen,0
                 
 render4:

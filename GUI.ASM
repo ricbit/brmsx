@@ -21,11 +21,13 @@ public rendercounter
 public spritecounter
 public blitcounter
 public guicounter
+public psgcounter
 
 public renderrate
 public spriterate
 public blitrate
 public guirate
+public psgrate
 
 public draw_gui
 public start_gui
@@ -40,23 +42,27 @@ rendercounter   db      8 dup (0)
 spritecounter   db      8 dup (0)
 blitcounter     db      8 dup (0)
 guicounter      db      8 dup (0)
+psgcounter      db      8 dup (0)
 
 z80acc          db      8 dup (0)
 renderacc       db      8 dup (0)
 spriteacc       db      8 dup (0)
 blitacc         db      8 dup (0)
 guiacc          db      8 dup (0)
+psgacc          db      8 dup (0)
 
 renderrate      dd      0
 spriterate      dd      0
 blitrate        dd      0
 guirate         dd      0
+psgrate         dd      0
 
 z80number       dd      0
 rendernumber    dd      0
 spritenumber    dd      0
 blitnumber      dd      0
 guinumber       dd      0
+psgnumber       dd      0
 
 framenumber     dd      0
 
@@ -93,6 +99,10 @@ draw_gui:
                 mov     ebp,guinumber
                 mov     eax,guirate
                 call    drawline
+                mov     edi,40
+                mov     ebp,psgnumber
+                mov     eax,psgrate
+                call    drawline
                 
 ; --------------------------------------------------------------------
                 
@@ -123,6 +133,11 @@ draw_gui:
                 mov     ecx,offset guinumber
                 call    evalcounter
 
+                mov     eax,psgrate
+                mov     ebx,offset psgacc
+                mov     ecx,offset psgnumber
+                call    evalcounter
+
                 inc     framenumber
                 cmp     framenumber,10
                 jne     draw_update0
@@ -136,7 +151,7 @@ draw_update0:
                 mov     eax,001010101h
                 mov     ebx,000010101h
                 mov     edi,offset dirtyname
-                irp     j,<0,1,2,3,4>
+                irp     j,<0,1,2,3,4,5>
                 or      [edi+j*32],eax
                 or      [edi+4+j*32],ebx
                 endm
@@ -306,6 +321,7 @@ start_gui_drawlogo_next:
                 dec     ecx
                 jnz     start_gui_drawlogo
 
+                call    set_border_color_dark
                 call    blit
 
 start_gui_loop:

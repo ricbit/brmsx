@@ -1,6 +1,13 @@
 - check the border effect in fetchw/readmemw/writememw
 - keyboard check
 - fix border color in 256 mode
+- fix video cache for screen 1
+- add video cache for screen 0
+- improve video cache in screen 2
+- add screen 3
 - add gui
 - finish the compiler
-- fix sprite cropping
+- fix X-sprite cropping
+- noise/envelope in sound
+- add options to select sb addr/irq/dma
+- optimize sound composing functions
