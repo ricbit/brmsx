@@ -117,6 +117,25 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; BITII - BIT nn,(II+dd) nn=[0..7]
+
+BITII           macro   opcode,bit,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                and     dl,01h
+                mov     ebp,12
+                or      dl,[offset BIT&bit&_table+eax]
+                and     dl,11010111b
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPDAA - DAA
 
 OPDAA           macro   opcode
@@ -319,6 +338,24 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RESII - RES nn,(II+dd)
+
+RESII          macro   opcode,bit,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                and     al,NBIT_&bit
+                call    writemem
+                mov     ebp,15
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SETHL - SET nn,(HL)
 
 SETHL          macro   opcode,bit
@@ -326,6 +363,24 @@ SETHL          macro   opcode,bit
 emul&opcode:                
                 inc     edi
                 mov     ecx,regehl
+                call    readmem
+                or      al,BIT_&bit
+                call    writemem
+                mov     ebp,15
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SETII - SET nn,(II+dd)
+
+SETII          macro   opcode,bit,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 or      al,BIT_&bit
                 call    writemem
@@ -779,6 +834,27 @@ XORHL           macro   opcode
 emul&opcode:                
                 inc     edi
                 mov     ecx,regehl
+                call    readmem
+                xor     dh,al
+                mov     al,dh
+                mov     ebp,7
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; XORII - XOR (II+dd)
+
+XORII           macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                call    fetch
+                inc     edi
+                movsx   ebx,al
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 xor     dh,al
                 mov     al,dh

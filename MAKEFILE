@@ -17,3 +17,4 @@ clean :
 	del *.o
 	del *.exe
 	del *.lst
+	del cart1.rom

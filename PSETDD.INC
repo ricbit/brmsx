@@ -173,7 +173,7 @@ psetDDxx:
 	psetDDAB: dd prinXX
 	psetDDAC: dd prinXX
 	psetDDAD: dd prinXX
-	psetDDAE: dd prinXX
+	psetDDAE: dd prinDDAE
 	psetDDAF: dd prinXX
 	psetDDB0: dd prinXX
 	psetDDB1: dd prinXX

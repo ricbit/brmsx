@@ -173,7 +173,7 @@ isetDDxx:
 	isetDDAB: dd emulXX
 	isetDDAC: dd emulXX
 	isetDDAD: dd emulXX
-	isetDDAE: dd emulXX
+	isetDDAE: dd emulDDAE
 	isetDDAF: dd emulXX
 	isetDDB0: dd emulXX
 	isetDDB1: dd emulXX

@@ -13,9 +13,48 @@ include bit.inc
 ; DATA ---------------------------------------------------------------
 
 include isetDD.inc
+include isetDDCB.inc
 public isetDDxx
 
 ; --------------------------------------------------------------------
+
+; setflag_bit --------------------------------------------------------
+; sets the z80 flags after bit operations
+
+setflag_bit     macro
+
+                pushfd
+                pop     ecx
+                and     dl,10111101b
+                and     cl,01000000b
+                or      dl,cl
+                or      dl,00010000b
+
+                endm
+
+; setflag_rlc --------------------------------------------------------
+; sets the z80 flags after rlc operations
+
+setflag_rlc     macro
+
+                pushfd
+                pop     ecx
+                mov     dl,cl
+                and     dl,11000101b
+
+                endm
+
+; setflag_rr ---------------------------------------------------------
+; sets the z80 flags after rr operations
+
+setflag_rr      macro
+
+                pushfd
+                pop     ecx
+                mov     dl,cl
+                and     dl,11000101b
+
+                endm
 
 setflag_add2    macro
 
@@ -255,6 +294,9 @@ emulDDA6:       inc     edi
                 setflag_and
                 ret
 
+; DD AE - XOR (IX+dd)
+XORII           DDAE,regeix
+
 ; DD B6 - OR (IX+dd)
 ORII            DDB6,regeix
 
@@ -307,6 +349,105 @@ emulDDE5:       inc     edi
 emulDDE9:       mov     edi,regeix
                 ret
 
+; DD CB 06 - RLC (IX+dd)
+emulDDCB06:     inc     edi
+                movsx   ebx,cl
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                rol     al,1
+                push    ecx
+                setflag_rlc
+                pop     ecx
+                call    writemem
+                ret
+
+; DD CB 1E - RR (IX+dd)
+emulDDCB1E:     inc     edi
+                movsx   ebx,cl
+                mov     ecx,regeix
+                add     cx,bx
+                call    readmem
+                mov     bl,dl
+                shr     bl,1
+                rcr     al,1
+                push    ecx
+                setflag_rr
+                pop     ecx
+                call    writemem
+                ret
+
+; DD CB 46 - BIT 0,(IX+dd)
+BITII           DDCB46,0,regeix
+
+; DD CB 4E - BIT 1,(IX+dd)
+BITII           DDCB4E,1,regeix
+
+; DD CB 56 - BIT 2,(IX+dd)
+BITII           DDCB56,2,regeix
+
+; DD CB 5E - BIT 3,(IX+dd)
+BITII           DDCB5E,3,regeix
+
+; DD CB 66 - BIT 4,(IX+dd)
+BITII           DDCB66,4,regeix
+
+; DD CB 6E - BIT 5,(IX+dd)
+BITII           DDCB6E,5,regeix
+
+; DD CB 76 - BIT 6,(IX+dd)
+BITII           DDCB76,6,regeix
+
+; DD CB 7E - BIT 7,(IX+dd)
+BITII           DDCB7E,7,regeix
+
+; DD CB 46 - RES 0,(IX+dd)
+RESII           DDCB86,0,regeix
+
+; DD CB 4E - RES 1,(IX+dd)
+RESII           DDCB8E,1,regeix
+
+; DD CB 56 - RES 2,(IX+dd)
+RESII           DDCB96,2,regeix
+
+; DD CB 5E - RES 3,(IX+dd)
+RESII           DDCB9E,3,regeix
+
+; DD CB 66 - RES 4,(IX+dd)
+RESII           DDCBA6,4,regeix
+
+; DD CB 6E - RES 5,(IX+dd)
+RESII           DDCBAE,5,regeix
+
+; DD CB 76 - RES 6,(IX+dd)
+RESII           DDCBB6,6,regeix
+
+; DD CB 7E - RES 7,(IX+dd)
+RESII           DDCBBE,7,regeix
+
+; DD CB 46 - SET 0,(IX+dd)
+SETII           DDCBC6,0,regeix
+
+; DD CB 4E - SET 1,(IX+dd)
+SETII           DDCBCE,1,regeix
+
+; DD CB 56 - SET 2,(IX+dd)
+SETII           DDCBD6,2,regeix
+
+; DD CB 5E - SET 3,(IX+dd)
+SETII           DDCBDE,3,regeix
+
+; DD CB 66 - SET 4,(IX+dd)
+SETII           DDCBE6,4,regeix
+
+; DD CB 6E - SET 5,(IX+dd)
+SETII           DDCBEE,5,regeix
+
+; DD CB 76 - SET 6,(IX+dd)
+SETII           DDCBF6,6,regeix
+
+; DD CB 7E - SET 7,(IX+dd)
+SETII           DDCBFE,7,regeix
 
 code32          ends
                 end

@@ -38,7 +38,6 @@ public inemulXX
 public outportxx
 public inportxx
 public opsubreg
-public isetDDCBxx
 
 public breakpoint
 public iff1
@@ -106,7 +105,6 @@ public DEC_table
 align 4
 
 include iset.inc
-include isetDDCB.inc
 include isetFD.inc
 
 include outport.inc
@@ -2173,114 +2171,6 @@ emulFF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,038h
                 xor     eax,eax
-                ret
-
-; DD CB 06 - RLC (IX+dd)
-emulDDCB06:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                rol     al,1
-                push    ecx
-                setflag_rlc
-                pop     ecx
-                call    writemem
-                ret
-
-; DD CB 1E - RR (IX+dd)
-emulDDCB1E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                mov     bl,dl
-                shr     bl,1
-                rcr     al,1
-                push    ecx
-                setflag_rr
-                pop     ecx
-                call    writemem
-                ret
-
-; DD CB 46 - BIT 0,(IX+dd)
-emulDDCB46:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_0
-                setflag_bit
-                ret
-
-; DD CB 4E - BIT 1,(IX+dd)
-emulDDCB4E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_1
-                setflag_bit
-                ret
-
-; DD CB 5E - BIT 3,(IX+dd)
-emulDDCB5E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_3
-                setflag_bit
-                ret
-
-; DD CB 6E - BIT 5,(IX+dd)
-emulDDCB6E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_5
-                setflag_bit
-                ret
-
-; DD CB 76 - BIT 6,(IX+dd)
-emulDDCB76:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_6
-                setflag_bit
-                ret
-
-; DD CB 7E - BIT 7,(IX+dd)
-emulDDCB7E:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                test    al,BIT_7
-                setflag_bit
-                ret
-
-; DD CB AE - RES 5,(IX+dd)
-emulDDCBAE:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                and     al,NBIT_7
-                call    writemem
-                ret
-
-; DD CB FE - SET 7,(IX+dd)
-emulDDCBFE:     inc     edi
-                movsx   ebx,cl
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                or      al,BIT_7
-                call    writemem
                 ret
 
 ; FD 09 - ADD IY,BC

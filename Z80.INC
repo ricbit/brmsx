@@ -73,4 +73,3 @@ extrn rcounter: dword
 extrn rmask: byte
 extrn regi: byte
 extrn opsubreg: near
-extrn isetDDCBxx: near
