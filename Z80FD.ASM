@@ -30,31 +30,13 @@ setflag_cp      macro
                 
                 endm
 
-setflag_add2    macro
-
-                pushfd
-                pop     ecx
-                and     ecx,1
-                and     dl,11111100b
-                or      dl,cl
-                
-                endm
-
 ; --------------------------------------------------------------------
 
 ; FD 09 - ADD IY,BC
-emulFD09:       inc     edi
-                mov     ebx,regebc
-                add     regiy,bx
-                setflag_add2
-                ret
+ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15
 
 ; FD 19 - ADD IY,DE
-emulFD19:       inc     edi
-                mov     ebx,regede
-                add     regiy,bx
-                setflag_add2
-                ret
+ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15
 
 ; FD 21 - LD IY,dddd
 emulFD21:       inc     edi
@@ -81,11 +63,7 @@ emulFD22:       inc     edi
 INCWREG         FD23,regiy,10
 
 ; FD 29 - ADD IY,IY
-emulFD29:       inc     edi
-                mov     ecx,regeiy
-                add     regiy,cx
-                setflag_add2
-                ret
+ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15
 
 ; FD 2A - LD IY,(dddd)
 emulFD2A:       inc     edi
@@ -111,6 +89,9 @@ DECII           FD35,regeiy
 
 ; FD 36 - LD (IY+dd),dd
 LDIIDDNN        FD36,regeiy
+
+; FD 39 - ADD IY,SP
+ADDREGWREGW     FD39,regiyl,regiyh,regspl,regsph,15
 
 ; FD 46 - LD B,(IY+dd)
 LDREGIIDD       FD46,regb,regeiy
@@ -215,76 +196,85 @@ emulFDE5:       inc     edi
 emulFDE9:       mov     edi,regeiy
                 ret
 
-; FD CB 46 - BIT 0,(IX+dd)
+; FD CB 06 - RLC (IY+dd)
+RLCII           FDCB06,regeiy
+
+; FD CB 16 - RL (IY+dd)
+RLII            FDCB16,regeiy
+
+; FD CB 1E - RR (IY+dd)
+RRII            FDCB1E,regeiy
+
+; FD CB 46 - BIT 0,(IY+dd)
 BITII           FDCB46,0,regeiy
 
-; FD CB 4E - BIT 1,(IX+dd)
+; FD CB 4E - BIT 1,(IY+dd)
 BITII           FDCB4E,1,regeiy
 
-; FD CB 56 - BIT 2,(IX+dd)
+; FD CB 56 - BIT 2,(IY+dd)
 BITII           FDCB56,2,regeiy
 
-; FD CB 5E - BIT 3,(IX+dd)
+; FD CB 5E - BIT 3,(IY+dd)
 BITII           FDCB5E,3,regeiy
 
-; FD CB 66 - BIT 4,(IX+dd)
+; FD CB 66 - BIT 4,(IY+dd)
 BITII           FDCB66,4,regeiy
 
-; FD CB 6E - BIT 5,(IX+dd)
+; FD CB 6E - BIT 5,(IY+dd)
 BITII           FDCB6E,5,regeiy
 
-; FD CB 76 - BIT 6,(IX+dd)
+; FD CB 76 - BIT 6,(IY+dd)
 BITII           FDCB76,6,regeiy
 
-; FD CB 7E - BIT 7,(IX+dd)
+; FD CB 7E - BIT 7,(IY+dd)
 BITII           FDCB7E,7,regeiy
 
-; FD CB 46 - RES 0,(IX+dd)
+; FD CB 46 - RES 0,(IY+dd)
 RESII           FDCB86,0,regeiy
 
-; FD CB 4E - RES 1,(IX+dd)
+; FD CB 4E - RES 1,(IY+dd)
 RESII           FDCB8E,1,regeiy
 
-; FD CB 56 - RES 2,(IX+dd)
+; FD CB 56 - RES 2,(IY+dd)
 RESII           FDCB96,2,regeiy
 
-; FD CB 5E - RES 3,(IX+dd)
+; FD CB 5E - RES 3,(IY+dd)
 RESII           FDCB9E,3,regeiy
 
-; FD CB 66 - RES 4,(IX+dd)
+; FD CB 66 - RES 4,(IY+dd)
 RESII           FDCBA6,4,regeiy
 
-; FD CB 6E - RES 5,(IX+dd)
+; FD CB 6E - RES 5,(IY+dd)
 RESII           FDCBAE,5,regeiy
 
-; FD CB 76 - RES 6,(IX+dd)
+; FD CB 76 - RES 6,(IY+dd)
 RESII           FDCBB6,6,regeiy
 
-; FD CB 7E - RES 7,(IX+dd)
+; FD CB 7E - RES 7,(IY+dd)
 RESII           FDCBBE,7,regeiy
 
-; FD CB 46 - SET 0,(IX+dd)
+; FD CB 46 - SET 0,(IY+dd)
 SETII           FDCBC6,0,regeiy
 
-; FD CB 4E - SET 1,(IX+dd)
+; FD CB 4E - SET 1,(IY+dd)
 SETII           FDCBCE,1,regeiy
 
-; FD CB 56 - SET 2,(IX+dd)
+; FD CB 56 - SET 2,(IY+dd)
 SETII           FDCBD6,2,regeiy
 
-; FD CB 5E - SET 3,(IX+dd)
+; FD CB 5E - SET 3,(IY+dd)
 SETII           FDCBDE,3,regeiy
 
-; FD CB 66 - SET 4,(IX+dd)
+; FD CB 66 - SET 4,(IY+dd)
 SETII           FDCBE6,4,regeiy
 
-; FD CB 6E - SET 5,(IX+dd)
+; FD CB 6E - SET 5,(IY+dd)
 SETII           FDCBEE,5,regeiy
 
-; FD CB 76 - SET 6,(IX+dd)
+; FD CB 76 - SET 6,(IY+dd)
 SETII           FDCBF6,6,regeiy
 
-; FD CB 7E - SET 7,(IX+dd)
+; FD CB 7E - SET 7,(IY+dd)
 SETII           FDCBFE,7,regeiy
 
 

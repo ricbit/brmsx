@@ -45,7 +45,7 @@ OPNEG           ED44
 OUTCREG         ED49,regc
 
 ; ED 4A - ADC HL,BC
-ADCHLWREG       ED4A,regc,regb
+ADCREGWREGW     ED4A,regl,regh,regc,regb
 
 ; ED 4B - LD BC,(dddd)
 emulED4B:       inc     edi
@@ -94,7 +94,7 @@ LDAI            ED57
 OUTCREG         ED59,rege
 
 ; ED 5A - ADC HL,DE
-ADCHLWREG       ED5A,rege,regd
+ADCREGWREGW     ED5A,regl,regh,rege,regd
 
 ; ED 5B - LD DE,(dddd)
 emulED5B:       inc     edi
@@ -125,7 +125,7 @@ OPRRD           ED67
 OUTCREG         ED69,regl
 
 ; ED 6A - ADC HL,HL
-ADCHLWREG       ED6A,regl,regh
+ADCREGWREGW     ED6A,regl,regh,regl,regh
 
 ; ED 6F - RLD
 OPRLD           ED6F  
@@ -163,7 +163,7 @@ emulED78:       inc     edi
 OUTCREG         ED79,dh
 
 ; ED 7A - ADC HL,SP
-ADCHLWREG       ED7A,regspl,regsph
+ADCREGWREGW     ED7A,regl,regh,regspl,regsph
 
 ; ED 7B - LD SP,(dddd)
 emulED7B:       inc     edi

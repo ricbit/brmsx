@@ -21,7 +21,7 @@ isetDDCBxx:
 	isetDDCB13: dd emulXX
 	isetDDCB14: dd emulXX
 	isetDDCB15: dd emulXX
-	isetDDCB16: dd emulXX
+	isetDDCB16: dd emulDDCB16
 	isetDDCB17: dd emulXX
 	isetDDCB18: dd emulXX
 	isetDDCB19: dd emulXX

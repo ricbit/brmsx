@@ -5,7 +5,7 @@ psetFDCBxx:
 	psetFDCB03: dd prinXX
 	psetFDCB04: dd prinXX
 	psetFDCB05: dd prinXX
-	psetFDCB06: dd prinXX
+	psetFDCB06: dd prinFDCB06
 	psetFDCB07: dd prinXX
 	psetFDCB08: dd prinXX
 	psetFDCB09: dd prinXX
@@ -21,7 +21,7 @@ psetFDCBxx:
 	psetFDCB13: dd prinXX
 	psetFDCB14: dd prinXX
 	psetFDCB15: dd prinXX
-	psetFDCB16: dd prinXX
+	psetFDCB16: dd prinFDCB16
 	psetFDCB17: dd prinXX
 	psetFDCB18: dd prinXX
 	psetFDCB19: dd prinXX
@@ -29,7 +29,7 @@ psetFDCBxx:
 	psetFDCB1B: dd prinXX
 	psetFDCB1C: dd prinXX
 	psetFDCB1D: dd prinXX
-	psetFDCB1E: dd prinXX
+	psetFDCB1E: dd prinFDCB1E
 	psetFDCB1F: dd prinXX
 	psetFDCB20: dd prinXX
 	psetFDCB21: dd prinXX

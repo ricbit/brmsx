@@ -1,0 +1,7 @@
+release 1.25:
+
+- optimized LD rr,dd
+- optimized LD (HL),dd
+- sorted OPCODE.INC file
+- added RL (II+dd)
+- added ADD II,rrw

@@ -18,16 +18,6 @@ public isetDDxx
 
 ; --------------------------------------------------------------------
 
-setflag_add2    macro
-
-                pushfd
-                pop     ecx
-                and     ecx,1
-                and     dl,11111100b
-                or      dl,cl
-                
-                endm
-
 setflag_cp      macro
 
                 pushfd
@@ -43,18 +33,10 @@ setflag_cp      macro
 ; --------------------------------------------------------------------
 
 ; DD 09 - ADD IX,BC
-emulDD09:       inc     edi
-                mov     ebx,regebc
-                add     regix,bx
-                setflag_add2
-                ret
+ADDREGWREGW     DD09,regixl,regixh,regc,regb,15
 
 ; DD 19 - ADD IX,DE
-emulDD19:       inc     edi
-                mov     ebx,regede
-                add     regix,bx
-                setflag_add2
-                ret
+ADDREGWREGW     DD19,regixl,regixh,rege,regd,15
 
 ; DD 21 - LD IX,dddd
 emulDD21:       inc     edi               
@@ -81,11 +63,7 @@ emulDD22:       inc     edi
 INCWREG         DD23,regix,10
 
 ; DD 29 - ADD IX,IX
-emulDD29:       inc     edi
-                mov     ecx,regeix
-                add     regix,cx
-                setflag_add2
-                ret
+ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15
 
 ; DD 2A - LD IX,(dddd)
 emulDD2A:       inc     edi
@@ -111,6 +89,9 @@ DECII           DD35,regeix
 
 ; DD 36 - LD (IX+dd),dd
 LDIIDDNN        DD36,regeix
+
+; DD 39 - ADD IX,SP
+ADDREGWREGW     DD39,regixl,regixh,regspl,regsph,15
 
 ; DD 46 - LD B,(IX+dd)
 LDREGIIDD       DD46,regb,regeix
@@ -226,6 +207,9 @@ emulDDE9:       mov     edi,regeix
 
 ; DD CB 06 - RLC (IX+dd)
 RLCII           DDCB06,regeix
+
+; DD CB 16 - RL (IX+dd)
+RLII            DDCB16,regeix
 
 ; DD CB 1E - RR (IX+dd)
 RRII            DDCB1E,regeix

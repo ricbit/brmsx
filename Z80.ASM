@@ -556,11 +556,7 @@ INCREG          04,regb
 DECREG          05,regb
 
 ; 06 - LD B,dd
-emul06:         inc     edi
-                call    fetch
-                inc     edi
-                mov     regb,al
-                ret
+LDREGIMM        06,regb
 
 ; 07 - RLCA
 OPRLCA          07
@@ -574,7 +570,7 @@ emul08:         inc     edi
                 ret
 
 ; 09 - ADD HL,BC
-ADDHLWREG       09,regc,regb
+ADDREGWREGW     09,regl,regh,regc,regb,11
 
 ; 0A - LD A,(BC)
 emul0A:         inc     edi
@@ -593,11 +589,7 @@ INCREG          0C,regc
 DECREG          0D,regc
 
 ; 0E - LD C,dd
-emul0E:         inc     edi
-                call    fetch
-                inc     edi
-                mov     regc,al
-                ret
+LDREGIMM        0E,regc
 
 ; 0F - RRCA
 OPRRCA          0F      
@@ -637,11 +629,7 @@ INCREG          14,regd
 DECREG          15,regd
 
 ; 16 - LD D,dd
-emul16:         inc     edi
-                call    fetch
-                inc     edi
-                mov     regd,al
-                ret
+LDREGIMM        16,regd
 
 ; 17 - RLA
 OPRLA           17
@@ -655,7 +643,7 @@ emul18:         inc     edi
                 ret
 
 ; 19 - ADD HL,DE
-ADDHLWREG       19,rege,regd
+ADDREGWREGW     19,regl,regh,rege,regd,11
 
 ; 1A - LD A,(DE)
 emul1A:         inc     edi
@@ -674,11 +662,7 @@ INCREG          1C,rege
 DECREG          1D,rege
 
 ; 1E - LD E,dd
-emul1E:         inc     edi
-                call    fetch
-                inc     edi
-                mov     rege,al
-                ret
+LDREGIMM        1E,rege
 
 ; 1F - RRA
 OPRRA           1F
@@ -724,11 +708,7 @@ INCREG          24,regh
 DECREG          25,regh
 
 ; 26 - LD H,dd
-emul26:         inc     edi
-                call    fetch
-                inc     edi
-                mov     regh,al
-                ret
+LDREGIMM        26,regh
 
 ; 27 - DAA
 OPDAA           27
@@ -744,7 +724,7 @@ emul28:         inc     edi
 emul28a:        ret
 
 ; 29 - ADD HL,HL
-ADDHLWREG       29,regl,regh
+ADDREGWREGW     29,regl,regh,regl,regh,11
 
 ; 2A - LD HL,(dddd)
 emul2A:         inc     edi
@@ -769,11 +749,7 @@ INCREG          2C,regl
 DECREG          2D,regl
 
 ; 2E - LD L,dd
-emul2E:         inc     edi
-                call    fetch
-                inc     edi
-                mov     regl,al
-                ret
+LDREGIMM        2E,regl
 
 ; 2F - CPL
 emul2F:         inc     edi
@@ -819,12 +795,7 @@ INCHL           34
 DECHL           35
 
 ; 36 - LD (HL),dd
-emul36:         inc     edi
-                call    fetch
-                mov     ecx,regehl        
-                call    writemem
-                inc     edi
-                ret
+LDHLIMM         36
 
 ; 37 - SCF
 emul37:         inc     edi
@@ -845,7 +816,7 @@ emul38a:        ret
 
 
 ; 39 - ADD HL,SP
-ADDHLWREG       39,regspl,regsph
+ADDREGWREGW     39,regl,regh,regspl,regsph,11
 
 ; 3A - LD A,(dddd)
 emul3A:         inc     edi
@@ -867,11 +838,7 @@ INCREG          3C,dh
 DECREG          3D,dh
 
 ; 3E - LD A,dd
-emul3E:         inc     edi
-                call    fetch
-                inc     edi
-                mov     dh,al
-                ret
+LDREGIMM        3E,dh
 
 ; 3F - CCF
 emul3F:         inc     edi

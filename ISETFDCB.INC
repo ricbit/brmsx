@@ -5,7 +5,7 @@ isetFDCBxx:
 	isetFDCB03: dd emulXX
 	isetFDCB04: dd emulXX
 	isetFDCB05: dd emulXX
-	isetFDCB06: dd emulXX
+	isetFDCB06: dd emulFDCB06
 	isetFDCB07: dd emulXX
 	isetFDCB08: dd emulXX
 	isetFDCB09: dd emulXX
@@ -21,7 +21,7 @@ isetFDCBxx:
 	isetFDCB13: dd emulXX
 	isetFDCB14: dd emulXX
 	isetFDCB15: dd emulXX
-	isetFDCB16: dd emulXX
+	isetFDCB16: dd emulFDCB16
 	isetFDCB17: dd emulXX
 	isetFDCB18: dd emulXX
 	isetFDCB19: dd emulXX
@@ -29,7 +29,7 @@ isetFDCBxx:
 	isetFDCB1B: dd emulXX
 	isetFDCB1C: dd emulXX
 	isetFDCB1D: dd emulXX
-	isetFDCB1E: dd emulXX
+	isetFDCB1E: dd emulFDCB1E
 	isetFDCB1F: dd emulXX
 	isetFDCB20: dd emulXX
 	isetFDCB21: dd emulXX

@@ -21,7 +21,7 @@ psetDDCBxx:
 	psetDDCB13: dd prinXX
 	psetDDCB14: dd prinXX
 	psetDDCB15: dd prinXX
-	psetDDCB16: dd prinXX
+	psetDDCB16: dd prinDDCB16
 	psetDDCB17: dd prinXX
 	psetDDCB18: dd prinXX
 	psetDDCB19: dd prinXX

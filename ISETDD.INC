@@ -56,7 +56,7 @@ isetDDxx:
 	isetDD36: dd emulDD36
 	isetDD37: dd emulXX
 	isetDD38: dd emulXX
-	isetDD39: dd emulXX
+	isetDD39: dd emulDD39
 	isetDD3A: dd emulXX
 	isetDD3B: dd emulXX
 	isetDD3C: dd emulXX
