@@ -156,3 +156,5 @@ extrn TC: dword
 extrn inemul98_timing: dword
 extrn inemul98: dword
 extrn mapper_banks: byte
+extrn extended_slot_0: byte
+extrn memlock: byte

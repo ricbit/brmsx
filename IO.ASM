@@ -12,6 +12,7 @@ extrn blitbuffer: dword
 extrn start_counter: near
 extrn end_counter: near
 extrn tape_pos: dword
+extrn message_buffer: dword
 
 include pmode.inc
 include pentium.inc
@@ -154,7 +155,21 @@ msg00           db      13,10,'$'
 ; print a dos message
 ; eax=address of message
 
-printmsg:       push    ebx eax
+printmsg:       
+                push    ebx eax edi esi
+
+                mov     esi,eax
+                mov     edi,message_buffer
+print_msg_loop:
+                mov     al,byte ptr [esi]
+                inc     esi
+                mov     byte ptr [edi],al
+                inc     edi
+                cmp     al,'$'
+                jne     print_msg_loop
+
+                mov     eax,message_buffer
+                mov     ebx,0
                 add     eax,_code32a
                 shld    ebx,eax,28
                 and     eax,0fh
@@ -163,7 +178,7 @@ printmsg:       push    ebx eax
                 mov     v86r_ah,9
                 mov     al,21h
                 int     33h
-                pop     eax ebx
+                pop     esi edi eax ebx
                 ret
 
 ; printasc -----------------------------------------------------------
@@ -509,9 +524,7 @@ set_border_color:
                 push    eax ebx edx
                 movzx   eax,byte ptr [offset vdpregs+7]
                 and     eax,0fh
-                ;lea     ebx,[offset palette+eax+eax*2]
                 mov     ebx,pal_normal
-                ;lea     ebx,[ebx+eax+eax*2]
                 add     ebx,eax
                 add     ebx,eax
                 add     ebx,eax
@@ -533,9 +546,7 @@ set_border_color:
                 ; must also set the color 2
                 movzx   eax,byte ptr [offset vdpregs+7]
                 shr     eax,4
-                ;lea     ebx,[offset palette+eax+eax*2]
                 mov     ebx,pal_normal
-                ;lea     ebx,[ebx+eax+eax*2]
                 add     ebx,eax
                 add     ebx,eax
                 add     ebx,eax
@@ -576,7 +587,6 @@ set_border_color_512x384:
                 lea     eax,[eax+eax*2]
                 mov     ebx,pal_filtered
                 add     ebx,eax
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     al,[ebx]
                 out     dx,al
                 mov     al,[ebx+1]
@@ -590,8 +600,6 @@ set_border_color_512x384:
                 lea     eax,[eax+eax*2]
                 shl     eax,4
                 mov     ebx,pal_filtered
-                ;add     ebx,eax
-                ;lea     ebx,[offset filtered_palette+eax+3]
                 lea     ebx,[ebx+eax+3]
 
                 mov     ecx,15*3
@@ -610,7 +618,6 @@ set_border_color_512x384_loop1:
                 mov     esi,10h
                 mov     ebx,pal_filtered
                 lea     ebx,[ebx+eax+3]
-                ;lea     ebx,[offset filtered_palette+eax+3]
 
                 dec     edx
                 mov     ecx,15
@@ -651,7 +658,6 @@ set_border_color_512x384_scr0:
                 lea     eax,[eax+eax*2]
                 mov     ebx,pal_filtered
                 add     ebx,eax
-                ;lea     ebx,[offset filtered_palette+eax]
 
                 mov     al,[ebx]
                 out     dx,al
@@ -667,7 +673,6 @@ set_border_color_512x384_scr0:
                 lea     eax,[eax+eax*2]
                 mov     ebx,pal_filtered
                 add     ebx,eax
-                ;lea     ebx,[offset filtered_palette+eax]
 
                 mov     al,[ebx]
                 out     dx,al
@@ -679,7 +684,6 @@ set_border_color_512x384_scr0:
                 ; set the color 02h
                 movzx   eax,byte ptr [offset vdpregs+7]
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -701,7 +705,6 @@ set_border_color_512x384_scr0:
                 and     eax,0Fh
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -723,7 +726,6 @@ set_border_color_512x384_scr0:
                 shr     eax,4
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -747,7 +749,6 @@ set_border_color_512x384_scr0:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -763,7 +764,6 @@ set_border_color_512x384_scr0:
                 shr     eax,4
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -781,7 +781,6 @@ set_border_color_512x384_scr0:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                ;lea     ebx,[offset filtered_palette+eax]
                 mov     ebx,pal_filtered
                 add     ebx,eax
 
@@ -867,7 +866,7 @@ convhexdig:     push    eax
                 add     eax,'0'
                 jmp     convhexdig2
 convhexdig1:    add     eax,'A'-10
-convhexdig2:    mov     [bx],al
+convhexdig2:    mov     [ebx],al
                 pop     eax
                 ret
 

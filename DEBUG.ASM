@@ -22,11 +22,13 @@ include mouse.inc
 include joystick.inc
 include drive.inc
 include z80core.inc
+include symdeb.inc
 
 include debugsrc.inc
 include debugsr2.inc
 include debugsr3.inc
 include debugsr4.inc
+include debugsr5.inc
 include helpsrc.inc
 include srsrc.inc
 include clsrc.inc
@@ -43,6 +45,7 @@ extrn sccram: dword
 
 public debug
 public printmsgd
+public printnuld
 public writemessage
 
 public change_sound
@@ -221,6 +224,32 @@ printmsgd2:
                 pop     edx edi eax
                 ret
 
+; printnuld ----------------------------------------------------------
+; print a message null terminated, 
+; drawing directly in the temp buffer
+; enter: dh=row, dl=column
+;        eax= offset of message
+
+printnuld:
+                push    eax edi edx
+                movzx   edi,dh
+                lea     edi,[edi+edi*4]
+                shl     edi,5
+                and     edx,0FFh
+                lea     edi,[edi+edx*2]
+                add     edi,offset temp_screen
+printnuld1:
+                mov     dl,[eax]
+                cmp     dl,0
+                je      printnuld2
+                mov     [edi],dl
+                add     edi,2
+                inc     eax
+                jmp     printnuld1
+printnuld2:
+                pop     edx edi eax
+                ret
+
 ; printyesno ---------------------------------------------------------
 ; print "yes" or "no" based on contents of eax
 ; eax=0 "NO"
@@ -374,6 +403,9 @@ render_debug:
                 cmp     debugtype,4
                 je      render_debug4
 
+                cmp     debugtype,5
+                je      render_debug5
+
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug_screen
@@ -382,6 +414,8 @@ render_debug:
                 rep     movsd
 
                 call    status_bar
+
+                mov     enable_symbolic,0
 
 ; --------------------------------------------------------------------
 
@@ -1471,6 +1505,112 @@ print_dump1:
                 jmp     blit_screen
 
 ; --------------------------------------------------------------------
+                
+render_debug5:
+                ; fifth debug screen
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug5_screen
+                mov     edi,offset temp_screen
+                mov     ecx,3840/4
+                rep     movsd
+
+                call    status_bar
+
+                mov     enable_symbolic,1
+
+; --------------------------------------------------------------------
+                
+                ; symbolic disassemble the program
+
+                mov     ecx,0
+                mov     edi,disasm_address
+                mov     firstone,1
+sprint_dis0:
+                ; print the address label (if any)
+                mov     eax,edi
+                call    search_label
+                jc      sprint_dis3
+
+                COORD   2,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                call    printleftd
+
+sprint_dis3:
+                ; print the mnemonic
+                xor     eax,eax
+                COORD   46,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                push    edi
+                call    print
+                pop     edi
+                
+                ; print the address
+                COORD   27,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                mov     eax,edi
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the pc indicator
+                cmp     edi,regepc
+                jne     sprint_dis2
+                COORD   31,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                mov     eax,offset tabindicator
+                call    printmsgd
+
+sprint_dis2:
+                ; print the opcode
+                COORD   33,3
+                mov     esi,ecx
+                shl     esi,8
+                add     edx,esi
+                push    ecx
+                mov     ecx,isize
+sprint_dis1:
+                call    fetch                                
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+                add     edx,3
+                inc     edi
+                and     edi,0FFFFh
+                dec     ecx
+                jnz     sprint_dis1
+                pop     ecx
+
+                cmp     firstone,1
+                jne     sprint_dis_skip
+                mov     firstone,0
+                mov     ebp,isize
+                add     ebp,regepc
+                and     ebp,0FFFFh
+                mov     nextbp,ebp
+                mov     ebp,isize
+                add     ebp,disasm_address
+                and     ebp,0FFFFh
+                mov     disasm_down,ebp
+sprint_dis_skip:
+
+                inc     ecx
+                cmp     ecx,11
+                jne     sprint_dis0
+
+; --------------------------------------------------------------------
+                
+                jmp     blit_screen
+
+; --------------------------------------------------------------------
 
 debug:          
                 ;call    init_compiler
@@ -1541,6 +1681,8 @@ debug_loop:
                 je      command_3
                 cmp     al,'4'
                 je      command_4
+                cmp     al,'5'
+                je      command_5
                 cmp     al,'V'
                 je      command_v
                 ;cmp     al,'Z'
@@ -2082,6 +2224,12 @@ command_3:
 
 command_4:
                 mov     debugtype,4
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_5:
+                mov     debugtype,5
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------

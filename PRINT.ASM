@@ -31,6 +31,7 @@ public isize
 public printmsgp
 public printhex2p
 public printhex4p
+public printnulp
 
 ; DATA ---------------------------------------------------------------
 
@@ -48,6 +49,17 @@ printmsgp1:
                 inc     eax
                 inc     edx
                 jmp     printmsgp1
+
+; --------------------------------------------------------------------
+
+printnulp:
+                call    printnuld
+printnulp1:
+                cmp     byte ptr [eax],0
+                je      _ret
+                inc     eax
+                inc     edx
+                jmp     printnulp1
 
 ; --------------------------------------------------------------------
 
@@ -120,7 +132,7 @@ PRINTOP100      0C,'INC C$'
 PRINTOP100      0D,'DEC C$'
 PRINTOP211      0E,'LD C,$'
 PRINTOP100      0F,'RRCA$'
-PRINTOP211      10,'DJNZ $'
+PRINTOP2JR      10,'DJNZ $'
 PRINTOP312      11,'LD DE,$'
 PRINTOP100      12,'LD (DE),A$'
 PRINTOP100      13,'INC DE$'
@@ -128,7 +140,7 @@ PRINTOP100      14,'INC D$'
 PRINTOP100      15,'DEC D$'
 PRINTOP211      16,'LD D,$'
 PRINTOP100      17,'RLA$'
-PRINTOP211      18,'JR $'
+PRINTOP2JR      18,'JR $'
 PRINTOP100      19,'ADD HL,DE$'
 PRINTOP100      1A,'LD A,(DE)$'
 PRINTOP100      1B,'DEC DE$'
@@ -136,7 +148,7 @@ PRINTOP100      1C,'INC E$'
 PRINTOP100      1D,'DEC E$'
 PRINTOP211      1E,'LD E,$'
 PRINTOP100      1F,'RRA$'
-PRINTOP211      20,'JR NZ,$'
+PRINTOP2JR      20,'JR NZ,$'
 PRINTOP312      21,'LD HL,$'
 PRINTOP322      22,'LD ($','),HL$'
 PRINTOP100      23,'INC HL$'
@@ -144,7 +156,7 @@ PRINTOP100      24,'INC H$'
 PRINTOP100      25,'DEC H$'
 PRINTOP211      26,'LD H,$'
 PRINTOP100      27,'DAA$'
-PRINTOP211      28,'JR Z,$'
+PRINTOP2JR      28,'JR Z,$'
 PRINTOP100      29,'ADD HL,HL$'
 PRINTOP322      2A,'LD HL,($',')$'
 PRINTOP100      2B,'DEC HL$'
@@ -152,7 +164,7 @@ PRINTOP100      2C,'INC L$'
 PRINTOP100      2D,'DEC L$'
 PRINTOP211      2E,'LD L,$'
 PRINTOP100      2F,'CPL$'
-PRINTOP211      30,'JR NC,$'
+PRINTOP2JR      30,'JR NC,$'
 PRINTOP312      31,'LD SP,$'
 PRINTOP322      32,'LD ($','),A$'
 PRINTOP100      33,'INC SP$'
@@ -160,7 +172,7 @@ PRINTOP100      34,'INC (HL)$'
 PRINTOP100      35,'DEC (HL)$'
 PRINTOP211      36,'LD (HL),$'
 PRINTOP100      37,'SCF$'
-PRINTOP211      38,'JR C,$'
+PRINTOP2JR      38,'JR C,$'
 PRINTOP100      39,'ADD HL,SP$'
 PRINTOP322      3A,'LD A,($',')$'
 PRINTOP100      3B,'DEC SP$'

@@ -32,6 +32,7 @@ extrn msxram: dword
 extrn codetable: dword
 extrn cart_sram: dword
 extrn cart1: dword
+extrn extendedrom: dword
 
 include io.inc
 include vdp.inc
@@ -191,6 +192,7 @@ public fakeirq
 public vdpcond
 public vdptemp
 public vdplookahead
+public memlock
 
 public BIT0_table
 public BIT1_table
@@ -216,6 +218,7 @@ public DAA_table
 public DAA_select_table
 public LDI_table
 public mapper_banks
+public extended_slot_0
 
 ; DATA ---------------------------------------------------------------
 
@@ -248,6 +251,8 @@ include cp.inc
 include cpl.inc
 include ldi.inc
 
+; --------------------------------------------------------------------
+
 align 4
 
 mem:
@@ -269,6 +274,8 @@ memlock:
                 dd      1
                 dd      1
                 dd      1
+
+; --------------------------------------------------------------------
 
 slot:           
 slot0:
@@ -340,6 +347,32 @@ slot3:
                 dd      ?
                 dd      1
 
+; --------------------------------------------------------------------
+
+extended_slot_0:
+                rept    4
+                
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      9+2
+
+                endm
+
+; --------------------------------------------------------------------
+
 megablock:
                 dd      0
                 dd      0
@@ -356,11 +389,15 @@ megadump:
                 dd      0
                 dd      0
 
+; --------------------------------------------------------------------
+
 mapper_banks:
                 db      3
                 db      2
                 db      1
                 db      0
+
+; --------------------------------------------------------------------
 
 megarom_callback:
                 dd      _ret                    ; pure RAM
@@ -374,6 +411,9 @@ megarom_callback:
                 dd      callback_megarom6       ; ascii 8kb with 8kb sram
                 dd      callback_megarom7       ; ascii 16kb with 2kb sram
                 dd      callback_megarom8       ; fm-pac with 8kb sram
+                dd      callback_megarom9       ; idle rom in extended slot
+
+; --------------------------------------------------------------------
 
 ; Z80 registers
 align 4
@@ -1297,6 +1337,55 @@ callback_megarom8_enable_sram:
                 mov     eax,0
                 ret
 
+; callback_megarom9 --------------------------------------------------
+; Idle extended slot
+; addresses:  FFFFh change entire slot
+
+callback_megarom9:
+                cmp     ecx,0FFFFh
+                jne     _ret
+
+                ; copy the slot information from extended_slot to slot0
+                irp     i,<0,1,2,3>
+                push    eax
+                shr     al,i*2
+                and     eax,3
+                shl     eax,2+3+1  ;4*8*2
+                add     eax,offset extended_slot_0
+                irp     j,<0,1,2,3>
+                mov     esi,dword ptr [eax+i*2*4*2+j*4]
+                mov     dword ptr [offset slot0+i*2*4*2+j*4],esi
+                endm
+                pop     eax
+                endm
+
+                ; check if the any slot is enabled ("hot")
+                irp     i,<0,1,2,3>
+                local   slot_skip
+
+                mov     bl,prim_slotreg
+                shr     bl,i*2
+                and     ebx,3
+                or      ebx,ebx
+                jnz     slot_skip
+
+                irp     j,<0,1>
+                mov     esi,dword ptr [offset slot0+i*2*4*2+j*8]
+                mov     dword ptr [offset mem+i*2*4+j*4],esi
+                mov     esi,dword ptr [offset slot0+i*2*4*2+j*8+4]
+                mov     dword ptr [offset memlock+i*2*4+j*4],esi
+                endm
+
+slot_skip:
+                endm
+
+                ; write the complemented value to 0FFFFh
+                xor     al,0FFh
+                mov     ecx,extendedrom
+                mov     byte ptr [ecx+01FFFh],al
+                
+                mov     eax,0
+                ret
                 
 ; writemem -----------------------------------------------------------
 ; write a byte to Z80 memory

@@ -16,12 +16,14 @@ include bit.inc
 extrn mountdir_name: byte
 extrn diskimage: dword
 extrn transf_buffer: dword
+extrn dos2enabled: dword
 
 public mount_disk_image
 
 ; DATA ---------------------------------------------------------------
 
 include msxboot.inc
+include msxboot2.inc
 
 msg1            db      'Mounting <$'
 msg2            db      '> as drive A: ... $'
@@ -82,6 +84,10 @@ mount_disk_found:
 ; copy the boot sector
 
                 mov     esi,offset msx_boot
+                cmp     dos2enabled,0
+                je      copy_boot_now
+                mov     esi,offset msx_boot_dos2
+copy_boot_now:
                 mov     edi,diskimage
                 mov     ecx,512/4
                 rep     movsd
@@ -141,6 +147,10 @@ mount_dsk_filename_loop:
                 
                 cmp     size_avail,eax
                 jl      mount_disk_ret_disk_full
+
+                ; check if the file has size 0
+                cmp     eax,0
+                je      search_next_file
 
                 sub     size_avail,eax
 
@@ -260,6 +270,8 @@ insert_file_next:
 
                 inc     totalfiles
                 add     direc,32
+                
+search_next_file:                
                 call    close_file
 
                 mov     edi,offset mountdir_name

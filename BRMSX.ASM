@@ -31,6 +31,7 @@ public msxvram
 public blitbuffer
 public collisionfield
 public transf_buffer
+public message_buffer
 public diskimage
 public cart1
 public dirtycode
@@ -55,6 +56,8 @@ public redbuffer
 public bluebuffer
 public symbolic_debugger
 public prn_name
+public dos2enabled
+public extendedrom
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -66,7 +69,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.161',13,10
+msg00           db      'BrMSX 1.162',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -185,6 +188,8 @@ help_message2   db      13
 help_message3   db      13
                 db      '-speaq <n>     select quality for PC speaker sound'
                 db      ' (range is 1 to 9)',13,10
+                db      '-dos2          enable MSX-DOS 2 emulation '
+                db      '(require DISK2.ROM)',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
@@ -193,6 +198,8 @@ help_message3   db      13
                 db      '-mount <dir>   mount the directory <dir> as '
                 db      'drive A:',13,10
                 db      '-tape <file>   use <file> as cassete image',13,10
+                db      '-prn <file>    load <file> to make symbolic '
+                db      'debugging',13,10
                 db      '-joy           enable joystick emulation',13,10
                 db      '-joysens <n>   adjust joystick sensibility '
                 db      '(range is 0 to 7, default is 3)',13,10
@@ -296,6 +303,7 @@ switch_snespad   db      '-snespad',0
 switch_vdptiming db      '-vdptiming',0
 switch_dos2      db      '-dos2',0
 switch_prn       db      '-prn',0
+switch_msx2      db      '-msx2',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -348,8 +356,9 @@ switch_table:
                 dd      offset switch_vdptiming
                 dd      offset switch_dos2
                 dd      offset switch_prn
+                dd      offset switch_msx2
 
-switch_total    dd      50
+switch_total    dd      51
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -402,6 +411,7 @@ switch_callback:
                 dd      offset callback_vdptiming
                 dd      offset callback_dos2
                 dd      offset callback_prn
+                dd      offset callback_msx2
 
 cart1table:
                 dd      128*1024
@@ -445,6 +455,7 @@ msxrom          dd      ?
 cart1           dd      ?
 cart2           dd      ?
 transf_buffer   dd      ?
+message_buffer  dd      ?
 diskimage       dd      ?
 compbuffer      dd      ?
 dirtycode       dd      ?
@@ -464,6 +475,7 @@ codetable       dd      ?
 cart_sram       dd      ?
 redbuffer       dd      ?
 bluebuffer      dd      ?
+extendedrom     dd      ?
 
 diskenabled        dd      0
 cpugraphok         dd      0
@@ -483,6 +495,7 @@ firsttime          dd      1
 nommx              dd      0
 dos2enabled        dd      0
 symbolic_debugger  dd      0
+msxmodel           dd      0          
 cart1size          dd      512*1024
 mappersize         dd      128*1024
 
@@ -490,6 +503,12 @@ mappersize         dd      128*1024
 
 _main:          
                 sti
+
+                ; allocate 2kb to message buffer
+                mov     eax,2048
+                call    _getlomem
+                jc      no_memory
+                mov     message_buffer,eax
 
                 ; print startup message
                 mov     eax,offset msg00
@@ -604,6 +623,12 @@ main_getdma2:
                 jc      no_memory
                 mov     transf_buffer,eax
 
+                ; allocate 2kb to message buffer
+                mov     eax,2048
+                call    _getlomem
+                jc      no_memory
+                mov     message_buffer,eax
+
                 ; alloc 512 bytes to vesa header
                 mov     eax,512
                 call    _getlomem
@@ -642,34 +667,9 @@ _main_idlerom:
                 mov     dword ptr [offset mem+i*4],eax
                 endm
 
-                ; allocate 32kb to msx rom
-                mov     eax,32768
-                call    _getmem
-                jc      no_memory
-                mov     msxrom,eax
-                irp     i,<0,1,2,3>
-                mov     dword ptr [offset slot0+i*8],eax
-                mov     dword ptr [offset mem+i*4],eax
-                add     eax,2000h
-                endm
+                call    read_msx_rom
 
-                ; read msx rom 1 from disk
-                mov     edx,offset rom_name
-                call    open_file
-                jc      msx_rom_error
-                call    read_size_file
-                cmp     eax,08000h
-                jne     msx_rom_error
-                mov     edx,transf_buffer
-                mov     ecx,32768
-                call    read_file
-                call    close_file
-                mov     edi,msxrom
-                mov     esi,transf_buffer
-                mov     ecx,32768/4
-                rep     movsd
-                
-                ; allocate 2*64kb to red buffer
+                ; allocate 2*64kb to red buffer (used in Parrot engine)
                 mov     eax,2*65536
                 call    _getmem
                 jc      no_memory
@@ -680,7 +680,7 @@ _main_idlerom:
                 mov     ecx,2*65536/4
                 rep     stosd
 
-                ; allocate 64kb to blue buffer
+                ; allocate 64kb to blue buffer (used in Parrot engine)
                 mov     eax,65536*2
                 call    _getmem
                 jc      no_memory
@@ -690,7 +690,6 @@ _main_idlerom:
                 mov     eax,0
                 mov     ecx,2*65536/4
                 rep     stosd
-
 
                 ; allocate 16kb to msx vram
                 mov     eax,16384
@@ -765,7 +764,8 @@ _main_idlerom:
                 endm
 
                 ; clear msx ram
-                mov     ecx,128*1024/4
+                mov     ecx,mappersize
+                shr     ecx,2
                 mov     edi,msxram
                 mov     eax,0
                 rep     stosd
@@ -2033,6 +2033,10 @@ callback_prn_second:
                 mov     symbolic_debugger,1
                 ret
 
+callback_msx2:
+                mov     msxmodel,1
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -2734,13 +2738,174 @@ read_disk_rom:
                 add     eax,2000h
                 mov     dword ptr [edi+16+8],eax
 
+                ; check for MSXDOS-2 emulation
                 cmp     dos2enabled,1
                 jne     _ret
 
+                ; read disk2.rom from disk
+                mov     edx,offset disk2_rom_name
+                call    open_file
+                jc      disk2_rom_error
+
+                call    read_size_file
+                cmp     eax,10000h
+                jne     disk2_rom_error
+
+                irp     i,<0,1,2,3>
+                mov     edx,transf_buffer
+                mov     ecx,16*1024
+                call    read_file
+                mov     esi,transf_buffer
+                mov     edi,cart1
+                add     edi,16384*i
+                mov     ecx,16384/4
+                rep     movsd
+                endm
+
+                call    close_file
+
+                ; place ROM in slot
+                mov     ecx,cart1
+                irp     i,<0,1,2,3>
+                mov     dword ptr [offset slot1+2*8+i*8],ecx
+                mov     dword ptr [offset slot1+2*8+i*8+4],2+1
+                mov     dword ptr [offset megablock+2*4+i*4],i
+                add     ecx,2000h
+                endm
+
+                ; patch the DISK2.ROM to make it run on msx-1 machines
+                mov     eax,cart1
+                add     eax,07DEh
+                mov     byte ptr [eax],0
+                
+                ret
+
+; --------------------------------------------------------------------
+
+read_msx_rom:
+                cmp     msxmodel,1
+                je      read_msx_rom_msx2
+
+                ; allocate 32kb to msx rom
+                mov     eax,32768
+                call    _getmem
+                jc      no_memory
+                mov     msxrom,eax
+                irp     i,<0,1,2,3>
+                mov     dword ptr [offset slot0+i*8],eax
+                mov     dword ptr [offset mem+i*4],eax
+                add     eax,2000h
+                endm
+
+                ; read msx rom 1 from disk
+                mov     edx,offset rom_name
+                call    open_file
+                jc      msx_rom_error
+                call    read_size_file
+                cmp     eax,08000h
+                jne     msx_rom_error
+                mov     edx,transf_buffer
+                mov     ecx,32768
+                call    read_file
+                call    close_file
                 mov     edi,msxrom
-                mov     byte ptr [edi+02Dh],1
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
 
                 ret
+
+read_msx_rom_msx2:
+
+                ; allocate 32kb to msx rom
+                mov     eax,32768
+                call    _getmem
+                jc      no_memory
+                mov     msxrom,eax
+                irp     i,<0,1,2,3>
+                mov     dword ptr [offset slot0+i*8],eax
+                mov     dword ptr [offset mem+i*4],eax
+                add     eax,2000h
+                endm
+
+                ; read msx rom 1 from disk
+                mov     edx,offset rom_name
+                call    open_file
+                jc      msx_rom_error
+                call    read_size_file
+                cmp     eax,08000h
+                jne     msx_rom_error
+                mov     edx,transf_buffer
+                mov     ecx,32768
+                call    read_file
+                call    close_file
+                mov     edi,msxrom
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
+
+                ; allocate 8kb to idle extended rom
+                mov     eax,8192
+                call    _getmem
+                jc      no_memory
+                mov     extendedrom,eax
+                mov     edi,eax
+                mov     eax,0FFFFFFFFh
+                mov     ecx,8192/4
+                rep     stosd
+
+                ; fill the extended slot with idle rom
+                mov     ecx,offset extended_slot_0
+                mov     edx,extendedrom
+                mov     ebx,idlerom
+                rept    4
+                irp     i,<0,1,2,3,4,5,6>
+                mov     dword ptr [ecx+i*8],ebx
+                endm
+                mov     dword ptr [ecx+7*8],edx
+                add     ecx,8*8
+                endm
+
+                ; place the msx.rom in the slot 0.0
+                mov     eax,msxrom
+                irp     i,<0,1,2,3>
+                mov     dword ptr [offset extended_slot_0+i*8],eax
+                add     eax,02000h
+                endm
+
+                ; make the slot0 become an extended slot
+                mov     eax,extendedrom
+                mov     dword ptr [offset slot0+7*8],eax
+                mov     dword ptr [offset slot0+7*8+4],2+9
+                mov     dword ptr [offset mem+7*4],eax
+                mov     dword ptr [offset memlock+7*4],2+9
+                
+                ; allocate 16kb to antartic adventure
+                mov     eax,16384
+                call    _getmem
+                jc      no_memory
+                mov     antartic,eax
+                irp     i,<0,1>
+                mov     dword ptr [offset extended_slot_0+8*4*2+2*8+i*8],eax
+                add     eax,2000h
+                endm
+
+                ; read msx rom 1 from disk
+                mov     edx,offset antartic_name
+                call    open_file
+                mov     edx,transf_buffer
+                mov     ecx,16384
+                call    read_file
+                call    close_file
+                mov     edi,antartic
+                mov     esi,transf_buffer
+                mov     ecx,16384/4
+                rep     movsd
+
+                ret
+
+antartic        dd      0
+antartic_name   db      'antartic.rom',0
 
 ; --------------------------------------------------------------------
 
