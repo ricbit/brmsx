@@ -1,3 +1,11 @@
+release 1.66:
+
+- put a lot of opcodes in the new pipe
+
+release 1.65:
+
+- optimized MMX renderer
+
 release 1.64:
 
 - fixed disk-patchs, but msx-dos still doesn't work

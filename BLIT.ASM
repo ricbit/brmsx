@@ -9,6 +9,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include z80.inc
+include pentium.inc
 include pmode.inc
 include vdp.inc
 include io.inc
@@ -39,6 +40,7 @@ blit_linear_256:
                 mov     ecx,256*192/4
                 rep     movsd                
                 ret
+
 blit0:
                 cmp     imagetype,1
                 je      blit_dirty_320

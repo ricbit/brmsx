@@ -305,6 +305,54 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPCALL - CALL dddd
+
+OPCALL          macro   opcode
+
+emul&opcode:                
+                FETCHW1 opcode
+                lea     ebx,[edi+3]
+                mov     edi,eax
+                mov     ecx,regesp
+                mov     eax,ebx
+                sub     ecx,2
+                call    writememw
+                mov     regesp,ecx
+                mov     eax,0
+                sub     ebp,17+5
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; CALLCC - CALL cc,dddd
+
+CALLCC          macro   opcode,flagtype,jcc
+
+emul&opcode:                
+                test    dl,flagtype
+                jcc     emulCD
+                add     edi,3
+                sub     ebp,10+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPCCF - CCF
+
+OPCCF           macro   opcode
+
+emul&opcode:                
+                xor     dl,1
+                inc     edi
+                and     dl,11101101b
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; CPREG - CP rr rr=[a,b,c,d,e,h,l]
 
 CPREG           macro   opcode,reg
@@ -362,6 +410,22 @@ emul&opcode:
                 xor     ebx,ebx
                 sub     ebp,19+3
                 jmp     opcpreg
+
+                endm
+
+; --------------------------------------------------------------------
+; OPCPL - CPL
+
+OPCPL           macro   opcode
+
+emul&opcode:
+                xor     dh,255
+                and     dl,11000101b
+                mov     al,dh
+                sub     ebp,4+1
+                inc     edi
+                or      dl,[offset CPL_table+eax]
+                ret
 
                 endm
 
@@ -451,6 +515,99 @@ emul&opcode:
                 inc     edi
                 dec     reg
                 sub     ebp,tcycles+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPDJNZ - DJNZ dd
+
+OPDJNZ          macro   opcode
+
+emul&opcode:
+                FETCH1  opcode
+                add     edi,2
+                dec     regb
+                jz      emul&opcode&a
+                movsx   ebx,al
+                sub     ebp,13+2
+                add     edi,ebx
+                ret
+emul&opcode&a:        
+                sub     ebp,8+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPEXAFAF - EX AF,AF'
+
+OPEXAFAF        macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regeafl
+                mov     regeafl,edx
+                mov     edx,ecx
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPEXSPHL - EX (SP),HL
+
+OPEXSPHL        macro   opcode
+
+emul&opcode:
+                mov     ecx,regesp
+                call    readmemw
+                mov     ebx,regehl
+                mov     regehl,eax
+                mov     eax,ebx
+                call    writememw
+                sub     ebp,19+3
+                inc     edi
+                mov     eax,0
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPEXX - EXX
+
+OPEXX           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ebx,regebc
+                mov     ecx,regebcl
+                mov     regebc,ecx
+                mov     regebcl,ebx
+                mov     ebx,regede
+                mov     ecx,regedel
+                mov     regede,ecx
+                mov     regedel,ebx
+                mov     ebx,regehl
+                mov     ecx,regehll
+                mov     regehl,ecx
+                mov     regehll,ebx
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPHALT - HALT
+
+OPHALT          macro   opcode
+
+emul&opcode:
+                inc     edi
+emul&opcode&a:
+                cmp     interrupt,1
+                jne     emul&opcode&a
+                sub     ebp,5
                 ret
 
                 endm
@@ -578,6 +735,26 @@ emul&opcode&a:  add     edi,3
                 endm
 
 ; --------------------------------------------------------------------
+; OPJR - JR dd
+
+OPJR            macro   opcode
+
+emul&opcode:    
+                FETCH1  opcode
+                cmp     al,0FEh
+                je      emul&opcode&a
+                movsx   ebx,al
+                sub     ebp,12+2
+                lea     edi,[edi+ebx+2]
+                ret
+emul&opcode&a:
+                mov     ebp,0
+                ; remember to implement the R correction
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; JRCC - JR cc,dd
 
 JRCC            macro   opcode,jcc,flagtype
@@ -592,6 +769,20 @@ emul&opcode:
                 ret
 emul&opcode&a:  sub     ebp,7+2
                 add     edi,2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPJP - JP dddd
+
+OPJP            macro   opcode
+
+emul&opcode:    
+                FETCHW1 opcode
+                mov     edi,eax
+                mov     eax,0
+                sub     ebp,10+3
                 ret
 
                 endm
@@ -652,6 +843,21 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; LDREGWIMM - LD rr,dddd rr=[bc,de,hl,sp]
+
+LDREGWIMM       macro   opcode,reg
+
+emul&opcode:
+                FETCHW1 opcode
+                add     edi,3
+                mov     reg,eax
+                xor     eax,eax
+                sub     ebp,10+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDREGIMM - LD rr,dd rr=[a,b,c,d,e,h,l]
 
 LDREGIMM        macro   opcode,reg
@@ -694,6 +900,70 @@ emul&opcode:
                 mov     ecx,regehl
                 sub     ebp,7+2
                 call    writemem
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDREGWA - LD (rr),A rr=[bc,de,hl]
+
+LDREGWA         macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     ecx,reg
+                mov     al,dh
+                call    writemem
+                sub     ebp,7+2
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDINDA - LD (dddd),A
+
+LDINDA          macro   opcode,reg
+
+emul&opcode:
+                FETCHW1 opcode
+                mov     ecx,eax
+                mov     al,dh
+                call    writemem
+                add     edi,3
+                mov     eax,0
+                sub     ebp,13+4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDAIND - LD A,(dddd)
+
+LDAIND          macro   opcode,reg
+
+emul&opcode:
+                FETCHW1 opcode
+                mov     ecx,eax
+                call    readmem
+                mov     dh,al
+                xor     eax,eax
+                add     edi,3
+                sub     ebp,13+4
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDAREGW - LD A,(rr) rr=[bc,de,hl]
+
+LDAREGW         macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     ecx,reg
+                call    readmem
+                mov     dh,al
+                sub     ebp,7+2
                 ret
 
                 endm
@@ -889,6 +1159,18 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; NOP
+
+OPNOP           macro   opcode
+
+emul&opcode:    
+                inc     edi
+                sub     ebp,4+1
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; ORREG - OR rr rr=[a,b,c,d,e,h,l]
 
 ORREG           macro   opcode,reg
@@ -1062,6 +1344,37 @@ emul&opcode:
                 and     al,NBIT_&bit
                 call    writemem
                 sub     ebp,23+6
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRET - RET
+
+OPRET           macro   opcode
+
+emul&opcode:                
+                mov     ecx,regesp
+                call    readmemw
+                add     ecx,2
+                mov     edi,eax
+                mov     regesp,ecx
+                mov     eax,0
+                sub     ebp,10+3
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RETCC - RET cc  cc=[Z,NZ,PO,PE,C,NC,P,M]
+
+RETCC           macro   opcode,flagtype,jcc
+
+emul&opcode:                
+                inc     edi
+                test    dl,flagtype
+                jcc     emulC9
+                sub     ebp,5+1
                 ret
 
                 endm
@@ -1530,6 +1843,20 @@ emul&opcode:
                 or      al,regl
                 jnz     _ret
                 or      dl,BIT_6
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPSCF - SCF
+
+OPSCF           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                or      dl,1
+                and     dl,11101101b
+                sub     ebp,4+1
                 ret
 
                 endm

@@ -7,6 +7,11 @@ ECHO = rbecho
 
 all : rbecho.exe brmsx.exe brmsxwin.exe brmsxmmx.exe
 
+fast: changemode all
+
+changemode:
+TASMFLAGS= /ml /m2 /q
+
 rbecho.exe: rbecho.c
 	gcc $^ -o $@ 
 

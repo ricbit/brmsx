@@ -30,13 +30,7 @@ ADDREGWREGW     DD09,regixl,regixh,regc,regb,15+1
 ADDREGWREGW     DD19,regixl,regixh,rege,regd,15+1
 
 ; DD 21 - LD IX,dddd
-emulDD21:       
-                FETCHW1 DD21
-                add     edi,3
-                mov     regeix,eax
-                xor     eax,eax
-                sub     ebp,14+4
-                ret
+LDREGWIMM      DD21,regeix
 
 ; DD 22 - LD (dddd),IX
 LDDDDDREGW      DD22,regeix

@@ -30,13 +30,7 @@ ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15+1
 ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+1
 
 ; FD 21 - LD IY,dddd
-emulFD21:       
-                FETCHW1 FD21
-                add     edi,3
-                mov     regeiy,eax
-                xor     eax,eax
-                sub     ebp,14+4
-                ret
+LDREGWIMM      FD21,regeiy
 
 ; FD 22 - LD (dddd),IY
 LDDDDDREGW      FD22,regeiy

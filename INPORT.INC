@@ -1,257 +1,513 @@
 inportxx:
-	inport00: dd inemulXX
-	inport01: dd inemulXX
-	inport02: dd inemulXX
-	inport03: dd inemulXX
-	inport04: dd inemulXX
-	inport05: dd inemulXX
-	inport06: dd inemulXX
-	inport07: dd inemulXX
-	inport08: dd inemulXX
-	inport09: dd inemulXX
-	inport0A: dd inemulXX
-	inport0B: dd inemulXX
-	inport0C: dd inemulXX
-	inport0D: dd inemulXX
-	inport0E: dd inemulXX
-	inport0F: dd inemulXX
-	inport10: dd inemulXX
-	inport11: dd inemulXX
-	inport12: dd inemulXX
-	inport13: dd inemulXX
-	inport14: dd inemulXX
-	inport15: dd inemulXX
-	inport16: dd inemulXX
-	inport17: dd inemulXX
-	inport18: dd inemulXX
-	inport19: dd inemulXX
-	inport1A: dd inemulXX
-	inport1B: dd inemulXX
-	inport1C: dd inemulXX
-	inport1D: dd inemulXX
-	inport1E: dd inemulXX
-	inport1F: dd inemulXX
-	inport20: dd inemulXX
-	inport21: dd inemulXX
-	inport22: dd inemulXX
-	inport23: dd inemulXX
-	inport24: dd inemulXX
-	inport25: dd inemulXX
-	inport26: dd inemulXX
-	inport27: dd inemulXX
-	inport28: dd inemulXX
-	inport29: dd inemulXX
-	inport2A: dd inemulXX
-	inport2B: dd inemulXX
-	inport2C: dd inemulXX
-	inport2D: dd inemulXX
-	inport2E: dd inemulXX
-	inport2F: dd inemulXX
-	inport30: dd inemulXX
-	inport31: dd inemulXX
-	inport32: dd inemulXX
-	inport33: dd inemulXX
-	inport34: dd inemulXX
-	inport35: dd inemulXX
-	inport36: dd inemulXX
-	inport37: dd inemulXX
-	inport38: dd inemulXX
-	inport39: dd inemulXX
-	inport3A: dd inemulXX
-	inport3B: dd inemulXX
-	inport3C: dd inemulXX
-	inport3D: dd inemulXX
-	inport3E: dd inemulXX
-	inport3F: dd inemulXX
-	inport40: dd inemulXX
-	inport41: dd inemulXX
-	inport42: dd inemulXX
-	inport43: dd inemulXX
-	inport44: dd inemulXX
-	inport45: dd inemulXX
-	inport46: dd inemulXX
-	inport47: dd inemulXX
-	inport48: dd inemulXX
-	inport49: dd inemulXX
-	inport4A: dd inemulXX
-	inport4B: dd inemulXX
-	inport4C: dd inemulXX
-	inport4D: dd inemulXX
-	inport4E: dd inemulXX
-	inport4F: dd inemulXX
-	inport50: dd inemulXX
-	inport51: dd inemulXX
-	inport52: dd inemulXX
-	inport53: dd inemulXX
-	inport54: dd inemulXX
-	inport55: dd inemulXX
-	inport56: dd inemulXX
-	inport57: dd inemulXX
-	inport58: dd inemulXX
-	inport59: dd inemulXX
-	inport5A: dd inemulXX
-	inport5B: dd inemulXX
-	inport5C: dd inemulXX
-	inport5D: dd inemulXX
-	inport5E: dd inemulXX
-	inport5F: dd inemulXX
-	inport60: dd inemulXX
-	inport61: dd inemulXX
-	inport62: dd inemulXX
-	inport63: dd inemulXX
-	inport64: dd inemulXX
-	inport65: dd inemulXX
-	inport66: dd inemulXX
-	inport67: dd inemulXX
-	inport68: dd inemulXX
-	inport69: dd inemulXX
-	inport6A: dd inemulXX
-	inport6B: dd inemulXX
-	inport6C: dd inemulXX
-	inport6D: dd inemulXX
-	inport6E: dd inemulXX
-	inport6F: dd inemulXX
-	inport70: dd inemulXX
-	inport71: dd inemulXX
-	inport72: dd inemulXX
-	inport73: dd inemulXX
-	inport74: dd inemulXX
-	inport75: dd inemulXX
-	inport76: dd inemulXX
-	inport77: dd inemulXX
-	inport78: dd inemulXX
-	inport79: dd inemulXX
-	inport7A: dd inemulXX
-	inport7B: dd inemulXX
-	inport7C: dd inemulXX
-	inport7D: dd inemulXX
-	inport7E: dd inemulXX
-	inport7F: dd inemulXX
-	inport80: dd inemulXX
-	inport81: dd inemulXX
-	inport82: dd inemulXX
-	inport83: dd inemulXX
-	inport84: dd inemulXX
-	inport85: dd inemulXX
-	inport86: dd inemulXX
-	inport87: dd inemulXX
-	inport88: dd inemulXX
-	inport89: dd inemulXX
-	inport8A: dd inemulXX
-	inport8B: dd inemulXX
-	inport8C: dd inemulXX
-	inport8D: dd inemulXX
-	inport8E: dd inemulXX
-	inport8F: dd inemulXX
-	inport90: dd inemulXX
-	inport91: dd inemulXX
-	inport92: dd inemulXX
-	inport93: dd inemulXX
-	inport94: dd inemulXX
-	inport95: dd inemulXX
-	inport96: dd inemulXX
-	inport97: dd inemulXX
-	inport98: dd inemul98
-	inport99: dd inemul99
-	inport9A: dd inemulXX
-	inport9B: dd inemulXX
-	inport9C: dd inemulXX
-	inport9D: dd inemulXX
-	inport9E: dd inemulXX
-	inport9F: dd inemulXX
-	inportA0: dd inemulXX
-	inportA1: dd inemulXX
-	inportA2: dd inemulA2
-	inportA3: dd inemulXX
-	inportA4: dd inemulXX
-	inportA5: dd inemulXX
-	inportA6: dd inemulXX
-	inportA7: dd inemulXX
-	inportA8: dd inemulA8
-	inportA9: dd inemulA9
-	inportAA: dd inemulXX
-	inportAB: dd inemulXX
-	inportAC: dd inemulXX
-	inportAD: dd inemulXX
-	inportAE: dd inemulXX
-	inportAF: dd inemulXX
-	inportB0: dd inemulXX
-	inportB1: dd inemulXX
-	inportB2: dd inemulXX
-	inportB3: dd inemulXX
-	inportB4: dd inemulXX
-	inportB5: dd inemulXX
-	inportB6: dd inemulXX
-	inportB7: dd inemulXX
-	inportB8: dd inemulXX
-	inportB9: dd inemulXX
-	inportBA: dd inemulXX
-	inportBB: dd inemulXX
-	inportBC: dd inemulXX
-	inportBD: dd inemulXX
-	inportBE: dd inemulXX
-	inportBF: dd inemulXX
-	inportC0: dd inemulXX
-	inportC1: dd inemulXX
-	inportC2: dd inemulXX
-	inportC3: dd inemulXX
-	inportC4: dd inemulXX
-	inportC5: dd inemulXX
-	inportC6: dd inemulXX
-	inportC7: dd inemulXX
-	inportC8: dd inemulXX
-	inportC9: dd inemulXX
-	inportCA: dd inemulXX
-	inportCB: dd inemulXX
-	inportCC: dd inemulXX
-	inportCD: dd inemulXX
-	inportCE: dd inemulXX
-	inportCF: dd inemulXX
-	inportD0: dd inemulXX
-	inportD1: dd inemulXX
-	inportD2: dd inemulXX
-	inportD3: dd inemulXX
-	inportD4: dd inemulXX
-	inportD5: dd inemulXX
-	inportD6: dd inemulXX
-	inportD7: dd inemulXX
-	inportD8: dd inemulXX
-	inportD9: dd inemulXX
-	inportDA: dd inemulXX
-	inportDB: dd inemulXX
-	inportDC: dd inemulXX
-	inportDD: dd inemulXX
-	inportDE: dd inemulXX
-	inportDF: dd inemulXX
-	inportE0: dd inemulXX
-	inportE1: dd inemulXX
-	inportE2: dd inemulXX
-	inportE3: dd inemulXX
-	inportE4: dd inemulXX
-	inportE5: dd inemulXX
-	inportE6: dd inemulXX
-	inportE7: dd inemulXX
-	inportE8: dd inemulXX
-	inportE9: dd inemulXX
-	inportEA: dd inemulXX
-	inportEB: dd inemulXX
-	inportEC: dd inemulXX
-	inportED: dd inemulXX
-	inportEE: dd inemulXX
-	inportEF: dd inemulXX
-	inportF0: dd inemulXX
-	inportF1: dd inemulXX
-	inportF2: dd inemulXX
-	inportF3: dd inemulXX
-	inportF4: dd inemulXX
-	inportF5: dd inemulXX
-	inportF6: dd inemulXX
-	inportF7: dd inemulXX
-	inportF8: dd inemulXX
-	inportF9: dd inemulXX
-	inportFA: dd inemulXX
-	inportFB: dd inemulXX
-	inportFC: dd inemulXX
-	inportFD: dd inemulXX
-	inportFE: dd inemulXX
-	inportFF: dd inemulXX
+	; 00
+ dd inemulXX
+	; 01
+ dd inemulXX
+	; 02
+ dd inemulXX
+	; 03
+ dd inemulXX
+	; 04
+ dd inemulXX
+	; 05
+ dd inemulXX
+	; 06
+ dd inemulXX
+	; 07
+ dd inemulXX
+	; 08
+ dd inemulXX
+	; 09
+ dd inemulXX
+	; 0A
+ dd inemulXX
+	; 0B
+ dd inemulXX
+	; 0C
+ dd inemulXX
+	; 0D
+ dd inemulXX
+	; 0E
+ dd inemulXX
+	; 0F
+ dd inemulXX
+	; 10
+ dd inemulXX
+	; 11
+ dd inemulXX
+	; 12
+ dd inemulXX
+	; 13
+ dd inemulXX
+	; 14
+ dd inemulXX
+	; 15
+ dd inemulXX
+	; 16
+ dd inemulXX
+	; 17
+ dd inemulXX
+	; 18
+ dd inemulXX
+	; 19
+ dd inemulXX
+	; 1A
+ dd inemulXX
+	; 1B
+ dd inemulXX
+	; 1C
+ dd inemulXX
+	; 1D
+ dd inemulXX
+	; 1E
+ dd inemulXX
+	; 1F
+ dd inemulXX
+	; 20
+ dd inemulXX
+	; 21
+ dd inemulXX
+	; 22
+ dd inemulXX
+	; 23
+ dd inemulXX
+	; 24
+ dd inemulXX
+	; 25
+ dd inemulXX
+	; 26
+ dd inemulXX
+	; 27
+ dd inemulXX
+	; 28
+ dd inemulXX
+	; 29
+ dd inemulXX
+	; 2A
+ dd inemulXX
+	; 2B
+ dd inemulXX
+	; 2C
+ dd inemulXX
+	; 2D
+ dd inemulXX
+	; 2E
+ dd inemulXX
+	; 2F
+ dd inemulXX
+	; 30
+ dd inemulXX
+	; 31
+ dd inemulXX
+	; 32
+ dd inemulXX
+	; 33
+ dd inemulXX
+	; 34
+ dd inemulXX
+	; 35
+ dd inemulXX
+	; 36
+ dd inemulXX
+	; 37
+ dd inemulXX
+	; 38
+ dd inemulXX
+	; 39
+ dd inemulXX
+	; 3A
+ dd inemulXX
+	; 3B
+ dd inemulXX
+	; 3C
+ dd inemulXX
+	; 3D
+ dd inemulXX
+	; 3E
+ dd inemulXX
+	; 3F
+ dd inemulXX
+	; 40
+ dd inemulXX
+	; 41
+ dd inemulXX
+	; 42
+ dd inemulXX
+	; 43
+ dd inemulXX
+	; 44
+ dd inemulXX
+	; 45
+ dd inemulXX
+	; 46
+ dd inemulXX
+	; 47
+ dd inemulXX
+	; 48
+ dd inemulXX
+	; 49
+ dd inemulXX
+	; 4A
+ dd inemulXX
+	; 4B
+ dd inemulXX
+	; 4C
+ dd inemulXX
+	; 4D
+ dd inemulXX
+	; 4E
+ dd inemulXX
+	; 4F
+ dd inemulXX
+	; 50
+ dd inemulXX
+	; 51
+ dd inemulXX
+	; 52
+ dd inemulXX
+	; 53
+ dd inemulXX
+	; 54
+ dd inemulXX
+	; 55
+ dd inemulXX
+	; 56
+ dd inemulXX
+	; 57
+ dd inemulXX
+	; 58
+ dd inemulXX
+	; 59
+ dd inemulXX
+	; 5A
+ dd inemulXX
+	; 5B
+ dd inemulXX
+	; 5C
+ dd inemulXX
+	; 5D
+ dd inemulXX
+	; 5E
+ dd inemulXX
+	; 5F
+ dd inemulXX
+	; 60
+ dd inemulXX
+	; 61
+ dd inemulXX
+	; 62
+ dd inemulXX
+	; 63
+ dd inemulXX
+	; 64
+ dd inemulXX
+	; 65
+ dd inemulXX
+	; 66
+ dd inemulXX
+	; 67
+ dd inemulXX
+	; 68
+ dd inemulXX
+	; 69
+ dd inemulXX
+	; 6A
+ dd inemulXX
+	; 6B
+ dd inemulXX
+	; 6C
+ dd inemulXX
+	; 6D
+ dd inemulXX
+	; 6E
+ dd inemulXX
+	; 6F
+ dd inemulXX
+	; 70
+ dd inemulXX
+	; 71
+ dd inemulXX
+	; 72
+ dd inemulXX
+	; 73
+ dd inemulXX
+	; 74
+ dd inemulXX
+	; 75
+ dd inemulXX
+	; 76
+ dd inemulXX
+	; 77
+ dd inemulXX
+	; 78
+ dd inemulXX
+	; 79
+ dd inemulXX
+	; 7A
+ dd inemulXX
+	; 7B
+ dd inemulXX
+	; 7C
+ dd inemulXX
+	; 7D
+ dd inemulXX
+	; 7E
+ dd inemulXX
+	; 7F
+ dd inemulXX
+	; 80
+ dd inemulXX
+	; 81
+ dd inemulXX
+	; 82
+ dd inemulXX
+	; 83
+ dd inemulXX
+	; 84
+ dd inemulXX
+	; 85
+ dd inemulXX
+	; 86
+ dd inemulXX
+	; 87
+ dd inemulXX
+	; 88
+ dd inemulXX
+	; 89
+ dd inemulXX
+	; 8A
+ dd inemulXX
+	; 8B
+ dd inemulXX
+	; 8C
+ dd inemulXX
+	; 8D
+ dd inemulXX
+	; 8E
+ dd inemulXX
+	; 8F
+ dd inemulXX
+	; 90
+ dd inemulXX
+	; 91
+ dd inemulXX
+	; 92
+ dd inemulXX
+	; 93
+ dd inemulXX
+	; 94
+ dd inemulXX
+	; 95
+ dd inemulXX
+	; 96
+ dd inemulXX
+	; 97
+ dd inemulXX
+	; 98
+ dd inemul98
+	; 99
+ dd inemul99
+	; 9A
+ dd inemulXX
+	; 9B
+ dd inemulXX
+	; 9C
+ dd inemulXX
+	; 9D
+ dd inemulXX
+	; 9E
+ dd inemulXX
+	; 9F
+ dd inemulXX
+	; A0
+ dd inemulXX
+	; A1
+ dd inemulXX
+	; A2
+ dd inemulA2
+	; A3
+ dd inemulXX
+	; A4
+ dd inemulXX
+	; A5
+ dd inemulXX
+	; A6
+ dd inemulXX
+	; A7
+ dd inemulXX
+	; A8
+ dd inemulA8
+	; A9
+ dd inemulA9
+	; AA
+ dd inemulXX
+	; AB
+ dd inemulXX
+	; AC
+ dd inemulXX
+	; AD
+ dd inemulXX
+	; AE
+ dd inemulXX
+	; AF
+ dd inemulXX
+	; B0
+ dd inemulXX
+	; B1
+ dd inemulXX
+	; B2
+ dd inemulXX
+	; B3
+ dd inemulXX
+	; B4
+ dd inemulXX
+	; B5
+ dd inemulXX
+	; B6
+ dd inemulXX
+	; B7
+ dd inemulXX
+	; B8
+ dd inemulXX
+	; B9
+ dd inemulXX
+	; BA
+ dd inemulXX
+	; BB
+ dd inemulXX
+	; BC
+ dd inemulXX
+	; BD
+ dd inemulXX
+	; BE
+ dd inemulXX
+	; BF
+ dd inemulXX
+	; C0
+ dd inemulXX
+	; C1
+ dd inemulXX
+	; C2
+ dd inemulXX
+	; C3
+ dd inemulXX
+	; C4
+ dd inemulXX
+	; C5
+ dd inemulXX
+	; C6
+ dd inemulXX
+	; C7
+ dd inemulXX
+	; C8
+ dd inemulXX
+	; C9
+ dd inemulXX
+	; CA
+ dd inemulXX
+	; CB
+ dd inemulXX
+	; CC
+ dd inemulXX
+	; CD
+ dd inemulXX
+	; CE
+ dd inemulXX
+	; CF
+ dd inemulXX
+	; D0
+ dd inemulXX
+	; D1
+ dd inemulXX
+	; D2
+ dd inemulXX
+	; D3
+ dd inemulXX
+	; D4
+ dd inemulXX
+	; D5
+ dd inemulXX
+	; D6
+ dd inemulXX
+	; D7
+ dd inemulXX
+	; D8
+ dd inemulXX
+	; D9
+ dd inemulXX
+	; DA
+ dd inemulXX
+	; DB
+ dd inemulXX
+	; DC
+ dd inemulXX
+	; DD
+ dd inemulXX
+	; DE
+ dd inemulXX
+	; DF
+ dd inemulXX
+	; E0
+ dd inemulXX
+	; E1
+ dd inemulXX
+	; E2
+ dd inemulXX
+	; E3
+ dd inemulXX
+	; E4
+ dd inemulXX
+	; E5
+ dd inemulXX
+	; E6
+ dd inemulXX
+	; E7
+ dd inemulXX
+	; E8
+ dd inemulXX
+	; E9
+ dd inemulXX
+	; EA
+ dd inemulXX
+	; EB
+ dd inemulXX
+	; EC
+ dd inemulXX
+	; ED
+ dd inemulXX
+	; EE
+ dd inemulXX
+	; EF
+ dd inemulXX
+	; F0
+ dd inemulXX
+	; F1
+ dd inemulXX
+	; F2
+ dd inemulXX
+	; F3
+ dd inemulXX
+	; F4
+ dd inemulXX
+	; F5
+ dd inemulXX
+	; F6
+ dd inemulXX
+	; F7
+ dd inemulXX
+	; F8
+ dd inemulXX
+	; F9
+ dd inemulXX
+	; FA
+ dd inemulXX
+	; FB
+ dd inemulXX
+	; FC
+ dd inemulXX
+	; FD
+ dd inemulXX
+	; FE
+ dd inemulXX
+	; FF
+ dd inemulXX

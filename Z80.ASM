@@ -171,6 +171,7 @@ include inc.inc
 include dec.inc
 include int.inc
 include cp.inc
+include cpl.inc
 
 align 4
 
@@ -387,15 +388,6 @@ PARITY_FLAG     equ     00000100b
 OVERFLOW_FLAG   equ     00000100b
 SUBTRACT_FLAG   equ     00000010b
 CARRY_FLAG      equ     00000001b
-
-; setflag_cpl --------------------------------------------------------
-; sets the z80 flags after cpl operations
-
-setflag_cpl     macro
-
-                or      dl,00010010b
-                
-                endm
 
 ; FETCHMACRO ---------------------------------------------------------
 ; fetch a byte from Z80 memory (macro version)
@@ -800,11 +792,11 @@ emulate2_trap:  EMULATE TURBO,TRAP
 
 emulate_histogr:        
                 cmp     emulatemode,NORMAL
-                jne     emulate1_trap
+                jne     emulate1_histogr
                 EMULATE NORMAL,HISTOGRAM
 emulate1_histogr:  
                 cmp     emulatemode,FAST
-                jne     emulate2_trap
+                jne     emulate2_histogr
                 EMULATE FAST,HISTOGRAM
 emulate2_histogr:  
                 EMULATE TURBO,HISTOGRAM
@@ -821,27 +813,13 @@ print:
 ; --------------------------------------------------------------------
 
 ; 00 - NOP
-emul00:         inc     edi
-                sub     ebp,4+1
-                ret
+OPNOP           00
 
 ; 01 - LD BC,dddd
-emul01:         
-                FETCHW1 01
-                mov     regebc,eax
-                add     edi,3
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+LDREGWIMM       01,regebc
 
 ; 02 - LD (BC),A
-emul02:         inc     edi
-                mov     ecx,regebc
-                mov     al,dh
-                call    writemem
-                sub     ebp,7+2
-                ret
-
+LDREGWA         02,regebc
 
 ; 03 - INC BC
 INCWREG         03,regbc,6
@@ -859,23 +837,13 @@ LDREGIMM        06,regb
 OPRLCA          07
 
 ; 08 - EX AF,AF'
-emul08:         inc     edi
-                mov     ecx,regeafl
-                mov     regeafl,edx
-                mov     edx,ecx
-                sub     ebp,4+1
-                ret
+OPEXAFAF        08
 
 ; 09 - ADD HL,BC
 ADDREGWREGW     09,regl,regh,regc,regb,11
 
 ; 0A - LD A,(BC)
-emul0A:         inc     edi
-                mov     ecx,regebc
-                call    readmem
-                mov     dh,al
-                sub     ebp,7+2
-                ret
+LDAREGW         0A,regebc
 
 ; 0B - DEC BC
 DECWREG         0B,regbc,6
@@ -893,34 +861,13 @@ LDREGIMM        0E,regc
 OPRRCA          0F      
 
 ; 10 - DJNZ dd
-emul10:         
-                FETCH1  10
-                add     edi,2
-                dec     regb
-                jz      emul10a
-                movsx   ebx,al
-                sub     ebp,13+2
-                add     edi,ebx
-                ret
-emul10a:        sub     ebp,8+2
-                ret
+OPDJNZ          10
 
 ; 11 - LD DE,dddd
-emul11:         
-                FETCHW1 11
-                add     edi,3
-                mov     regede,eax
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+LDREGWIMM       11,regede
 
 ; 12 - LD (DE),A
-emul12:         inc     edi
-                mov     ecx,regede
-                mov     al,dh
-                call    writemem
-                sub     ebp,7+2
-                ret
+LDREGWA         12,regede
 
 ; 13 - INC DE
 INCWREG         13,regde,6
@@ -938,29 +885,13 @@ LDREGIMM        16,regd
 OPRLA           17
 
 ; 18 - JR dd
-emul18:         
-                FETCH1  18
-                cmp     al,0FEh
-                je      emul18a
-                movsx   ebx,al
-                sub     ebp,12+2
-                lea     edi,[edi+ebx+2]
-                ret
-emul18a:
-                mov     ebp,0
-                ; remember to implement the R correction
-                ret
+OPJR            18
 
 ; 19 - ADD HL,DE
 ADDREGWREGW     19,regl,regh,rege,regd,11
 
 ; 1A - LD A,(DE)
-emul1A:         inc     edi
-                mov     ecx,regede
-                call    readmem
-                mov     dh,al
-                sub     ebp,7+2
-                ret
+LDAREGW         1A,regede
 
 ; 1B - DEC DE
 DECWREG         1B,regde,6
@@ -981,13 +912,7 @@ OPRRA           1F
 JRCC            20,jnz,ZERO_FLAG
 
 ; 21 - LD HL,dddd
-emul21:         
-                FETCHW1 21
-                add     edi,3
-                mov     regehl,eax
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+LDREGWIMM      21,regehl
 
 ; 22 - LD (dddd),HL
 LDDDDDREGW      22,regehl
@@ -1017,39 +942,7 @@ ADDREGWREGW     29,regl,regh,regl,regh,11
 LDREGWDDDD      2A,regehl
 
 ; 2B - DEC HL
-;DECWREG         2B,reghl,6
-emul2B:                
-                cmp     dword ptr [esi+ebx],020B47D2Bh
-                je      emul2Ba
-emul2B_single:
-                inc     edi
-                dec     reghl
-                sub     ebp,6+1
-                ret
-; superscalar extension: DEC HL / LD A,L / OR H / JR NZ,dd
-emul2Ba:        
-                cmp     ebx,01FFBh
-                jae     emul2B_single
-                dec     reghl
-                mov     dh,regl
-                or      dh,regh
-                mov     al,dh
-                or      dh,dh
-                jz      emul2Bb
-                mov     dl,[offset LOGICAL_table+eax]
-                add     edi,4
-                call    fetch
-                movsx   ebx,al
-                sub     ebp,(12+2)+(4+1)+(4+1)+(6+1)
-                lea     edi,[edi+ebx+1]
-                add     rcounter,3
-                ret
-emul2Bb:        
-                mov     dl,[offset LOGICAL_table+eax]
-                sub     ebp,(7+2)+(4+1)+(4+1)+(6+1)
-                add     rcounter,3
-                add     edi,5
-                ret
+DECWREG         2B,reghl,6
 
 ; 2C - INC L
 INCREG          2C,regl
@@ -1061,34 +954,16 @@ DECREG          2D,regl
 LDREGIMM        2E,regl
 
 ; 2F - CPL
-emul2F:         inc     edi
-                xor     dh,255
-                setflag_cpl
-                sub     ebp,4+1
-                ret
+OPCPL           2F
 
 ; 30 - JR NC,dd
 JRCC            30,jnz,CARRY_FLAG
 
 ; 31 - LD SP,dddd
-emul31:         
-                FETCHW1 31
-                add     edi,3
-                mov     regesp,eax
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+LDREGWIMM      31,regesp
 
 ; 32 - LD (dddd),A
-emul32:         
-                FETCHW1 32
-                mov     ecx,eax
-                mov     al,dh
-                call    writemem
-                add     edi,3
-                xor     eax,eax
-                sub     ebp,13+4
-                ret
+LDINDA          32
 
 ; 33 - INC SP
 INCWREG         33,regsp,6
@@ -1103,11 +978,7 @@ DECHL           35
 LDHLIMM         36
 
 ; 37 - SCF
-emul37:         inc     edi
-                or      dl,1
-                and     dl,11101101b
-                sub     ebp,4+1
-                ret
+OPSCF           37
 
 ; 38 - JR C,dd
 JRCC            38,jz,CARRY_FLAG
@@ -1116,15 +987,7 @@ JRCC            38,jz,CARRY_FLAG
 ADDREGWREGW     39,regl,regh,regspl,regsph,11
 
 ; 3A - LD A,(dddd)
-emul3A:         
-                FETCHW1 3A
-                mov     ecx,eax
-                call    readmem
-                mov     dh,al
-                xor     eax,eax
-                add     edi,3
-                sub     ebp,13+4
-                ret
+LDAIND          3A
 
 ; 3B - DEC SP
 DECWREG         3B,regsp,6
@@ -1139,11 +1002,7 @@ DECREG          3D,dh
 LDREGIMM        3E,dh
 
 ; 3F - CCF
-emul3F:         inc     edi
-                xor     dl,1
-                and     dl,11101101b
-                sub     ebp,4+1
-                ret
+OPCCF           3F
 
 ; 40 - LD B,B
 LDREGREG        40,regb,regb
@@ -1308,11 +1167,7 @@ LDHLREG         74,regh
 LDHLREG         75,regl
 
 ; 76 - HALT
-emul76:         inc     edi
-emul76a:        cmp     interrupt,1
-                jne     emul76a
-                sub     ebp,5
-                ret
+OPHALT          76
 
 ; 77 - LD (HL),A
 LDHLREG         77,dh
@@ -1507,36 +1362,7 @@ ORREG           B5,regl
 ORHL            B6
 
 ; B7 - OR A
-;ORREG           B7,dh
-emulB7:                
-                cmp     word ptr [ebx+esi],028B7h
-                je      emulB7a
-emulB7_single:
-                inc     edi
-                mov     al,dh
-                sub     ebp,4+1
-                mov     dl,[offset LOGICAL_table+eax]
-                ret
-emulB7a:
-                cmp     ebx,01FFEh
-                jae     emulB7_single
-                mov     al,dh
-                or      dh,dh
-                jnz     emulB7b    
-                add     edi,2
-                mov     dl,[offset LOGICAL_table+eax]
-                call    fetch
-                movsx   ebx,al
-                sub     ebp,(12+2)+(4+1)
-                inc     rcounter
-                lea     edi,[edi+ebx+1]
-                ret
-emulB7b:  
-                mov     dl,[offset LOGICAL_table+eax]
-                sub     ebp,(7+2)+(4+1)
-                add     edi,3
-                inc     rcounter
-                ret
+ORREG           B7,dh
 
 ; B8 - CP B
 CPREG           B8,regb
@@ -1563,11 +1389,7 @@ CPAHL           BE
 CPREG           BF,dh
 
 ; C0 - RET NZ
-emulC0:         inc     edi
-                test    dl,ZERO_FLAG
-                jz      emulC9
-                sub     ebp,5+1
-                ret
+RETCC           C0,ZERO_FLAG,jz
 
 ; C1 - POP BC
 POPREGW         C1,regebc
@@ -1576,19 +1398,10 @@ POPREGW         C1,regebc
 JPCC            C2,jnz,ZERO_FLAG
 
 ; C3 - JP dddd
-emulC3:         
-                FETCHW1 C3
-                mov     edi,eax
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+OPJP            C3
 
 ; C4 - CALL NZ,dddd
-emulC4:         test    dl,ZERO_FLAG    
-                jz      emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          C4,ZERO_FLAG,jz
 
 ; C5 - PUSH BC
 PUSHREGW        C5,regebc
@@ -1597,22 +1410,10 @@ PUSHREGW        C5,regebc
 ADDIMM          C6
 
 ; C8 - RET Z
-emulC8:         inc     edi
-                test    dl,ZERO_FLAG
-                jnz     emulC9
-                sub     ebp,5+1
-                ret
+RETCC           C8,ZERO_FLAG,jnz
 
 ; C9 - RET
-emulC9:         
-                mov     ecx,regesp
-                call    readmemw
-                add     ecx,2
-                mov     edi,eax
-                mov     regesp,ecx
-                xor     eax,eax
-                sub     ebp,10+3
-                ret
+OPRET           C9
 
 ; CA - JP Z,dddd
 JPCC            CA,jz,ZERO_FLAG
@@ -1624,25 +1425,10 @@ emulCB:         inc     edi
                 jmp     [offset isetCBxx+eax*4]
 
 ; CC - CALL Z,dddd
-emulCC:         test    dl,ZERO_FLAG    
-                jnz     emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          CC,ZERO_FLAG,jnz
 
 ; CD - CALL dddd
-emulCD:
-                FETCHW1 CD
-                lea     ebx,[edi+3]
-                mov     edi,eax
-                mov     ecx,regesp
-                mov     eax,ebx
-                sub     ecx,2
-                call    writememw
-                mov     regesp,ecx
-                xor     eax,eax
-                sub     ebp,17+5
-                ret
+OPCALL          CD
 
 ; CE - ADC A,dd
 ADCIMM          CE
@@ -1651,11 +1437,7 @@ ADCIMM          CE
 OPRST           CF,08h
 
 ; D0 - RET NC
-emulD0:         inc     edi
-                test    dl,CARRY_FLAG
-                jz      emulC9
-                sub     ebp,5+1
-                ret
+RETCC           D0,CARRY_FLAG,jz
 
 ; D1 - POP DE
 POPREGW         D1,regede
@@ -1667,11 +1449,7 @@ JPCC            D2,jnz,CARRY_FLAG
 OUTIMM          D3
 
 ; D4 - CALL NC,dddd
-emulD4:         test    dl,CARRY_FLAG
-                jz      emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          D4,PARITY_FLAG,jz
 
 ; D5 - PUSH DE
 PUSHREGW        D5,regede
@@ -1683,28 +1461,10 @@ SUBIMM          D6
 OPRST           D7,010h
 
 ; D8 - RET C
-emulD8:         inc     edi
-                test    dl,CARRY_FLAG   
-                jnz     emulC9
-                sub     ebp,5+1
-                ret
+RETCC           D8,CARRY_FLAG,jnz
 
 ; D9 - EXX
-emulD9:         inc     edi
-                mov     ebx,regebc
-                mov     ecx,regebcl
-                mov     regebc,ecx
-                mov     regebcl,ebx
-                mov     ebx,regede
-                mov     ecx,regedel
-                mov     regede,ecx
-                mov     regedel,ebx
-                mov     ebx,regehl
-                mov     ecx,regehll
-                mov     regehl,ecx
-                mov     regehll,ebx
-                sub     ebp,4+1
-                ret
+OPEXX           D9
 
 ; DA - JP C,dddd
 JPCC            DA,jz,CARRY_FLAG
@@ -1713,11 +1473,7 @@ JPCC            DA,jz,CARRY_FLAG
 INADD           DB
 
 ; DC - CALL C,dddd 
-emulDC:         test    dl,CARRY_FLAG
-                jnz     emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          DC,CARRY_FLAG,jnz
 
 ; DD - group DD
 emulDD:         inc     edi
@@ -1732,11 +1488,7 @@ SBCIMM          DE
 OPRST           DF,018h
 
 ; E0 - RET PO
-emulE0:         test    dl,PARITY_FLAG
-                jz      emulC9
-                inc     edi
-                sub     ebp,5+1
-                ret
+RETCC           E0,PARITY_FLAG,jz
 
 ; E1 - POP HL
 POPREGW         E1,regehl
@@ -1745,33 +1497,10 @@ POPREGW         E1,regehl
 JPCC            E2,jnz,PARITY_FLAG
 
 ; E3 - EX (SP),HL
-emulE3:         
-                cmp     word ptr [esi+ebx],0E3E3h
-                je      emulE3a
-emulE3_single:
-                mov     ecx,regesp
-                call    readmemw
-                mov     ebx,regehl
-                mov     regehl,eax
-                mov     eax,ebx
-                call    writememw
-                sub     ebp,19+3
-                inc     edi
-                xor     eax,eax
-                ret
-emulE3a:
-                cmp     ebx,01FFFh
-                je      emulE3_single
-                sub     ebp,(19+3)+(19+3)
-                add     edi,2
-                ret
+OPEXSPHL        E3               
 
 ; E4 - CALL PO,dddd
-emulE4:         test    dl,PARITY_FLAG
-                jz      emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          E4,PARITY_FLAG,jz
 
 ; E5 - PUSH HL
 PUSHREGW        E5,regehl
@@ -1783,11 +1512,7 @@ ANDIMM          E6
 OPRST           E7,020h
 
 ; E8 - RET PE
-emulE8:         test    dl,PARITY_FLAG
-                jnz     emulC9
-                inc     edi
-                sub     ebp,5+1
-                ret
+RETCC           E8,PARITY_FLAG,jnz
 
 ; E9 - JP (HL)
 emulE9:         mov     edi,regehl
@@ -1807,11 +1532,7 @@ emulEB:         mov     ebx,regede
                 ret
 
 ; EC - CALL PE,dddd
-emulEC:         test    dl,PARITY_FLAG
-                jnz     emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          EC,PARITY_FLAG,jnz
 
 ; ED - group ED
 emulED:         inc     edi
@@ -1826,11 +1547,7 @@ XORIMM          EE
 OPRST           EF,028h
 
 ; F0 - RET P
-emulF0:         inc     edi
-                test    dl,SIGN_FLAG
-                jz      emulC9  
-                sub     ebp,5+1
-                ret
+RETCC           F0,SIGN_FLAG,jz
 
 ; F1 - POP AF
 POPREGW         F1,edx
@@ -1845,11 +1562,7 @@ emulF3:         inc     edi
                 ret
 
 ; F4 - CALL P,dddd
-emulF4:         test    dl,SIGN_FLAG
-                jz      emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          F4,SIGN_FLAG,jz
 
 ; F5 - PUSH AF
 PUSHREGW        F5,edx
@@ -1861,11 +1574,7 @@ ORIMM           F6
 OPRST           F7,030h
 
 ; F8 - RET M
-emulF8:         inc     edi
-                test    dl,SIGN_FLAG
-                jnz     emulC9
-                sub     ebp,5+1
-                ret
+RETCC           F8,SIGN_FLAG,jnz
 
 ; F9 - LD SP,HL
 emulF9:         inc     edi
@@ -1884,11 +1593,7 @@ emulFB:         inc     edi
                 ret
 
 ; FC - CALL M,dddd
-emulFC:         test    dl,SIGN_FLAG
-                jnz     emulCD
-                add     edi,3
-                sub     ebp,10+3
-                ret
+CALLCC          FC,SIGN_FLAG,jnz
 
 ; FD - group FD
 emulFD:         inc     edi
