@@ -28,3 +28,5 @@ extrn render_col: near
 extrn sprite_collision: near
 extrn direct_color: dword
 extrn eval_base_address_msx2: near
+extrn text_columns: dword
+extrn actualscreen: byte

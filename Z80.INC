@@ -163,3 +163,5 @@ extrn outemul99_msx2: near
 extrn inemul99_msx2: near
 extrn inemul98_msx2: near
 extrn outemul9B_msx2: near
+extrn outemul9A_msx2: near
+extrn msx2palette: byte

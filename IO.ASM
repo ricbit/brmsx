@@ -13,6 +13,7 @@ extrn start_counter: near
 extrn end_counter: near
 extrn tape_pos: dword
 extrn message_buffer: dword
+extrn msxmodel: dword
 
 include pmode.inc
 include pentium.inc
@@ -90,6 +91,7 @@ public speaq
 public sg1000_high_palette
 public gui_palette_high
 public border_changed
+public set_palette_color
 
 ; DATA ---------------------------------------------------------------
 
@@ -383,6 +385,9 @@ setgraphmode1:
 ; set the correct palette for the selected video mode/screen
 
 set_correct_palette:
+                cmp     msxmodel,0
+                jne     _ret
+
                 cmp     videomode,2
                 jne     set_correct_palette_16
 
@@ -516,6 +521,9 @@ ret
 ; set color 0 of VGA as VDP border color
 
 set_border_color:
+                cmp     msxmodel,0
+                jne     _ret
+
                 mov     border_changed,1
                 
                 cmp     videomode,2
@@ -1656,6 +1664,45 @@ adjust_clock:
                 mov     al,01Ah
                 int     33h
                 
+                ret
+
+; set_palette_color ---------------------------------------------------
+; set one MSX2 palette color
+; enter eax = offset palette color
+
+set_palette_color:
+                push    eax edx ecx
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+                lea     ecx,[offset msx2palette+eax*2]
+                
+                ; R
+                mov     al,[ecx]
+                shr     al,4
+                and     al,7
+                mov     ah,al
+                shl     al,3
+                or      al,ah
+                out     dx,al
+
+                ; G
+                mov     al,[ecx+1]
+                and     al,7
+                mov     ah,al
+                shl     al,3
+                or      al,ah
+                out     dx,al
+
+                ; B
+                mov     al,[ecx]
+                and     al,7
+                mov     ah,al
+                shl     al,3
+                or      al,ah
+                out     dx,al
+                
+                pop     ecx edx eax
                 ret
 
 ; --------------------------------------------------------------------

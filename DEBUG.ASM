@@ -571,7 +571,7 @@ print_vdp1:
                 add     edx,100h
                 inc     esi
                 inc     ecx
-                cmp     ecx,8
+                cmp     ecx,16
                 jnz     print_vdp1
 
 ; --------------------------------------------------------------------
@@ -1414,7 +1414,7 @@ render_debug4:
 print_dump1:
                 push    eax
                 lea     edi,[eax+ecx]
-                and     edi,03FFFh
+                and     edi,01FFFFh  ; 03FFFh
                 add     edi,msxvram
                 mov     al,[edi]
                 call    convhex4
@@ -1434,7 +1434,7 @@ print_dump1:
 print_dump2:
                 push    eax
                 lea     edi,[eax+ecx]
-                and     edi,03FFFh
+                and     edi,01FFFFh ;03FFFh
                 add     edi,msxvram
                 mov     al,[edi]
                 cmp     al,32
@@ -1738,7 +1738,7 @@ command_pgup_2:
                 jmp     debug_loop
 command_pgup_4:
                 sub     vmemdump,16*4
-                and     vmemdump,03FFFh
+                and     vmemdump,01FFFFh ;03FFFh
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------
@@ -1775,7 +1775,7 @@ command_pgdown_2:
                 jmp     debug_loop
 command_pgdown_4:
                 add     vmemdump,16*4
-                and     vmemdump,03FFFh
+                and     vmemdump,01FFFFh ;03FFFh
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------
@@ -1801,7 +1801,7 @@ command_d_4:
                 COORD   14,23
                 call    set_cursor_position
                 call    gethex4
-                and     eax,03FFFh
+                and     eax,01FFFFh ; 03FFFh
                 mov     vmemdump,eax
                 jmp     debug_loop
 

@@ -196,6 +196,12 @@ blit_dirty_256_next:
                 ret
 
 blit2:
+                cmp     text_columns,80                
+                je      blit2_msx2
+
+                cmp     actualscreen,5
+                je      blit2_msx2
+
                 cmp     cpupaused,1
                 je      blit2_slow
                 
@@ -1596,6 +1602,27 @@ blit_linear_512_inter_mmx:
                 ;BLIT_LINEAR ENGINE_MMX,RES_512_15
                 mov     esi,redbuffer
                 BLIT_LINEAR_512_GENERIC ENGINE_MMX
+
+; linear 512x384 -----------------------------------------------------
+; MSX2 VERSION
+
+blit2_msx2:
+                mov     esi,blitbuffer
+                mov     eax,0
+
+blit2_msx2_outer_loop:
+                call    set_vesa_bank
+                mov     edi,0a0000h
+                sub     edi,_code32a
+
+                mov     ecx,65536/4
+                rep     movsd
+
+                inc     eax
+                cmp     eax,3
+                jne     blit2_msx2_outer_loop
+
+                ret
 
 code32          ends
                 end

@@ -33,6 +33,7 @@ extrn codetable: dword
 extrn cart_sram: dword
 extrn cart1: dword
 extrn extendedrom: dword
+extrn vdplog: dword
 
 include io.inc
 include vdp.inc
@@ -81,6 +82,7 @@ public outemul99_msx2
 public inemul99_msx2
 public inemul98_msx2
 public outemul9B_msx2
+public outemul9A_msx2
 
 public fetch
 public fetch1
@@ -198,7 +200,8 @@ public vdpcond
 public vdptemp
 public vdplookahead
 public memlock
-
+public msx2palette
+           
 public BIT0_table
 public BIT1_table
 public BIT2_table
@@ -255,6 +258,9 @@ include int.inc
 include cp.inc
 include cpl.inc
 include ldi.inc
+
+include timp.inc
+
 
 ; --------------------------------------------------------------------
 
@@ -463,6 +469,8 @@ vdpindirect     db      0
 vdpindirectmode db      0
 vdpregs         db      64 dup (0)
 vdpstatus       db      0,0,080h,0,0,0,0,0
+msx2palette     db      16*2 dup (0)
+paletteflag     db      0
 
 ; PSG registers
 align 4
@@ -872,8 +880,10 @@ megarom2_switchbank_doit:
                 jae     _ret
 
                 mov     ebx,ecx
-                and     ebx,0FFFh
-                cmp     ebx,800h
+                and     ebx,01FFFh
+                cmp     ebx,1000h
+                jb      _ret
+                cmp     ebx,1800h
                 jae     _ret
                 
                 mov     ebx,eax
@@ -2252,16 +2262,22 @@ outemul99b_msx2:
                 ; write directly to a VDP register
                 and     ebx,00111111b
                 mov     al,vdptemp
-                ;mov     cl,byte ptr [offset vdpregs+ebx]
+                mov     cl,byte ptr [offset vdpregs+ebx]
                 ;cmp     cl,al
                 ;je      _ret
                 mov     byte ptr [offset vdpregs+ebx],al
+
+register_action:
                 cmp     bl,7
                 je      set_border_color
                 cmp     bl,1
                 je      outemul99_checkirq_msx2
                 cmp     bl,17
                 je      outemul99_indirect_msx2
+                cmp     bl,16
+                je      outemul99_palette_msx2
+                cmp     bl,46
+                je      outemul99_vdpcommand_msx2
 outemul99_update_msx2:
                 mov     firstscreen,1
                 jmp     eval_base_address_msx2
@@ -2312,6 +2328,222 @@ outemul99_indirect_msx2:
                 mov     vdpindirect,al
                 ret
 
+outemul99_palette_msx2:
+                mov     paletteflag,0
+                ret
+
+outemul99_vdpcommand_msx2:
+                cmp     al,0D0h
+                je      vdpcommand_HMMM
+
+                cmp     al,098h
+                je      vdpcommand_LMMM
+
+                cmp     al,0C0h
+                je      vdpcommand_HMMV
+
+                cmp     vdplog,0
+                je      _ret
+
+                and     eax,0FFh
+                pushad
+                call    crlf
+                call    crlf
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+36]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+37]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+38]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+39]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+40]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+41]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+42]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+43]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+44]
+                call    printhex2
+                call    crlf
+                mov     al,byte ptr [offset vdpregs+45]
+                call    printhex2
+                call    crlf
+
+                popad
+                ret
+
+vdpcommand_HMMM:
+                pushad
+                
+                movzx   esi,word ptr [offset vdpregs+32]
+                and     esi,01FFh
+                shr     esi,1
+                movzx   eax,word ptr [offset vdpregs+34]
+                and     eax,03FFh
+                shl     eax,7
+                add     esi,eax
+                add     esi,msxvram
+
+                movzx   edi,word ptr [offset vdpregs+36]
+                and     edi,01FFh
+                shr     edi,1
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,03FFh
+                shl     eax,7
+                add     edi,eax
+                add     edi,msxvram
+
+                movzx   ecx,word ptr [offset vdpregs+40]
+                and     ecx,01FFh
+                shr     ecx,1
+                movzx   ebx,word ptr [offset vdpregs+42]
+                and     ebx,03FFh
+HMMM_outer:
+                push    ecx
+
+HMMM_inner:
+                mov     al,[esi]
+                inc     esi
+                mov     [edi],al
+                inc     edi
+                dec     ecx
+                jnz     HMMM_inner
+
+                pop     ecx
+                sub     esi,ecx
+                sub     edi,ecx
+                add     esi,128
+                add     edi,128
+                dec     ebx
+                jnz     HMMM_outer
+
+
+                popad
+                ret
+
+vdpcommand_HMMV:
+                pushad
+                
+                movzx   edi,word ptr [offset vdpregs+36]
+                and     edi,01FFh
+                shr     edi,1
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,03FFh
+                shl     eax,7
+                add     edi,eax
+                add     edi,msxvram
+
+                movzx   ecx,word ptr [offset vdpregs+40]
+                and     ecx,01FFh
+                jnz     HMMV_small
+                mov     ecx,256
+HMMV_small:
+                shr     ecx,1
+                movzx   ebx,word ptr [offset vdpregs+42]
+                and     ebx,03FFh
+                mov     al,byte ptr [offset vdpregs+44]
+HMMV_outer:
+                push    ecx
+
+HMMV_inner:
+                mov     [edi],al
+                inc     edi
+                dec     ecx
+                jnz     HMMV_inner
+
+                pop     ecx
+                sub     edi,ecx
+                add     edi,128
+                dec     ebx
+                jnz     HMMV_outer
+
+                popad
+                ret
+
+vdpcommand_LMMM:
+                pushad
+                
+                movzx   esi,word ptr [offset vdpregs+32]
+                and     esi,01FFh
+                shr     esi,1
+                movzx   eax,word ptr [offset vdpregs+34]
+                and     eax,03FFh
+                shl     eax,7
+                add     esi,eax
+                add     esi,msxvram
+
+                movzx   edi,word ptr [offset vdpregs+36]
+                and     edi,01FFh
+                shr     edi,1
+                movzx   eax,word ptr [offset vdpregs+38]
+                and     eax,03FFh
+                shl     eax,7
+                add     edi,eax
+                add     edi,msxvram
+
+                movzx   ecx,word ptr [offset vdpregs+40]
+                and     ecx,01FFh
+                shr     ecx,1
+                movzx   ebx,word ptr [offset vdpregs+42]
+                and     ebx,03FFh
+LMMM_outer:
+                push    ecx
+
+LMMM_inner:
+                movzx   eax,byte ptr [esi]
+                inc     esi
+                mov     dl,[offset timp_table+eax]
+                and     dl,[edi]
+                or      dl,al
+                mov     [edi],dl
+                inc     edi
+                dec     ecx
+                jnz     LMMM_inner
+
+                pop     ecx
+                sub     esi,ecx
+                sub     edi,ecx
+                add     esi,128
+                add     edi,128
+                dec     ebx
+                jnz     LMMM_outer
+
+                popad
+                ret
+
+; --------------------------------------------------------------------
+; VDP palette register write
+; MSX2 version
+
+outemul9A_msx2:
+                cmp     paletteflag,1
+                je      outemul9A_msx2_set
+
+                movzx   eax,byte ptr [offset vdpregs+16]
+                mov     byte ptr [offset msx2palette+eax*2],bl
+                mov     paletteflag,1
+                ret
+
+outemul9A_msx2_set:
+                movzx   eax,byte ptr [offset vdpregs+16]
+                mov     byte ptr [offset msx2palette+eax*2+1],bl
+                inc     byte ptr [offset vdpregs+16]
+                mov     paletteflag,0
+                jmp     set_palette_color
+
 ; --------------------------------------------------------------------
 ; VDP indirect register write
 ; MSX2 version
@@ -2323,6 +2555,12 @@ outemul9B_msx2:
                 ; auto increment
                 movzx   eax,vdpindirect
                 mov     byte ptr [offset vdpregs+eax],bl
+                push    eax
+                xchg    eax,ebx
+                and     eax,0FFh
+                and     ebx,03Fh
+                call    register_action
+                pop     eax
                 inc     eax
                 mov     vdpindirect,al
                 ret
@@ -2330,6 +2568,11 @@ outemul9B_msx2:
 outemul9B_single:
                 movzx   eax,vdpindirect
                 mov     byte ptr [offset vdpregs+eax],bl
+                push    eax
+                xchg    eax,ebx
+                and     eax,03Fh
+                call    register_action
+                pop     eax
                 ret
 
 ; --------------------------------------------------------------------

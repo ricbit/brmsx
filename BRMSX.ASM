@@ -58,6 +58,8 @@ public symbolic_debugger
 public prn_name
 public dos2enabled
 public extendedrom
+public msxmodel
+public vdplog
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -69,7 +71,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.164',13,10
+msg00           db      'BrMSX 1.165',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -93,7 +95,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.164',13,10
+msg22           db      'BrMSX 1.165',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -309,6 +311,7 @@ switch_vdptiming db      '-vdptiming',0
 switch_dos2      db      '-dos2',0
 switch_prn       db      '-prn',0
 switch_msx2      db      '-msx2',0
+switch_vdplog    db      '-vdplog',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -362,8 +365,9 @@ switch_table:
                 dd      offset switch_dos2
                 dd      offset switch_prn
                 dd      offset switch_msx2
+                dd      offset switch_vdplog
 
-switch_total    dd      51
+switch_total    dd      52
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -417,6 +421,7 @@ switch_callback:
                 dd      offset callback_dos2
                 dd      offset callback_prn
                 dd      offset callback_msx2
+                dd      offset callback_vdplog
 
 cart1table:
                 dd      128*1024
@@ -502,6 +507,7 @@ nommx              dd      0
 dos2enabled        dd      0
 symbolic_debugger  dd      0
 msxmodel           dd      0          
+vdplog             dd      0
 vramsize           dd      16384
 cart1size          dd      512*1024
 mappersize         dd      128*1024
@@ -867,8 +873,8 @@ main_nocart1:
 
 main_nocart2:
 
-                ; allocate 64kb to blit buffer
-                mov     eax,65536
+                ; allocate 256kb to blit buffer
+                mov     eax,256*1024
                 call    _getmem
                 jc      no_memory
                 mov     blitbuffer,eax
@@ -917,7 +923,7 @@ main_nocart2:
                 call    read_disk_rom
 
                 cmp     portenabled,1
-                je      _main_noport
+                je      _main_port
 
                 ; patch for PHYDIO
                 mov     edi,cart2slot
@@ -932,8 +938,16 @@ main_nocart2:
                 ; patch for GETDPB
                 mov     byte ptr [eax+016h],0edh
                 mov     byte ptr [eax+017h],0ffh
+                jmp     _main_nodrive
 
-_main_noport:
+_main_port:
+                ;; fix the error present in all interfaces
+                ;; based on the CDX-2
+                ;; (this means all brazilian interfaces)
+                ;mov     edi,cart2slot
+                ;mov     eax,dword ptr [edi+16]
+                ;mov     byte ptr [eax+024B0h],0C2h
+
 _main_nodrive:
 
                 ; check for korean support
@@ -2056,6 +2070,10 @@ callback_msx2:
                 mov     msxmodel,1
                 ret
 
+callback_vdplog:
+                mov     vdplog,1
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -2933,6 +2951,9 @@ read_msx_rom_msx2:
                 
                 mov     eax,offset outemul99_msx2
                 mov     dword ptr [offset outportxx+099h*4],eax
+
+                mov     eax,offset outemul9A_msx2
+                mov     dword ptr [offset outportxx+09Ah*4],eax
 
                 mov     eax,offset outemul9B_msx2
                 mov     dword ptr [offset outportxx+09Bh*4],eax
