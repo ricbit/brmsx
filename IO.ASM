@@ -82,6 +82,7 @@ public palette_green
 public filtered_palette_green
 public gui_palette_green
 public wait_next_vsync
+public adjust_clock
 
 ; DATA ---------------------------------------------------------------
 
@@ -1529,6 +1530,65 @@ outtokbl1:
                 je      _ret
                 dec     bh
                 jnz     outtokbl0
+                ret
+
+; bcdtobin -----------------------------------------------------------
+; convert a byte in bl from BCD to binary
+
+bcdtobin:
+                push    ecx
+                movzx   ecx,bl
+                and     ecx,0F0h
+                shr     ecx,3
+                lea     ecx,[ecx*4+ecx]
+                and     bl,0Fh
+                add     bl,cl
+                pop     ecx
+                ret
+
+; adjust_clock -------------------------------------------------------
+; adjust the system clock based on the bios clock
+
+adjust_clock:
+                ; call the bios real time clock handler
+                mov     v86r_ah,2
+                mov     al,01Ah
+                int     33h
+
+                ; adjust the rtc info to clock ticks
+
+                ; seconds
+                movzx   ebx,v86r_dh
+                call    bcdtobin
+                mov     eax,4659        ; 18.2 * 256
+                mul     ebx
+                mov     esi,eax
+
+                ; minutes
+                movzx   ebx,v86r_cl
+                call    bcdtobin
+                mov     eax,279552      ; 18.2*60 * 256
+                mul     ebx
+                add     esi,eax
+
+                ; hours
+                movzx   ebx,v86r_ch
+                call    bcdtobin
+                mov     eax,16773120    ; 18.2*3600 * 256
+                mul     ebx
+                add     esi,eax
+
+                shr     esi,8
+                mov     eax,esi
+                
+                ; set the system time
+                mov     v86r_dx,ax
+                shr     eax,16
+                mov     v86r_cx,ax
+                mov     v86r_ah,1
+                mov     al,01Ah
+                int     33h
+                
                 ret
 
 ; --------------------------------------------------------------------

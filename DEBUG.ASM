@@ -958,9 +958,9 @@ print2_dump3&i:
                 mov     eax,offset tmphex4
                 call    printmsgd
 
-                ; print the psg address
+                ; print the vdp status byte
                 COORD   76,19
-                movzx   eax,psgselect
+                movzx   eax,vdpstatus
                 call    convhex4
                 mov     eax,offset tmphex2
                 call    printmsgd

@@ -7,10 +7,9 @@
 - add true-disk emulation
 - fix the remaining IRQ bug (yawara/goonies module and thezeus)
 - fix the scc soundstream generator  (f1 spirit)
-- finish sprite collision detection
 - fix r register emulation in block commands
 - fix irq in block commands
 - load dsk in the gui
 - fix offset in ix/iy opcodes (printfd/dd.asm)
-- fix the third psggraph in screen0 
 - video cache bug in daiva
+- mount directory as drive A

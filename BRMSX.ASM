@@ -22,6 +22,7 @@ include gui.inc
 include drive.inc
 include serial.inc
 include z80core.inc
+include mount.inc
 
 public _main
 public msxram
@@ -48,6 +49,7 @@ public codetable
 public rommapper
 public rommappera
 public cart_sram
+public mountdir_name
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -59,7 +61,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.147',13,10
+msg00           db      'BrMSX 1.150',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -83,7 +85,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.147',13,10
+msg22           db      'BrMSX 1.150',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -104,6 +106,7 @@ msg33           db      'Using MegaROM Mapper #$'
 msg34           db      'This game is unknown, using MegaROM Mapper #0',13,10
                 db      'Please contact the author at ricardo@lsi.usp.br'
                 db      13,10,'$'
+msg35           db      'Disk image invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -741,63 +744,26 @@ main_nocart2:
                 jc      no_memory
                 mov     filenamelist,eax
 
-                ; print drive a name
-                cmp     byte ptr [offset drivea_name],0
-                je      main_nodrivea
-                mov     eax,offset msg25
-                call    printmsg
-                mov     al,'"'
-                call    printasc
-                mov     eax,offset drivea_name
-                call    printnul
-                mov     al,'"'
-                call    printasc
-                call    crlf
-main_nodrivea:
-
-                ; read disk image from file
-                mov     edx,offset drivea_name
-                call    open_file
-                jc      _main_nodrive
-
-                mov     diskenabled,1
-                call    read_size_file
-                cmp     eax,720*1024
-                ja      disk_size_not_supported
-                mov     ebx,eax
-                shr     ebx,10+2
-                mov     disksize,ebx
+                ; check for disk drive emulation
+                cmp     diskenabled,0
+                je      _main_nodrive
 
                 ; allocate 720kb to disk image
                 mov     eax,720*1024
                 call    _getmem
                 jc      no_memory
                 mov     diskimage,eax
-                
-                mov     ebx,disksize ;720/16
+
+                ; clear disk image
                 mov     edi,diskimage
-_main4:               
-                mov     ecx,4096 ; 16384
-                mov     edx,transf_buffer
-                push    ebx
-                call    read_file
-                pop     ebx
-                mov     esi,transf_buffer
-                mov     ecx,4096/4 ;16384/4
-                rep     movsd
-                dec     ebx
-                jnz     _main4
-                call    close_file
+                mov     ecx,(720/4)*1024
+                mov     eax,0
+                rep     stosd
 
-                ; adjust shiftfactor as (number of faces - 1)
-                ; discover number of faces by looking into
-                ; the disk ID number
-
-                mov     eax,diskimage
-                mov     al,[eax+15h]
-                and     al,1
-                mov     shiftfactor,al
-
+                ; load disk image from disk
+                call    load_disk_image
+                jc      invalid_disk_image
+                
                 ; allocate 16kb for disk.rom
                 mov     eax,16*1024
                 call    _getmem
@@ -1077,9 +1043,9 @@ main_nommx:
                 call    printmsg
 
                 cmp     diskenabled,1
-                jne     main_exit_nodisk
+                jne     main_exit_noflushdisk
                 call    flush_dsk
-main_exit_nodisk:
+main_exit_noflushdisk:
 
                 cmp     byte ptr [offset tape_name],0
                 je      main_exit_notape
@@ -1088,6 +1054,7 @@ main_exit_nodisk:
 main_exit_notape:
 
                 call    save_sram
+                call    adjust_clock
 
                 cmp     fmenabled,1
                 jne     main_exit_nofm
@@ -1105,11 +1072,6 @@ no_memory:
 
 error_in_rom:
                 mov     eax,offset msg02
-                call    printmsg
-                jmp     _exit
-
-disk_size_not_supported:
-                mov     eax,offset msg03
                 call    printmsg
                 jmp     _exit
 
@@ -1160,6 +1122,11 @@ tape_too_large:
 
 msxhan_error:
                 mov     eax,offset msg31
+                call    printmsg
+                jmp     _exit
+
+invalid_disk_image:
+                mov     eax,offset msg35
                 call    printmsg
                 jmp     _exit
 
@@ -1455,6 +1422,7 @@ callback_diska_second:
                 mov     esi,offset emptyspace
                 mov     ecx,128/4
                 rep     movsd
+                mov     diskenabled,1
                 ret
 
 callback_nosound:
@@ -1760,6 +1728,7 @@ callback_mount_second:
                 mov     esi,offset emptyspace
                 mov     ecx,128/4
                 rep     movsd
+                mov     diskenabled,2
                 ret
 
 ; read_rom -----------------------------------------------------------
@@ -1915,12 +1884,17 @@ read_rom_not_32kb:
                 shr     ebx,14
                 dec     ebx
 
+                ; check for 48kb roms
+                cmp     filesize,48*1024
+                je      read_rom_megarom_skip_megamask
+                
                 ; fill the megarom mask
                 mov     edx,filesize
                 shr     edx,13
                 dec     edx
                 mov     megamask,edx
 
+read_rom_megarom_skip_megamask:
                 call    guess_megarom_type
 
 read_rom_megarom_loop:
@@ -2299,6 +2273,75 @@ save_sram:
                 ; close the file and exit
                 call    close_file
                 ret
+
+; load_disk_image ----------------------------------------------------
+; load disk image from disk or mount a disk from a directory
+; behaviour is defined by the diskenabled variable
+; diskenabled = 1   => read .DSK file
+; diskenabled = 2   => mount directory
+
+load_disk_image:
+                cmp     diskenabled,2
+                je      mount_disk_image
+
+                ; print drive A name
+                mov     eax,offset msg25
+                call    printmsg
+                mov     al,'"'
+                call    printasc
+                mov     eax,offset drivea_name
+                call    printnul
+                mov     al,'"'
+                call    printasc
+                call    crlf
+
+                ; read disk image from file
+                mov     edx,offset drivea_name
+                call    open_file
+                jc      _ret
+
+                ; check file size
+                call    read_size_file
+                cmp     eax,720*1024
+                ja      load_disk_image_error
+                mov     ebx,eax
+                shr     ebx,10+2
+                mov     disksize,ebx
+
+                ; read the file from disk
+                mov     ebx,disksize
+                mov     edi,diskimage
+load_disk_image_loop:
+                mov     ecx,4096 
+                mov     edx,transf_buffer
+                push    ebx
+                call    read_file
+                pop     ebx
+                mov     esi,transf_buffer
+                mov     ecx,4096/4 
+                rep     movsd
+                dec     ebx
+                jnz     load_disk_image_loop
+
+                call    close_file
+
+                ; adjust shiftfactor as (number of faces - 1)
+                ; discover number of faces by looking into
+                ; the disk ID number
+
+                mov     eax,diskimage
+                mov     al,[eax+15h]
+                and     al,1
+                mov     shiftfactor,al
+
+                clc
+                ret
+
+load_disk_image_error:
+                stc
+                ret
+
+; --------------------------------------------------------------------
 
 code32          ends
                 end

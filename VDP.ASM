@@ -495,6 +495,11 @@ PIPE2_MMX       macro
 ; render_screen2_dirty (macro version) -------------------------------
 
 RENDER_SCREEN2_DIRTY_MACRO macro videoengine
+                local   render23d
+                local   render20d
+                local   render21d
+                local   render2d_draw
+                local   render2d_next
 
                 call    wash_sprite
 
@@ -529,7 +534,7 @@ RENDER_SCREEN2_DIRTY_MACRO macro videoengine
                 ; for each sector
                 mov     ebp,3
 
-EMULABEL        render23d,videoengine
+render23d:
 
                 push    ebp
 
@@ -542,26 +547,26 @@ EMULABEL        render23d,videoengine
                 ; for each line
                 mov     ebp,8
 
-EMULABEL        render20d,videoengine
+render20d:
 
                 push    ebp
 
                 ; for each char
                 mov     ebp,32
 
-EMULABEL        render21d,videoengine
+render21d:
 
                 mov     al,[edx]
                 or      al,al
-                JUMP    jnz,render2d_draw,videoengine
+                jnz     render2d_draw
 
                 mov     al,[esi]
                 cmp     byte ptr [ebx+eax],0
-                JUMP    je,render2d_next,videoengine
+                je      render2d_next
                 mov     byte ptr [edx],1
 
 
-EMULABEL        render2d_draw,videoengine
+render2d_draw:
 
                 ; fetch the character
                 mov     al,[esi]
@@ -586,18 +591,18 @@ EMULABEL        render2d_draw,videoengine
                 pop     esi
                 pop     ebp
                 
-EMULABEL        render2d_next,videoengine
+render2d_next:
 
                 inc     esi
                 add     edi,8
                 inc     edx
                 dec     ebp
-                JUMP    jnz,render21d,videoengine
+                jnz     render21d
 
                 pop     ebp
                 add     edi,256*7
                 dec     ebp
-                JUMP    jnz,render20d,videoengine
+                jnz     render20d
 
                 add     ebx,256                                         
                 add     patternsave,256*8
@@ -605,24 +610,10 @@ EMULABEL        render2d_next,videoengine
 
                 pop     ebp
                 dec     ebp
-                JUMP    jnz,render23d,videoengine
+                jnz     render23d
 
                 mov     spriteenable,1
                 ret
-
-                endm
-
-; macro definitions --------------------------------------------------
-
-EMULABEL           macro   name,engine
-
-name&_&engine:
-
-                endm
-
-JUMP            macro   jump,name,engine
-
-                jump    name&_&engine
 
                 endm
 
@@ -634,13 +625,8 @@ JUMP            macro   jump,name,engine
 render_screen2_dirty:
 
                 cmp     enginetype,0
-                jne     render_screen2_dirty_win
-                RENDER_SCREEN2_DIRTY_MACRO DOS_ENGINE
-
-render_screen2_dirty_win:
-                cmp     enginetype,1
                 jne     render_screen2_dirty_mmx
-                RENDER_SCREEN2_DIRTY_MACRO WIN_ENGINE
+                RENDER_SCREEN2_DIRTY_MACRO DOS_ENGINE
 
 render_screen2_dirty_mmx:
                 RENDER_SCREEN2_DIRTY_MACRO MMX_ENGINE
@@ -648,14 +634,18 @@ render_screen2_dirty_mmx:
 ; render_screen2 (macro version) -------------------------------------
 
 RENDER_SCREEN2_MACRO macro videoengine                
+                local   render_screen2_next
+                local   render23
+                local   render20
+                local   render21
                 
                 cmp     everyframe,1
-                je      render_screen2_next_&videoengine
+                je      render_screen2_next
                 
                 cmp     imagetype,1
                 je      render_screen2_dirty
 
-render_screen2_next_&videoengine:
+render_screen2_next:
 
                 ; esi = name table
                 mov     eax,nametable
@@ -685,7 +675,7 @@ render_screen2_next_&videoengine:
                 ; for each sector
                 mov     ebp,3
 
-EMULABEL        render23,videoengine
+render23:
 
                 push    ebp
 
@@ -698,14 +688,14 @@ EMULABEL        render23,videoengine
                 ; for each line
                 mov     ebp,8
 
-EMULABEL        render20,videoengine
+render20:
                 
                 push    ebp
 
                 ; for each char
                 mov     ebp,32
 
-EMULABEL        render21,videoengine
+render21:
                 
                 ; fetch the character
                 mov     al,[esi]
@@ -727,12 +717,12 @@ EMULABEL        render21,videoengine
                 
                 inc     esi
                 dec     ebp
-                JUMP    jnz,render21,videoengine
+                jnz     render21
 
                 pop     ebp
                 add     edi,256*7
                 dec     ebp
-                JUMP    jnz,render20,videoengine
+                jnz     render20
 
                 ; perform the undocumented correction
                 ; to find increment for image table
@@ -768,7 +758,7 @@ EMULABEL        render21,videoengine
 
                 pop     ebp
                 dec     ebp
-                JUMP    jnz,render23,videoengine
+                jnz     render23
 
                 mov     spriteenable,1
                 ret
@@ -783,17 +773,11 @@ EMULABEL        render21,videoengine
 render_screen2:
                 
                 cmp     enginetype,0
-                jne     render_screen2_win
-                RENDER_SCREEN2_MACRO DOS_ENGINE
-
-render_screen2_win:
-                cmp     enginetype,1
                 jne     render_screen2_mmx
-                RENDER_SCREEN2_MACRO WIN_ENGINE
+                RENDER_SCREEN2_MACRO DOS_ENGINE
 
 render_screen2_mmx:
                 RENDER_SCREEN2_MACRO MMX_ENGINE
-
 
 ; render_screen3 -----------------------------------------------------
 ; render a screen 3 page
@@ -815,9 +799,10 @@ render_screen3_outerloop:
                 push    ebp
 
                 irp     i,<0,1,2,3,4,5,6,7>
+                local   render_screen3_innerloop
 
                 mov     ebx,0
-render_screen3_innerloop_&i:
+render_screen3_innerloop:
                 
                 mov     al,[ecx]
                 
@@ -836,7 +821,7 @@ render_screen3_innerloop_&i:
                 inc     ebx
                 inc     ecx
                 cmp     ebx,32
-                jne     render_screen3_innerloop_&i
+                jne     render_screen3_innerloop
 
                 add     edi,3*256
                 add     ecx,((i AND 1)*32)-32

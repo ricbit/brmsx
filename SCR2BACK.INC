@@ -1,257 +1,513 @@
 backgroundmask:
-	back00: db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
-	back01: db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h
-	back02: db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh
-	back03: db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h
-	back04: db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh
-	back05: db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h
-	back06: db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh
-	back07: db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h,000h
-	back08: db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh
-	back09: db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h
-	back0A: db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh
-	back0B: db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h,000h
-	back0C: db 0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh
-	back0D: db 0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh,000h
-	back0E: db 0FFh,0FFh,0FFh,0FFh,000h,000h,000h,0FFh
-	back0F: db 0FFh,0FFh,0FFh,0FFh,000h,000h,000h,000h
-	back10: db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh
-	back11: db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h
-	back12: db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh
-	back13: db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h,000h
-	back14: db 0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh
-	back15: db 0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh,000h
-	back16: db 0FFh,0FFh,0FFh,000h,0FFh,000h,000h,0FFh
-	back17: db 0FFh,0FFh,0FFh,000h,0FFh,000h,000h,000h
-	back18: db 0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh
-	back19: db 0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh,000h
-	back1A: db 0FFh,0FFh,0FFh,000h,000h,0FFh,000h,0FFh
-	back1B: db 0FFh,0FFh,0FFh,000h,000h,0FFh,000h,000h
-	back1C: db 0FFh,0FFh,0FFh,000h,000h,000h,0FFh,0FFh
-	back1D: db 0FFh,0FFh,0FFh,000h,000h,000h,0FFh,000h
-	back1E: db 0FFh,0FFh,0FFh,000h,000h,000h,000h,0FFh
-	back1F: db 0FFh,0FFh,0FFh,000h,000h,000h,000h,000h
-	back20: db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh
-	back21: db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h
-	back22: db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh
-	back23: db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h,000h
-	back24: db 0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh
-	back25: db 0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh,000h
-	back26: db 0FFh,0FFh,000h,0FFh,0FFh,000h,000h,0FFh
-	back27: db 0FFh,0FFh,000h,0FFh,0FFh,000h,000h,000h
-	back28: db 0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh
-	back29: db 0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh,000h
-	back2A: db 0FFh,0FFh,000h,0FFh,000h,0FFh,000h,0FFh
-	back2B: db 0FFh,0FFh,000h,0FFh,000h,0FFh,000h,000h
-	back2C: db 0FFh,0FFh,000h,0FFh,000h,000h,0FFh,0FFh
-	back2D: db 0FFh,0FFh,000h,0FFh,000h,000h,0FFh,000h
-	back2E: db 0FFh,0FFh,000h,0FFh,000h,000h,000h,0FFh
-	back2F: db 0FFh,0FFh,000h,0FFh,000h,000h,000h,000h
-	back30: db 0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh
-	back31: db 0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh,000h
-	back32: db 0FFh,0FFh,000h,000h,0FFh,0FFh,000h,0FFh
-	back33: db 0FFh,0FFh,000h,000h,0FFh,0FFh,000h,000h
-	back34: db 0FFh,0FFh,000h,000h,0FFh,000h,0FFh,0FFh
-	back35: db 0FFh,0FFh,000h,000h,0FFh,000h,0FFh,000h
-	back36: db 0FFh,0FFh,000h,000h,0FFh,000h,000h,0FFh
-	back37: db 0FFh,0FFh,000h,000h,0FFh,000h,000h,000h
-	back38: db 0FFh,0FFh,000h,000h,000h,0FFh,0FFh,0FFh
-	back39: db 0FFh,0FFh,000h,000h,000h,0FFh,0FFh,000h
-	back3A: db 0FFh,0FFh,000h,000h,000h,0FFh,000h,0FFh
-	back3B: db 0FFh,0FFh,000h,000h,000h,0FFh,000h,000h
-	back3C: db 0FFh,0FFh,000h,000h,000h,000h,0FFh,0FFh
-	back3D: db 0FFh,0FFh,000h,000h,000h,000h,0FFh,000h
-	back3E: db 0FFh,0FFh,000h,000h,000h,000h,000h,0FFh
-	back3F: db 0FFh,0FFh,000h,000h,000h,000h,000h,000h
-	back40: db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
-	back41: db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h
-	back42: db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh
-	back43: db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h,000h
-	back44: db 0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh
-	back45: db 0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh,000h
-	back46: db 0FFh,000h,0FFh,0FFh,0FFh,000h,000h,0FFh
-	back47: db 0FFh,000h,0FFh,0FFh,0FFh,000h,000h,000h
-	back48: db 0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh
-	back49: db 0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh,000h
-	back4A: db 0FFh,000h,0FFh,0FFh,000h,0FFh,000h,0FFh
-	back4B: db 0FFh,000h,0FFh,0FFh,000h,0FFh,000h,000h
-	back4C: db 0FFh,000h,0FFh,0FFh,000h,000h,0FFh,0FFh
-	back4D: db 0FFh,000h,0FFh,0FFh,000h,000h,0FFh,000h
-	back4E: db 0FFh,000h,0FFh,0FFh,000h,000h,000h,0FFh
-	back4F: db 0FFh,000h,0FFh,0FFh,000h,000h,000h,000h
-	back50: db 0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh
-	back51: db 0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh,000h
-	back52: db 0FFh,000h,0FFh,000h,0FFh,0FFh,000h,0FFh
-	back53: db 0FFh,000h,0FFh,000h,0FFh,0FFh,000h,000h
-	back54: db 0FFh,000h,0FFh,000h,0FFh,000h,0FFh,0FFh
-	back55: db 0FFh,000h,0FFh,000h,0FFh,000h,0FFh,000h
-	back56: db 0FFh,000h,0FFh,000h,0FFh,000h,000h,0FFh
-	back57: db 0FFh,000h,0FFh,000h,0FFh,000h,000h,000h
-	back58: db 0FFh,000h,0FFh,000h,000h,0FFh,0FFh,0FFh
-	back59: db 0FFh,000h,0FFh,000h,000h,0FFh,0FFh,000h
-	back5A: db 0FFh,000h,0FFh,000h,000h,0FFh,000h,0FFh
-	back5B: db 0FFh,000h,0FFh,000h,000h,0FFh,000h,000h
-	back5C: db 0FFh,000h,0FFh,000h,000h,000h,0FFh,0FFh
-	back5D: db 0FFh,000h,0FFh,000h,000h,000h,0FFh,000h
-	back5E: db 0FFh,000h,0FFh,000h,000h,000h,000h,0FFh
-	back5F: db 0FFh,000h,0FFh,000h,000h,000h,000h,000h
-	back60: db 0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh
-	back61: db 0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh,000h
-	back62: db 0FFh,000h,000h,0FFh,0FFh,0FFh,000h,0FFh
-	back63: db 0FFh,000h,000h,0FFh,0FFh,0FFh,000h,000h
-	back64: db 0FFh,000h,000h,0FFh,0FFh,000h,0FFh,0FFh
-	back65: db 0FFh,000h,000h,0FFh,0FFh,000h,0FFh,000h
-	back66: db 0FFh,000h,000h,0FFh,0FFh,000h,000h,0FFh
-	back67: db 0FFh,000h,000h,0FFh,0FFh,000h,000h,000h
-	back68: db 0FFh,000h,000h,0FFh,000h,0FFh,0FFh,0FFh
-	back69: db 0FFh,000h,000h,0FFh,000h,0FFh,0FFh,000h
-	back6A: db 0FFh,000h,000h,0FFh,000h,0FFh,000h,0FFh
-	back6B: db 0FFh,000h,000h,0FFh,000h,0FFh,000h,000h
-	back6C: db 0FFh,000h,000h,0FFh,000h,000h,0FFh,0FFh
-	back6D: db 0FFh,000h,000h,0FFh,000h,000h,0FFh,000h
-	back6E: db 0FFh,000h,000h,0FFh,000h,000h,000h,0FFh
-	back6F: db 0FFh,000h,000h,0FFh,000h,000h,000h,000h
-	back70: db 0FFh,000h,000h,000h,0FFh,0FFh,0FFh,0FFh
-	back71: db 0FFh,000h,000h,000h,0FFh,0FFh,0FFh,000h
-	back72: db 0FFh,000h,000h,000h,0FFh,0FFh,000h,0FFh
-	back73: db 0FFh,000h,000h,000h,0FFh,0FFh,000h,000h
-	back74: db 0FFh,000h,000h,000h,0FFh,000h,0FFh,0FFh
-	back75: db 0FFh,000h,000h,000h,0FFh,000h,0FFh,000h
-	back76: db 0FFh,000h,000h,000h,0FFh,000h,000h,0FFh
-	back77: db 0FFh,000h,000h,000h,0FFh,000h,000h,000h
-	back78: db 0FFh,000h,000h,000h,000h,0FFh,0FFh,0FFh
-	back79: db 0FFh,000h,000h,000h,000h,0FFh,0FFh,000h
-	back7A: db 0FFh,000h,000h,000h,000h,0FFh,000h,0FFh
-	back7B: db 0FFh,000h,000h,000h,000h,0FFh,000h,000h
-	back7C: db 0FFh,000h,000h,000h,000h,000h,0FFh,0FFh
-	back7D: db 0FFh,000h,000h,000h,000h,000h,0FFh,000h
-	back7E: db 0FFh,000h,000h,000h,000h,000h,000h,0FFh
-	back7F: db 0FFh,000h,000h,000h,000h,000h,000h,000h
-	back80: db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
-	back81: db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h
-	back82: db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh
-	back83: db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h
-	back84: db 000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh
-	back85: db 000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h
-	back86: db 000h,0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh
-	back87: db 000h,0FFh,0FFh,0FFh,0FFh,000h,000h,000h
-	back88: db 000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh
-	back89: db 000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h
-	back8A: db 000h,0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh
-	back8B: db 000h,0FFh,0FFh,0FFh,000h,0FFh,000h,000h
-	back8C: db 000h,0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh
-	back8D: db 000h,0FFh,0FFh,0FFh,000h,000h,0FFh,000h
-	back8E: db 000h,0FFh,0FFh,0FFh,000h,000h,000h,0FFh
-	back8F: db 000h,0FFh,0FFh,0FFh,000h,000h,000h,000h
-	back90: db 000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh
-	back91: db 000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h
-	back92: db 000h,0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh
-	back93: db 000h,0FFh,0FFh,000h,0FFh,0FFh,000h,000h
-	back94: db 000h,0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh
-	back95: db 000h,0FFh,0FFh,000h,0FFh,000h,0FFh,000h
-	back96: db 000h,0FFh,0FFh,000h,0FFh,000h,000h,0FFh
-	back97: db 000h,0FFh,0FFh,000h,0FFh,000h,000h,000h
-	back98: db 000h,0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh
-	back99: db 000h,0FFh,0FFh,000h,000h,0FFh,0FFh,000h
-	back9A: db 000h,0FFh,0FFh,000h,000h,0FFh,000h,0FFh
-	back9B: db 000h,0FFh,0FFh,000h,000h,0FFh,000h,000h
-	back9C: db 000h,0FFh,0FFh,000h,000h,000h,0FFh,0FFh
-	back9D: db 000h,0FFh,0FFh,000h,000h,000h,0FFh,000h
-	back9E: db 000h,0FFh,0FFh,000h,000h,000h,000h,0FFh
-	back9F: db 000h,0FFh,0FFh,000h,000h,000h,000h,000h
-	backA0: db 000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh
-	backA1: db 000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h
-	backA2: db 000h,0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh
-	backA3: db 000h,0FFh,000h,0FFh,0FFh,0FFh,000h,000h
-	backA4: db 000h,0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh
-	backA5: db 000h,0FFh,000h,0FFh,0FFh,000h,0FFh,000h
-	backA6: db 000h,0FFh,000h,0FFh,0FFh,000h,000h,0FFh
-	backA7: db 000h,0FFh,000h,0FFh,0FFh,000h,000h,000h
-	backA8: db 000h,0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh
-	backA9: db 000h,0FFh,000h,0FFh,000h,0FFh,0FFh,000h
-	backAA: db 000h,0FFh,000h,0FFh,000h,0FFh,000h,0FFh
-	backAB: db 000h,0FFh,000h,0FFh,000h,0FFh,000h,000h
-	backAC: db 000h,0FFh,000h,0FFh,000h,000h,0FFh,0FFh
-	backAD: db 000h,0FFh,000h,0FFh,000h,000h,0FFh,000h
-	backAE: db 000h,0FFh,000h,0FFh,000h,000h,000h,0FFh
-	backAF: db 000h,0FFh,000h,0FFh,000h,000h,000h,000h
-	backB0: db 000h,0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh
-	backB1: db 000h,0FFh,000h,000h,0FFh,0FFh,0FFh,000h
-	backB2: db 000h,0FFh,000h,000h,0FFh,0FFh,000h,0FFh
-	backB3: db 000h,0FFh,000h,000h,0FFh,0FFh,000h,000h
-	backB4: db 000h,0FFh,000h,000h,0FFh,000h,0FFh,0FFh
-	backB5: db 000h,0FFh,000h,000h,0FFh,000h,0FFh,000h
-	backB6: db 000h,0FFh,000h,000h,0FFh,000h,000h,0FFh
-	backB7: db 000h,0FFh,000h,000h,0FFh,000h,000h,000h
-	backB8: db 000h,0FFh,000h,000h,000h,0FFh,0FFh,0FFh
-	backB9: db 000h,0FFh,000h,000h,000h,0FFh,0FFh,000h
-	backBA: db 000h,0FFh,000h,000h,000h,0FFh,000h,0FFh
-	backBB: db 000h,0FFh,000h,000h,000h,0FFh,000h,000h
-	backBC: db 000h,0FFh,000h,000h,000h,000h,0FFh,0FFh
-	backBD: db 000h,0FFh,000h,000h,000h,000h,0FFh,000h
-	backBE: db 000h,0FFh,000h,000h,000h,000h,000h,0FFh
-	backBF: db 000h,0FFh,000h,000h,000h,000h,000h,000h
-	backC0: db 000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
-	backC1: db 000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h
-	backC2: db 000h,000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh
-	backC3: db 000h,000h,0FFh,0FFh,0FFh,0FFh,000h,000h
-	backC4: db 000h,000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh
-	backC5: db 000h,000h,0FFh,0FFh,0FFh,000h,0FFh,000h
-	backC6: db 000h,000h,0FFh,0FFh,0FFh,000h,000h,0FFh
-	backC7: db 000h,000h,0FFh,0FFh,0FFh,000h,000h,000h
-	backC8: db 000h,000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh
-	backC9: db 000h,000h,0FFh,0FFh,000h,0FFh,0FFh,000h
-	backCA: db 000h,000h,0FFh,0FFh,000h,0FFh,000h,0FFh
-	backCB: db 000h,000h,0FFh,0FFh,000h,0FFh,000h,000h
-	backCC: db 000h,000h,0FFh,0FFh,000h,000h,0FFh,0FFh
-	backCD: db 000h,000h,0FFh,0FFh,000h,000h,0FFh,000h
-	backCE: db 000h,000h,0FFh,0FFh,000h,000h,000h,0FFh
-	backCF: db 000h,000h,0FFh,0FFh,000h,000h,000h,000h
-	backD0: db 000h,000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh
-	backD1: db 000h,000h,0FFh,000h,0FFh,0FFh,0FFh,000h
-	backD2: db 000h,000h,0FFh,000h,0FFh,0FFh,000h,0FFh
-	backD3: db 000h,000h,0FFh,000h,0FFh,0FFh,000h,000h
-	backD4: db 000h,000h,0FFh,000h,0FFh,000h,0FFh,0FFh
-	backD5: db 000h,000h,0FFh,000h,0FFh,000h,0FFh,000h
-	backD6: db 000h,000h,0FFh,000h,0FFh,000h,000h,0FFh
-	backD7: db 000h,000h,0FFh,000h,0FFh,000h,000h,000h
-	backD8: db 000h,000h,0FFh,000h,000h,0FFh,0FFh,0FFh
-	backD9: db 000h,000h,0FFh,000h,000h,0FFh,0FFh,000h
-	backDA: db 000h,000h,0FFh,000h,000h,0FFh,000h,0FFh
-	backDB: db 000h,000h,0FFh,000h,000h,0FFh,000h,000h
-	backDC: db 000h,000h,0FFh,000h,000h,000h,0FFh,0FFh
-	backDD: db 000h,000h,0FFh,000h,000h,000h,0FFh,000h
-	backDE: db 000h,000h,0FFh,000h,000h,000h,000h,0FFh
-	backDF: db 000h,000h,0FFh,000h,000h,000h,000h,000h
-	backE0: db 000h,000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh
-	backE1: db 000h,000h,000h,0FFh,0FFh,0FFh,0FFh,000h
-	backE2: db 000h,000h,000h,0FFh,0FFh,0FFh,000h,0FFh
-	backE3: db 000h,000h,000h,0FFh,0FFh,0FFh,000h,000h
-	backE4: db 000h,000h,000h,0FFh,0FFh,000h,0FFh,0FFh
-	backE5: db 000h,000h,000h,0FFh,0FFh,000h,0FFh,000h
-	backE6: db 000h,000h,000h,0FFh,0FFh,000h,000h,0FFh
-	backE7: db 000h,000h,000h,0FFh,0FFh,000h,000h,000h
-	backE8: db 000h,000h,000h,0FFh,000h,0FFh,0FFh,0FFh
-	backE9: db 000h,000h,000h,0FFh,000h,0FFh,0FFh,000h
-	backEA: db 000h,000h,000h,0FFh,000h,0FFh,000h,0FFh
-	backEB: db 000h,000h,000h,0FFh,000h,0FFh,000h,000h
-	backEC: db 000h,000h,000h,0FFh,000h,000h,0FFh,0FFh
-	backED: db 000h,000h,000h,0FFh,000h,000h,0FFh,000h
-	backEE: db 000h,000h,000h,0FFh,000h,000h,000h,0FFh
-	backEF: db 000h,000h,000h,0FFh,000h,000h,000h,000h
-	backF0: db 000h,000h,000h,000h,0FFh,0FFh,0FFh,0FFh
-	backF1: db 000h,000h,000h,000h,0FFh,0FFh,0FFh,000h
-	backF2: db 000h,000h,000h,000h,0FFh,0FFh,000h,0FFh
-	backF3: db 000h,000h,000h,000h,0FFh,0FFh,000h,000h
-	backF4: db 000h,000h,000h,000h,0FFh,000h,0FFh,0FFh
-	backF5: db 000h,000h,000h,000h,0FFh,000h,0FFh,000h
-	backF6: db 000h,000h,000h,000h,0FFh,000h,000h,0FFh
-	backF7: db 000h,000h,000h,000h,0FFh,000h,000h,000h
-	backF8: db 000h,000h,000h,000h,000h,0FFh,0FFh,0FFh
-	backF9: db 000h,000h,000h,000h,000h,0FFh,0FFh,000h
-	backFA: db 000h,000h,000h,000h,000h,0FFh,000h,0FFh
-	backFB: db 000h,000h,000h,000h,000h,0FFh,000h,000h
-	backFC: db 000h,000h,000h,000h,000h,000h,0FFh,0FFh
-	backFD: db 000h,000h,000h,000h,000h,000h,0FFh,000h
-	backFE: db 000h,000h,000h,000h,000h,000h,000h,0FFh
-	backFF: db 000h,000h,000h,000h,000h,000h,000h,000h
+	; 00
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
+	; 01
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h
+	; 02
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh
+	; 03
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h
+	; 04
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh
+	; 05
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h
+	; 06
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh
+	; 07
+ db 0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h,000h
+	; 08
+ db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh
+	; 09
+ db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h
+	; 0A
+ db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh
+	; 0B
+ db 0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h,000h
+	; 0C
+ db 0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh
+	; 0D
+ db 0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh,000h
+	; 0E
+ db 0FFh,0FFh,0FFh,0FFh,000h,000h,000h,0FFh
+	; 0F
+ db 0FFh,0FFh,0FFh,0FFh,000h,000h,000h,000h
+	; 10
+ db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh
+	; 11
+ db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h
+	; 12
+ db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh
+	; 13
+ db 0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h,000h
+	; 14
+ db 0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh
+	; 15
+ db 0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh,000h
+	; 16
+ db 0FFh,0FFh,0FFh,000h,0FFh,000h,000h,0FFh
+	; 17
+ db 0FFh,0FFh,0FFh,000h,0FFh,000h,000h,000h
+	; 18
+ db 0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh
+	; 19
+ db 0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh,000h
+	; 1A
+ db 0FFh,0FFh,0FFh,000h,000h,0FFh,000h,0FFh
+	; 1B
+ db 0FFh,0FFh,0FFh,000h,000h,0FFh,000h,000h
+	; 1C
+ db 0FFh,0FFh,0FFh,000h,000h,000h,0FFh,0FFh
+	; 1D
+ db 0FFh,0FFh,0FFh,000h,000h,000h,0FFh,000h
+	; 1E
+ db 0FFh,0FFh,0FFh,000h,000h,000h,000h,0FFh
+	; 1F
+ db 0FFh,0FFh,0FFh,000h,000h,000h,000h,000h
+	; 20
+ db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh
+	; 21
+ db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h
+	; 22
+ db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh
+	; 23
+ db 0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h,000h
+	; 24
+ db 0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh
+	; 25
+ db 0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh,000h
+	; 26
+ db 0FFh,0FFh,000h,0FFh,0FFh,000h,000h,0FFh
+	; 27
+ db 0FFh,0FFh,000h,0FFh,0FFh,000h,000h,000h
+	; 28
+ db 0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh
+	; 29
+ db 0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh,000h
+	; 2A
+ db 0FFh,0FFh,000h,0FFh,000h,0FFh,000h,0FFh
+	; 2B
+ db 0FFh,0FFh,000h,0FFh,000h,0FFh,000h,000h
+	; 2C
+ db 0FFh,0FFh,000h,0FFh,000h,000h,0FFh,0FFh
+	; 2D
+ db 0FFh,0FFh,000h,0FFh,000h,000h,0FFh,000h
+	; 2E
+ db 0FFh,0FFh,000h,0FFh,000h,000h,000h,0FFh
+	; 2F
+ db 0FFh,0FFh,000h,0FFh,000h,000h,000h,000h
+	; 30
+ db 0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh
+	; 31
+ db 0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh,000h
+	; 32
+ db 0FFh,0FFh,000h,000h,0FFh,0FFh,000h,0FFh
+	; 33
+ db 0FFh,0FFh,000h,000h,0FFh,0FFh,000h,000h
+	; 34
+ db 0FFh,0FFh,000h,000h,0FFh,000h,0FFh,0FFh
+	; 35
+ db 0FFh,0FFh,000h,000h,0FFh,000h,0FFh,000h
+	; 36
+ db 0FFh,0FFh,000h,000h,0FFh,000h,000h,0FFh
+	; 37
+ db 0FFh,0FFh,000h,000h,0FFh,000h,000h,000h
+	; 38
+ db 0FFh,0FFh,000h,000h,000h,0FFh,0FFh,0FFh
+	; 39
+ db 0FFh,0FFh,000h,000h,000h,0FFh,0FFh,000h
+	; 3A
+ db 0FFh,0FFh,000h,000h,000h,0FFh,000h,0FFh
+	; 3B
+ db 0FFh,0FFh,000h,000h,000h,0FFh,000h,000h
+	; 3C
+ db 0FFh,0FFh,000h,000h,000h,000h,0FFh,0FFh
+	; 3D
+ db 0FFh,0FFh,000h,000h,000h,000h,0FFh,000h
+	; 3E
+ db 0FFh,0FFh,000h,000h,000h,000h,000h,0FFh
+	; 3F
+ db 0FFh,0FFh,000h,000h,000h,000h,000h,000h
+	; 40
+ db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
+	; 41
+ db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h
+	; 42
+ db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh
+	; 43
+ db 0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h,000h
+	; 44
+ db 0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh
+	; 45
+ db 0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh,000h
+	; 46
+ db 0FFh,000h,0FFh,0FFh,0FFh,000h,000h,0FFh
+	; 47
+ db 0FFh,000h,0FFh,0FFh,0FFh,000h,000h,000h
+	; 48
+ db 0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh
+	; 49
+ db 0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh,000h
+	; 4A
+ db 0FFh,000h,0FFh,0FFh,000h,0FFh,000h,0FFh
+	; 4B
+ db 0FFh,000h,0FFh,0FFh,000h,0FFh,000h,000h
+	; 4C
+ db 0FFh,000h,0FFh,0FFh,000h,000h,0FFh,0FFh
+	; 4D
+ db 0FFh,000h,0FFh,0FFh,000h,000h,0FFh,000h
+	; 4E
+ db 0FFh,000h,0FFh,0FFh,000h,000h,000h,0FFh
+	; 4F
+ db 0FFh,000h,0FFh,0FFh,000h,000h,000h,000h
+	; 50
+ db 0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh
+	; 51
+ db 0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh,000h
+	; 52
+ db 0FFh,000h,0FFh,000h,0FFh,0FFh,000h,0FFh
+	; 53
+ db 0FFh,000h,0FFh,000h,0FFh,0FFh,000h,000h
+	; 54
+ db 0FFh,000h,0FFh,000h,0FFh,000h,0FFh,0FFh
+	; 55
+ db 0FFh,000h,0FFh,000h,0FFh,000h,0FFh,000h
+	; 56
+ db 0FFh,000h,0FFh,000h,0FFh,000h,000h,0FFh
+	; 57
+ db 0FFh,000h,0FFh,000h,0FFh,000h,000h,000h
+	; 58
+ db 0FFh,000h,0FFh,000h,000h,0FFh,0FFh,0FFh
+	; 59
+ db 0FFh,000h,0FFh,000h,000h,0FFh,0FFh,000h
+	; 5A
+ db 0FFh,000h,0FFh,000h,000h,0FFh,000h,0FFh
+	; 5B
+ db 0FFh,000h,0FFh,000h,000h,0FFh,000h,000h
+	; 5C
+ db 0FFh,000h,0FFh,000h,000h,000h,0FFh,0FFh
+	; 5D
+ db 0FFh,000h,0FFh,000h,000h,000h,0FFh,000h
+	; 5E
+ db 0FFh,000h,0FFh,000h,000h,000h,000h,0FFh
+	; 5F
+ db 0FFh,000h,0FFh,000h,000h,000h,000h,000h
+	; 60
+ db 0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh
+	; 61
+ db 0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh,000h
+	; 62
+ db 0FFh,000h,000h,0FFh,0FFh,0FFh,000h,0FFh
+	; 63
+ db 0FFh,000h,000h,0FFh,0FFh,0FFh,000h,000h
+	; 64
+ db 0FFh,000h,000h,0FFh,0FFh,000h,0FFh,0FFh
+	; 65
+ db 0FFh,000h,000h,0FFh,0FFh,000h,0FFh,000h
+	; 66
+ db 0FFh,000h,000h,0FFh,0FFh,000h,000h,0FFh
+	; 67
+ db 0FFh,000h,000h,0FFh,0FFh,000h,000h,000h
+	; 68
+ db 0FFh,000h,000h,0FFh,000h,0FFh,0FFh,0FFh
+	; 69
+ db 0FFh,000h,000h,0FFh,000h,0FFh,0FFh,000h
+	; 6A
+ db 0FFh,000h,000h,0FFh,000h,0FFh,000h,0FFh
+	; 6B
+ db 0FFh,000h,000h,0FFh,000h,0FFh,000h,000h
+	; 6C
+ db 0FFh,000h,000h,0FFh,000h,000h,0FFh,0FFh
+	; 6D
+ db 0FFh,000h,000h,0FFh,000h,000h,0FFh,000h
+	; 6E
+ db 0FFh,000h,000h,0FFh,000h,000h,000h,0FFh
+	; 6F
+ db 0FFh,000h,000h,0FFh,000h,000h,000h,000h
+	; 70
+ db 0FFh,000h,000h,000h,0FFh,0FFh,0FFh,0FFh
+	; 71
+ db 0FFh,000h,000h,000h,0FFh,0FFh,0FFh,000h
+	; 72
+ db 0FFh,000h,000h,000h,0FFh,0FFh,000h,0FFh
+	; 73
+ db 0FFh,000h,000h,000h,0FFh,0FFh,000h,000h
+	; 74
+ db 0FFh,000h,000h,000h,0FFh,000h,0FFh,0FFh
+	; 75
+ db 0FFh,000h,000h,000h,0FFh,000h,0FFh,000h
+	; 76
+ db 0FFh,000h,000h,000h,0FFh,000h,000h,0FFh
+	; 77
+ db 0FFh,000h,000h,000h,0FFh,000h,000h,000h
+	; 78
+ db 0FFh,000h,000h,000h,000h,0FFh,0FFh,0FFh
+	; 79
+ db 0FFh,000h,000h,000h,000h,0FFh,0FFh,000h
+	; 7A
+ db 0FFh,000h,000h,000h,000h,0FFh,000h,0FFh
+	; 7B
+ db 0FFh,000h,000h,000h,000h,0FFh,000h,000h
+	; 7C
+ db 0FFh,000h,000h,000h,000h,000h,0FFh,0FFh
+	; 7D
+ db 0FFh,000h,000h,000h,000h,000h,0FFh,000h
+	; 7E
+ db 0FFh,000h,000h,000h,000h,000h,000h,0FFh
+	; 7F
+ db 0FFh,000h,000h,000h,000h,000h,000h,000h
+	; 80
+ db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
+	; 81
+ db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh,000h
+	; 82
+ db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h,0FFh
+	; 83
+ db 000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h,000h
+	; 84
+ db 000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh,0FFh
+	; 85
+ db 000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh,000h
+	; 86
+ db 000h,0FFh,0FFh,0FFh,0FFh,000h,000h,0FFh
+	; 87
+ db 000h,0FFh,0FFh,0FFh,0FFh,000h,000h,000h
+	; 88
+ db 000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh,0FFh
+	; 89
+ db 000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh,000h
+	; 8A
+ db 000h,0FFh,0FFh,0FFh,000h,0FFh,000h,0FFh
+	; 8B
+ db 000h,0FFh,0FFh,0FFh,000h,0FFh,000h,000h
+	; 8C
+ db 000h,0FFh,0FFh,0FFh,000h,000h,0FFh,0FFh
+	; 8D
+ db 000h,0FFh,0FFh,0FFh,000h,000h,0FFh,000h
+	; 8E
+ db 000h,0FFh,0FFh,0FFh,000h,000h,000h,0FFh
+	; 8F
+ db 000h,0FFh,0FFh,0FFh,000h,000h,000h,000h
+	; 90
+ db 000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh,0FFh
+	; 91
+ db 000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh,000h
+	; 92
+ db 000h,0FFh,0FFh,000h,0FFh,0FFh,000h,0FFh
+	; 93
+ db 000h,0FFh,0FFh,000h,0FFh,0FFh,000h,000h
+	; 94
+ db 000h,0FFh,0FFh,000h,0FFh,000h,0FFh,0FFh
+	; 95
+ db 000h,0FFh,0FFh,000h,0FFh,000h,0FFh,000h
+	; 96
+ db 000h,0FFh,0FFh,000h,0FFh,000h,000h,0FFh
+	; 97
+ db 000h,0FFh,0FFh,000h,0FFh,000h,000h,000h
+	; 98
+ db 000h,0FFh,0FFh,000h,000h,0FFh,0FFh,0FFh
+	; 99
+ db 000h,0FFh,0FFh,000h,000h,0FFh,0FFh,000h
+	; 9A
+ db 000h,0FFh,0FFh,000h,000h,0FFh,000h,0FFh
+	; 9B
+ db 000h,0FFh,0FFh,000h,000h,0FFh,000h,000h
+	; 9C
+ db 000h,0FFh,0FFh,000h,000h,000h,0FFh,0FFh
+	; 9D
+ db 000h,0FFh,0FFh,000h,000h,000h,0FFh,000h
+	; 9E
+ db 000h,0FFh,0FFh,000h,000h,000h,000h,0FFh
+	; 9F
+ db 000h,0FFh,0FFh,000h,000h,000h,000h,000h
+	; A0
+ db 000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh,0FFh
+	; A1
+ db 000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh,000h
+	; A2
+ db 000h,0FFh,000h,0FFh,0FFh,0FFh,000h,0FFh
+	; A3
+ db 000h,0FFh,000h,0FFh,0FFh,0FFh,000h,000h
+	; A4
+ db 000h,0FFh,000h,0FFh,0FFh,000h,0FFh,0FFh
+	; A5
+ db 000h,0FFh,000h,0FFh,0FFh,000h,0FFh,000h
+	; A6
+ db 000h,0FFh,000h,0FFh,0FFh,000h,000h,0FFh
+	; A7
+ db 000h,0FFh,000h,0FFh,0FFh,000h,000h,000h
+	; A8
+ db 000h,0FFh,000h,0FFh,000h,0FFh,0FFh,0FFh
+	; A9
+ db 000h,0FFh,000h,0FFh,000h,0FFh,0FFh,000h
+	; AA
+ db 000h,0FFh,000h,0FFh,000h,0FFh,000h,0FFh
+	; AB
+ db 000h,0FFh,000h,0FFh,000h,0FFh,000h,000h
+	; AC
+ db 000h,0FFh,000h,0FFh,000h,000h,0FFh,0FFh
+	; AD
+ db 000h,0FFh,000h,0FFh,000h,000h,0FFh,000h
+	; AE
+ db 000h,0FFh,000h,0FFh,000h,000h,000h,0FFh
+	; AF
+ db 000h,0FFh,000h,0FFh,000h,000h,000h,000h
+	; B0
+ db 000h,0FFh,000h,000h,0FFh,0FFh,0FFh,0FFh
+	; B1
+ db 000h,0FFh,000h,000h,0FFh,0FFh,0FFh,000h
+	; B2
+ db 000h,0FFh,000h,000h,0FFh,0FFh,000h,0FFh
+	; B3
+ db 000h,0FFh,000h,000h,0FFh,0FFh,000h,000h
+	; B4
+ db 000h,0FFh,000h,000h,0FFh,000h,0FFh,0FFh
+	; B5
+ db 000h,0FFh,000h,000h,0FFh,000h,0FFh,000h
+	; B6
+ db 000h,0FFh,000h,000h,0FFh,000h,000h,0FFh
+	; B7
+ db 000h,0FFh,000h,000h,0FFh,000h,000h,000h
+	; B8
+ db 000h,0FFh,000h,000h,000h,0FFh,0FFh,0FFh
+	; B9
+ db 000h,0FFh,000h,000h,000h,0FFh,0FFh,000h
+	; BA
+ db 000h,0FFh,000h,000h,000h,0FFh,000h,0FFh
+	; BB
+ db 000h,0FFh,000h,000h,000h,0FFh,000h,000h
+	; BC
+ db 000h,0FFh,000h,000h,000h,000h,0FFh,0FFh
+	; BD
+ db 000h,0FFh,000h,000h,000h,000h,0FFh,000h
+	; BE
+ db 000h,0FFh,000h,000h,000h,000h,000h,0FFh
+	; BF
+ db 000h,0FFh,000h,000h,000h,000h,000h,000h
+	; C0
+ db 000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh,0FFh
+	; C1
+ db 000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh,000h
+	; C2
+ db 000h,000h,0FFh,0FFh,0FFh,0FFh,000h,0FFh
+	; C3
+ db 000h,000h,0FFh,0FFh,0FFh,0FFh,000h,000h
+	; C4
+ db 000h,000h,0FFh,0FFh,0FFh,000h,0FFh,0FFh
+	; C5
+ db 000h,000h,0FFh,0FFh,0FFh,000h,0FFh,000h
+	; C6
+ db 000h,000h,0FFh,0FFh,0FFh,000h,000h,0FFh
+	; C7
+ db 000h,000h,0FFh,0FFh,0FFh,000h,000h,000h
+	; C8
+ db 000h,000h,0FFh,0FFh,000h,0FFh,0FFh,0FFh
+	; C9
+ db 000h,000h,0FFh,0FFh,000h,0FFh,0FFh,000h
+	; CA
+ db 000h,000h,0FFh,0FFh,000h,0FFh,000h,0FFh
+	; CB
+ db 000h,000h,0FFh,0FFh,000h,0FFh,000h,000h
+	; CC
+ db 000h,000h,0FFh,0FFh,000h,000h,0FFh,0FFh
+	; CD
+ db 000h,000h,0FFh,0FFh,000h,000h,0FFh,000h
+	; CE
+ db 000h,000h,0FFh,0FFh,000h,000h,000h,0FFh
+	; CF
+ db 000h,000h,0FFh,0FFh,000h,000h,000h,000h
+	; D0
+ db 000h,000h,0FFh,000h,0FFh,0FFh,0FFh,0FFh
+	; D1
+ db 000h,000h,0FFh,000h,0FFh,0FFh,0FFh,000h
+	; D2
+ db 000h,000h,0FFh,000h,0FFh,0FFh,000h,0FFh
+	; D3
+ db 000h,000h,0FFh,000h,0FFh,0FFh,000h,000h
+	; D4
+ db 000h,000h,0FFh,000h,0FFh,000h,0FFh,0FFh
+	; D5
+ db 000h,000h,0FFh,000h,0FFh,000h,0FFh,000h
+	; D6
+ db 000h,000h,0FFh,000h,0FFh,000h,000h,0FFh
+	; D7
+ db 000h,000h,0FFh,000h,0FFh,000h,000h,000h
+	; D8
+ db 000h,000h,0FFh,000h,000h,0FFh,0FFh,0FFh
+	; D9
+ db 000h,000h,0FFh,000h,000h,0FFh,0FFh,000h
+	; DA
+ db 000h,000h,0FFh,000h,000h,0FFh,000h,0FFh
+	; DB
+ db 000h,000h,0FFh,000h,000h,0FFh,000h,000h
+	; DC
+ db 000h,000h,0FFh,000h,000h,000h,0FFh,0FFh
+	; DD
+ db 000h,000h,0FFh,000h,000h,000h,0FFh,000h
+	; DE
+ db 000h,000h,0FFh,000h,000h,000h,000h,0FFh
+	; DF
+ db 000h,000h,0FFh,000h,000h,000h,000h,000h
+	; E0
+ db 000h,000h,000h,0FFh,0FFh,0FFh,0FFh,0FFh
+	; E1
+ db 000h,000h,000h,0FFh,0FFh,0FFh,0FFh,000h
+	; E2
+ db 000h,000h,000h,0FFh,0FFh,0FFh,000h,0FFh
+	; E3
+ db 000h,000h,000h,0FFh,0FFh,0FFh,000h,000h
+	; E4
+ db 000h,000h,000h,0FFh,0FFh,000h,0FFh,0FFh
+	; E5
+ db 000h,000h,000h,0FFh,0FFh,000h,0FFh,000h
+	; E6
+ db 000h,000h,000h,0FFh,0FFh,000h,000h,0FFh
+	; E7
+ db 000h,000h,000h,0FFh,0FFh,000h,000h,000h
+	; E8
+ db 000h,000h,000h,0FFh,000h,0FFh,0FFh,0FFh
+	; E9
+ db 000h,000h,000h,0FFh,000h,0FFh,0FFh,000h
+	; EA
+ db 000h,000h,000h,0FFh,000h,0FFh,000h,0FFh
+	; EB
+ db 000h,000h,000h,0FFh,000h,0FFh,000h,000h
+	; EC
+ db 000h,000h,000h,0FFh,000h,000h,0FFh,0FFh
+	; ED
+ db 000h,000h,000h,0FFh,000h,000h,0FFh,000h
+	; EE
+ db 000h,000h,000h,0FFh,000h,000h,000h,0FFh
+	; EF
+ db 000h,000h,000h,0FFh,000h,000h,000h,000h
+	; F0
+ db 000h,000h,000h,000h,0FFh,0FFh,0FFh,0FFh
+	; F1
+ db 000h,000h,000h,000h,0FFh,0FFh,0FFh,000h
+	; F2
+ db 000h,000h,000h,000h,0FFh,0FFh,000h,0FFh
+	; F3
+ db 000h,000h,000h,000h,0FFh,0FFh,000h,000h
+	; F4
+ db 000h,000h,000h,000h,0FFh,000h,0FFh,0FFh
+	; F5
+ db 000h,000h,000h,000h,0FFh,000h,0FFh,000h
+	; F6
+ db 000h,000h,000h,000h,0FFh,000h,000h,0FFh
+	; F7
+ db 000h,000h,000h,000h,0FFh,000h,000h,000h
+	; F8
+ db 000h,000h,000h,000h,000h,0FFh,0FFh,0FFh
+	; F9
+ db 000h,000h,000h,000h,000h,0FFh,0FFh,000h
+	; FA
+ db 000h,000h,000h,000h,000h,0FFh,000h,0FFh
+	; FB
+ db 000h,000h,000h,000h,000h,0FFh,000h,000h
+	; FC
+ db 000h,000h,000h,000h,000h,000h,0FFh,0FFh
+	; FD
+ db 000h,000h,000h,000h,000h,000h,0FFh,000h
+	; FE
+ db 000h,000h,000h,000h,000h,000h,000h,0FFh
+	; FF
+ db 000h,000h,000h,000h,000h,000h,000h,000h
