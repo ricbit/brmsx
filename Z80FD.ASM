@@ -203,6 +203,13 @@ emulFDE9:       mov     edi,regeiy
                 mov     ebp,8
                 ret
 
+; FD F9 - LD SP,IY
+emulFDF9:       inc     edi
+                mov     ebx,regeiy
+                mov     regesp,ebx
+                mov     ebp,10
+                ret
+
 ; FD CB 06 - RLC (IY+dd)
 RLCII           FDCB06,regeiy
 

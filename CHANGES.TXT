@@ -1,3 +1,16 @@
+release 1.27:
+
+- changed the memory model to 8k banks instead of 16k banks
+- now the bank switch is also done on the "slot" variable,
+  this way you can change the banks to another slot and then
+  back, preserving the megarom bank selectors. With this change
+  F1 Spirit now run.
+- changed interrupt emulation, now MSX timing has higher priority
+  than PC timing. This will slow down emulation on slower machines,
+  but it can prevent deadlocks. As a side effect, Nemesis run on 
+  correct speed.
+- added LD SP,IY instruction
+
 release 1.26:
 
 - fixed timings of instructions in Z80??.ASM

@@ -248,7 +248,7 @@ psetFDxx:
 	psetFDF6: dd prinXX
 	psetFDF7: dd prinXX
 	psetFDF8: dd prinXX
-	psetFDF9: dd prinXX
+	psetFDF9: dd prinFDF9
 	psetFDFA: dd prinXX
 	psetFDFB: dd prinXX
 	psetFDFC: dd prinXX

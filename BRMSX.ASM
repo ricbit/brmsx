@@ -48,24 +48,22 @@ _main:          sti
                 call    _getmem
                 jc      no_memory
                 mov     msxrom,eax
-                mov     ecx,16
+                mov     ecx,32
                 mov     ebx,offset slot0
 _main0:
                 mov     [ebx],eax
                 add     ebx,8
                 loop    _main0
                 mov     dword ptr [offset mem],eax
-                mov     dword ptr [offset mem+16],eax
-                add     eax,2000h
-                mov     dword ptr [offset mem+4],eax
-                mov     dword ptr [offset mem+16+4],eax
                 add     eax,2000h
                 mov     dword ptr [offset slot0+8],eax
-                mov     dword ptr [offset mem+8],eax
-                mov     dword ptr [offset mem+16+8],eax
+                mov     dword ptr [offset mem+4],eax
                 add     eax,2000h
+                mov     dword ptr [offset slot0+16],eax
+                mov     dword ptr [offset mem+8],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot0+24],eax
                 mov     dword ptr [offset mem+12],eax
-                mov     dword ptr [offset mem+16+12],eax
 
                 ; read msx rom 1 from disk
                 mov     edx,offset rom_name
@@ -80,12 +78,20 @@ _main0:
                 jc      no_memory
                 mov     msxram,eax
                 mov     dword ptr [offset slot2],eax
-                add     eax,4000h
+                add     eax,2000h
                 mov     dword ptr [offset slot2+8],eax
-                add     eax,4000h
+                add     eax,2000h
                 mov     dword ptr [offset slot2+16],eax
-                add     eax,4000h
+                add     eax,2000h
                 mov     dword ptr [offset slot2+24],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot2+32],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot2+40],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot2+48],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot2+56],eax
 
                 ; allocate 32kb to transfer buffer
                 mov     eax,32768
@@ -102,7 +108,9 @@ _main0:
                 call    _gethimem
                 jc      no_memory
                 mov     cart1,eax
-                mov     dword ptr [offset slot1+8],eax
+                mov     dword ptr [offset slot1+16],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot1+16+8],eax
                 pop     eax
                 cmp     eax,04000h
                 je     _main1
@@ -110,7 +118,9 @@ _main0:
                 jne     read_megarom
                 mov     ecx,cart1
                 add     ecx,4000h
-                mov     dword ptr [offset slot1+16],ecx
+                mov     dword ptr [offset slot1+32],ecx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
 _main1:
                 mov     edx,transf_buffer
                 mov     ecx,eax
@@ -136,10 +146,14 @@ read_megarom1:
                 jnz     read_megarom1
                 mov     ecx,cart1
                 add     ecx,4000h
-                mov     dword ptr [offset slot1+16],ecx
+                mov     dword ptr [offset slot1+32],ecx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
                 mov     eax,2
-                mov     dword ptr [offset slot1+8+4],eax
                 mov     dword ptr [offset slot1+16+4],eax
+                mov     dword ptr [offset slot1+16+4+8],eax
+                mov     dword ptr [offset slot1+16+4+16],eax
+                mov     dword ptr [offset slot1+16+4+24],eax
 
 _main2:
                 ; allocate 64kb to blit buffer

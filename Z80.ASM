@@ -174,7 +174,23 @@ slot0:
                 dd      1
                 dd      ?
                 dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
 slot1:
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
                 dd      ?
                 dd      1
                 dd      ?
@@ -192,7 +208,23 @@ slot2:
                 dd      0
                 dd      ?
                 dd      0
+                dd      ?
+                dd      0
+                dd      ?
+                dd      0
+                dd      ?
+                dd      0
+                dd      ?
+                dd      0
 slot3:
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
+                dd      ?
+                dd      1
                 dd      ?
                 dd      1
                 dd      ?
@@ -403,6 +435,7 @@ writemem0:
                 shl     ebx,13
                 add     ebx,cart1
                 mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [offset slot1+esi*8],ebx
                 ret
 
 
@@ -434,8 +467,6 @@ emulate_loop:
                 call    fetch
                 inc     rcounter
                 call    [offset iset + eax*4]
-                cmp     interrupt,1
-                je      emulate_interrupt
                 cmp     error,1
                 je      emulate_exit
                 add     clockcounter,ebp
@@ -444,16 +475,16 @@ emulate_loop:
 emulate_synch:  
                 cmp     interrupt,1
                 jne     emulate_synch
-                sub     clockcounter,59659
+                mov     clockcounter,0
 emulate_interrupt:
+                mov     interrupt,0
                 cmp     exit_now,1
                 je      emulate_exit
                 cmp     iff1,1
                 jne     emulate_loop
                 mov     iff1,0 
-                and     edi,0ffffh
                 dec     edi
-                mov     interrupt,0
+                and     edi,0ffffh
                 call    emulFF
                 jmp     emulate_loop
 emulate_exit:
@@ -1331,7 +1362,7 @@ emulC2:         test    dl,ZERO_FLAG
 emulC2a:        add     edi,3
                 ret
 
-; C3 - JP
+; C3 - JP dddd
 emulC3:         inc     edi
                 call    fetchw
                 mov     edi,eax
@@ -1946,49 +1977,53 @@ outemulA1:      mov     al,psgselect
 outemulA8:      mov     prim_slotreg,bl
                 ; frame 0
                 and     ebx,03h
-                shl     ebx,5
+                shl     ebx,6
                 mov     ecx,[offset slot+ebx]
                 mov     mem00,ecx
-                add     ecx,2000h
+                mov     ecx,[offset slot+ebx+8]
                 mov     mem20,ecx
                 mov     ecx,[offset slot+ebx+4]
                 mov     memlock00,ecx
+                mov     ecx,[offset slot+ebx+4+8]
                 mov     memlock20,ecx
                 ; frame 1
                 mov     bl,prim_slotreg
                 shr     bl,2
                 and     ebx,03h
-                shl     ebx,5
-                mov     ecx,[offset slot+ebx+8]
+                shl     ebx,6
+                mov     ecx,[offset slot+ebx+16]
                 mov     mem40,ecx
-                add     ecx,2000h
+                mov     ecx,[offset slot+ebx+16+8]
                 mov     mem60,ecx
-                mov     ecx,[offset slot+ebx+8+4]
+                mov     ecx,[offset slot+ebx+16+4]
                 mov     memlock40,ecx
+                mov     ecx,[offset slot+ebx+16+4+8]
                 mov     memlock60,ecx
                 ; frame 2
                 mov     bl,prim_slotreg
                 shr     bl,4
                 and     ebx,03h
-                shl     ebx,5
-                mov     ecx,[offset slot+ebx+16]
+                shl     ebx,6
+                mov     ecx,[offset slot+ebx+32]
                 mov     mem80,ecx
-                add     ecx,2000h
+                mov     ecx,[offset slot+ebx+32+8]
                 mov     memA0,ecx
-                mov     ecx,[offset slot+ebx+16+4]
+                mov     ecx,[offset slot+ebx+32+4]
                 mov     memlock80,ecx
+                mov     ecx,[offset slot+ebx+32+4+8]
                 mov     memlockA0,ecx
                 ; frame 3
                 mov     bl,prim_slotreg
                 shr     bl,6
                 and     ebx,03h
-                shl     ebx,5
-                mov     ecx,[offset slot+ebx+24]
+                shl     ebx,6
+                mov     ecx,[offset slot+ebx+48]
                 mov     memC0,ecx
-                add     ecx,2000h
+                mov     ecx,[offset slot+ebx+48+8]
                 mov     memE0,ecx
-                mov     ecx,[offset slot+ebx+24+4]
+                mov     ecx,[offset slot+ebx+48+4]
                 mov     memlockC0,ecx
+                mov     ecx,[offset slot+ebx+48+4+8]
                 mov     memlockE0,ecx
                 ret
 

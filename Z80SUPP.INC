@@ -2,7 +2,6 @@ opaddreg:
                 mov     ch,dh                           ; clock 2 
                 add     dh,bh                           ; clock 3 U
                 mov     cl,0                            ; clock 3 V
-                mov     ebp,4                           ; clock 4 U
                 mov     al,dh                           ; clock 4 V
                 adc     cl,cl                           ; clock 5 U
                 xor     bh,dh                           ; clock 5 V
@@ -38,7 +37,6 @@ opsubreg:
                 mov     ch,dh                           ; clock 2 V
                 sub     dh,bh                           ; clock 3 U
                 mov     cl,0                            ; clock 3 V
-                mov     ebp,4                           ; clock 4 U
                 mov     al,dh                           ; clock 4 V
                 adc     cl,cl                           ; clock 5 U
                 xor     bh,dh                           ; clock 5 V
