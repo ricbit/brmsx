@@ -23,6 +23,7 @@ extrn end_counter: near
 include io.inc
 include vdp.inc
 include debug.inc
+include serial.inc
 include bit.inc
 include opcode.inc
 include z80supp.inc
@@ -318,6 +319,7 @@ align 4
 
 psgselect       db      0
 psgreg          db      16 dup (0)
+psgjoyb         db      00111111b
 
 ; PPI registers
 align 4
@@ -728,6 +730,9 @@ EMULABEL        continue,emtype,brtype
                 JUMP    je,exit,emtype,brtype
                 cmp     iff1,1
                 JUMP    jne,loop,emtype,brtype
+                
+                call    check_client
+                
                 mov     iff1,0 
                 dec     edi
                 and     edi,0ffffh
@@ -742,6 +747,22 @@ EMULABEL        exit,emtype,brtype
                 ret
 
                 endm
+
+; check_client -------------------------------------------------------
+; if the emulator is in a SERVER session
+; then this function call the client to get 
+; joystick information
+
+check_client:
+                cmp     sessionmode,1
+                jne     _ret
+
+                pushad
+                call    UART_send_idstring
+                call    UART_receive
+                mov     psgjoyb,al
+                popad
+                ret
 
 ; z80paused ----------------------------------------------------------
 ; pauses the Z80 and starts the gui
@@ -1730,7 +1751,14 @@ inemulA2:       mov     al,psgselect
                 je      inemulA2a
                 mov     bl,[offset psgreg+eax]
                 ret
-inemulA2a:      mov     bl,00111111b
+inemulA2a:      
+                mov     al,byte ptr [offset psgreg+15]
+                test    al,BIT_6
+                jnz     inemulA2b
+                mov     bl,00111111b
+                ret
+inemulA2b:
+                mov     bl,psgjoyb
                 ret
 
 inemulA8:       mov     bl,prim_slotreg

@@ -15,10 +15,14 @@ include vdp.inc
 include pentium.inc
 include saveload.inc
 include blit.inc
+include bit.inc
 include compiler.inc
+include serial.inc
 
 include debugsrc.inc
 include helpsrc.inc
+include srsrc.inc
+include clsrc.inc
 
 extrn msxrom: near
 extrn pentiumfound: dword
@@ -57,6 +61,13 @@ intdi           db      'DI$'
 intei           db      'EI$'
 imagedynamic    db      ' OFF   $'
 imagestatic     db      ' ON    $'
+com1            db      '1$'
+com2            db      '2$'
+com3            db      '3$'
+com4            db      '4$'
+sessionsingle   db      'SINGLE$'
+sessionserver   db      'SERVER$'
+sessionclient   db      'CLIENT$'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -151,6 +162,56 @@ printmsgd2:
                 ret
 
 ; --------------------------------------------------------------------
+                
+emulate_client:                
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset client_screen
+                mov     edi,0b8000h
+                mov     ecx,80*24*2/4
+                rep     movsd
+                pop     es
+                call    turnon_kb_irq
+                call    UART_init
+                call    UART_send_idstring
+
+emulate_client_loop:
+                ;call    UART_receive_idstring
+
+                mov     bl,byte ptr [offset keymatrix+4]
+                mov     al,0
+                rcr     bl,3
+                rcl     al,1
+                
+                mov     bl,byte ptr [offset keymatrix+8]
+                rcr     bl,1
+                rcl     al,1
+
+                mov     bl,byte ptr [offset keymatrix+8]
+                rcl     bl,1
+                rcl     al,1
+                rcl     bl,3
+                rcl     al,1
+                
+                mov     bl,byte ptr [offset keymatrix+8]
+                rcl     bl,2
+                rcl     al,1
+                rcl     bl,1
+                rcl     al,1
+
+                call    UART_send
+
+                mov     al,byte ptr [offset keymatrix+7]
+                test    al,BIT_2
+                jnz     emulate_client_loop
+
+                mov     byte ptr [offset keymatrix+7],0FFh
+
+                call    turnoff_kb_irq
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
 
 changemode:
                 inc     emulatemode
@@ -169,6 +230,15 @@ changevideomode:
 
 changebargraph:
                 xor     bargraphmode,1
+                ret
+
+; --------------------------------------------------------------------
+
+changesession:
+                inc     sessionmode
+                cmp     sessionmode,3
+                jne     _ret
+                mov     sessionmode,0
                 ret
 
 ; --------------------------------------------------------------------
@@ -263,6 +333,54 @@ print_bar1:
 print_bar0:
                 COORD   57,21
                 call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the COM port being used
+
+                COORD   57,22
+                cmp     comport,1
+                jne     print_com2
+                mov     eax,offset com1
+                call    printmsgd
+                jmp     print_com_exit
+print_com2:
+                cmp     comport,2
+                jne     print_com3
+                mov     eax,offset com2
+                call    printmsgd
+                jmp     print_com_exit
+print_com3:
+                cmp     comport,3
+                jne     print_com4
+                mov     eax,offset com3
+                call    printmsgd
+                jmp     print_com_exit
+print_com4:
+                mov     eax,offset com4
+                call    printmsgd
+print_com_exit:
+
+; --------------------------------------------------------------------
+
+                ; print the session mode
+
+                COORD   44,22
+                cmp     sessionmode,0
+                jne     print_session1
+                mov     eax,offset sessionsingle
+                call    printmsgd
+                jmp     print_session_exit
+print_session1:
+                cmp     sessionmode,1
+                jne     print_session2
+                mov     eax,offset sessionserver
+                call    printmsgd
+                jmp     print_session_exit
+print_session2:
+                mov     eax,offset sessionclient
+                call    printmsgd
+print_session_exit:
 
 ; --------------------------------------------------------------------
 
@@ -687,7 +805,8 @@ init_compiler:
 ; --------------------------------------------------------------------
 
 debug:          
-                call    init_compiler
+                ;call    init_compiler
+                call    set_com_baseaddr
                 call    clear_text
 debug_loop:                
                 call    render_debug
@@ -703,8 +822,6 @@ debug_loop:
                 call    crlf
                 cmp     al,'D'
                 je      command_d      
-                cmp     al,'N'
-                je      command_n
                 cmp     al,'C'
                 je      command_c
                 cmp     al,'0'
@@ -717,16 +834,16 @@ debug_loop:
                 je      command_b
                 cmp     al,'P'
                 je      command_p
-                cmp     al,'Z'
-                je      command_help
                 cmp     al,'F'
                 je      command_f
                 cmp     al,'H'
                 je      command_help
                 cmp     al,'J'
                 je      command_j
-                ;cmp     al,'K'
-                ;je      command_k
+                cmp     al,'K'
+                je      command_k
+                cmp     al,'R'
+                je      command_r
                 cmp     al,'A'
                 je      command_a
                 cmp     al,'I'
@@ -743,6 +860,10 @@ debug_loop:
                 je      command_2
                 cmp     al,'V'
                 je      command_v
+                cmp     al,'Z'
+                je      command_z
+                cmp     al,'N'
+                je      command_n
                 cmp     al,'E'
                 je      command_e
                 cmp     al,'Q'
@@ -762,12 +883,28 @@ command_e:
                 call    init_compiler
                 jmp     debug_loop
 
+command_n:
+                call    changesession
+                jmp     debug_loop
+
 command_d:
                 COORD   14,23
                 call    set_cursor_position
                 call    gethex4
                 and     eax,0FFFFh
                 mov     memdump,eax
+                jmp     debug_loop
+
+command_z:
+                call    UART_init
+                call    UART_send_idstring
+                jmp     debug_loop
+
+command_r:
+                call    UART_init
+                call    UART_receive_idstring
+                mov     eax,offset modenormal
+                call    writemessage
                 jmp     debug_loop
 
 command_help:
@@ -803,18 +940,6 @@ command_j:
                 jmp     debug_loop
 
 command_v:      call    changevideomode
-                jmp     debug_loop
-
-command_n:
-                mov     eax,nametable
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                add     messagepointer,2
-                mov     eax,patterntable
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
                 jmp     debug_loop
 
 command_i:
@@ -914,7 +1039,23 @@ command_0:
                 call    crlf
                 jmp     debug_loop
 
-command_s:      call    setgraphmode
+command_s:      
+                cmp     sessionmode,2
+                je      emulate_client
+                cmp     sessionmode,1
+                jne     command_s_go
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset server_screen
+                mov     edi,0b8000h
+                mov     ecx,80*24*2/4
+                rep     movsd
+                pop     es
+                call    UART_init
+                call    UART_receive_idstring
+command_s_go:
+                call    setgraphmode
                 call    clear
                 call    turnon_kb_irq
                 call    turnon_irq
@@ -936,8 +1077,17 @@ command_c:
                 call    settextmode
                 jmp     debug_loop
 
+;command_k:
+;                call    change_megamode
+;                jmp     debug_loop
+
 command_k:
-                call    change_megamode
+                inc     comport
+                cmp     comport,5
+                jne     command_k_print
+                mov     comport,1
+command_k_print:
+                call    set_com_baseaddr
                 jmp     debug_loop
 
 command_1:

@@ -1,3 +1,12 @@
+$Log: changes.txt $
+Revision 1.74  1997/12/31 08:26:41  Ricardo
+first version with rcs
+
+
+release 1.73:
+
+- removed a stupid warning in VDP.ASM
+
 release 1.72:
 
 - sprite Y-clipping: no more bugs on penguin, zanac, kv2

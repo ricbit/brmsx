@@ -30,7 +30,7 @@ extrn mmxfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.72',13,10
+msg00           db      'BrMSX 1.74',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -257,22 +257,22 @@ _main2:
                 mov     blitbuffer,eax
 
                 ; allocate 1Mb to compile buffer
-                mov     eax,1048576
-                call    _getmem
-                jc      no_memory
-                mov     compbuffer,eax
+                ;mov     eax,1048576
+                ;call    _getmem
+                ;jc      no_memory
+                ;mov     compbuffer,eax
 
                 ; allocate 8*64kb to dirty code buffer
-                mov     eax,8*65536
-                call    _getmem
-                jc      no_memory
-                mov     dirtycode,eax
+                ;mov     eax,8*65536
+                ;call    _getmem
+                ;jc      no_memory
+                ;mov     dirtycode,eax
 
                 ; allocate 720kb to disk image
-                mov     eax,720*1024
-                call    _gethimem
-                jc      no_memory
-                mov     diskimage,eax
+                ;mov     eax,720*1024
+                ;call    _gethimem
+                ;jc      no_memory
+                ;mov     diskimage,eax
                 
                 ; read disk image from file
                 mov     edx,offset drivea_name

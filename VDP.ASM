@@ -876,7 +876,7 @@ sprite16N3:
 
 sprite_crop:
                 ; address of sprite image
-                movzx   eax,[esi+2]
+                movzx   eax,byte ptr [esi+2]
                 and     al,11111100b
                 mov     ecx,sprpatttable
                 add     ecx,msxvram
