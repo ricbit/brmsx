@@ -2598,7 +2598,6 @@ blit11_skip_mmx:
 
                 ret
 
-
 code32          ends
                 end
 

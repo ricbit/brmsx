@@ -78,7 +78,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.173',13,10
+msg00           db      'BrMSX 1.174',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -101,8 +101,8 @@ msg17           db      'h, IRQ $'
 msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
-msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.173',13,10
+msg21           db      'VESA2 512x384x8 not found',13,10,'$'
+msg22           db      'BrMSX 1.174',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -133,6 +133,7 @@ msg38           db      'VESA2 not found',13,10,'$'
 msg39           db      'DISK2.ROM invalid or not found',13,10,'$'
 msg40           db      'MSX2.ROM invalid or not found',13,10,'$'
 msg41           db      'MSX2EXT.ROM invalid or not found',13,10,'$'
+msg42           db      'VESA2 640x480x8 not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -173,21 +174,19 @@ help_message2   db      13
                 db      '               0=64kb 1=128kb 2=256kb 3=512kb '
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-res <mode>    select screen resolution',13,10 
-                db      '               0 =320x200x8  MSX-1 default',13,10
-                db      '               1 =256x200x8  MSX-1 large screen'
+                db      '               0=320x200x8  MSX-1 default',13,10
+                db      '               1=256x200x8  MSX-1 large screen'
                 db      13,10
-                db      '               2 =512x384x8  MSX-1 TV emulation '
+                db      '               2=512x384x8  MSX-1 TV emulation '
                 db      '(interpolation+scanlines)',13,10
-                db      '               3 =256x192x8  MSX-1 square pixels'
+                db      '               3=256x192x8  MSX-1 square pixels'
                 db      13,10
-                db      '               6 =512x384x15 MSX-1 Parrot engine'
+                db      '               6=512x384x15 MSX-1 Parrot engine'
                 db      13,10
-                db      '               7 =320x200x8  MSX-2 default',13,10
-                db      '               8 =512x384x8  MSX-2 full width '
+                db      '               7=320x200x8  MSX-2 default',13,10
+                db      '               8=512x384x8  MSX-2 full width '
                 db      'support',13,10
-                db      '               9 =512x384x8  MSX-2 full width '
-                db      'support with black scanlines',13,10
-                db      '               11=640x480x8  MSX-2 full screen '
+                db      '               9=512x384x8  MSX-2 full width '
                 db      'support with black scanlines',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
@@ -200,9 +199,9 @@ help_message2   db      13
                 db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
+                db      '-cpugraph      enable CPU performance graph',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
-                db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
@@ -238,9 +237,9 @@ help_message3   db      13
                 db      '(range is 0 to 9, default is 5)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
+                db      '-client        computer is client',13,10
                 db      'Press enter to continue.$'
 help_message4   db      13
-                db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
@@ -1174,51 +1173,8 @@ _main_nosound:
                 cmp     ax,0200h
                 jb      vesa2_not_found
 
-                ; search for mode 640x480x8 linear
-                call    search_vesa_mode_640
-                ;jc      vesa2_640x480_not_found
-
-                ; search for mode 512x384x8 linear
-                call    search_vesa_mode
-                jc      vesa2_512x384_not_found
-
-                or      vesa2found,1
-
-
-_main_novesa_512:
-
-                ; search for mode 512x384x15 linear
-                call    search_vesa_mode_512_15
-                jc      vesa2_512x384x15_not_found
-
-                or      vesa2found,4
-_main_novesa_512_15:
-
 _main_novesa:
-                cmp     videomode,2
-                jne     _main_nores2
-                cmp     videomode,8
-                jne     _main_nores2
-                cmp     videomode,9
-                jne     _main_nores2
-                test    vesa2found,1
-                jnz     _main_notrouble
-
-                cmp     msxmodel,0
-                jne     _main_novesa_msx2
-                mov     videomode,0
-                jmp     _main_nores2
-_main_novesa_msx2:
-                mov     videomode,7
-
-_main_nores2:
-                cmp     videomode,6
-                jne     _main_notrouble
-                test    vesa2found,4
-                jnz     _main_notrouble
-                mov     videomode,0
-
-_main_notrouble:
+                call    check_video_mode
 
                 ; enter debug mode
                 
@@ -1319,12 +1275,17 @@ vesa2_not_found:
 vesa2_512x384_not_found:
                 mov     eax,offset msg21
                 call    printmsg
-                jmp     _main_novesa_512_15
+                ret
 
-vesa2_512x384x15_not_found:
+vesa2_640x480_not_found:
+                mov     eax,offset msg42
+                call    printmsg
+                ret
+
+vesa2_512x384_15_not_found:
                 mov     eax,offset msg36
                 call    printmsg
-                jmp     _main_novesa
+                ret
 
 msx_rom_error:
                 mov     eax,offset msg26
@@ -1736,7 +1697,6 @@ callback_res_loop:
 
 callback_res_set:
                 mov     bl,al
-                ;mov     bl,byte ptr [offset emptyspace]
                 cmp     bl,1
                 je      callback_res_256x200
                 cmp     bl,2
@@ -1752,7 +1712,7 @@ callback_res_set:
                 cmp     bl,9
                 je      callback_res_512x384xmsx2_scanlines
                 cmp     bl,11
-                je      callback_res_640x480xmsx2
+                je      callback_res_640x480xmsx2_scanlines
                 mov     videomode,0
                 ret
 
@@ -1784,7 +1744,7 @@ callback_res_512x384xmsx2_scanlines:
                 mov     videomode,9
                 ret
 
-callback_res_640x480xmsx2:
+callback_res_640x480xmsx2_scanlines:
                 mov     videomode,11
                 ret
 
@@ -3060,16 +3020,80 @@ read_msx_rom_msx2:
                 ; turn off video cache
                 mov     imagetype,0
 
-                ; check for valid videomodes
-                cmp     videomode,7
-                jae     msx2_videomode_valid
-                mov     videomode,7
-msx2_videomode_valid:
-
                 ret
 
 ; --------------------------------------------------------------------
 
+CHECK_VIDEOMODE macro   mode,offset
+                local   exit
+
+                cmp     videomode,mode
+                jne     exit
+                test    vesa2found,offset
+                jnz     exit
+
+                mov     videomode,0
+exit:
+
+                endm
+
+; --------------------------------------------------------------------
+
+check_video_mode:                
+                
+                ; search for mode 512x384x8 linear
+                or      vesa2found,1
+                call    search_vesa_mode
+                jnc     check_video_mode_512_ok
+
+                call    vesa2_512x384_not_found
+                and     vesa2found,NOT (1)
+
+check_video_mode_512_ok:
+
+                ; search for mode 512x384x15 linear
+                or      vesa2found,2
+                call    search_vesa_mode_512_15
+                jnc     check_video_mode_512_15_ok
+
+                call    vesa2_512x384_15_not_found
+                and     vesa2found,NOT (2)
+
+check_video_mode_512_15_ok:
+
+                ; search for mode 640x480x8 linear
+                or      vesa2found,4
+                call    search_vesa_mode_640
+                jnc     check_video_mode_640_ok
+
+                call    vesa2_640x480_not_found
+                and     vesa2found,NOT (4)
+
+check_video_mode_640_ok:
+
+                CHECK_VIDEOMODE 2,1
+                CHECK_VIDEOMODE 6,2
+                CHECK_VIDEOMODE 8,1
+                CHECK_VIDEOMODE 9,1
+                CHECK_VIDEOMODE 11,4
+
+                cmp     msxmodel,0
+                jne     check_video_mode_msx2
+
+                cmp     videomode,7
+                jb      _ret
+
+                mov     videomode,0
+                ret
+
+check_video_mode_msx2:
+                cmp     videomode,7
+                jae     _ret
+
+                mov     videomode,7
+                ret
+
+; --------------------------------------------------------------------
 code32          ends
                 end
 
