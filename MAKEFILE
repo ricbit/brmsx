@@ -1,5 +1,5 @@
 OBJECTS = pmode.o brmsx.o debug.o patch.o \
-	  io.o pentium.o saveload.o gui.o \
+	  io.o pentium.o saveload.o gui.o blit.o \
 	  z80.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o
 TASMFLAGS = /ml /m2 /q /la

@@ -28,6 +28,10 @@ public sprite_render
 public imagetype
 public nametable
 public patterntable
+public colortable
+public sprattrtable
+public eval_sprite_coords
+public dirty_sprite
 
 ; DATA ---------------------------------------------------------------
 
@@ -45,11 +49,13 @@ enabled         dd      1
 linenumber      dd      0
 stacksave       dd      0
 colorsave       dd      0
+patternsave     dd      0
 spriteenable    dd      0
 imagetype       dd      0
 nametable       dd      0
 patterntable    dd      0
-currentsector   dd      0
+sprattrtable    dd      0
+colortable      dd      0
 firstscreen     dd      1
 spriteline      db      192 dup (0)
 lastscreen      db      0
@@ -465,11 +471,13 @@ render_screen2_dirty:
                 mov     patterntable,eax
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
+                mov     patternsave,ebx
 
                 ; ecx = color table
                 movzx   eax,byte ptr [offset vdpregs+3]
                 and     eax,080h
                 shl     eax,6
+                mov     colortable,eax
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
@@ -477,15 +485,16 @@ render_screen2_dirty:
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
 
-                ; edx = dirty table
+                ; edx = dirty table name
+                ; ebx = dirty table pattern
                 mov     edx,dirtyname
+                mov     ebx,dirtypattern
 
                 ; mask the temporary registers
                 xor     eax,eax
 
                 ; for each sector
                 mov     ebp,3
-                mov     currentsector,0
 render23d:      
                 push    ebp
 
@@ -507,11 +516,7 @@ render21d:
                 jnz     render2d_draw
 
                 mov     al,[esi]
-                push    edx
-                mov     edx,dirtypattern
-                add     edx,currentsector
-                cmp     byte ptr [edx+eax],0
-                pop     edx
+                cmp     byte ptr [ebx+eax],0
                 je      render2d_next
                 mov     byte ptr [edx],1
 
@@ -521,8 +526,11 @@ render2d_draw:
                 push    ebp
                 push    esi
 
+                push    ebx
                 push    edx
+
                 xor     edx,edx
+                mov     ebx,patternsave
 
                 ifdef   DOS
                   PIPE2_DOS
@@ -531,6 +539,7 @@ render2d_draw:
                 endif
 
                 pop     edx
+                pop     ebx
 
                 pop     esi
                 pop     ebp
@@ -548,11 +557,11 @@ render2d_next:
                 dec     ebp
                 jnz     render20d
 
-                add     ebx,256*8
+                add     ebx,256                                         
+                add     patternsave,256*8
                 add     colorsave,256*8
 
                 pop     ebp
-                add     currentsector,256
                 dec     ebp
                 jnz     render23d
 
@@ -593,6 +602,7 @@ render_screen2_linear:
                 movzx   eax,byte ptr [offset vdpregs+3]
                 and     eax,080h
                 shl     eax,6
+                mov     colortable,eax
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
                 mov     colorsave,ecx
@@ -684,6 +694,7 @@ sprite16N:
                 movzx   eax,byte ptr [offset vdpregs+5]
                 and     eax,07fh
                 shl     eax,7
+                mov     sprattrtable,eax
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
@@ -868,6 +879,10 @@ render:
                 mov     enabled,0
                 jmp     clear
 render1:
+                cmp     enabled,0
+                jne     render3
+                call    clear
+render3:
                 mov     enabled,1
                 shr     bh,2
                 and     bh,00000110b
@@ -887,7 +902,7 @@ render2:
                 ret
 
 ; clear --------------------------------------------------------------
-; clear the PC screen
+; clear the blit buffer
                 
 clear:
                 push    es
@@ -897,7 +912,7 @@ clear:
                 mov     edi,blitbuffer
                 mov     ecx,320*200/4
                 rep     stosd
-                mov     eax,0FFFFFFFFh
+                mov     eax,001010101h
                 mov     edi,dirtyname
                 mov     ecx,32*24/4
                 rep     stosd
@@ -911,6 +926,73 @@ clear:
                 out     dx,al
                 mov     firstscreen,1
                 pop     es
+                ret
+
+; eval_sprite_coords -------------------------------------------------
+; evaluate sprite coordinates
+; enter: esi = start of sprite attribute in vram
+; exit: eax = offset y ; ecx = offset x (both are signed numbers)
+
+eval_sprite_coords:
+                xor     ecx,ecx
+                mov     al,[esi+3]
+                mov     cl,[esi+1]
+                and     eax,080h
+                shr     eax,2
+                sub     ecx,eax
+
+                mov     al,[esi]
+                cmp     al,0BEh
+                jbe     eval_sprite_coords1
+                movsx   eax,al
+
+eval_sprite_coords1:
+                inc     eax
+                ret
+                
+; CHECK --------------------------------------------------------------
+; mark one block as dirty
+
+CHECK           macro offx,offy,name
+
+                push    ecx eax
+
+                add     eax,offy
+                js      check_sprite_&name&_exit
+                cmp     eax,24
+                jge     check_sprite_&name&_exit
+                add     ecx,offx
+                js      check_sprite_&name&_exit
+                cmp     ecx,32
+                jge     check_sprite_&name&_exit
+                shl     eax,5
+                add     eax,ecx
+                add     eax,dirtyname
+                mov     byte ptr [eax],1
+
+check_sprite_&name&_exit:
+                pop     eax ecx
+
+                endm
+
+; dirty_sprite -------------------------------------------------------
+; make the screen behind the sprite dirty
+; enter: eax = offset y ; ecx = offset x (both are signed numbers)
+
+dirty_sprite:
+                sar     ecx,3
+                sar     eax,3
+
+                CHECK   0,0,0
+                CHECK   1,0,1
+                CHECK   2,0,2
+                CHECK   0,1,3
+                CHECK   1,1,4
+                CHECK   2,1,5
+                CHECK   0,2,6
+                CHECK   1,2,7
+                CHECK   2,2,8
+
                 ret
 
 code32          ends

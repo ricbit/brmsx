@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------- 
 ; BrMSX v:1.32                                                         
 ; Copyright (C) 1997 by Ricardo Bittencourt                            
-; module: 
+; module: GUI.ASM
 ; -------------------------------------------------------------------- 
 
         .386p
@@ -35,10 +35,24 @@ spritecounter   db      8 dup (0)
 blitcounter     db      8 dup (0)
 guicounter      db      8 dup (0)
 
+z80acc          db      8 dup (0)
+renderacc       db      8 dup (0)
+spriteacc       db      8 dup (0)
+blitacc         db      8 dup (0)
+guiacc          db      8 dup (0)
+
 renderrate      dd      0
 spriterate      dd      0
 blitrate        dd      0
 guirate         dd      0
+
+z80number       dd      0
+rendernumber    dd      0
+spritenumber    dd      0
+blitnumber      dd      0
+guinumber       dd      0
+
+framenumber     dd      0
 
 ; CODE ---------------------------------------------------------------
 
@@ -48,28 +62,83 @@ guirate         dd      0
 draw_gui:
                 cmp     bargraphmode,0
                 je      _ret
+
+; --------------------------------------------------------------------
+                
+                ; draw the bar graph
+
                 mov     edi,0
+                mov     ebp,z80number
                 mov     eax,z80rate
                 call    drawline
                 mov     edi,8
+                mov     ebp,rendernumber
                 mov     eax,renderrate
                 call    drawline
                 mov     edi,16
+                mov     ebp,spritenumber
                 mov     eax,spriterate
                 call    drawline
                 mov     edi,24
+                mov     ebp,blitnumber
                 mov     eax,blitrate
                 call    drawline
                 mov     edi,32
+                mov     ebp,guinumber
                 mov     eax,guirate
                 call    drawline
-                mov     eax,0FFFFFFFFh
+                
+; --------------------------------------------------------------------
+                
+                ; update the counters
+
+                mov     eax,z80rate
+                mov     ebx,offset z80acc
+                mov     ecx,offset z80number
+                call    evalcounter
+
+                mov     eax,renderrate
+                mov     ebx,offset renderacc
+                mov     ecx,offset rendernumber
+                call    evalcounter
+
+                mov     eax,spriterate
+                mov     ebx,offset spriteacc
+                mov     ecx,offset spritenumber
+                call    evalcounter
+
+                mov     eax,blitrate
+                mov     ebx,offset blitacc
+                mov     ecx,offset blitnumber
+                call    evalcounter
+
+                mov     eax,guirate
+                mov     ebx,offset guiacc
+                mov     ecx,offset guinumber
+                call    evalcounter
+
+                inc     framenumber
+                cmp     framenumber,10
+                jne     draw_update0
+                mov     framenumber,0
+draw_update0:
+
+; --------------------------------------------------------------------
+                
+                ; update the dirty table
+
+                mov     eax,001010101h
+                mov     ebx,000010101h
                 mov     edi,dirtyname
                 irp     j,<0,1,2,3,4>
-                mov     [edi+j*32],eax
-                mov     [edi+4+j*32],eax
+                or      [edi+j*32],eax
+                or      [edi+4+j*32],ebx
                 endm
+
                 ret
+
+; drawline -----------------------------------------------------------
+; draw a single bar in blitbuffer
 
 drawline:
                 mov     ebx,100
@@ -99,8 +168,9 @@ drawline_loop:
                 dec     ecx
                 jnz     drawline1
 
-                sub     edi,30
-                mov     ebx,10
+                mov     eax,ebp
+                sub     edi,33
+                mov     ebx,100
                 xor     edx,edx
                 div     ebx
                 mov     esi,eax
@@ -118,7 +188,12 @@ drawline_loop:
                 or      [edi+(i+1)*256],ebx
                 or      [edi+(i+1)*256+4],ecx
                 endm
-                mov     esi,edx
+                
+                mov     eax,edx
+                mov     ebx,10
+                xor     edx,edx
+                div     ebx
+                mov     esi,eax
                 shl     esi,6
                 add     esi,offset number_font
                 irp     i,<0,1,2,3,4>
@@ -133,8 +208,56 @@ drawline_loop:
                 or      [edi+(i+1)*256+5],ebx
                 or      [edi+(i+1)*256+4+5],ecx
                 endm
+                
+                mov     byte ptr [edi+5*256+10],04h
+
+                mov     esi,edx
+                shl     esi,6
+                add     esi,offset number_font
+                irp     i,<0,1,2,3,4>
+                mov     ebx,[esi+i*8]
+                mov     ecx,[esi+i*8+4]
+                and     [edi+(i+1)*256+12],ebx
+                and     [edi+(i+1)*256+4+12],ecx
+                xor     ebx,0FFFFFFFFh
+                xor     ecx,0FFFFFFFFh
+                and     ebx,004040404h
+                and     ecx,004040404h
+                or      [edi+(i+1)*256+12],ebx
+                or      [edi+(i+1)*256+4+12],ecx
+                endm
+                
                 ret
 
+; evalcounter --------------------------------------------------------
+; update a counter
+
+evalcounter:
+                add     dword ptr [ebx],eax
+                adc     dword ptr [ebx+4],0
+                cmp     framenumber,0
+                jnz     _ret
+
+                mov     eax,dword ptr [ebx]
+                mov     edi,100
+                mul     edi
+                mov     esi,edx
+                mov     dword ptr [ebx],eax
+                mov     eax,dword ptr [ebx+4]
+                mul     edi
+                add     eax,esi
+                mov     dword ptr [ebx+4],eax
+
+                mov     eax,dword ptr [ebx]
+                mov     edx,dword ptr [ebx+4]
+                mov     edi,dword ptr [offset clockrate]
+                div     edi
+                mov     dword ptr [ecx],eax
+
+                mov     dword ptr [ebx],0
+                mov     dword ptr [ebx+4],0
+
+                ret
 
 code32          ends
                 end

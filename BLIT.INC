@@ -1,0 +1,1 @@
+extrn blit: near

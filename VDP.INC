@@ -8,3 +8,7 @@ extrn lastscreen: byte
 extrn imagetype: dword
 extrn nametable: dword
 extrn patterntable: dword
+extrn colortable: dword
+extrn eval_sprite_coords: near
+extrn dirty_sprite: near
+extrn sprattrtable: dword

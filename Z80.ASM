@@ -1894,40 +1894,80 @@ outemulXX:      ret
 
 outemul98:      mov     ecx,msxvram
                 mov     esi,vdpaddresse
-                mov     [ecx+esi],bl
                 inc     vdpaddress
+                mov     eax,esi
                 cmp     imagetype,0
-                je      _ret
+                je      outemul98_ret
                 cmp     lastscreen,1
                 jne     outemul98_1
                 ; screen 2
-                cmp     esi,nametable
-                js      outemul98_2_pat
+                mov     esi,eax
                 sub     esi,nametable
+                js      outemul98_2_pat
                 cmp     esi,32*24
                 jge     outemul98_2_pat
                 add     esi,dirtyname
                 mov     byte ptr [esi],1
+                mov     [ecx+eax],bl
+                xor     eax,eax
                 ret
 outemul98_2_pat:
+                mov     esi,eax
                 sub     esi,patterntable
-                js      _ret
+                js      outemul98_2_col
                 cmp     esi,256*3*8
-                jge     _ret
+                jge     outemul98_2_col
                 shr     esi,3
                 add     esi,dirtypattern
                 mov     byte ptr [esi],1
+                mov     [ecx+eax],bl
+                xor     eax,eax
                 ret
+outemul98_2_col:
+                mov     esi,eax
+                sub     esi,colortable
+                js      outemul98_2_spr
+                cmp     esi,256*3*8
+                jge     outemul98_2_spr
+                shr     esi,3
+                add     esi,dirtypattern
+                mov     byte ptr [esi],1
+                mov     [ecx+eax],bl
+                xor     eax,eax
+                ret
+outemul98_2_spr:
+                mov     esi,eax
+                sub     esi,sprattrtable
+                js      outemul98_ret
+                cmp     esi,128
+                jge     outemul98_ret
+                mov     esi,eax
+                and     esi,0FFFFFFFCh
+                add     esi,ecx
+                push    ecx eax
+                call    eval_sprite_coords
+                call    dirty_sprite
+                pop     eax ecx
+                mov     [ecx+eax],bl
+                call    eval_sprite_coords
+                call    dirty_sprite
+                xor     eax,eax
+                ret
+
 outemul98_1:
                 cmp     lastscreen,0
-                jne     _ret
+                jne     outemul98_ret
                 ; screen 1
+                mov     eax,esi
                 sub     esi,nametable
-                js      _ret
+                js      outemul98_ret
                 cmp     esi,32*24
-                jge     _ret
+                jge     outemul98_ret
                 add     esi,dirtyname
                 mov     byte ptr [esi],1
+outemul98_ret:
+                mov     [ecx+eax],bl
+                xor     eax,eax
                 ret
 
 outemul99:      cmp     vdpcond,0

@@ -50,8 +50,8 @@ stateon         db      'ON $'
 stateoff        db      'OFF$'
 intdi           db      'DI$'
 intei           db      'EI$'
-imagedynamic    db      ' NORMAL$'
-imagestatic     db      '   FAST$'
+imagedynamic    db      ' LINEAR$'
+imagestatic     db      '  BLOCK$'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
