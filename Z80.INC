@@ -89,3 +89,8 @@ extrn emulatemode: dword
 extrn megarommode: dword
 extrn z80rate: dword
 extrn psgreg: byte
+extrn prim_slotreg: byte
+extrn ppic: byte
+extrn megablock: byte
+extrn outemulA8: near
+extrn megarom0_switchbank: near

@@ -18,6 +18,7 @@ public _main
 public msxram
 public msxvram
 public blitbuffer
+public transf_buffer
 public diskimage
 public cart1
 
@@ -26,8 +27,9 @@ extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.40',13,10
-                db      'by Ricardo Bittencourt',13,10,10,'$'
+msg00           db      'BrMSX 1.42',13,10
+                db      'Copyright (C) 1997 by Ricardo Bittencourt'
+                db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
 msg03           db      'Disk size not supported',13,10,'$'
@@ -301,7 +303,7 @@ _main_dontmeasure:
                 ; enter debug mode
                 
                 ; don't ask 
-                db 165 dup (090h)
+                db 165+100 dup (090h)
 
                 call    crlf
                 mov     eax,offset msg10

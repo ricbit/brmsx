@@ -1,3 +1,14 @@
+release 1.42:
+
+- added save/load machine state
+  keys: "A" for save and "L" for load
+
+release 1.41: [*] public version
+
+- added yet more extensions to the debugger
+- fixed bug on numeric display, now it uses color 4 instead of color 0
+- optimized CALL dddd a little
+
 release 1.40:
 
 - added more extensions to the debugger

@@ -37,6 +37,9 @@ public turnon_kb_irq
 public turnoff_kb_irq
 public exit_now
 public open_file
+public create_file
+public close_file
+public write_file
 public read_file
 public read_size_file
 public blit
@@ -646,7 +649,7 @@ drawline_loop:
                 dec     ecx
                 jnz     drawline1
 
-                sub     edi,50
+                sub     edi,30
                 mov     ebx,10
                 xor     edx,edx
                 div     ebx
@@ -658,6 +661,12 @@ drawline_loop:
                 mov     ecx,[esi+i*8+4]
                 and     [edi+(i+1)*256],ebx
                 and     [edi+(i+1)*256+4],ecx
+                xor     ebx,0FFFFFFFFh
+                xor     ecx,0FFFFFFFFh
+                and     ebx,004040404h
+                and     ecx,004040404h
+                or      [edi+(i+1)*256],ebx
+                or      [edi+(i+1)*256+4],ecx
                 endm
                 mov     esi,edx
                 shl     esi,6
@@ -667,6 +676,12 @@ drawline_loop:
                 mov     ecx,[esi+i*8+4]
                 and     [edi+(i+1)*256+5],ebx
                 and     [edi+(i+1)*256+4+5],ecx
+                xor     ebx,0FFFFFFFFh
+                xor     ecx,0FFFFFFFFh
+                and     ebx,004040404h
+                and     ecx,004040404h
+                or      [edi+(i+1)*256+5],ebx
+                or      [edi+(i+1)*256+4+5],ecx
                 endm
                 ret
 
@@ -729,6 +744,27 @@ open_file:
                 mov     v86r_bx,ax
                 ret
 
+; create_file --------------------------------------------------------
+; create a file
+; in: edx = ASCIIZ filename
+; out: v86r_bx = file handle
+;      carry = 1 -> error                
+
+create_file:                
+                add     edx,_code32a
+                mov     eax,edx
+                shr     edx,4
+                and     eax,0fh
+                mov     v86r_dx,ax
+                mov     v86r_ds,dx
+                mov     v86r_ax,03C02h
+                mov     v86r_cx,BIT_5
+                mov     al,21h
+                int     33h
+                mov     ax,v86r_ax
+                mov     v86r_bx,ax
+                ret
+
 ; read_file ----------------------------------------------------------
 ; read a file
 ; in: v86r_bx = file handle
@@ -745,6 +781,39 @@ read_file:
                 mov     v86r_dx,ax
                 mov     v86r_cx,cx
                 mov     v86r_ax,03f00h
+                mov     al,21h
+                int     33h
+                pop     eax
+                ret
+
+; write_file ---------------------------------------------------------
+; write a file
+; in: v86r_bx = file handle
+;     edx = address of write buffer
+;     ecx = number of bytes to write (must be <0ffffh)
+
+write_file:                
+                push    eax
+                add     edx,_code32a
+                mov     eax,edx
+                shr     edx,4
+                and     eax,0fh
+                mov     v86r_ds,dx
+                mov     v86r_dx,ax
+                mov     v86r_cx,cx
+                mov     v86r_ax,04000h
+                mov     al,21h
+                int     33h
+                pop     eax
+                ret
+
+; close_file ---------------------------------------------------------
+; close a file
+; in: v86r_bx = file handle
+
+close_file:                
+                push    eax
+                mov     v86r_ax,03E00h
                 mov     al,21h
                 int     33h
                 pop     eax
@@ -787,21 +856,27 @@ read_size_file:
 blit:              
                 cmp     videomode,0
                 je      blit0
-                push    es
-                mov     ax,cs:_selzero
-                mov     es,ax
                 mov     edi,0a0000h
                 mov     esi,blitbuffer
+                sub     edi,_code32a
                 mov     ecx,256*192/4
-                rep     movsd
-                pop     es
+                rep     movsd                
+;                mov     ecx,256*192/16
+;TOP:    FILD    QWORD PTR [ESI]                                                 
+;        FILD    QWORD PTR [ESI+8]                                               
+;        FXCH                                                                    
+;        FISTP   QWORD PTR [EDI]                                                 
+;        FISTP   QWORD PTR [EDI+8]                                               
+;        ADD     ESI, 16                                                         
+;        ADD     EDI, 16                                                         
+;        DEC     ECX                                                             
+;        JNZ     TOP                                                             
+                                                                                
                 ret
 blit0:
-                push    es
-                mov     ax,cs:_selzero
-                mov     es,ax
                 mov     esi,blitbuffer
                 mov     edi,0a0000h+32
+                sub     edi,_code32a
                 mov     edx,192
 blit0_0:
                 mov     ecx,256/4
@@ -809,7 +884,6 @@ blit0_0:
                 add     edi,64
                 dec     edx
                 jnz     blit0_0
-                pop     es
                 ret
 
 code32          ends

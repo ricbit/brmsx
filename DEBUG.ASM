@@ -13,6 +13,8 @@ include io.inc
 include z80.inc
 include vdp.inc
 include pentium.inc
+include saveload.inc
+
 include debugsrc.inc
 
 extrn msxrom: near
@@ -27,8 +29,11 @@ public printmsgd
 align 4
 
 temp_screen     db      3840 dup (0)
+message         dw      80 dup (0Fh)
+messagepointer  dd      0
 memdump         dd      0
 tabspace        db      ' $'
+flags           db      '00000000$'
 msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 msgpentiumonly  db      'this option requires a pentium',13,10,'$'
@@ -60,11 +65,40 @@ clear_text:
                 mov     ax,gs
                 mov     es,ax
                 mov     eax,00070007h
-                mov     edi,0b8000h+80*24*2
+                mov     edi,offset message
                 mov     ecx,80*2/4
                 rep     stosd
+                mov     eax,offset message
+                mov     messagepointer,eax
                 pop     es ecx edi eax
+                jmp     printmessage
+
+; printmessage -------------------------------------------------------
+; print the message in bottom line of screen
+
+printmessage:
+                push    eax esi edi ecx es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset message
+                mov     edi,0b8000h+80*24*2
+                mov     ecx,80*2/4
+                rep     movsd
+                pop     es ecx edi esi eax
                 ret
+
+; writemessage -------------------------------------------------------
+; write a dos string in the message space
+
+writemessage:
+                mov     edx,messagepointer
+                mov     bl,[eax]
+                cmp     bl,'$'
+                je      _ret
+                mov     [edx],bl
+                add     messagepointer,2
+                inc     eax
+                jmp     writemessage
 
 ; printmsgd ----------------------------------------------------------
 ; print a message in dos format, 
@@ -141,7 +175,7 @@ checkpentium:
                 cmp     pentiumfound,1
                 je      checkpentium1
                 mov     eax,offset msgpentiumonly
-                call    printmsg
+                call    writemessage
                 stc
                 ret
 checkpentium1:
@@ -489,6 +523,89 @@ print_dis1:
 
 ; --------------------------------------------------------------------
                 
+                ; print the Z80 flags
+
+                mov     ecx,8
+                mov     eax,offset flags+7
+                mov     ebx,regeaf
+print_flags0:
+                xor     edx,edx
+                shr     ebx,1
+                adc     dl,'0'
+                mov     [eax],dl
+                dec     eax
+                dec     ecx
+                jnz     print_flags0
+                COORD   55,8
+                mov     eax,offset flags
+                call    printmsgd
+                
+; --------------------------------------------------------------------
+                
+                ; print the Z80 register "R"
+
+                mov     eax,rcounter
+                and     eax,07Fh
+                or      al,rmask
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   61,10
+                call    printmsgd
+                
+; --------------------------------------------------------------------
+                
+                ; print the PPI registers
+
+                mov     al,prim_slotreg
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   48,13
+                call    printmsgd
+                
+                mov     al,ppic
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   48,14
+                call    printmsgd
+                
+; --------------------------------------------------------------------
+                
+                ; print primary slot configuration
+
+                irp     i,<0,1,2,3>
+                mov     al,prim_slotreg
+                shr     al,i*2
+                and     al,3
+                add     al,'0'
+                mov     tabspace,al
+                mov     eax,offset tabspace
+                COORD   52,16+i
+                call    printmsgd
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; print megarom block information
+
+                mov     ecx,0
+                mov     esi,offset megablock
+print_mega:
+                mov     eax,[esi]
+                call    convhex4
+                COORD   61,12
+                mov     edi,ecx
+                shl     edi,8
+                add     edx,edi
+                mov     eax,offset tmphex2
+                call    printmsgd
+                add     esi,4
+                inc     ecx
+                cmp     ecx,8
+                jne     print_mega
+
+                
+; --------------------------------------------------------------------
+                
                 ; blit the temp buffer to screen 
                 
                 push    es
@@ -506,8 +623,10 @@ print_dis1:
 
 debug:          
                 call    clear_text
+                ;mov     pentiumfound,0
 debug_loop:                
                 call    render_debug
+                call    printmessage
                 COORD   12,23
                 call    set_cursor_position
                 call    getchar
@@ -529,6 +648,10 @@ debug_loop:
                 je      command_f
                 ;cmp     al,'K'
                 ;je      command_k
+                cmp     al,'A'
+                je      command_a
+                cmp     al,'L'
+                je      command_l
                 cmp     al,'G'
                 je      command_g
                 cmp     al,'T'
@@ -570,6 +693,14 @@ command_f:
                 jmp     debug_loop
 
 command_v:      call    changevideomode
+                jmp     debug_loop
+
+command_a:
+                call    save_state
+                jmp     debug_loop
+
+command_l:
+                call    load_state
                 jmp     debug_loop
 
 command_m:      

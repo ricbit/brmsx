@@ -1,4 +1,4 @@
-; -------------------------------------------------------------------- 
+; --------------------------------------------------------------------
 ; BrMSX v:1.32                                                         
 ; Copyright (C) 1997 by Ricardo Bittencourt                            
 ; module: Z80.ASM                                                      
@@ -41,6 +41,8 @@ public outemulXX
 public inemulXX
 public outportxx
 public inportxx
+public outemulA8
+public megarom0_switchbank
 
 public opsubreg
 public opsbcreg
@@ -60,6 +62,9 @@ public emulatemode
 public megarommode
 public z80rate
 public psgreg
+public prim_slotreg
+public ppic
+public megablock
 
 public slot0
 public slot1
@@ -247,6 +252,16 @@ slot3:
                 dd      ?
                 dd      1
 
+megablock:
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+                dd      0
+
 ; Z80 registers
 align 4
 
@@ -284,6 +299,7 @@ align 4
 
 prim_slotreg    db      0
 keyboard_line   db      0
+ppic            db      0
 
 align 4
 
@@ -411,6 +427,21 @@ readmem:        mov     esi,ecx                         ; clock 1 U
                 mov     al,byte ptr [esi+ebx]           ; clock 6 U [AGI]
                 ret
 
+; megarom0_switchbank ------------------------------------------------
+; switch megarom bank with mode 0 megaroms (konami 8kb)
+; esi = address shr 13
+; eax = block number
+
+megarom0_switchbank:
+                mov     dword ptr [offset megablock+esi*4],eax
+                mov     ebx,eax
+                and     ebx,0ffh
+                shl     ebx,13
+                add     ebx,cart1
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [offset slot1+esi*8],ebx
+                ret
+
 ; writemem -----------------------------------------------------------
 ; write a byte to Z80 memory
 ; in, ecx: address
@@ -436,13 +467,7 @@ writemem0:
                 jne     writemem1
 
                 ; megarom mode 0 - konami 8kb
-                mov     ebx,eax
-                and     ebx,0ffh
-                shl     ebx,13
-                add     ebx,cart1
-                mov     dword ptr [offset mem+esi*4],ebx
-                mov     dword ptr [offset slot1+esi*8],ebx
-                ret
+                jmp     megarom0_switchbank
 
 writemem1:
                 cmp     ebx,7
@@ -1410,8 +1435,8 @@ emulCC:         test    dl,ZERO_FLAG
 
 ; CD - CALL dddd
 emulCD:         add     edi,3
-                mov     eax,edi
                 mov     ecx,regesp
+                mov     eax,edi
                 dec     cx
                 mov     al,ah
                 call    writemem
@@ -1929,7 +1954,8 @@ outemulA8:      mov     prim_slotreg,bl
                 mov     memlockE0,ecx
                 ret
 
-outemulAA:      and     bl,0fh
+outemulAA:      mov     ppic,bl
+                and     bl,0fh
                 mov     keyboard_line,bl
                 ret
 

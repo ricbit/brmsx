@@ -31,3 +31,6 @@ extrn set_cursor_position: near
 extrn convhex4: near
 extrn tmphex4: byte
 extrn tmphex2: byte
+extrn write_file: near
+extrn close_file: near
+extrn create_file: near
