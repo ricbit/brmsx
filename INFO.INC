@@ -812,8 +812,8 @@ info_table:
 	db      (offset compCA_end)-(offset compCA)
 	db      0,0,0
 	; CB
-	dd      0; offset compCB
-	db      0; (offset compCB_end)-(offset compCB)
+	dd      offset compCB
+	db      (offset compCB_end)-(offset compCB)
 	db      0,0,0
 	; CC
 	dd      offset compCC
@@ -884,8 +884,8 @@ info_table:
 	db      (offset compDC_end)-(offset compDC)
 	db      0,0,0
 	; DD
-	dd      0; offset compDD
-	db      0; (offset compDD_end)-(offset compDD)
+	dd      offset compDD
+	db      (offset compDD_end)-(offset compDD)
 	db      0,0,0
 	; DE
 	dd      offset compDE
@@ -948,8 +948,8 @@ info_table:
 	db      (offset compEC_end)-(offset compEC)
 	db      0,0,0
 	; ED
-	dd      0; offset compED
-	db      0; (offset compED_end)-(offset compED)
+	dd      offset compED
+	db      (offset compED_end)-(offset compED)
 	db      0,0,0
 	; EE
 	dd      offset compEE
@@ -1012,8 +1012,8 @@ info_table:
 	db      (offset compFC_end)-(offset compFC)
 	db      0,0,0
 	; FD
-	dd      0; offset compFD
-	db      0; (offset compFD_end)-(offset compFD)
+	dd      offset compFD
+	db      (offset compFD_end)-(offset compFD)
 	db      0,0,0
 	; FE
 	dd      offset compFE

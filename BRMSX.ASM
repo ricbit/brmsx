@@ -30,7 +30,7 @@ extrn mmxfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.68',13,10
+msg00           db      'BrMSX 1.69',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'

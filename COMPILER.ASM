@@ -48,25 +48,69 @@ compile_pipeline:
                 mov     edi,regepc
                 mov     edx,regeaf
                 mov     eax,0
+                mov     ebp,59659
 
 compile_loop:
 
-                mov     edi,1
+                mov     esi,dirtycode
+                mov     al,[esi+edi*8]
+                or      al,al
+                jnz     compile_already
 
+                mov     byte ptr [esi+edi*8],1
+                mov     ebx,nextopcode
+                mov     dword ptr [esi+edi*8+4],ebx
+
+                call    fetch
                 push    edi
-                mov     esi,dword ptr [offset info_table+0C3h*8]
+                mov     esi,dword ptr [offset info_table+eax*8]
                 mov     edi,nextopcode
-                movzx   ecx,byte ptr [offset info_table+0C3h*8+4]
+                movzx   ecx,byte ptr [offset info_table+eax*8+4]
                 rep     movsb
                 mov     byte ptr [edi],0C3h
+                inc     edi
+                mov     nextopcode,edi
                 pop     edi
-                mov     ebx,compbuffer
+                
+                mov     esi,dirtycode
+compile_already:
+                mov     ebx,dword ptr [esi+edi*8+4]
                 call    ebx
 
-                ;mov     ebx,dword ptr [offset info_table+0C4h*8]
-                ;mov     byte ptr [ebx],0C3h
-                ;mov     ebx,offset info_table+0C3h*8
-                ;call    [ebx]
+                cmp     ebp,0
+                jg      compile_loop
+                
+                mov     eax,offset z80counter
+                call    end_counter
+                mov     eax,dword ptr [offset z80counter]
+                mov     z80rate,eax
+                xor     eax,eax
+
+compiler_synch:
+                cmp     interrupt,1
+                jne     compiler_synch
+
+                mov     eax,offset z80counter
+                call    start_counter
+                xor     eax,eax
+
+                mov     ebp,59659
+                mov     interrupt,0
+                
+                cmp     exit_now,1
+                je      compiler_exit
+
+                cmp     error,1
+                je      compiler_exit
+
+                cmp     iff1,1
+                jne     compile_loop
+
+                mov     iff1,0 
+                dec     edi
+                and     edi,0ffffh
+                call    emulFF
+                jmp     compile_loop
 
 compiler_exit:
                 mov     regpc,di

@@ -668,9 +668,26 @@ print_mega:
 
                 ret
 
+; init_compiler ------------------------------------------------------
+; initialize the luts for the compile pipeline
+
+init_compiler:
+                mov     ecx,131072 ; 64kb*8 /4
+                mov     eax,0
+                mov     edi,dirtycode
+                rep     stosd
+                mov     ecx,262144 ;1048576/4
+                mov     eax,0C3C3C3C3h
+                mov     edi,compbuffer
+                rep     stosd
+                mov     ebx,compbuffer
+                mov     nextopcode,ebx
+                ret
+
 ; --------------------------------------------------------------------
 
 debug:          
+                call    init_compiler
                 call    clear_text
 debug_loop:                
                 call    render_debug
@@ -742,16 +759,7 @@ command_extended:
                 jmp     debug_loop
 
 command_e:
-                mov     ecx,131072 ; 64kb*8 /4
-                mov     eax,0FFFFFFFFh
-                mov     edi,dirtycode
-                rep     stosd
-                mov     ecx,262144 ;1048576/4
-                mov     eax,0C3C3C3C3h
-                mov     edi,compbuffer
-                rep     stosd
-                mov     ebx,compbuffer
-                mov     nextopcode,ebx
+                call    init_compiler
                 jmp     debug_loop
 
 command_d:
@@ -917,8 +925,14 @@ command_s:      call    setgraphmode
                 jmp     debug_loop
 
 command_c:      
-                
+                call    setgraphmode
+                call    clear
+                call    turnon_kb_irq
+                call    turnon_irq
                 call    compile_pipeline
+                call    turnoff_irq
+                call    turnoff_kb_irq
+                call    settextmode
                 jmp     debug_loop
 
 command_k:
