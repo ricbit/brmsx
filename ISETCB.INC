@@ -7,14 +7,14 @@ isetCBxx:
 	isetCB05: dd emulCB05
 	isetCB06: dd emulCB06
 	isetCB07: dd emulCB07
-	isetCB08: dd emulXX
-	isetCB09: dd emulXX
-	isetCB0A: dd emulXX
-	isetCB0B: dd emulXX
-	isetCB0C: dd emulXX
-	isetCB0D: dd emulXX
-	isetCB0E: dd emulXX
-	isetCB0F: dd emulXX
+	isetCB08: dd emulCB08
+	isetCB09: dd emulCB09
+	isetCB0A: dd emulCB0A
+	isetCB0B: dd emulCB0B
+	isetCB0C: dd emulCB0C
+	isetCB0D: dd emulCB0D
+	isetCB0E: dd emulCB0E
+	isetCB0F: dd emulCB0F
 	isetCB10: dd emulCB10
 	isetCB11: dd emulCB11
 	isetCB12: dd emulCB12
@@ -31,14 +31,14 @@ isetCBxx:
 	isetCB1D: dd emulCB1D
 	isetCB1E: dd emulCB1E
 	isetCB1F: dd emulCB1F
-	isetCB20: dd emulXX
+	isetCB20: dd emulCB20
 	isetCB21: dd emulCB21
-	isetCB22: dd emulXX
+	isetCB22: dd emulCB22
 	isetCB23: dd emulCB23
-	isetCB24: dd emulXX
-	isetCB25: dd emulXX
-	isetCB26: dd emulXX
-	isetCB27: dd emulXX
+	isetCB24: dd emulCB24
+	isetCB25: dd emulCB25
+	isetCB26: dd emulCB26
+	isetCB27: dd emulCB27
 	isetCB28: dd emulXX
 	isetCB29: dd emulXX
 	isetCB2A: dd emulXX

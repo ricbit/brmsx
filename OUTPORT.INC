@@ -159,8 +159,8 @@ outportxx:
 	outport9D: dd outemulXX
 	outport9E: dd outemulXX
 	outport9F: dd outemulXX
-	outportA0: dd outemulXX
-	outportA1: dd outemulXX
+	outportA0: dd outemulA0
+	outportA1: dd outemulA1
 	outportA2: dd outemulXX
 	outportA3: dd outemulXX
 	outportA4: dd outemulXX

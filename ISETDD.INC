@@ -40,7 +40,7 @@ isetDDxx:
 	isetDD26: dd emulXX
 	isetDD27: dd emulXX
 	isetDD28: dd emulXX
-	isetDD29: dd emulXX
+	isetDD29: dd emulDD29
 	isetDD2A: dd emulDD2A
 	isetDD2B: dd emulDD2B
 	isetDD2C: dd emulXX
@@ -149,7 +149,7 @@ isetDDxx:
 	isetDD93: dd emulXX
 	isetDD94: dd emulXX
 	isetDD95: dd emulXX
-	isetDD96: dd emulXX
+	isetDD96: dd emulDD96
 	isetDD97: dd emulXX
 	isetDD98: dd emulXX
 	isetDD99: dd emulXX

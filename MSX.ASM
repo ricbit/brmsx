@@ -12,6 +12,7 @@ include bit.inc
 extrn msxvram: near
 extrn vdpregs: near
 extrn blitbuffer: dword
+extrn palette: near
 
 public render_screen0
 public render_screen1
@@ -39,16 +40,35 @@ lastscreen      db      0
 
 render_screen0:
                 mov     dx,03C8h
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0Fh
+                lea     ebx,[offset palette+eax+eax*2]
                 mov     al,0
                 out     dx,al
                 inc     dx
+                mov     al,[ebx]
+                shr     al,2
                 out     dx,al
+                mov     al,[ebx+1]
+                shr     al,2
                 out     dx,al
+                mov     al,[ebx+2]
+                shr     al,2
                 out     dx,al
-                mov     al,32
+                
+                movzx   eax,byte ptr [offset vdpregs+7]
+                shr     eax,4
+                lea     ebx,[offset palette+eax+eax*2]
+                mov     al,[ebx]
+                shr     al,2
                 out     dx,al
+                mov     al,[ebx+1]
+                shr     al,2
                 out     dx,al
+                mov     al,[ebx+2]
+                shr     al,2
                 out     dx,al
+
                 mov     esi,offset msxvram                
                 mov     ebx,offset msxvram+0800h
                 mov     edi,blitbuffer
@@ -513,12 +533,9 @@ clear:
                 mov     ecx,16000
                 rep     stosd
                 mov     dx,03C8h
-                mov     al,0
+                mov     al,1
                 out     dx,al
                 inc     dx
-                out     dx,al
-                out     dx,al
-                out     dx,al
                 out     dx,al
                 out     dx,al
                 out     dx,al

@@ -161,7 +161,7 @@ inportxx:
 	inport9F: dd inemulXX
 	inportA0: dd inemulXX
 	inportA1: dd inemulXX
-	inportA2: dd inemulXX
+	inportA2: dd inemulA2
 	inportA3: dd inemulXX
 	inportA4: dd inemulXX
 	inportA5: dd inemulXX

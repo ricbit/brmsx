@@ -34,6 +34,9 @@ public read_size_file
 public blit
 public framerate
 public on_off
+public reset_sb
+public set_border_color
+public palette
 
 ; DATA ---------------------------------------------------------------
 
@@ -195,6 +198,30 @@ setgraphmode1:
                 out     dx,al
                 inc     ebx
                 loop    setgraphmode1
+                ret
+
+; set_border_color ----------------------------------------------------
+; set color 0 of VGA as VDP border color
+
+set_border_color:
+                pushad
+                movzx   eax,byte ptr [offset vdpregs+7]
+                and     eax,0fh
+                lea     ebx,[offset palette+eax+eax*2]
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+                mov     al,[ebx]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+1]
+                shr     al,2
+                out     dx,al
+                mov     al,[ebx+2]
+                shr     al,2
+                out     dx,al
+                popad
                 ret
 
 ; settextmode ---------------------------------------------------------
@@ -476,6 +503,97 @@ blit:
                 pop     es
                 ret
 
+; set_sb_reg ---------------------------------------------------------
+; set a sound blaster register
+; al: port number
+; bl: value
+
+set_sb_reg:
+                push    eax
+                push    ebx
+                pushfd
+                cli
+                mov     dx,0330h
+                out     dx,al
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                inc     dx
+                mov     al,bl
+                out     dx,al
+                popfd
+                dec     dx
+                
+                ;1
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;2
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;3
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;4
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;5
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;6
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                ;7
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+                in      al,dx
+
+                pop     ebx
+                pop     eax
+
+                ret
+
+; reset_sb -----------------------------------------------------------
+; reset the sound blaster
+
+reset_sb:
+                mov     al,0
+                mov     bl,0
+reset_sb1:
+                call    set_sb_reg
+                inc     al
+                cmp     al,0f5h
+                jbe     reset_sb1
+
+                ret
 
 code32          ends
                 end

@@ -40,7 +40,7 @@ psetDDxx:
 	psetDD26: dd prinXX
 	psetDD27: dd prinXX
 	psetDD28: dd prinXX
-	psetDD29: dd prinXX
+	psetDD29: dd prinDD29
 	psetDD2A: dd prinDD2A
 	psetDD2B: dd prinDD2B
 	psetDD2C: dd prinXX
@@ -149,7 +149,7 @@ psetDDxx:
 	psetDD93: dd prinXX
 	psetDD94: dd prinXX
 	psetDD95: dd prinXX
-	psetDD96: dd prinXX
+	psetDD96: dd prinDD96
 	psetDD97: dd prinXX
 	psetDD98: dd prinXX
 	psetDD99: dd prinXX

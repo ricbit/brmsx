@@ -122,7 +122,7 @@ no_memory:
                 jmp     _exit
 
 cartridge_not_supported:
-                mov     eax,offset msg01
+                mov     eax,offset msg02
                 call    printmsg
                 jmp     _exit
 

@@ -41,24 +41,6 @@ emul&opcode:
 
                 endm
 
-opadcreg:
-                shr     dl,1                            ; clock 2 U
-                mov     ch,dh                           ; clock 2 V
-                adc     dh,bh                           ; clock 3 U
-                mov     cl,0                            ; clock 3 V
-                mov     al,dh                           ; clock 4 V
-                adc     cl,cl                           ; clock 5 U
-                xor     bh,dh                           ; clock 5 V
-                mov     dl,[offset ARITP_table+eax]     ; clock 6 U
-                xor     bh,ch                           ; clock 6 V
-                or      dl,cl                           ; clock 7 U
-                mov     al,cl                           ; clock 7 V
-                or      al,bh                           ; clock 8 U
-                and     bh,BIT_4                        ; clock 8 V
-                or      dl,bh                           ; clock 9
-                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
-                ret
-
 ; --------------------------------------------------------------------
 ; ADDREG - ADD A,rr rr=[a,b,c,d,e,h,l]
 
@@ -101,24 +83,6 @@ emul&opcode:
                 jmp     opaddreg
 
                 endm
-
-opaddreg:
-                mov     ch,dh                           ; clock 2 
-                add     dh,bh                           ; clock 3 U
-                mov     cl,0                            ; clock 3 V
-                mov     ebp,4                           ; clock 4 U
-                mov     al,dh                           ; clock 4 V
-                adc     cl,cl                           ; clock 5 U
-                xor     bh,dh                           ; clock 5 V
-                mov     dl,[offset ARITP_table+eax]     ; clock 6 U
-                xor     bh,ch                           ; clock 6 V
-                or      dl,cl                           ; clock 7 U
-                mov     al,cl                           ; clock 7 V
-                or      al,bh                           ; clock 8 U
-                and     bh,BIT_4                        ; clock 8 V
-                or      dl,bh                           ; clock 9
-                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
-                ret
 
 ; --------------------------------------------------------------------
 ; BITREG - BIT nn,rr nn=[0..7] rr=[a,b,c,d,e,h,l]
@@ -386,6 +350,80 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; OPRLCA - RLCA
+
+OPRLCA          macro opcode
+
+emul&opcode:                
+                inc     edi
+                and     dl,11000100b
+                rol     dh,1
+                mov     bl,dh
+                mov     al,bl
+                and     bl,1
+                or      dl,bl
+                mov     ebp,8
+                or      dl,[offset PVN53_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RRCREG - RRC rr rr=[a,b,c,d,e,h,l]
+
+RRCREG          macro opcode,reg
+
+emul&opcode:                
+                inc     edi
+                mov     dl,reg
+                ror     reg,1
+                mov     al,reg
+                and     dl,1
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRRCA - RRCA
+
+OPRRCA          macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     bl,dh
+                and     dl,11000100b
+                ror     dh,1
+                mov     al,dh
+                and     bl,1
+                or      dl,bl
+                mov     ebp,8
+                or      dl,[offset PVN53_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RRCHL - RRC (HL)
+
+RRCHL           macro opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     dl,al
+                ror     al,1
+                call    writemem
+                and     dl,1
+                mov     ebp,15
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; RRREG - RR rr rr=[a,b,c,d,e,h,l]
 
 RRREG           macro   opcode,reg
@@ -398,6 +436,63 @@ emul&opcode:
                 and     dl,1
                 mov     al,reg
                 mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRRA - RRA
+
+OPRRA           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     bl,dl
+                shr     bl,1
+                and     dl,11000100b
+                mov     bl,dh
+                rcr     dh,1
+                and     bl,1
+                or      dl,bl
+                mov     al,dh
+                mov     ebp,8
+                or      dl,[offset PVN53_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLAREG - SLA rr rr=[a,b,c,d,e,h,l]
+
+SLAREG          macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     dl,0
+                shl     reg,1
+                mov     ebp,8
+                adc     dl,dl
+                mov     al,reg
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLAHL - SLA (HL)
+
+SLAHL           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                mov     ebp,8
+                adc     dl,dl
+                call    writemem
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -417,6 +512,27 @@ emul&opcode:
                 adc     dl,dl
                 mov     ebp,8
                 or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRLA - RLA
+
+OPRLA           macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     bl,dl
+                and     dl,11000100b
+                shr     bl,1
+                mov     bl,0
+                rcl     dh,1
+                mov     al,dh
+                adc     bl,bl
+                or      dl,bl
+                mov     ebp,8
+                or      dl,[offset PVN53_table+eax]
                 ret
 
                 endm
@@ -471,6 +587,7 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 rol     al,1
+                call    writemem
                 mov     dl,al
                 and     dl,1
                 mov     ebp,15
@@ -522,24 +639,6 @@ emul&opcode:
 
                 endm
 
-opsbcreg:
-                shr     dl,1                            ; clock 2 U
-                mov     ch,dh                           ; clock 2 V
-                sbb     dh,bh                           ; clock 3 U
-                mov     cl,0                            ; clock 3 V
-                mov     al,dh                           ; clock 4 V
-                adc     cl,cl                           ; clock 5 U
-                xor     bh,dh                           ; clock 5 V
-                mov     dl,[offset ARITN_table+eax]     ; clock 6 U
-                xor     bh,ch                           ; clock 6 V
-                or      dl,cl                           ; clock 7 U
-                mov     al,cl                           ; clock 7 V
-                or      al,bh                           ; clock 8 U
-                and     bh,BIT_4                        ; clock 8 V
-                or      dl,bh                           ; clock 9
-                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
-                ret
-
 ; --------------------------------------------------------------------
 ; SUBREG - SUB rr rr=[a,b,c,d,e,h,l]
 
@@ -569,6 +668,24 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SUBII - SUB (II+dd)
+
+SUBII           macro   opcode,itype
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,itype
+                call    fetch
+                inc     edi
+                add     cx,ax
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opsubreg
+
+                endm
+
+; --------------------------------------------------------------------
 ; SUBIMM - SUB dd
 
 SUBIMM          macro   opcode
@@ -582,24 +699,6 @@ emul&opcode:
                 jmp     opsubreg
 
                 endm
-
-opsubreg:
-                mov     ch,dh                           ; clock 2 V
-                sub     dh,bh                           ; clock 3 U
-                mov     cl,0                            ; clock 3 V
-                mov     ebp,4                           ; clock 4 U
-                mov     al,dh                           ; clock 4 V
-                adc     cl,cl                           ; clock 5 U
-                xor     bh,dh                           ; clock 5 V
-                mov     dl,[offset ARITN_table+eax]     ; clock 6 U
-                xor     bh,ch                           ; clock 6 V
-                or      dl,cl                           ; clock 7 U
-                mov     al,cl                           ; clock 7 V
-                or      al,bh                           ; clock 8 U
-                and     bh,BIT_4                        ; clock 8 V
-                or      dl,bh                           ; clock 9
-                or      dl,[offset OVERFLOW_table+eax]  ; clock 10
-                ret
 
 ; --------------------------------------------------------------------
 ; SRLREG - SRL rr rr=[a,b,c,d,e,h,l]
@@ -722,19 +821,37 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
-; LDIXDDREG - LD (IX+dd),rr     rr=[a,b,c,d,e,h,l]
+; LDIIDDREG - LD (II+dd),rr     rr=[a,b,c,d,e,h,l]
 
-LDIXDDREG       macro   opcode,reg
+LDIIDDREG       macro   opcode,reg,itype
 
 emul&opcode:
                 inc     edi
                 call    fetch
-                mov     ecx,regeix
+                mov     ecx,itype
                 inc     edi
                 add     cx,ax
                 mov     al,reg
                 call    writemem
                 mov     ebp,19
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; LDIIDDNN - LD (II+dd),nn     rr=[a,b,c,d,e,h,l]
+
+LDIIDDNN        macro   opcode,itype
+
+emul&opcode:
+                inc     edi
+                call    fetch
+                mov     ecx,itype
+                add     cx,ax
+                inc     edi
+                call    fetch
+                inc     edi
+                call    writemem
                 ret
 
                 endm
@@ -754,6 +871,32 @@ emul&opcode:
                 mov     bh,dh                         
                 and     dh,0f0h
                 shl     bh,4
+                or      dh,bl
+                or      al,bh
+                call    writemem
+                mov     al,dh
+                and     dl,1
+                mov     ebp,18
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; OPRLD - RLD
+
+OPRLD           macro   opcode
+
+emul&opcode:
+                inc     edi                            
+                mov     ecx,regehl                    
+                call    readmem                       
+                mov     bl,al                         
+                shl     al,4
+                mov     bh,dh                         
+                and     dh,0f0h
+                and     bh,0fh
+                shr     bl,4
                 or      dh,bl
                 or      al,bh
                 call    writemem
