@@ -56,6 +56,10 @@ public set_cursor_position
 public tmphex4
 public tmphex2
 public convhex4
+public cpupaused
+public gui_palette
+public fill_palette
+public palette
 
 ; DATA ---------------------------------------------------------------
 
@@ -63,6 +67,7 @@ align 4
 
 include keyboard.inc
 include palette.inc
+include guipal.inc
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
@@ -85,6 +90,7 @@ framerate       dd      1
 exit_now        dd      0
 on_off          dd      1
 videomode       dd      0
+cpupaused       dd      0
 
 clockrate       db      8 dup (0)
 measurestatus   dd      0
@@ -233,22 +239,23 @@ SET_VGA_REG     macro   reg,index,value
                 endm
 
 ; fill_palette --------------------------------------------------------
-; fill the upper palette with the color to make the color bar
+; fill the palette with colors 
+; enter ebx = offset palette  ecx = number of colors
 
 fill_palette:
-                mov     ebx,offset palette
-                mov     ecx,48
-fill_palette0:
-                movzx   eax,byte ptr [ebx]
-                add     eax,100
-                cmp     ah,0
-                jz      fill_palette1
-                mov     al,255
-fill_palette1:  
-                mov     [ebx+48],al
+                push    eax edx
+                mov     al,0
+                mov     dx,03C8h
+                out     dx,al
+                inc     dx
+                lea     ecx,[ecx+ecx*2]
+setgraphmode1:  
+                mov     al,[ebx]
+                out     dx,al
                 inc     ebx
                 dec     ecx
-                jnz     fill_palette0
+                jnz     setgraphmode1
+                pop     edx eax
                 ret
 
 ; setgraphmode --------------------------------------------------------
@@ -258,19 +265,22 @@ setgraphmode:
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
-                call    fill_palette
-                mov     al,0
-                mov     dx,03C8h
-                out     dx,al
-                inc     dx
+;                mov     al,0
+;                mov     dx,03C8h
+;                out     dx,al
+;                inc     dx
+;                mov     ebx,offset palette
+;                mov     ecx,16*3
+;setgraphmode1:  
+;                mov     al,[ebx]
+;                shr     al,2
+;                out     dx,al
+;                inc     ebx
+;                loop    setgraphmode1
+
                 mov     ebx,offset palette
-                mov     ecx,16*3
-setgraphmode1:  
-                mov     al,[ebx]
-                shr     al,2
-                out     dx,al
-                inc     ebx
-                loop    setgraphmode1
+                mov     ecx,16
+                call    fill_palette
 
                 cmp     videomode,0
                 je      _ret
@@ -306,13 +316,10 @@ set_border_color:
                 out     dx,al
                 inc     dx
                 mov     al,[ebx]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+1]
-                shr     al,2
                 out     dx,al
                 mov     al,[ebx+2]
-                shr     al,2
                 out     dx,al
                 pop     edx ebx eax
                 ret
@@ -554,6 +561,9 @@ my_irq_handler:
                 push    ds gs
                 mov     ds,cs:_seldata
                 mov     gs,cs:_selzero
+
+                cmp     cpupaused,1
+                je      my_irq_handler0
                 
                 dec     on_off
                 jnz     my_irq_handler0
@@ -617,6 +627,8 @@ my_kb_irq_handler:
                 mov     ds:exit_now,1
 
 my_kb_irq_handler1:
+                cmp     al,88
+                je      my_kb_irq_handler_f12
                 
                 test    al,080h
                 jnz     my_kb_irq_handler2
@@ -641,6 +653,10 @@ my_kb_irq_handler3:
                 popad
                 sti
                 iretd
+
+my_kb_irq_handler_f12:
+                xor     cpupaused,1
+                jmp     my_kb_irq_handler3
                 
 ; open_file ----------------------------------------------------------
 ; open a file

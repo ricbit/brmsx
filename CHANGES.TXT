@@ -1,6 +1,12 @@
+release 1.63:
+
+- optimized MMX renderer
+- added LD SP,IX
+- pause on F12: stop Z80, change palette and show logo
+
 release 1.62:
 
-- new MMX graphics renderer
+- new MMX graphics renderer (25% speed gain)
 
 release 1.61: [*] public version
 

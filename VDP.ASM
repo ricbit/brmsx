@@ -535,25 +535,26 @@ PIPE2_MMX       macro
                 por
                 db      11000001b
                 
+                mov     dl,[esi+(2*i)+2]
+                
                 ;;por     MM2,MM3
                 por
                 db      11010011b
                 
-                mov     dl,[esi+(2*i)+2]
-
-                mov     al,[esi+(2*i)+3]
+                mov     bl,[ebp+(2*i)+2]
+                
 
                 ;;movq    [edi+i*256],MM0
                 movq_st
                 db      10000111b
                 dd      (2*i)*256
                 
+                mov     al,[esi+(2*i)+3]
+                
                 ;;movq    [edi+i*256],MM2
                 movq_st
                 db      10010111b
                 dd      ((2*i)+1)*256
-                
-                mov     bl,[ebp+(2*i)+2]
                 
                 mov     cl,[ebp+(2*i)+3]
                 
@@ -642,7 +643,7 @@ render2d_draw:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_MMX
+                  PIPE2_WIN
                 endif
 
                 pop     edx
@@ -734,7 +735,7 @@ render21:
                 ifdef   DOS
                   PIPE2_DOS
                 else
-                  PIPE2_MMX
+                  PIPE2_WIN
                 endif
 
                 add     edi,8

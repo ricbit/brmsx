@@ -13,6 +13,7 @@ include z80.inc
 include io.inc
 include number.inc
 include vdp.inc
+include blit.inc
 
 extrn blitbuffer: dword
 
@@ -27,8 +28,13 @@ public blitrate
 public guirate
 
 public draw_gui
+public start_gui
 
 ; DATA ---------------------------------------------------------------
+
+include logo.inc
+
+align 4
 
 rendercounter   db      8 dup (0)
 spritecounter   db      8 dup (0)
@@ -256,6 +262,60 @@ evalcounter:
 
                 mov     dword ptr [ebx],0
                 mov     dword ptr [ebx+4],0
+
+                ret
+
+; start_gui ----------------------------------------------------------
+; start the gui
+
+start_gui:
+                ; update palette
+                
+                mov     ebx,offset gui_palette
+                mov     ecx,256
+                call    fill_palette
+
+                mov     firstscreen,1
+                call    render
+                call    sprite_render
+
+                ; draw logo
+
+                mov     edi,135*256
+                add     edi,blitbuffer
+                mov     esi,offset logo_bitmap
+                mov     ecx,57
+
+start_gui_drawlogo:
+                mov     ebx,89
+
+start_gui_drawlogo_loop:
+                mov     al,[esi]
+                or      al,al
+                jz      start_gui_drawlogo_next
+
+                mov     [edi],al
+
+start_gui_drawlogo_next:
+                inc     edi
+                inc     esi
+                dec     ebx
+                jnz     start_gui_drawlogo_loop
+
+                add     edi,256-89
+                dec     ecx
+                jnz     start_gui_drawlogo
+
+                call    blit
+
+start_gui_loop:
+                cmp     cpupaused,1
+                je      start_gui_loop
+                
+                mov     firstscreen,1
+                mov     ebx,offset palette
+                mov     ecx,16
+                call    fill_palette
 
                 ret
 

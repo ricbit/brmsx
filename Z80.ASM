@@ -717,13 +717,12 @@ EMULABEL        synch,emtype,brtype
 
 EMULABEL        interrupt,emtype,brtype
 
-                if      (emtype EQ FAST)
-;                  mov   eax,offset z80counter
-;                  call  end_counter
-;                  mov   eax,dword ptr [offset z80counter]
-;                  mov   z80rate,eax
-;                  xor   eax,eax
-                endif
+                cmp     cpupaused,1
+                JUMP    jne,continue,emtype,brtype
+
+                call    z80paused
+                
+EMULABEL        continue,emtype,brtype
 
                 mov     eax,offset z80counter
                 call    start_counter
@@ -750,6 +749,18 @@ EMULABEL        exit,emtype,brtype
                 ret
 
                 endm
+
+; z80paused ----------------------------------------------------------
+; pauses the Z80 and starts the gui
+; must preserve ebp,eax,edx,edi,esp
+
+z80paused:
+                push    ebp eax edx edi
+
+                call    start_gui
+
+                pop     edi edx eax ebp
+                ret
 
 ; emulate ------------------------------------------------------------
 ; starts emulation, stop with any error

@@ -168,6 +168,13 @@ emulDDE9:       mov     edi,regeix
                 sub     ebp,8+2
                 ret
 
+; DD F9 - LD SP,IX
+emulDDF9:       inc     edi
+                mov     ebx,regeix
+                mov     regesp,ebx
+                sub     ebp,10+2
+                ret
+
 ; DD CB 06 - RLC (IX+dd)
 RLCII           DDCB06,regeix
 
@@ -225,28 +232,28 @@ RESII           DDCBB6,6,regeix
 ; DD CB 7E - RES 7,(IX+dd)
 RESII           DDCBBE,7,regeix
 
-; DD CB 46 - SET 0,(IX+dd)
+; DD CB C6 - SET 0,(IX+dd)
 SETII           DDCBC6,0,regeix
 
-; DD CB 4E - SET 1,(IX+dd)
+; DD CB CE - SET 1,(IX+dd)
 SETII           DDCBCE,1,regeix
 
-; DD CB 56 - SET 2,(IX+dd)
+; DD CB D6 - SET 2,(IX+dd)
 SETII           DDCBD6,2,regeix
 
-; DD CB 5E - SET 3,(IX+dd)
+; DD CB DE - SET 3,(IX+dd)
 SETII           DDCBDE,3,regeix
 
-; DD CB 66 - SET 4,(IX+dd)
+; DD CB E6 - SET 4,(IX+dd)
 SETII           DDCBE6,4,regeix
 
-; DD CB 6E - SET 5,(IX+dd)
+; DD CB EE - SET 5,(IX+dd)
 SETII           DDCBEE,5,regeix
 
-; DD CB 76 - SET 6,(IX+dd)
+; DD CB F6 - SET 6,(IX+dd)
 SETII           DDCBF6,6,regeix
 
-; DD CB 7E - SET 7,(IX+dd)
+; DD CB FE - SET 7,(IX+dd)
 SETII           DDCBFE,7,regeix
 
 code32          ends

@@ -1,4 +1,5 @@
 extrn draw_gui: near
+extrn start_gui: near
 
 extrn rendercounter: byte
 extrn spritecounter: byte

@@ -248,7 +248,7 @@ isetDDxx:
 	isetDDF6: dd emulXX
 	isetDDF7: dd emulXX
 	isetDDF8: dd emulXX
-	isetDDF9: dd emulXX
+	isetDDF9: dd emulDDF9
 	isetDDFA: dd emulXX
 	isetDDFB: dd emulXX
 	isetDDFC: dd emulXX

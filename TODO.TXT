@@ -2,7 +2,6 @@
 - check the border effect in fetchw/readmemw/writememw
 - keyboard check
 - fix border color in 256 mode
-- add dirty ops in 256 mode
 - add gui
-- check Z80 opcodes ADC SBC 16-bit
+- add code cache
 
