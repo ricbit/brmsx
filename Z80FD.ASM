@@ -18,20 +18,6 @@ public isetFDxx
 
 ; --------------------------------------------------------------------
 
-setflag_cp      macro
-
-                pushfd
-                pop     ecx
-                and     ecx,0000100011000001b
-                shr     ch,1
-                mov     dl,cl
-                or      dl,ch
-                or      dl,00000010b
-                
-                endm
-
-; --------------------------------------------------------------------
-
 ; FD 09 - ADD IY,BC
 ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15
 
@@ -151,17 +137,7 @@ XORII           FDAE,regeiy
 ORII            FDB6,regeiy
 
 ; FD BE - CP (IY+dd)
-emulFDBE:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeiy
-                add     cx,bx
-                call    readmem
-                cmp     dh,al
-                setflag_cp
-                mov     ebp,19
-                ret
+CPII            FDBE,regeiy
 
 ; FD CB - group FD CB
 emulFDCB:       inc     edi

@@ -7,7 +7,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include pmode.inc
-include msx.inc
+include vdp.inc
 include z80.inc
 include bit.inc
 

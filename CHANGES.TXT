@@ -1,8 +1,18 @@
-release 1.30:
+release 1.31:
+
+- added pseudo-support for megarom mode-5 (ascii 16kb) 
+- added new debug key "K" to switch between megarom modes
+- now an error in emulation will generate an interrupt
+  this will make emulation about 5% faster since
+  the error checking is done outside the main loop  
+- optimized CP opcode
+
+release 1.30: [*] public version
 
 - added IN reg,(C)
 - fixed major bug on IN A,(dd), no one told me this opcode sets the flags!!
-  now the intro of Zanac runs fine
+  now the intro of Zanac runs fine and the speed in all the megarom are
+  improved
 
 release 1.29:
 

@@ -42,6 +42,7 @@ public opsubreg
 public opsbcreg
 public opadcreg
 public opaddreg
+public opcpreg
 
 public breakpoint
 public iff1
@@ -52,6 +53,7 @@ public rcounter
 public rmask
 public regi
 public emulatemode
+public megarommode
 
 public slot0
 public slot1
@@ -246,6 +248,7 @@ rmask           db      0
 regi            db      0
 clockcounter    dd      0
 emulatemode     dd      0
+megarommode     dd      0
 
 ; VDP registers
 align 4
@@ -349,21 +352,6 @@ setflag_cpl     macro
                 
                 endm
 
-; setflag_cp ---------------------------------------------------------
-; sets the z80 flags after cp operations
-
-setflag_cp      macro
-
-                pushfd
-                pop     ecx
-                and     ecx,0000100011000001b
-                shr     ch,1
-                mov     dl,cl
-                or      dl,ch
-                or      dl,00000010b
-                
-                endm
-
 ; fetch --------------------------------------------------------------
 ; fetch a byte from Z80 memory
 ; in, edi: address
@@ -431,12 +419,44 @@ writemem:       mov     esi,ecx                         ; clock 1 U
 writemem0:      
                 cmp     ebx,1
                 jz      _ret
+                cmp     ebx,2
+                jne     writemem1
+
+                ; megarom mode 0 - konami 8kb
                 mov     ebx,eax
                 and     ebx,0ffh
                 shl     ebx,13
                 add     ebx,cart1
                 mov     dword ptr [offset mem+esi*4],ebx
                 mov     dword ptr [offset slot1+esi*8],ebx
+                ret
+
+writemem1:
+                cmp     ebx,7
+                jne     _ret
+
+                ; megarom mode 5 - ascii 16kb
+                mov     esi,ecx
+                cmp     esi,6000h
+                jb      _ret
+                cmp     esi,8000h
+                jae     _ret
+                and     esi,1000h
+                shr     esi,11
+                add     esi,2
+                mov     ebx,eax
+                and     ebx,0ffh
+                shl     ebx,14
+                add     ebx,cart1
+                mov     dword ptr [offset slot1+esi*8],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset slot1+esi*8+8],ebx
+                cmp     dword ptr [offset mem+esi*8+4],7
+                jne     _ret
+                sub     ebx,2000h
+                mov     dword ptr [offset mem+esi*8],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset mem+esi*8+8],ebx
                 ret
 
 
@@ -498,8 +518,6 @@ EMULABEL        loop,emtype,brtype
                 cmp     interrupt,1
                 JUMP    je,interrupt,emtype,brtype
                 add     clockcounter,ebp
-                cmp     error,1
-                JUMP    je,exit,emtype,brtype
 
                 if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
                 cmp     clockcounter,59659
@@ -521,6 +539,8 @@ EMULABEL        interrupt,emtype,brtype
 
                 mov     clockcounter,0
                 mov     interrupt,0
+                cmp     error,1
+                JUMP    je,exit,emtype,brtype
                 cmp     exit_now,1
                 JUMP    je,exit,emtype,brtype
                 cmp     iff1,1
@@ -1250,62 +1270,28 @@ ORHL            B6
 ORREG           B7,dh
 
 ; B8 - CP B
-emulB8:         inc     edi
-                cmp     dh,regb
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           B8,regb
 
 ; B9 - CP C
-emulB9:         inc     edi
-                cmp     dh,regc
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           B9,regc
 
 ; BA - CP D
-emulBA:         inc     edi
-                cmp     dh,regd
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           BA,regd
 
 ; BB - CP E
-emulBB:         inc     edi
-                cmp     dh,rege
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           BB,rege
 
 ; BC - CP H
-emulBC:         inc     edi
-                cmp     dh,regh
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           BC,regh
 
 ; BD - CP L
-emulBD:         inc     edi
-                cmp     dh,regl
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           BD,regl
 
 ; BE - CP (HL)
-emulBE:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                cmp     dh,al
-                setflag_cp
-                mov     ebp,7
-                ret
+CPAHL           BE
 
 ; BF - CP A
-emulBF:         inc     edi
-                cmp     dh,dh
-                setflag_cp
-                mov     ebp,4
-                ret
+CPREG           BF,dh
 
 ; C0 - RET NZ
 emulC0:         inc     edi
@@ -1648,7 +1634,7 @@ emulE3:         inc     edi
                 mov     regh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,13
+                mov     ebp,19
                 ret
 
 ; E4 - CALL PO,dddd
@@ -1879,13 +1865,7 @@ emulFD:         inc     edi
                 jmp     [offset isetFDxx+eax*4]
 
 ; FE - CP dd
-emulFE:         inc     edi
-                call    fetch
-                inc     edi
-                cmp     dh,al
-                setflag_cp
-                mov     ebp,7
-                ret
+CPIMM           FE
 
 ; FF - RST 38
 emulFF:         inc     edi
@@ -1905,6 +1885,7 @@ emulFF:         inc     edi
 
 ; XX - not found
 emulXX:         mov     error,1
+                mov     interrupt,1
                 ret
 
 ; --------------------------------------------------------------------

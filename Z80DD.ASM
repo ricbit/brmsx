@@ -18,20 +18,6 @@ public isetDDxx
 
 ; --------------------------------------------------------------------
 
-setflag_cp      macro
-
-                pushfd
-                pop     ecx
-                and     ecx,0000100011000001b
-                shr     ch,1
-                mov     dl,cl
-                or      dl,ch
-                or      dl,00000010b
-                
-                endm
-
-; --------------------------------------------------------------------
-
 ; DD 09 - ADD IX,BC
 ADDREGWREGW     DD09,regixl,regixh,regc,regb,15
 
@@ -160,17 +146,7 @@ XORII           DDAE,regeix
 ORII            DDB6,regeix
 
 ; DD BE - CP (IX+dd)
-emulDDBE:       inc     edi
-                call    fetch
-                movsx   ebx,al
-                inc     edi
-                mov     ecx,regeix
-                add     cx,bx
-                call    readmem
-                cmp     dh,al
-                setflag_cp
-                mov     ebp,19
-                ret
+CPII            DDBE,regeix
 
 ; DD CB - group DD CB
 emulDDCB:       inc     edi

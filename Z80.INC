@@ -79,4 +79,6 @@ extrn opsubreg: near
 extrn opadcreg: near
 extrn opsbcreg: near
 extrn opaddreg: near
+extrn opcpreg: near
 extrn emulatemode: dword
+extrn megarommode: dword

@@ -9,7 +9,7 @@ code32  segment para public use32
 
 include io.inc
 include z80.inc
-include msx.inc
+include vdp.inc
 include pentium.inc
 
 extrn msxrom:near
@@ -30,6 +30,8 @@ tabprompt       db      '> $'
 msgmode00       db      'emulation mode set to NORMAL',13,10,'$'
 msgmode01       db      'emulation mode set to FAST',13,10,'$'
 msgmode02       db      'emulation mode set to TURBO',13,10,'$'
+msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
+msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
 
 ; showreg ------------------------------------------------------------
 ; show the contents of Z80 registers
@@ -142,6 +144,28 @@ changemode3:
 
 ; --------------------------------------------------------------------
 
+change_megamode:
+                xor     megarommode,5
+                cmp     megarommode,0
+                je      change_megamode0
+                mov     eax,offset msgmega05
+                jmp     change_megamodex
+
+change_megamode0:       
+                mov     eax,offset msgmega00
+
+change_megamodex:
+                call    printmsg
+                mov     eax,2
+                add     eax,megarommode
+                mov     dword ptr [offset slot1+16+4],eax
+                mov     dword ptr [offset slot1+16+4+8],eax
+                mov     dword ptr [offset slot1+16+4+16],eax
+                mov     dword ptr [offset slot1+16+4+24],eax
+                ret
+
+; --------------------------------------------------------------------
+
 debug:          
                 call    showreg
 debug_loop:                
@@ -163,6 +187,8 @@ debug_loop:
                 je      command_b
                 cmp     al,'F'
                 je      command_f
+                cmp     al,'K'
+                je      command_k
                 cmp     al,'R'
                 je      command_r
                 cmp     al,'T'
@@ -240,6 +266,10 @@ command_s:      call    setgraphmode
                 call    turnoff_irq
                 call    turnoff_kb_irq
                 call    settextmode
+                jmp     debug_loop
+
+command_k:
+                call    change_megamode
                 jmp     debug_loop
 
 command_1:

@@ -306,6 +306,68 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; CPREG - CP rr rr=[a,b,c,d,e,h,l]
+
+CPREG           macro   opcode,reg
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     bh,reg                          ; clock 1 V
+                mov     ebp,4
+                jmp     opcpreg
+
+                endm
+
+; --------------------------------------------------------------------
+; CPAHL - CP (HL)
+
+CPAHL           macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,regehl
+                call    readmem
+                mov     bh,al
+                mov     ebp,7
+                jmp     opcpreg
+
+                endm
+
+; --------------------------------------------------------------------
+; CPIMM - CP dd
+
+CPIMM           macro   opcode
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                call    fetch
+                inc     edi
+                mov     bh,al
+                mov     ebp,7
+                jmp     opcpreg
+
+                endm
+
+; --------------------------------------------------------------------
+; CPII - CP (II+dd)
+
+CPII            macro   opcode,itype
+
+emul&opcode:                
+                inc     edi                             ; clock 1 U
+                mov     ecx,itype
+                call    fetch
+                movsx   ebx,al
+                inc     edi
+                add     cx,bx
+                call    readmem
+                mov     bh,al
+                mov     ebp,19
+                jmp     opcpreg
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPDAA - DAA
 
 OPDAA           macro   opcode

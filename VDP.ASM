@@ -33,7 +33,9 @@ include scr2bkcl.inc
 align 4
 
 enabled         dd      1
+linenumber      dd      0
 lastscreen      db      0
+spriteline      db      192 dup (0)
 
 ; render_screen0 -----------------------------------------------------
 ; render a screen 0 page
@@ -363,6 +365,9 @@ sprite16:
                 ; sprites 16x16 without magnification
 
 sprite16N:
+                ; clear sprite line buffer
+                call    clear_sprite_buffer
+                
                 ; esi = sprite attribute table
                 movzx   eax,byte ptr [offset vdpregs+5]
                 and     eax,07fh
@@ -403,8 +408,11 @@ sprite16N6:
 
                 ; for each sprite
 sprite16N1:     push    ecx
+                
                 ; ah = vertical position of sprite
                 mov     ah,[esi]
+                movzx   ebx,ah
+                mov     linenumber,ebx
 
                 ; check if it is 0D0h, in this case exit
                 cmp     ah,0D0h
@@ -444,6 +452,17 @@ sprite16N1:     push    ecx
                 mov     al,[esi+3]
                 mov     eax,[offset backgroundcolor+eax*4]
 sprite16N4:
+
+                ; check if it is the fifth on a row
+                ; mov     esi,linenumber
+                ; inc     byte ptr [offset spriteline+esi]
+                ; mov     ebp,esi
+                ; inc     esi
+                ; mov     linenumber,esi
+                ; movzx   esi,byte ptr [offset spriteline+ebp]
+                ; cmp     esi,5
+                ; jae     sprite16N8
+
                 ; fetch the image for the subline
                 mov     bl,[ecx]
 
@@ -488,6 +507,8 @@ sprite16N4:
                 or      esi,ebp
                 mov     [edi+12],esi
 
+sprite16N8:
+
                 add     edi,320
                 inc     ecx
                 dec     edx
@@ -510,6 +531,16 @@ sprite16N7:
                 ret
 
 sprite16M:      ret
+
+; clear_sprite_buffer ------------------------------------------------
+
+clear_sprite_buffer:
+
+                mov     eax,0
+                mov     ecx,192/4
+                mov     edi,offset spriteline
+                rep     stosd
+                ret
 
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM
