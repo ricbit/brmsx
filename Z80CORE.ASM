@@ -13,16 +13,42 @@ include vdp.inc
 include io.inc
 include bit.inc
 include fetch.inc
+include flags.inc
+include psg.inc
+include pmode.inc
 
-extrn   iset:dword
-extrn   start_counter: near
-extrn   end_counter: near
+extrn iset:dword
+extrn isetCBxx: near
+extrn isetDDxx: near
+extrn isetEDxx: near
+extrn isetFDxx: near
+extrn start_counter: near
+extrn end_counter: near
+extrn codetable: dword
 
 public emulate
 public emulate_break
 public emulate_histogr
+public emulate_compiler
+public fetchcallback
+public comp_position
+public slot_change
+public emumode
 
 ; DATA ---------------------------------------------------------------
+
+dirtycode:
+                db      0
+                db      0
+                db      0
+                db      0
+                db      0
+                db      0
+                db      0
+                db      0
+
+comp_position   dd      0
+emumode         dd      0
 
 ; --------------------------------------------------------------------
 
@@ -32,6 +58,7 @@ BREAK           EQU     0
 NOBREAK         EQU     1
 TRAP            EQU     2
 HISTOGRAM       EQU     3
+COMPILER        EQU     4
 
 NORMAL          EQU     0
 FAST            EQU     1       
@@ -51,6 +78,7 @@ EMULABEL        macro   point,emtype,brtype
 
 EMULATE         macro   emtype,brtype
 
+                mov     emumode,emtype
                 xor     eax,eax
                 xor     ecx,ecx
                 mov     error,eax
@@ -71,6 +99,12 @@ EMULABEL        loop,emtype,brtype
                 JUMP    je,exit,emtype,brtype
                 endif
 
+                if      brtype EQ COMPILER
+                mov     ecx,codetable
+                inc     rcounter
+                call    [ecx+edi*4]
+                else                
+
                 FETCHMACRO 0
 
                 if      brtype EQ HISTOGRAM
@@ -79,11 +113,14 @@ EMULABEL        loop,emtype,brtype
 
                 inc     rcounter
                 call    [offset iset + eax*4]
+                endif
                 
                 if      (emtype EQ FAST)
                   cmp   interrupt,1
-                  JUMP  je,interrupt,emtype,brtype
-                  JUMP  jmp,loop,emtype,brtype
+                  JUMP  jne,loop,emtype,brtype
+                  cmp   fakeirq,1
+                  JUMP  je,fakeirq,emtype,brtype
+                  JUMP  jmp,interrupt,emtype,brtype
                 else
                   cmp   ebp,0
                   JUMP  jg,loop,emtype,brtype
@@ -134,9 +171,10 @@ EMULABEL        turbo_skip,emtype,brtype
                 mov     eax,offset z80counter
                 call    start_counter
                 xor     eax,eax
-
+                ;;;
                 add     ebp,TC
                 ;mov     ebp,TC
+                ;;;
                 call    checkpsg
                 mov     interrupt,0
                 
@@ -151,15 +189,17 @@ EMULABEL        turbo_skip,emtype,brtype
                 call    check_client
                 popad
                 
+                ; irq has arrived
+                mov     iline,1
+
                 test    byte ptr [vdpregs+1],00100000b
                 JUMP    jz,vdpdisabled,emtype,brtype
-                
+
                 test    vdpstatus,BIT_7
                 JUMP    jnz,loop,emtype,brtype
                 
                 call    set_vdp_interrupt
                 
-                mov     iline,1
                 cmp     iff1,1
                 JUMP    jne,loop,emtype,brtype
                 
@@ -173,16 +213,23 @@ EMULABEL        exit,emtype,brtype
 
                 mov     regpc,di
                 mov     regaf,dx
+                if      emtype EQ FAST
+                mov     clockcounter,0
+                else
                 mov     clockcounter,ebp
+                endif
+                call    speaker_shutup
                 ret
 
 EMULABEL        fakeirq,emtype,brtype
 
                 mov     eax,0
                 mov     ebp,clocksleft
-                ;
-                ;
                 mov     fakeirq,0
+
+                test    byte ptr [offset vdpregs+1],BIT_5
+                JUMP    jz,loop,emtype,brtype
+
                 mov     iff1,0
                 inc     rcounter
                 call    z80_interrupt
@@ -245,7 +292,337 @@ emulate1_histogr:
 emulate2_histogr:  
                 EMULATE TURBO,HISTOGRAM
 
+; emulate_compiler ---------------------------------------------------
+; starts emulation with compiler pipeline
 
+emulate_compiler:        
+                cmp     emulatemode,NORMAL
+                jne     emulate1_compiler
+                EMULATE NORMAL,COMPILER
+emulate1_compiler:  
+                cmp     emulatemode,FAST
+                jne     emulate2_compiler
+                EMULATE FAST,COMPILER
+emulate2_compiler:  
+                EMULATE TURBO,COMPILER
+
+; SLOT_MACRO ---------------------------------------------------------
+
+SLOT_MACRO      macro   page
+                local   slot_macro_next
+                local   slot_macro_exit
+
+                cmp     byte ptr [offset dirtycode+page*2],0
+                je      slot_macro_next
+                mov     byte ptr [offset dirtycode+page*2],0
+                push    edi
+                mov     edi,codetable
+                add     edi,16384*4*page
+                mov     eax,offset fetchcallback
+                mov     ecx,8192
+                rep     stosd
+                pop     edi
+                mov     eax,0
+
+slot_macro_next:
+                cmp     byte ptr [offset dirtycode+page*2+1],0
+                je      slot_macro_exit
+                mov     byte ptr [offset dirtycode+page*2+1],0
+                push    edi
+                mov     edi,codetable
+                add     edi,16384*4*page+8192*4
+                mov     eax,offset fetchcallback
+                mov     ecx,8192
+                rep     stosd
+                pop     edi
+                mov     eax,0
+
+slot_macro_exit:
+                endm
+
+; slot_change --------------------------------------------------------
+; dirty all the code previously compiled in a slot change
+; enter: esi = previous slot configuration
+;        prim_slotreg = actual slot configuration
+; warning: called form inside emulation 
+;          (must preserve edx, edi, ebp, high eax=0)
+
+slot_change:
+                movzx   ecx,prim_slotreg
+                and     ecx,3
+                mov     ebx,esi
+                and     ebx,3
+                cmp     ecx,ebx
+                je      slot_change_page1
+
+                SLOT_MACRO 0
+
+slot_change_page1:
+                movzx   ecx,prim_slotreg
+                and     ecx,1100b
+                mov     ebx,esi
+                and     ebx,1100b
+                cmp     ecx,ebx
+                je      slot_change_page2
+
+                SLOT_MACRO 1
+
+slot_change_page2:
+                movzx   ecx,prim_slotreg
+                and     ecx,110000b
+                mov     ebx,esi
+                and     ebx,110000b
+                cmp     ecx,ebx
+                je      slot_change_page3
+
+                SLOT_MACRO 2
+
+slot_change_page3:
+                movzx   ecx,prim_slotreg
+                and     ecx,11000000b
+                mov     ebx,esi
+                and     ebx,11000000b
+                cmp     ecx,ebx
+                je      _ret
+
+                SLOT_MACRO 3
+
+                ret
+
+; fetch_multi --------------------------------------------------------
+
+MULTI_SIZE      EQU     offset multi_callback_end - offset multi_callback
+
+fetch_multi     macro   iset_table
+
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset multi_callback
+                mov     ecx,MULTI_SIZE
+                rep     movsb
+                pop     edi
+                call    fetch1
+                mov     esi,dword ptr [offset iset_table+eax*4]
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,MULTI_SIZE
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                ret
+                endm
+
+; fetchcallback ------------------------------------------------------
+; null callback to fetch an opcode and place it in
+; the code table
+
+fetchcallback:
+                mov     ecx,edi
+                shr     ecx,13
+                mov     byte ptr [offset dirtycode+ecx],1
+
+                FETCHMACRO 0
+                
+                cmp     eax,018h
+                je      fetchcallback_18
+
+                cmp     eax,0C3h                
+                je      fetchcallback_c3
+
+                cmp     eax,0D3h
+                je      fetchcallback_d3
+
+                cmp     eax,0DBh
+                je      fetchcallback_db
+
+                cmp     eax,0CBh
+                je      fetchcallback_cb
+
+                cmp     eax,0DDh
+                je      fetchcallback_dd
+
+                cmp     eax,0EDh
+                je      fetchcallback_ed
+
+                cmp     eax,0FDh
+                je      fetchcallback_fd
+
+                mov     ecx,codetable
+                mov     esi,dword ptr [offset iset+eax*4]
+                mov     dword ptr [ecx+edi*4],esi
+                ret
+
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_simple
+                mov     ecx,offset callback_simple_end-offset callback_simple
+                rep     movsb
+                pop     edi
+                mov     esi,dword ptr [offset iset+eax*4]
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,offset callback_simple_end-offset callback_simple
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                mov     eax,0
+                ret
+
+
+fetchcallback_18:
+                call    fetch1
+                cmp     al,0FEh
+                je      fetchcallback_18_fast
+                
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_18
+                mov     ecx,offset callback_18_end-offset callback_18
+                rep     movsb
+                pop     edi
+                call    fetch1
+                movsx   esi,al
+                lea     esi,[esi+edi+2]
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,offset callback_18_end-offset callback_18
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                ret
+
+fetchcallback_18_fast:
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_18_fast
+                mov     ecx,offset callback_18_fast_end-offset callback_18_fast
+                rep     movsb
+                pop     edi
+                mov     esi,comp_position
+                add     comp_position,offset callback_18_fast_end-offset callback_18_fast
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                ret
+
+fetchcallback_c3:
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_c3
+                mov     ecx,offset callback_c3_end-offset callback_c3
+                rep     movsb
+                pop     edi
+                call    fetchw1
+                movzx   esi,ax
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,offset callback_c3_end-offset callback_c3
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                mov     eax,0
+                ret
+
+fetchcallback_d3:
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_d3
+                mov     ecx,offset callback_d3_end-offset callback_d3
+                rep     movsb
+                pop     edi
+                call    fetch1
+                mov     esi,[offset outportxx+eax*4]
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,offset callback_d3_end-offset callback_d3
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                mov     eax,0
+                ret
+
+fetchcallback_db:
+                push    edi
+                mov     edi,comp_position
+                mov     esi,offset callback_db
+                mov     ecx,offset callback_db_end-offset callback_db
+                rep     movsb
+                pop     edi
+                call    fetch1
+                mov     esi,[offset inportxx+eax*4]
+                mov     ecx,comp_position
+                mov     dword ptr [ecx+1],esi
+                mov     esi,ecx
+                add     comp_position,offset callback_db_end-offset callback_db
+                mov     ecx,codetable
+                mov     dword ptr [ecx+edi*4],esi
+                mov     eax,0
+                ret
+
+fetchcallback_cb:
+                fetch_multi     isetCBxx
+
+fetchcallback_dd:
+                fetch_multi     isetDDxx
+
+fetchcallback_ed:
+                fetch_multi     isetEDxx
+
+fetchcallback_fd:
+                fetch_multi     isetFDxx
+
+; multi_callback -----------------------------------------------------
+
+multi_callback:
+                mov     ebx,12345678h
+                inc     edi
+                inc     rcounter
+                jmp     ebx
+multi_callback_end:
+
+; callback_c3 --------------------------------------------------------
+
+callback_c3:
+                mov     edi,12345678h
+                sub     ebp,10+1
+                ret
+callback_c3_end:
+
+; callback_simple ----------------------------------------------------
+
+callback_simple:
+                mov     ebx,12345678h
+                call    ebx
+                mov     ecx,codetable
+                jmp     dword ptr [ecx+edi*4]
+callback_simple_end:
+                
+callback_d3:
+                mov     ecx,12345678h
+                add     edi,2
+                mov     bl,dh
+                sub     ebp,11+1
+                jmp     ecx
+callback_d3_end:
+
+callback_db:
+                mov     ecx,12345678h
+                add     edi,2
+                call    ecx
+                mov     dh,bl
+                sub     ebp,11+1
+                ret
+callback_db_end:
+
+callback_18:
+                mov     edi,12345678h
+                sub     ebp,12+1
+                ret
+callback_18_end:
+
+callback_18_fast:
+                mov     ebp,0
+                ret
+callback_18_fast_end:
 
 code32          ends
                 end

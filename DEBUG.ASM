@@ -74,6 +74,8 @@ intdi           db      'DI$'
 intei           db      'EI$'
 imagedynamic    db      ' OFF   $'
 imagestatic     db      ' ON    $'
+access_write    db      'Write$'
+access_read     db      ' Read$'
 com1            db      '1$'
 com2            db      '2$'
 com3            db      '3$'
@@ -940,6 +942,103 @@ print2_dump3&i:
                 mov     eax,offset tmphex4
                 call    printmsgd
 
+                ; print the vdp address
+                COORD   74,17
+                movzx   eax,vdpaddress
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the psg address
+                COORD   76,19
+                movzx   eax,psgselect
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; print the vdp access mode
+
+                cmp     vdpaccess,0
+                je      print_access1
+                mov     eax,offset access_write
+                jmp     print_access0
+print_access1:
+                mov     eax,offset access_read
+print_access0:
+                COORD   73,18
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the VDP BASE()
+
+                ; print the name table
+                COORD   75,3
+                mov     eax,nametable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the pattern table
+                COORD   75,4
+                mov     eax,patterntable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the color table
+                COORD   75,5
+                mov     eax,colortable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the sprite attribute table
+                COORD   75,6
+                mov     eax,sprattrtable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+                ; print the sprite pattern table
+                COORD   75,7
+                mov     eax,sprpatttable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; print the actual screen mode
+
+                cmp     lastscreen,0
+                jne     print_screen1x
+                mov     tabspace,'0'
+                jmp     print_screen0x
+print_screen1x:
+                cmp     lastscreen,1
+                jne     print_screen2x
+                mov     tabspace,'1'
+                jmp     print_screen0x
+print_screen2x:
+                cmp     lastscreen,2
+                jne     print_screen3x
+                mov     tabspace,'2'
+                jmp     print_screen0x
+print_screen3x:
+                cmp     lastscreen,3
+                jne     print_screenXx
+                mov     tabspace,'3'
+                jmp     print_screen0x
+print_screenXx:
+                mov     tabspace,'X'
+print_screen0x:
+                COORD   75,9
+                mov     eax,offset tabspace
+                call    printmsgd
+
 ; --------------------------------------------------------------------
                 
                 ; blit the temp buffer to screen 
@@ -1206,12 +1305,8 @@ debug_loop:
                 je      command_k
                 cmp     al,'R'
                 je      command_r
-                cmp     al,'A'
-                je      command_a
                 cmp     al,'I'
                 je      command_i
-                cmp     al,'L'
-                je      command_l
                 cmp     al,'G'
                 je      command_g
                 cmp     al,'T'
@@ -1228,6 +1323,8 @@ debug_loop:
                 je      command_n
                 cmp     al,'E'
                 je      command_e
+                ;cmp     al,'W'
+                ;je      command_w
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -1238,6 +1335,10 @@ command_extended:
                 call    crlf
                 cmp     ah,59 ;F1
                 je      command_help
+                cmp     ah,60 ;F2
+                je      command_save
+                cmp     ah,61 ;F3
+                je      command_load
                 cmp     ah,65 ;F7
                 je      command_t
                 cmp     ah,66 ;F8
@@ -1374,12 +1475,14 @@ command_i:
                 xor     imagetype,1
                 jmp     debug_loop
 
-command_a:
+command_save:
                 call    save_state
                 jmp     debug_loop
 
-command_l:
+command_load:
                 call    load_state
+                mov     edi,regepc
+                mov     disasm_address,edi
                 jmp     debug_loop
 
 command_m:      
@@ -1442,32 +1545,30 @@ command_h:
                 call    settextmode
                 jmp     debug_loop
 
-command_0:
-                call    checkpentium
-                jc      debug_loop
+command_w:
                 call    setgraphmode
                 call    clear
-                rdtsc
-                push    eax
-                call    render_screen0
+                call    turnon_kb_irq
+                call    turnon_irq
+                call    sound_on
+                call    emulate_compiler
+                call    sound_off
+                call    turnoff_irq
+                call    turnoff_kb_irq
+                call    settextmode
+                jmp     debug_loop
+
+command_0:
+                call    setgraphmode
+                call    clear
+                mov     firstscreen,1
+                cli
+                call    render
+                call    sprite_render
+                sti
                 call    blit
-                pop     ebx
-                rdtsc
-                sub     eax,ebx
-                push    eax
                 call    getchar
                 call    settextmode
-                pop     eax
-                push    eax
-                shr     eax,16
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                pop     eax
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                call    crlf
                 jmp     debug_loop
 
 command_s:      
@@ -1504,10 +1605,6 @@ command_c:
                 call    calibrate_joystick
                 mov     joyenable,1
                 jmp     debug_loop
-
-;command_k:
-;                call    change_megamode
-;                jmp     debug_loop
 
 command_k:
                 inc     comport

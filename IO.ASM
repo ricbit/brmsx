@@ -81,6 +81,7 @@ public pal_gui
 public palette_green
 public filtered_palette_green
 public gui_palette_green
+public wait_next_vsync
 
 ; DATA ---------------------------------------------------------------
 
@@ -289,6 +290,18 @@ wait_vsync_loop:
                 jz      wait_vsync_loop
 
                 ret
+
+; wait_next_vsync -----------------------------------------------------
+; wait for the next vertical retrace
+                
+wait_next_vsync:                
+                mov     edx,03DAh
+wait_next_vsync_loop:                
+                in      al,dx
+                test    al,BIT_3
+                jnz     wait_next_vsync_loop
+
+                jmp     wait_vsync
 
 ; toupper -------------------------------------------------------------
 ; upcase a char

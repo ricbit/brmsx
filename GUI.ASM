@@ -24,6 +24,8 @@ extrn blitbuffer: dword
 extrn filenamelist: dword
 extrn read_rom: near
 extrn cart1: dword
+extrn rommapper: dword
+extrn rommappera: dword
 
 public rendercounter
 public spritecounter
@@ -41,6 +43,7 @@ public psggraph
 
 public draw_gui
 public start_gui
+public turnoff_flag
 
 ; DATA ---------------------------------------------------------------
 
@@ -82,18 +85,21 @@ psgnumber       dd      0
 framenumber     dd      0
 lastmouse       dd      0
 psggraph        dd      0
+turnoff_flag    dd      0
 
 ; vars for main menu
 
 menu_selected   dd      0
 menu_last       dd      0
-menu_number     dd      8
+menu_number     dd      9
 menu_locked     dd      0
 menu_child      dd      0
 
 menu_callback:
                 dd      offset unpause_cpu
                 dd      offset reset_cpu_now
+menu_callback_xxx:
+                dd      offset turn_off_now
                 dd      offset load_rom
                 dd      offset changebargraph
                 dd      offset change_psggraph
@@ -104,6 +110,7 @@ menu_callback:
 
 menu_msg:
                 dd      offset msg_reset
+                dd      offset msg_turn_xxx
                 dd      offset msg_load_cart
                 dd      offset msg_bargraph
                 dd      offset msg_psggraph
@@ -113,6 +120,7 @@ menu_msg:
                 dd      offset msg_quit
 
 msg_reset       db      'Reset',0
+msg_turn_xxx    db      'Turn OFF',0
 msg_load_cart   db      'Load ROM',0
 msg_bargraph    db      'CPU Graph',0
 msg_psggraph    db      'PSG Graph',0
@@ -120,6 +128,9 @@ msg_sound       db      'Sound',0
 msg_save_sta    db      'Save State',0
 msg_load_sta    db      'Load State',0
 msg_quit        db      'Quit',0
+
+msg_turn_on     db      'Turn ON ',0       
+msg_turn_off    db      'Turn OFF',0       
 
 ; vars for load rom menu
 
@@ -481,22 +492,22 @@ start_gui_loop:
                 rep     stosd
 start_gui_pipeline:
                 call    dirty_mouse
-                cli     
-                call    render
-                sti
-                call    sprite_render
+                call    draw_menu_screen
                 call    draw_logo
                 call    read_mouse
                 call    draw_main_menu
                 call    dirty_mouse
                 call    draw_mouse_cursor
                 call    wait_vsync
-                call    set_border_color_dark
                 call    blit
                 call    action
                 cmp     cpupaused,1
                 je      start_gui_loop
+
+                cmp     turnoff_flag,1
+                je      turnoff_trap
                 
+start_gui_exit:
                 call    clear
                 mov     eax,01010101h
                 mov     ecx,32*24/4
@@ -507,6 +518,29 @@ start_gui_pipeline:
 
                 call    set_correct_palette
 
+                ret
+
+turnoff_trap:
+                cmp     quitnow,1
+                je      start_gui_exit
+
+                call    turn_off_now
+                jmp     start_gui_loop
+
+; draw_menu_screen ---------------------------------------------------
+; draw the background for the menu screen
+
+draw_menu_screen:
+                mov     ebx,0
+                
+                cmp     turnoff_flag,1
+                je      draw_noise_screen
+
+                cli     
+                call    render
+                sti
+                call    sprite_render
+                call    set_border_color_dark
                 ret
 
 ; action -------------------------------------------------------------
@@ -872,6 +906,8 @@ load_rom_now:
                 mov     edx,offset name_buffer
                 mov     eax,cart1
                 mov     ebp,offset slot1
+                mov     ecx,rommappera
+                mov     rommapper,ecx
                 call    read_rom
                 jnc     reset_cpu_now
                 ret
@@ -1178,6 +1214,120 @@ reset_cpu_now:
                 call    release_button
                 call    reset_cpu
                 mov     cpupaused,0
+                ret
+
+; turn_off_now -------------------------------------------------------
+; turn off the computer
+
+turn_off_now:
+                call    release_button
+                call    set_correct_palette
+                call    sound_on
+                mov     ebx,0
+                mov     cpupaused,0
+                mov     turnoff_flag,1
+
+turn_off_outer:
+                call    draw_noise_screen
+                push    ebx
+                call    wait_vsync
+                call    wait_next_vsync
+                call    wait_next_vsync
+                call    blit
+
+                call    noise_sound
+
+                call    read_mouse
+                pop     ebx
+                cmp     mouseleft,1
+                jne     turn_off_outer
+
+                call    release_button
+                call    sound_off
+
+                mov     enabled,0
+                mov     ebx,pal_gui
+                mov     ecx,256
+                call    fill_palette
+                mov     cpupaused,1
+                mov     menu_locked,0
+
+                mov     esi,offset msg_turn_on
+                mov     edi,offset msg_turn_xxx
+                mov     ecx,9
+                rep     movsb
+
+                mov     eax,offset turn_on_now
+                mov     dword ptr [offset menu_callback_xxx],eax
+                
+                ret
+
+noise_sound:
+                cmp     soundenabled,1
+                jne     _ret
+
+                cmp     sb_flushed,1
+                jne     _ret
+
+                mov     sb_flushed,0
+                call    compose_soundstream
+                ret
+
+; draw_noise_screen --------------------------------------------------
+; draw noise on the blitbuffer
+; enter: ebx = a random seed
+
+draw_noise_screen:
+                and     ebx,16383
+                mov     ecx,13
+                mov     eax,0
+turn_off_seed:
+                mov     dl,[ebx]
+                inc     ebx
+                and     ebx,16383
+                shr     dl,1
+                adc     eax,eax
+                dec     ecx
+                jnz     turn_off_seed
+                mov     ebx,eax
+
+                mov     edi,blitbuffer
+                mov     ecx,256*192
+                mov     esi,ebx
+
+turn_off_inner:
+                mov     al,[esi+offset noise_table]
+                and     al,15
+                mov     [edi],al
+                inc     esi
+                inc     edi
+                and     esi,16383
+                dec     ecx
+                jnz     turn_off_inner
+
+                mov     eax,01010101h
+                mov     ecx,32*24/4
+                mov     edi,offset dirtyname
+                rep     stosd
+
+                ret
+
+; turn_on_now --------------------------------------------------------
+; turn on the emulator again
+
+turn_on_now:
+                mov     esi,offset msg_turn_off
+                mov     edi,offset msg_turn_xxx
+                mov     ecx,9
+                rep     movsb
+
+                mov     eax,offset turn_off_now
+                mov     dword ptr [offset menu_callback_xxx],eax
+
+                call    release_button
+                call    reset_cpu_hard
+                mov     cpupaused,0
+                mov     turnoff_flag,0
                 ret
 
 ; change_psggraph ----------------------------------------------------

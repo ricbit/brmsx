@@ -894,9 +894,11 @@ render_screen3_innerloop_&i:
 align 4
 
 sprite_render:
-
                 cmp     spriteenable,1
                 jne     _ret
+
+                test    byte ptr [offset vdpregs+1],BIT_6
+                jz      _ret
 
                 test    byte ptr [offset vdpregs+1],BIT_1
                 jnz     sprite16
@@ -1346,6 +1348,10 @@ render:
                 je      _ret
 
                 mov     enabled,0
+                mov     eax,01010101h
+                mov     edi,offset dirtyname
+                mov     ecx,32*24/4
+                rep     stosd
                 jmp     clear
 
 render_enabled:

@@ -29,6 +29,7 @@ extrn soundbuffer: dword
 extrn timebuffer: dword
 extrn sccram: dword
 extrn msxram: dword
+extrn codetable: dword
 
 include io.inc
 include vdp.inc
@@ -48,6 +49,7 @@ include mouse.inc
 include joystick.inc
 include drive.inc
 include saveload.inc
+include z80core.inc
 
 public compose_sound
 public synch_emulation
@@ -60,6 +62,9 @@ public check_client
 public set_vdp_interrupt
 public z80_interrupt
 public set_keyboard_leds
+public vdpaddress
+public vdpaccess
+public speaker
 
 public fetch
 public fetch1
@@ -89,6 +94,7 @@ public sccdetected
 public sccenabled
 public newleds
 public megadump
+public psgselect
 
 public opsubreg
 public opsbcreg
@@ -159,6 +165,7 @@ public regepc
 public vdpregs
 public vsyncflag
 public reset_cpu
+public reset_cpu_hard
 public ramslot
 public cart2slot
 public allram
@@ -372,6 +379,7 @@ vdpaddress      dw      0
                 dw      0
 vdpregs         db      8 dup (0)
 vsyncflag       dd      0
+vdpaccess       dd      0
 vdptemp         db      0
 vdpstatus       db      0
 vdplookahead    db      0
@@ -382,6 +390,7 @@ align 4
 psgclocks       dd      0
 psgpos          dd      0
 psgclear        dd      1
+speaker         dd      0
 psgselect       db      0
 psgreg          db      16 dup (0)
 psgjoya         db      00111111b
@@ -880,7 +889,12 @@ callback_megarom5:
 ; in, al: byte
 ; affect: esi,ebx
 
-writemem:       mov     esi,ecx                         ; clock 1 U
+writemem:       
+                ;mov     esi,codetable
+                ;lea     esi,[esi+ecx*4]
+                ;mov     dword ptr [esi],offset fetchcallback
+
+                mov     esi,ecx                         ; clock 1 U
                 shr     esi,13                          ; clock 2 U
                 ; lock
                 mov     ebx,[offset memlock+esi*4]
@@ -903,6 +917,11 @@ writemem0:
 ; affect: esi,ebx
 
 writememw:      
+                ;mov     esi,codetable
+                ;lea     esi,[esi+ecx*4]
+                ;mov     dword ptr [esi+4],offset fetchcallback
+                ;mov     dword ptr [esi],offset fetchcallback
+
                 mov     esi,ecx                         
                 mov     ebx,ecx
                 shr     esi,13                          
@@ -978,6 +997,12 @@ synch_emulation:
 ; checkpsg -----------------------------------------------------------
 
 checkpsg:
+                cmp     speaker,1
+                jne     checkpsg_start
+
+                call    compose_speaker
+
+checkpsg_start:
                 cmp     psgclear,1
                 je      checkpsg_clear
                 add     psgclocks,TC
@@ -1194,6 +1219,7 @@ z80paused:
                 mov     reset_flag,0
                 mov     regeaf,edx
                 mov     regepc,edi
+                mov     clockcounter,ebp
 
                 call    sound_off
                 call    start_gui
@@ -1206,6 +1232,7 @@ z80paused:
 
                 mov     edx,regeaf
                 mov     edi,regepc
+                mov     ebp,clockcounter
                 mov     reset_flag,0
 
                 ret
@@ -1226,6 +1253,9 @@ reset_cpu:
                 ; put the pc at address 0
                 mov     regepc,0
 
+                ; lots of clocks
+                mov     clockcounter,TC
+
                 ; enable all ROM
                 mov     bl,0
                 call    outemulA8
@@ -1234,6 +1264,61 @@ reset_cpu:
                 mov     iff1,0
                 mov     iline,0
                 mov     fakeirq,0
+                mov     vdpstatus,0
+
+                ; clear keyboard matrix
+                mov     edi,offset keymatrix
+                mov     eax,0FFFFFFFFh
+                mov     ecx,16/4
+                rep     stosd
+
+                ; clear vram
+                ;mov     edi,msxvram
+                ;mov     ecx,16384/4
+                ;mov     eax,0
+                ;rep     stosd
+
+                ; clear psg registers
+                mov     edi,offset psgreg
+                mov     ecx,16/4
+                mov     eax,0
+                rep     stosd
+
+                ; clear scc memory
+                mov     edi,sccram
+                mov     ecx,8192/4
+                mov     eax,0
+                rep     stosd
+
+                ; clear scc registers
+                mov     edi,offset sccregs
+                mov     ecx,16/4
+                mov     eax,0
+                rep     stosd
+
+                ; inform to main routine that MSX is reseted
+                mov     reset_flag,1
+                ret
+
+; reset_cpu_hard -----------------------------------------------------
+; reset the MSX and erase all memory
+
+reset_cpu_hard:
+                ; put the pc at address 0
+                mov     regepc,0
+
+                ; lots of clocks
+                mov     clockcounter,TC
+
+                ; enable all ROM
+                mov     bl,0
+                call    outemulA8
+
+                ; disable interrupts
+                mov     iff1,0
+                mov     iline,0
+                mov     fakeirq,0
+                mov     vdpstatus,0
 
                 ; clear keyboard matrix
                 mov     edi,offset keymatrix
@@ -1244,6 +1329,12 @@ reset_cpu:
                 ; clear vram
                 mov     edi,msxvram
                 mov     ecx,16384/4
+                mov     eax,0
+                rep     stosd
+
+                ; clear ram
+                mov     edi,msxram
+                mov     ecx,128*1024/4
                 mov     eax,0
                 rep     stosd
 
@@ -1264,28 +1355,6 @@ reset_cpu:
                 mov     ecx,16/4
                 mov     eax,0
                 rep     stosd
-
-                ; if a megarom is loaded, then init it
-                cmp     dword ptr [offset slot1+16+4],2
-                jne     reset_cpu_nomegarom
-
-                mov     esi,(04000h SHR 13)
-                mov     eax,0
-                call    callback_megarom0
-                
-                mov     esi,(06000h SHR 13)
-                mov     eax,1
-                call    callback_megarom0
-
-                mov     esi,(08000h SHR 13)
-                mov     eax,2
-                call    callback_megarom0
-
-                mov     esi,(0A000h SHR 13)
-                mov     eax,3
-                call    callback_megarom0
-
-reset_cpu_nomegarom:
 
                 ; inform to main routine that MSX is reseted
                 mov     reset_flag,1
@@ -1348,8 +1417,8 @@ outemul8E_page2:
                 and     ebx,3
                 cmp     ebx,1
                 jne     _ret
-                mov     dword ptr [offset memlock+2*4],eax
-                mov     dword ptr [offset memlock+3*4],eax
+                mov     dword ptr [offset memlock+4*4],eax
+                mov     dword ptr [offset memlock+5*4],eax
                 ret
 
 outemul98:      mov     esi,msxvram
@@ -1386,6 +1455,7 @@ outemul99a:     mov     vdpcond,0
                 mov     vdpaddressh,bl
                 mov     bl,vdptemp
                 mov     vdpaddressl,bl
+                mov     vdpaccess,1
                 ret
 outemul99_read:
                 and     bl,00111111b
@@ -1399,7 +1469,9 @@ outemul99_read:
                 inc     ecx
                 and     ecx,03FFFh
                 mov     vdpaddresse,ecx
+                mov     vdpaccess,0
                 ret
+
 outemul99b:     and     ebx,00000111b
                 mov     al,vdptemp
                 mov     cl,byte ptr [offset vdpregs+ebx]
@@ -1415,13 +1487,51 @@ outemul99_update:
                 jmp     eval_base_address
 
 outemul99_checkirq:
-                test    cl,BIT_5
-                jnz     outemul99_update
+                ;test    cl,BIT_5
+                ;jnz     outemul99_update
+                ;test    al,BIT_5
+                ;jz      outemul99_update
+                ;;and     vdpstatus,NBIT_7
+                ;;;
+                ;cmp     iline,0
+                ;je      outemul99_update
+                ;mov     clocksleft,ebp
+                ;mov     fakeirq,1
+                ;mov     ebp,0
+                ;;;;
+                ;jmp     outemul99_update
+                ;
+                cmp     iline,0
+                je      outemul99_turnedoff
+
+                ; at this point iline=1
+                ; if bit 5 goes to zero, then iline must drop to zero also
                 test    al,BIT_5
-                jz      outemul99_update
-                and     vdpstatus,NBIT_7
+                jnz     outemul99_update
+                
+                mov     iline,0
                 jmp     outemul99_update
 
+outemul99_turnedoff:
+                ; at this point iline=0
+                ; if bit 5 goes to 1, and bit 7 is also 1
+                ; this irq will happen NOW, unless iff1=0
+                test    al,BIT_5
+                jz      outemul99_update
+
+                test    vdpstatus,BIT_7
+                jz      outemul99_update
+
+                mov     iline,1
+                cmp     iff1,1
+                jne     outemul99_update
+
+                mov     clocksleft,ebp
+                mov     fakeirq,1
+                mov     ebp,0
+
+                jmp     outemul99_update
+                
 outemulA0:      
                 and     bl,0Fh
                 mov     psgselect,bl
@@ -1451,7 +1561,9 @@ outemulA1_kana:
                 
                 ret
 
-outemulA8:      mov     prim_slotreg,bl
+outemulA8:      
+                movzx   esi,prim_slotreg
+                mov     prim_slotreg,bl
                 
                 irp     i,<0,1,2,3>
                 mov     bl,prim_slotreg
@@ -1467,6 +1579,9 @@ outemulA8:      mov     prim_slotreg,bl
                 endm
                 
                 endm
+
+                ;call    slot_change
+
                 ret
 
 outemulAA:      
@@ -1578,8 +1693,8 @@ inemul8E_page2:
                 and     ebx,3
                 cmp     ebx,1
                 jne     _ret
-                mov     dword ptr [offset memlock+2*4],eax
-                mov     dword ptr [offset memlock+3*4],eax
+                mov     dword ptr [offset memlock+4*4],eax
+                mov     dword ptr [offset memlock+5*4],eax
                 ret
 
 inemul98:       mov     ecx,msxvram

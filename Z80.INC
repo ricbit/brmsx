@@ -19,6 +19,7 @@ extrn interrupt: dword
 extrn vdpstatus: byte
 extrn keymatrix: byte
 extrn vdpregs: near
+extrn reset_cpu_hard: near
 extrn mem: near
 extrn slot0: near
 extrn slot1: near
@@ -134,3 +135,7 @@ extrn check_client: near
 extrn set_vdp_interrupt: near
 extrn z80_interrupt: near
 extrn set_keyboard_leds: near
+extrn vdpaddress: word
+extrn psgselect: byte
+extrn vdpaccess: dword
+extrn speaker: dword

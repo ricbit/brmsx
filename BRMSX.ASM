@@ -21,6 +21,7 @@ include joystick.inc
 include gui.inc
 include drive.inc
 include serial.inc
+include z80core.inc
 
 public _main
 public msxram
@@ -42,6 +43,9 @@ public timebuffer
 public sccram
 public tapeimage
 public disksize
+public codetable
+public rommapper
+public rommappera
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -51,7 +55,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.136',13,10
+msg00           db      'BrMSX 1.141',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -75,7 +79,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.136',13,10
+msg22           db      'BrMSX 1.141',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -132,6 +136,7 @@ help_message2   db      13
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
+                db      '-speaker       sound through the PC speaker',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
@@ -213,6 +218,7 @@ switch_korean   db      '-korean',0
 switch_green    db      '-green',0
 switch_roma     db      '-roma',0
 switch_romb     db      '-romb',0
+switch_speaker  db      '-speaker',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -249,8 +255,9 @@ switch_table:
                 dd      offset switch_green
                 dd      offset switch_roma
                 dd      offset switch_romb
+                dd      offset switch_speaker
 
-switch_total    dd      34
+switch_total    dd      35
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -287,6 +294,7 @@ switch_callback:
                 dd      offset callback_green
                 dd      offset callback_roma
                 dd      offset callback_romb
+                dd      offset callback_speaker
 
 align 4
 
@@ -312,6 +320,7 @@ sccram          dd      ?
 idlerom         dd      ?
 tapeimage       dd      ?
 msxhan          dd      ?
+codetable       dd      ?
 
 diskenabled     dd      0
 cpugraphok      dd      0
@@ -509,6 +518,25 @@ _main_idlerom:
                 call    _getmem
                 jc      no_memory
                 mov     msxvram,eax
+
+                ; allocate 64kb*4 to code table
+                ;mov     eax,65536*4
+                ;call    _getmem
+                ;jc      no_memory
+                ;mov     codetable,eax
+
+                ; fill code table with fetch functions
+                ;mov     edi,codetable
+                ;mov     eax,offset fetchcallback
+                ;mov     ecx,65536
+                ;rep     stosd
+
+                ; allocate 1Mb to compiler buffer
+                ;mov     eax,1048576
+                ;call    _getmem
+                ;jc      no_memory
+                ;mov     compbuffer,eax
+                ;mov     comp_position,eax
 
                 ; allocate 8kb to SCC ram
                 mov     eax,8192
@@ -1631,6 +1659,10 @@ callback_romb_second_5:
                 mov     rommapperb,2+5
                 ret
 
+callback_speaker:
+                mov     nosound,1
+                mov     speaker,1
+                ret
 
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
@@ -1834,6 +1866,11 @@ enable_megaram:
                 mov     dword ptr [offset slot1+16+4+8],eax
                 mov     dword ptr [offset slot1+16+4+16],eax
                 mov     dword ptr [offset slot1+16+4+24],eax
+                
+                ; fill the megadump area
+                mov     eax,cart1
+                mov     dword ptr [offset megadump+4],eax
+                
                 ret
 
 

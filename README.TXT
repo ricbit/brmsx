@@ -1,18 +1,8 @@
-BrMSX 1.136
+BrMSX 1.141
 by Ricardo Bittencourt
 
----
+The user's manual for version v1.141 is 
+available in English and Portuguese.
 
-The user's manual is available in HTML format,
-in two languages. Use your web browser in the files:
-
-MANUAL-E.HTM    (english)
-MANUAL-P.HTM    (portuguese)
-
----
-
-O manual do usuario esta' disponivel no formato HTML,
-em duas linguas. Use seu web browser nos arquivos:
-
-MANUAL-E.HTM    (ingles)
-MANUAL-P.HTM    (portugues)
+Versions in French and Spanish will be 
+available soon in the homepage.

@@ -755,13 +755,9 @@ emul&opcode:
                 je      _ret
 
                 mov     clocksleft,ebp
-                mov     ebp,5
+                mov     ebp,0
                 mov     fakeirq,1
 
-                cmp     emumode,1       ; mode FAST
-                jne     _ret
-
-                mov     interrupt,1
                 ret
 
                 endm
@@ -1625,26 +1621,23 @@ emul&opcode:
 OPLDIR          macro   opcode
 
 emul&opcode:    
+                inc     edi
+emul&opcode&a:
                 mov     ecx,regehl                      ; clock 1 U
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U
                 call    writemem                        ; clock 2 V
-                ;sub     ebp,16+2                        ; clock 3 U
+                sub     ebp,16+2                        ; clock 3 U
                 inc     regde                           ; clock 3 V
                 inc     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
                 and     dl,11000001b                    ; clock 5 V
                 or      dl,[offset LDI_table+eax]
                 dec     regbc                           ; clock 6 U
-                ;jnz     emul&opcode
-                jz      emul&opcode&a
-                sub     ebp,16+2
-                jns     emul&opcode
-                dec     edi
+                jnz     emul&opcode&a
                 ret
-emul&opcode&a:
-                sub     ebp,16+2
-                inc     edi
+emul&opcode&b:
+                sub     edi,2
                 ret
 
                 endm

@@ -11,3 +11,7 @@ extrn sounddetected: dword
 extrn read_master_volume: near
 extrn write_master_volume: near
 extrn dmastart: dword
+extrn compose_speaker: near
+extrn speaker_shutup: near
+extrn noise_table: byte
+extrn sb_flushed: dword

@@ -16,3 +16,5 @@ extrn blitrate: dword
 extrn guirate: dword
 extrn psgrate: dword
 extrn vsyncrate: dword
+
+extrn turnoff_flag: dword

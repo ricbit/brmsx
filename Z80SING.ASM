@@ -13,6 +13,7 @@ include opcode.inc
 include bit.inc
 include fetch.inc
 include pmode.inc
+include z80core.inc
 
 extrn isetCBxx: near
 extrn isetDDxx: near
@@ -647,7 +648,22 @@ OPRET           C9
 JPCC            CA,jz,ZERO_FLAG
 
 ; CB - group CB
-emulCB:         inc     edi
+emulCB:         ;inc     edi
+                ;inc     rcounter
+                ;call    fetch
+                ;jmp     [offset isetCBxx+eax*4]
+               
+                cmp     ebx,01FFCh
+                jae     emulCB_slow
+
+                mov     al,[esi+ebx+1]
+                inc     edi
+                inc     rcounter
+                inc     ebx
+                jmp     [offset isetCBxx+eax*4]
+
+emulCB_slow:
+                inc     edi
                 inc     rcounter
                 call    fetch
                 jmp     [offset isetCBxx+eax*4]
@@ -704,10 +720,26 @@ INADD           DB
 CALLCC          DC,CARRY_FLAG,jnz
 
 ; DD - group DD
-emulDD:         inc     edi
+emulDD:         ;inc     edi
+                ;inc     rcounter
+                ;call    fetch
+                ;jmp     [offset isetDDxx+eax*4]
+
+                cmp     ebx,01FFCh
+                jae     emulDD_slow
+
+                mov     al,[esi+ebx+1]
+                inc     edi
+                inc     rcounter
+                inc     ebx
+                jmp     [offset isetDDxx+eax*4]
+
+emulDD_slow:
+                inc     edi
                 inc     rcounter
                 call    fetch
                 jmp     [offset isetDDxx+eax*4]
+
 
 ; DE - SBC A,dd
 SBCIMM          DE
@@ -755,7 +787,22 @@ OPEXDEHL        EB
 CALLCC          EC,PARITY_FLAG,jnz
 
 ; ED - group ED
-emulED:         inc     edi
+emulED:         ;inc     edi
+                ;inc     rcounter
+                ;call    fetch
+                ;jmp     [offset isetEDxx+eax*4]
+
+                cmp     ebx,01FFCh
+                jae     emulED_slow
+
+                mov     al,[esi+ebx+1]
+                inc     edi
+                inc     rcounter
+                inc     ebx
+                jmp     [offset isetEDxx+eax*4]
+
+emulED_slow:
+                inc     edi
                 inc     rcounter
                 call    fetch
                 jmp     [offset isetEDxx+eax*4]
@@ -806,7 +853,23 @@ OPEI            FB
 CALLCC          FC,SIGN_FLAG,jnz
 
 ; FD - group FD
-emulFD:         inc     edi
+emulFD:         ;inc     edi
+                ;inc     rcounter
+                ;call    fetch
+                ;jmp     [offset isetFDxx+eax*4]
+
+
+                cmp     ebx,01FFCh
+                jae     emulFD_slow
+
+                mov     al,[esi+ebx+1]
+                inc     edi
+                inc     rcounter
+                inc     ebx
+                jmp     [offset isetFDxx+eax*4]
+
+emulFD_slow:
+                inc     edi
                 inc     rcounter
                 call    fetch
                 jmp     [offset isetFDxx+eax*4]

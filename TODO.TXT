@@ -5,7 +5,9 @@
 - add sprite collision detection
 - add sprite ocultation
 - improve gui
-- finish the compiler
-- noise/envelope in sound
+- finish the compiler (again)
+- envelope in sound
 - add high-level disk functions
 - add true-disk emulation
+- fix the remaining IRQ bug (yawara/goonies module)
+- fix the scc soundstream generator
