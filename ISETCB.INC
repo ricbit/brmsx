@@ -61,7 +61,7 @@ isetCBxx:
 	isetCB3B: dd emulCB3B
 	isetCB3C: dd emulCB3C
 	isetCB3D: dd emulCB3D
-	isetCB3E: dd emulXX
+	isetCB3E: dd emulCB3E
 	isetCB3F: dd emulCB3F
 	isetCB40: dd emulCB40
 	isetCB41: dd emulCB41

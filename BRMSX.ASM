@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: BRMSX.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -20,7 +22,7 @@ public cart1
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.31',13,10
+msg00           db      'BrMSX 1.32',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'

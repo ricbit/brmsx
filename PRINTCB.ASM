@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: PRINTCB.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -121,6 +123,7 @@ PRINTOP200      CB3A,'SRL D$'
 PRINTOP200      CB3B,'SRL E$'
 PRINTOP200      CB3C,'SRL H$'
 PRINTOP200      CB3D,'SRL L$'
+PRINTOP200      CB3E,'SRL (HL)$'
 PRINTOP200      CB3F,'SRL A$'
 PRINTOP200      CB40,'BIT 0,B$'
 PRINTOP200      CB41,'BIT 0,C$'

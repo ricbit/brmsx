@@ -1,7 +1,9 @@
-; BrMSX 1.0       
-; by Ricardo Bittencourt
-; start: 25/1/97
-
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: Z80.ASM                                                      
+; -------------------------------------------------------------------- 
+        
         .386p
 code32  segment para public use32
         assume cs:code32, ds:code32
@@ -244,11 +246,11 @@ iff1            dd      0
 interrupt       dd      0
 error           dd      0
 rcounter        dd      0        
-rmask           db      0
-regi            db      0
 clockcounter    dd      0
 emulatemode     dd      0
 megarommode     dd      0
+rmask           db      0
+regi            db      0
 
 ; VDP registers
 align 4
@@ -517,9 +519,9 @@ EMULABEL        loop,emtype,brtype
                 call    [offset iset + eax*4]
                 cmp     interrupt,1
                 JUMP    je,interrupt,emtype,brtype
-                add     clockcounter,ebp
 
                 if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
+                add     clockcounter,ebp
                 cmp     clockcounter,59659
                 JUMP    jb,loop,emtype,brtype
                 endif
@@ -597,7 +599,7 @@ print:
 
 ; 00 - NOP
 emul00:         inc     edi
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; 01 - LD BC,dddd
@@ -606,7 +608,7 @@ emul01:         inc     edi
                 mov     regebc,eax
                 add     edi,2
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; 02 - LD (BC),A
@@ -614,7 +616,7 @@ emul02:         inc     edi
                 mov     ecx,regebc
                 mov     al,dh
                 call    writemem
-                mov     ebp,7
+                mov     ebp,7+2
                 ret
 
 
@@ -639,7 +641,7 @@ emul08:         inc     edi
                 mov     ecx,regeafl
                 mov     edx,ecx
                 mov     regeafl,ebx
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; 09 - ADD HL,BC
@@ -650,7 +652,7 @@ emul0A:         inc     edi
                 mov     ecx,regebc
                 call    readmem
                 mov     dh,al
-                mov     ebp,7
+                mov     ebp,7+2
                 ret
 
 ; 0B - DEC BC
@@ -676,9 +678,9 @@ emul10:         inc     edi
                 jz      emul10a
                 movsx   ebx,al
                 add     edi,ebx
-                mov     ebp,13
+                mov     ebp,13+2
                 ret
-emul10a:        mov     ebp,8
+emul10a:        mov     ebp,8+2
                 ret
 
 ; 11 - LD DE,dddd
@@ -687,7 +689,7 @@ emul11:         inc     edi
                 add     edi,2
                 mov     regede,eax
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; 12 - LD (DE),A
@@ -695,7 +697,7 @@ emul12:         inc     edi
                 mov     ecx,regede
                 mov     al,dh
                 call    writemem
-                mov     ebp,7
+                mov     ebp,7+2
                 ret
 
 ; 13 - INC DE
@@ -719,7 +721,7 @@ emul18:         inc     edi
                 inc     edi
                 movsx   ebx,al
                 add     edi,ebx
-                mov     ebp,12
+                mov     ebp,12+2
                 ret
 
 ; 19 - ADD HL,DE
@@ -730,7 +732,7 @@ emul1A:         inc     edi
                 mov     ecx,regede
                 call    readmem
                 mov     dh,al
-                mov     ebp,7
+                mov     ebp,7+2
                 ret
 
 ; 1B - DEC DE
@@ -757,7 +759,7 @@ emul21:         inc     edi
                 add     edi,2
                 mov     regehl,eax
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; 22 - LD (dddd),HL
@@ -771,7 +773,7 @@ emul22:         inc     edi
                 mov     al,regh
                 call    writemem
                 xor     eax,eax
-                mov     ebp,16
+                mov     ebp,16+5
                 ret
 
 ; 23 - INC HL
@@ -806,7 +808,7 @@ emul2A:         inc     edi
                 mov     regh,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,16
+                mov     ebp,16+5
                 ret
 
 ; 2B - DEC HL
@@ -825,7 +827,7 @@ LDREGIMM        2E,regl
 emul2F:         inc     edi
                 xor     dh,255
                 setflag_cpl
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; 30 - JR NC,dd
@@ -837,7 +839,7 @@ emul31:         inc     edi
                 add     edi,2
                 mov     regesp,eax
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; 32 - LD (dddd),A
@@ -848,7 +850,7 @@ emul32:         inc     edi
                 call    writemem
                 add     edi,2
                 xor     eax,eax
-                mov     ebp,13
+                mov     ebp,13+4
                 ret
 
 ; 33 - INC SP
@@ -867,7 +869,7 @@ LDHLIMM         36
 emul37:         inc     edi
                 or      dl,1
                 and     dl,11101101b
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; 38 - JR C,dd
@@ -884,7 +886,7 @@ emul3A:         inc     edi
                 mov     dh,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,13
+                mov     ebp,13+4
                 ret
 
 ; 3B - DEC SP
@@ -903,7 +905,7 @@ LDREGIMM        3E,dh
 emul3F:         inc     edi
                 xor     dl,1
                 and     dl,11101101b
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; 40 - LD B,B
@@ -1072,6 +1074,7 @@ LDHLREG         75,regl
 emul76:         inc     edi
 emul76a:        cmp     interrupt,1
                 jne     emul76a
+                mov     ebp,5
                 ret
 
 ; 77 - LD (HL),A
@@ -1297,7 +1300,7 @@ CPREG           BF,dh
 emulC0:         inc     edi
                 test    dl,ZERO_FLAG
                 jz      emulC9
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; C1 - POP BC
@@ -1310,12 +1313,12 @@ emulC1:         inc     edi
                 mov     regb,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; C2 - JP NZ,dddd
 emulC2:         test    dl,ZERO_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jnz     emulC2a
                 inc     edi
                 call    fetchw
@@ -1330,14 +1333,14 @@ emulC3:         inc     edi
                 call    fetchw
                 mov     edi,eax
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; C4 - CALL NZ,dddd
 emulC4:         test    dl,ZERO_FLAG    
                 jz      emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; C5 - PUSH BC
@@ -1350,7 +1353,7 @@ emulC5:         inc     edi
                 mov     al,regc
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,11
+                mov     ebp,11+3
                 ret
 
 ; C6 - ADD A,dd
@@ -1360,7 +1363,7 @@ ADDIMM         C6
 emulC8:         inc     edi
                 test    dl,ZERO_FLAG
                 jnz     emulC9
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; C9 - RET
@@ -1376,12 +1379,12 @@ emulC9:         mov     ecx,regesp
                 and     eax,0ff00h
                 or      edi,eax
                 xor     eax,eax
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; CA - JP Z,dddd
 emulCA:         test    dl,ZERO_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jz      emulCAa
                 inc     edi
                 call    fetchw
@@ -1401,7 +1404,7 @@ emulCB:         inc     edi
 emulCC:         test    dl,ZERO_FLAG    
                 jnz     emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; CD - CALL dddd
@@ -1419,7 +1422,7 @@ emulCD:         add     edi,3
                 call    fetchw
                 mov     edi,eax
                 xor     eax,eax
-                mov     ebp,17
+                mov     ebp,17+5
                 ret
 
 ; CE - ADC A,dd
@@ -1438,14 +1441,14 @@ emulCF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,008h
                 xor     eax,eax
-                mov     ebp,11
+                mov     ebp,11+3
                 ret
 
 ; D0 - RET NC
 emulD0:         inc     edi
                 test    dl,CARRY_FLAG
                 jz      emulC9
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; D1 - POP DE
@@ -1458,12 +1461,12 @@ emulD1:         inc     edi
                 mov     regd,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; D2 - JP NC,dddd
 emulD2:         test    dl,CARRY_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jnz     emulD2a
                 inc     edi
                 call    fetchw
@@ -1481,7 +1484,7 @@ OUTIMM          D3
 emulD4:         test    dl,CARRY_FLAG
                 jz      emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; D5 - PUSH DE
@@ -1494,7 +1497,7 @@ emulD5:         inc     edi
                 mov     al,rege
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,11
+                mov     ebp,11+3
                 ret
 
 ; D6 - SUB dd
@@ -1513,14 +1516,14 @@ emulD7:         inc     edi
                 mov     regesp,ecx
                 mov     edi,010h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 
 ; D8 - RET C
 emulD8:         inc     edi
                 test    dl,CARRY_FLAG   
                 jnz     emulC9
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; D9 - EXX
@@ -1537,12 +1540,12 @@ emulD9:         inc     edi
                 mov     ecx,regehll
                 mov     regehl,ecx
                 mov     regehll,ebx
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; DA - JP C,dddd
 emulDA:         test    dl,CARRY_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jz      emulDAa
                 inc     edi
                 call    fetchw
@@ -1559,7 +1562,7 @@ INADD           DB
 emulDC:         test    dl,CARRY_FLAG
                 jnz     emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; DD - group DD
@@ -1585,14 +1588,14 @@ emulDF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,018h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 
 ; E0 - RET PO
 emulE0:         test    dl,PARITY_FLAG
                 jz      emulC9
                 inc     edi
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; E1 - POP HL
@@ -1605,12 +1608,12 @@ emulE1:         inc     edi
                 mov     regh,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; E2 - JP PO,dddd
 emulE2:         test    dl,PARITY_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jnz     emulE2a
                 inc     edi
                 call    fetchw
@@ -1634,14 +1637,14 @@ emulE3:         inc     edi
                 mov     regh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,19
+                mov     ebp,19+3
                 ret
 
 ; E4 - CALL PO,dddd
 emulE4:         test    dl,PARITY_FLAG
                 jz      emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; E5 - PUSH HL
@@ -1654,7 +1657,7 @@ emulE5:         inc     edi
                 mov     al,regl
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,11
+                mov     ebp,11+3
                 ret
 
 ; E6 - AND dd
@@ -1673,24 +1676,24 @@ emulE7:         inc     edi
                 mov     regesp,ecx
                 mov     edi,020h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 
 ; E8 - RET PE
 emulE8:         test    dl,PARITY_FLAG
                 jnz     emulC9
                 inc     edi
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; E9 - JP (HL)
 emulE9:         mov     edi,regehl
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; EA - JP PE,dddd
 emulEA:         test    dl,PARITY_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jz      emulEAa
                 inc     edi
                 call    fetchw
@@ -1706,14 +1709,14 @@ emulEB:         mov     ebx,regede
                 mov     regehl,ebx
                 mov     regede,ecx
                 inc     edi
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; EC - CALL PE,dddd
 emulEC:         test    dl,PARITY_FLAG
                 jnz     emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; ED - group ED
@@ -1739,14 +1742,14 @@ emulEF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,028h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 
 ; F0 - RET P
 emulF0:         inc     edi
                 test    dl,SIGN_FLAG
                 jz      emulC9  
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; F1 - POP AF
@@ -1759,12 +1762,12 @@ emulF1:         inc     edi
                 mov     dh,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; F2 - JP P,dddd
 emulF2:         test    dl,SIGN_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jnz     emulF2a 
                 inc     edi
                 call    fetchw
@@ -1777,14 +1780,14 @@ emulF2a:        add     edi,3
 ; F3 - DI
 emulF3:         inc     edi
                 mov     iff1,0
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; F4 - CALL P,dddd
 emulF4:         test    dl,SIGN_FLAG
                 jz      emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; F5 - PUSH AF
@@ -1797,7 +1800,7 @@ emulF5:         inc     edi
                 mov     al,dl
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,11
+                mov     ebp,11+3
                 ret
 
 ; F6 - OR dd
@@ -1816,25 +1819,25 @@ emulF7:         inc     edi
                 mov     regesp,ecx
                 mov     edi,030h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 ; F8 - RET M
 emulF8:         inc     edi
                 test    dl,SIGN_FLAG
                 jnz     emulC9
-                mov     ebp,5
+                mov     ebp,5+1
                 ret
 
 ; F9 - LD SP,HL
 emulF9:         inc     edi
                 mov     ebx,regehl
                 mov     regesp,ebx
-                mov     ebp,6
+                mov     ebp,6+1
                 ret
 
 ; FA - JP M,dddd
 emulFA:         test    dl,SIGN_FLAG
-                mov     ebp,10
+                mov     ebp,10+3
                 jz      emulFAa 
                 inc     edi
                 call    fetchw
@@ -1847,14 +1850,14 @@ emulFAa:        add     edi,3
 ; FB - EI
 emulFB:         inc     edi
                 mov     iff1,1
-                mov     ebp,4
+                mov     ebp,4+1
                 ret
 
 ; FC - CALL M,dddd
 emulFC:         test    dl,SIGN_FLAG
                 jnz     emulCD
                 add     edi,3
-                mov     ebp,10
+                mov     ebp,10+3
                 ret
 
 ; FD - group FD
@@ -1880,7 +1883,7 @@ emulFF:         inc     edi
                 mov     regesp,ecx
                 mov     edi,038h
                 xor     eax,eax
-                mov     ebp,7
+                mov     ebp,7+3
                 ret
 
 ; XX - not found

@@ -61,7 +61,7 @@ psetCBxx:
 	psetCB3B: dd prinCB3B
 	psetCB3C: dd prinCB3C
 	psetCB3D: dd prinCB3D
-	psetCB3E: dd prinXX
+	psetCB3E: dd prinCB3E
 	psetCB3F: dd prinCB3F
 	psetCB40: dd prinCB40
 	psetCB41: dd prinCB41

@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: Z80FD.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -19,10 +21,10 @@ public isetFDxx
 ; --------------------------------------------------------------------
 
 ; FD 09 - ADD IY,BC
-ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15
+ADDREGWREGW     FD09,regiyl,regiyh,regc,regb,15+1
 
 ; FD 19 - ADD IY,DE
-ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15
+ADDREGWREGW     FD19,regiyl,regiyh,rege,regd,15+1
 
 ; FD 21 - LD IY,dddd
 emulFD21:       inc     edi
@@ -30,7 +32,7 @@ emulFD21:       inc     edi
                 add     edi,2
                 mov     regeiy,eax
                 xor     eax,eax
-                mov     ebp,14
+                mov     ebp,14+4
                 ret
 
 ; FD 22 - LD (dddd),IY
@@ -44,14 +46,14 @@ emulFD22:       inc     edi
                 mov     al,regiyh
                 call    writemem
                 xor     eax,eax
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; FD 23 - INC IY
-INCWREG         FD23,regiy,10
+INCWREG         FD23,regiy,10+1
 
 ; FD 29 - ADD IY,IY
-ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15
+ADDREGWREGW     FD29,regiyl,regiyh,regiyl,regiyh,15+1
 
 ; FD 2A - LD IY,(dddd)
 emulFD2A:       inc     edi
@@ -64,11 +66,11 @@ emulFD2A:       inc     edi
                 mov     regiyh,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; FD 2B - DEC IY
-DECWREG         FD2B,regiy,10
+DECWREG         FD2B,regiy,10+1
 
 ; FD 34 - INC (IY+dd)
 INCII           FD34,regeiy
@@ -80,7 +82,7 @@ DECII           FD35,regeiy
 LDIIDDNN        FD36,regeiy
 
 ; FD 39 - ADD IY,SP
-ADDREGWREGW     FD39,regiyl,regiyh,regspl,regsph,15
+ADDREGWREGW     FD39,regiyl,regiyh,regspl,regsph,15+1
 
 ; FD 46 - LD B,(IY+dd)
 LDREGIIDD       FD46,regb,regeiy
@@ -158,7 +160,7 @@ emulFDE1:       inc     edi
                 mov     regiyh,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,14
+                mov     ebp,14+4
                 ret
 
 ; FD E5 - PUSH IY
@@ -171,19 +173,19 @@ emulFDE5:       inc     edi
                 mov     al,regiyl
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,15
+                mov     ebp,15+4
                 ret
 
 ; FD E9 - JP (IY)
 emulFDE9:       mov     edi,regeiy
-                mov     ebp,8
+                mov     ebp,8+2
                 ret
 
 ; FD F9 - LD SP,IY
 emulFDF9:       inc     edi
                 mov     ebx,regeiy
                 mov     regesp,ebx
-                mov     ebp,10
+                mov     ebp,10+2
                 ret
 
 ; FD CB 06 - RLC (IY+dd)

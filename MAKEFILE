@@ -1,5 +1,6 @@
-OBJECTS = pmode.o brmsx.o io.o debug.o z80.o vdp.o \
-	  z80cb.o z80dd.o z80ed.o z80fd.o print.o printcb.o patch.o
+OBJECTS = pmode.o brmsx.o io.o debug.o vdp.o patch.o \
+	  z80.o z80cb.o z80dd.o z80ed.o z80fd.o \
+	  print.o printcb.o
 TASMFLAGS = /ml /m2 /q /la
 
 all : brmsx.exe

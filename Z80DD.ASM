@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: Z80DD.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -19,10 +21,10 @@ public isetDDxx
 ; --------------------------------------------------------------------
 
 ; DD 09 - ADD IX,BC
-ADDREGWREGW     DD09,regixl,regixh,regc,regb,15
+ADDREGWREGW     DD09,regixl,regixh,regc,regb,15+1
 
 ; DD 19 - ADD IX,DE
-ADDREGWREGW     DD19,regixl,regixh,rege,regd,15
+ADDREGWREGW     DD19,regixl,regixh,rege,regd,15+1
 
 ; DD 21 - LD IX,dddd
 emulDD21:       inc     edi               
@@ -30,7 +32,7 @@ emulDD21:       inc     edi
                 add     edi,2
                 mov     regeix,eax
                 xor     eax,eax
-                mov     ebp,14
+                mov     ebp,14+4
                 ret
 
 ; DD 22 - LD (dddd),IX
@@ -44,14 +46,14 @@ emulDD22:       inc     edi
                 mov     al,regixh
                 call    writemem
                 xor     eax,eax
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; DD 23 - INC IX
-INCWREG         DD23,regix,10
+INCWREG         DD23,regix,10+1
 
 ; DD 29 - ADD IX,IX
-ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15
+ADDREGWREGW     DD29,regixl,regixh,regixl,regixh,15+1
 
 ; DD 2A - LD IX,(dddd)
 emulDD2A:       inc     edi
@@ -64,11 +66,11 @@ emulDD2A:       inc     edi
                 mov     regixh,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; DD 2B - DEC IX
-DECWREG         DD2B,regix,10
+DECWREG         DD2B,regix,10+1
 
 ; DD 34 - INC (IX+dd)
 INCII           DD34,regeix
@@ -80,7 +82,7 @@ DECII           DD35,regeix
 LDIIDDNN        DD36,regeix
 
 ; DD 39 - ADD IX,SP
-ADDREGWREGW     DD39,regixl,regixh,regspl,regsph,15
+ADDREGWREGW     DD39,regixl,regixh,regspl,regsph,15+1
 
 ; DD 46 - LD B,(IX+dd)
 LDREGIIDD       DD46,regb,regeix
@@ -167,7 +169,7 @@ emulDDE1:       inc     edi
                 mov     regixh,al
                 inc     cx
                 mov     regesp,ecx
-                mov     ebp,14
+                mov     ebp,14+4
                 ret
 
 ; DD E3 - EX (SP),IX
@@ -184,7 +186,7 @@ emulDDE3:       inc     edi
                 mov     regixh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,23
+                mov     ebp,23+4
                 ret
 
 ; DD E5 - PUSH IX
@@ -197,12 +199,12 @@ emulDDE5:       inc     edi
                 mov     al,regixl
                 call    writemem
                 mov     regesp,ecx
-                mov     ebp,15
+                mov     ebp,15+4
                 ret
 
 ; DD E9 - JP (IX)
 emulDDE9:       mov     edi,regeix
-                mov     ebp,8
+                mov     ebp,8+2
                 ret
 
 ; DD CB 06 - RLC (IX+dd)

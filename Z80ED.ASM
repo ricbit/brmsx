@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: Z80ED.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -39,7 +41,7 @@ emulED43:       inc     edi
                 mov     al,regb
                 call    writemem
                 xor     eax,eax
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED 44 - NEG
@@ -65,7 +67,7 @@ emulED4B:       inc     edi
                 mov     regb,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED 4D - RETI
@@ -91,12 +93,12 @@ emulED53:       inc     edi
                 mov     al,regd
                 call    writemem
                 xor     eax,eax
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED 56 - IM 1
 emulED56:       inc     edi
-                mov     ebp,8
+                mov     ebp,8+2
                 ret
 
 ; ED 57 - LD A,I
@@ -122,7 +124,7 @@ emulED5B:       inc     edi
                 mov     regd,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED 5F - LD A,R
@@ -166,7 +168,7 @@ emulED73:       inc     edi
                 mov     al,regsph
                 call    writemem
                 xor     eax,eax
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED 78 - IN A,(C)
@@ -189,26 +191,11 @@ emulED7B:       inc     edi
                 mov     regsph,al
                 xor     eax,eax
                 add     edi,2
-                mov     ebp,20
+                mov     ebp,20+6
                 ret
 
 ; ED A0 - LDI
-emulEDA0:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                inc     reghl
-                inc     regde
-                dec     regbc
-                pushfd
-                pop     ecx
-                and     dl,11101001b
-                and     cl,01000000b 
-                shr     cl,4
-                or      dl,cl
-                mov     ebp,16
-                ret
+OPLDI           EDA0
 
 ; ED A2 - INI
 emulEDA2:       inc     edi
@@ -224,7 +211,7 @@ emulEDA2:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
-                mov     ebp,16
+                mov     ebp,16+3
                 ret
 
 ; ED A3 - OUTI
@@ -241,7 +228,7 @@ emulEDA3:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
-                mov     ebp,16
+                mov     ebp,16+3
                 ret
 
 ; ED A8 - LDD
@@ -254,12 +241,12 @@ emulEDB0a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
-                add     ebp,21
+                add     ebp,21+2
                 inc     reghl
                 inc     regde
                 dec     regbc
                 jnz     emulEDB0a
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 
 ; ED B1 - CPIR
@@ -269,18 +256,18 @@ emulEDB1b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB1a
-                add     ebp,21
+                add     ebp,21+2
                 inc     reghl
                 dec     regbc
                 jnz     emulEDB1b
                 and     dl,10111011b
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 emulEDB1a:      
                 inc     reghl
                 dec     regbc
                 or      dl,01000100b
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 
 ; ED B8 - LDDR
@@ -290,12 +277,12 @@ emulEDB8a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
-                add     ebp,21
+                add     ebp,21+2
                 dec     reghl
                 dec     regde
                 dec     regbc
                 jnz     emulEDB8a
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 
 ; ED B9 - CPDR
@@ -305,18 +292,18 @@ emulEDB9b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB9a
-                add     ebp,21
+                add     ebp,21+2
                 dec     reghl
                 dec     regbc
                 jnz     emulEDB9b
                 and     dl,10111011b
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 emulEDB9a:      
                 dec     reghl
                 dec     regbc
                 or      dl,01000100b
-                sub     ebp,5
+                sub     ebp,5-2
                 ret
 
 code32          ends

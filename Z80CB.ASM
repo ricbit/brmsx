@@ -1,6 +1,8 @@
-; BrMSX 1.0        
-; by Ricardo Bittencourt
-; start: 25/1/97
+; -------------------------------------------------------------------- 
+; BrMSX v:1.32                                                         
+; Copyright (C) 1997 by Ricardo Bittencourt                            
+; module: Z80CB.ASM
+; -------------------------------------------------------------------- 
 
         .386p
 code32  segment para public use32
@@ -178,6 +180,9 @@ SRLREG          CB3C,regh
 
 ; CB 3D - SRL L
 SRLREG          CB3D,regl
+
+; CB 3E - SRL (HL)
+SRLHL           CB3E
 
 ; CB 3F - SRL A
 SRLREG          CB3F,dh

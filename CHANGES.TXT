@@ -1,3 +1,12 @@
+release 1.32:
+
+- optimized LDI
+- added 1 waitstate for each instruction
+  now everything should run at correct speed
+- added SRL (HL)
+- aaargh: clockcounter was not dword-aligned
+  now the emulation should be faster
+
 release 1.31:
 
 - added pseudo-support for megarom mode-5 (ascii 16kb) 
@@ -18,7 +27,7 @@ release 1.29:
 
 - added three levels of synchronization:
   NORMAL MODE: synchronizes on every interrupt
-  FAST MODE: doest not synchronize, but ints are still generated at 60 Hz
+  FAST MODE: does not synchronize, but ints are still generated at 60 Hz
   TURBO MODE: ints are generated at more than 60 Hz
   "M" key switches between the modes
 - removed useless debug commands: X, P, K
