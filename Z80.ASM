@@ -8,7 +8,7 @@ code32  segment para public use32
 
 extrn msxrom: near
 extrn msxvram: near
-extrn cart1: near
+extrn cart1: dword
 extrn pset: near
 extrn isetCBxx: near
 extrn isetDDxx: near
@@ -20,6 +20,7 @@ include debug.inc
 include bit.inc
 include opcode.inc
 include z80supp.inc
+include pmode.inc
 
 public fetch
 public fetchw
@@ -705,7 +706,15 @@ writemem:       mov     esi,ecx                         ; clock 1 U
                 and     ebx,01fffh                      ; clock 2 V
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
                 mov     byte ptr [esi+ebx],al           ; clock 6 U [AGI]
+                ret
 writemem0:      
+                cmp     ebx,1
+                jz      _ret
+                mov     ebx,eax
+                and     ebx,0ffh
+                shl     ebx,13
+                add     ebx,cart1
+                mov     dword ptr [offset mem+esi*4],ebx
                 ret
 
 

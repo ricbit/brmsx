@@ -447,6 +447,7 @@ open_file:
 ;     ecx = number of bytes to read (must be <0ffffh)
 
 read_file:                
+                push    eax
                 add     edx,_code32a
                 mov     eax,edx
                 shr     edx,4
@@ -457,6 +458,7 @@ read_file:
                 mov     v86r_ax,03f00h
                 mov     al,21h
                 int     33h
+                pop     eax
                 ret
 
 ; read_size_file -----------------------------------------------------

@@ -15,6 +15,7 @@ public _main
 public msxram
 public blitbuffer
 public diskimage
+public cart1
 
 ; DATA ---------------------------------------------------------------
 
@@ -86,29 +87,59 @@ _main0:
                 add     eax,4000h
                 mov     dword ptr [offset slot2+24],eax
 
-                ; allocate 32kb to cartridge 1
+                ; allocate 32kb to transfer buffer
                 mov     eax,32768
                 call    _getmem
                 jc      no_memory
-                mov     cart1,eax
-                mov     dword ptr [offset slot1+8],eax
-
+                mov     transf_buffer,eax
+                
                 ; read cartridge 1 from disk
                 mov     edx,offset cart1_name
                 call    open_file
                 jc      _main2
                 call    read_size_file
+                push    eax
+                call    _gethimem
+                jc      no_memory
+                mov     cart1,eax
+                mov     dword ptr [offset slot1+8],eax
+                pop     eax
                 cmp     eax,04000h
                 je     _main1
                 cmp     eax,08000h
-                jne     cartridge_not_supported
+                jne     read_megarom
                 mov     ecx,cart1
                 add     ecx,4000h
                 mov     dword ptr [offset slot1+16],ecx
 _main1:
-                mov     edx,cart1
+                mov     edx,transf_buffer
                 mov     ecx,eax
                 call    read_file
+                mov     ecx,eax
+                mov     esi,transf_buffer
+                mov     edi,cart1
+                rep     movsb
+                jmp     _main2
+
+read_megarom:
+                shr     eax,15
+                mov     edi,cart1
+read_megarom1:
+                mov     edx,transf_buffer
+                mov     ecx,32768
+                call    read_file
+                mov     esi,transf_buffer
+                mov     ecx,32768/4
+                rep     movsd
+                dec     eax
+                or      eax,eax
+                jnz     read_megarom1
+                mov     ecx,cart1
+                add     ecx,4000h
+                mov     dword ptr [offset slot1+16],ecx
+                mov     eax,2
+                mov     dword ptr [offset slot1+8+4],eax
+                mov     dword ptr [offset slot1+16+4],eax
 
 _main2:
                 ; allocate 64kb to blit buffer
@@ -117,12 +148,6 @@ _main2:
                 jc      no_memory
                 mov     blitbuffer,eax
 
-                ; allocate 32kb to transfer buffer
-                mov     eax,32768
-                call    _getmem
-                jc      no_memory
-                mov     transf_buffer,eax
-                
                 ; allocate 720kb to disk image
                 mov     eax,720*1024
                 call    _gethimem
