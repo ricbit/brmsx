@@ -1930,10 +1930,12 @@ outemul99a:     mov     vdpcond,0
                 ret
 outemul99b:     and     ebx,00000111b
                 mov     al,vdptemp
+                cmp     byte ptr [offset vdpregs+ebx],al
+                je      _ret
                 mov     byte ptr [offset vdpregs+ebx],al
-                mov     firstscreen,1
-                cmp     ebx,7
+                cmp     bl,7
                 je      set_border_color
+                mov     firstscreen,1
                 jmp     eval_base_address
 
 outemulA0:      mov     psgselect,bl

@@ -1,3 +1,8 @@
+release 1.58:
+
+- optimized base address evaluation
+- added support to EC bit (sprite horizontal shifter)
+
 release 1.57:
 
 - fixed yet another bug on new graphics pipeline

@@ -661,7 +661,8 @@ sprite_render:
 
 sprite16:       
                 test    byte ptr [offset vdpregs+1],BIT_0
-                jnz     sprite16M
+                jz      sprite16N
+                ret
 
                 ; sprites 16x16 without magnification
 
@@ -708,39 +709,35 @@ sprite16N6:
                 jz      sprite16N7
 
                 ; for each sprite
-sprite16N1:     push    ecx
+sprite16N1:     push    ecx eax
+
+                call    eval_sprite_coords
+                cmp     eax,0
+                js      sprite16N3
+                cmp     eax,192-16
+                jge     sprite16N3
+                cmp     ecx,0
+                js      sprite16N3
+                cmp     ecx,256-16
+                jge     sprite16N3
+                mov     ch,al
+                mov     edi,blitbuffer
+                add     edi,ecx
                 
-                ; ah = vertical position of sprite
-                mov     ah,[esi]
-                movzx   ebx,ah
-                mov     linenumber,ebx
-
-                ; check if it is 0D0h, in this case exit
-                cmp     ah,0D0h
-                je      sprite16N2
-
-                ; check if it is bounded
-                inc     ah
-                cmp     ah,191-16
-                ja      sprite16N3
-
-                ; check for horizontal bound
-                mov     al,[esi+1]
-                cmp     al,255-16
-                ja      sprite16N3
-
-                ; load effective initial address in ebx
+                ; load effective initial address in edi
                 push    edi
-                xor     ebx,ebx
-                mov     bl,ah
-                and     eax,0ffh
-                shl     ebx,8
-                add     ebx,eax
-                add     edi,ebx
+                ;xor     ebx,ebx
+                ;mov     bl,ah
+                ;and     eax,0ffh
+                ;shl     ebx,8
+                ;add     ebx,eax
+                ;add     edi,ebx
 
                 ; load address of sprite image in ecx
                 mov     al,[esi+2]
                 and     al,11111100b
+                mov     ecx,sprpatttable
+                add     ecx,msxvram
                 lea     ecx,[ecx+eax*8]
 
                 ; for each subline
@@ -819,7 +816,7 @@ sprite16N8:
                 pop     edi
 
 sprite16N3:
-                pop     ecx
+                pop     eax ecx
                 sub     esi,4
                 dec     ebp
                 jnz     sprite16N1
@@ -829,8 +826,6 @@ sprite16N2:
                 pop     ecx
 sprite16N7:
                 ret
-
-sprite16M:      ret
 
 ; clear_sprite_buffer ------------------------------------------------
 
