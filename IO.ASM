@@ -85,6 +85,7 @@ public wait_next_vsync
 public adjust_clock
 public oldmode
 public fastforward 
+public speaq
 
 ; DATA ---------------------------------------------------------------
 
@@ -127,6 +128,8 @@ key_extended    dd      0
 noled           dd      0
 savesnap        dd      0
 greenflag       dd      0
+speaq           dd      1
+speaker_counter dd      1
 pal_normal      dd      offset palette
 pal_filtered    dd      offset filtered_palette
 pal_gui         dd      offset gui_palette
@@ -939,9 +942,19 @@ turnon_irq:
                 mov     oldrirqvect,eax
                 mov     al,034h
                 out     043h,al
-                mov     al,0aeh
+
+                mov     eax,01234DDh
+                mov     edx,0
+                mov     ebx,_verticalrate  ; 60
+                div     ebx
+                mov     edx,0
+                mov     ebx,speaq
+                div     ebx
+
+                mov     edx,eax
+                mov     al,dl 
                 out     040h,al
-                mov     al,04dh
+                mov     al,dh 
                 out     040h,al
                 ret
 
@@ -1067,8 +1080,23 @@ my_irq_handler:
                 push    ds 
                 mov     ds,cs:_seldata
 
+                cmp     speaker,1
+                jne     my_irq_handler_nospeaker
+                cmp     soundplaying,1
+                jne     my_irq_handler_nospeaker
+                
+                call    compose_speaker
+my_irq_handler_nospeaker:
+
+                dec     speaker_counter
+                jnz     my_irq_handler_noadjust
+
+                mov     eax,speaq
+                mov     speaker_counter,eax
 
                 mov     interrupt,1
+
+my_irq_handler_noadjust:
 
                 pop     ds
                 

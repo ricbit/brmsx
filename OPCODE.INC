@@ -425,11 +425,8 @@ emul&opcode:
 OPCPIR          macro   opcode
 
 emul&opcode:
-                inc     edi
-emul&opcode&loop:
                 mov     ecx,regehl
                 call    readmem
-                sub     ebp,21
                 inc     reghl
                 mov     bl,al
                 xor     bl,dh
@@ -459,10 +456,19 @@ emul&opcode&loop:
 
                 ; flag PV 
                 dec     regbc
-                jz      _ret
+                jz      emul&opcode&done
+                
                 or      dl,00000100b
                 test    dl,01000000b
-                jz      emul&opcode&loop
+                jnz     emul&opcode&done
+
+                dec     edi
+                sub     ebp,21+2
+                ret
+
+emul&opcode&done:
+                inc     edi
+                sub     ebp,16+2
                 ret
 
                 endm
@@ -476,7 +482,7 @@ emul&opcode:
                 inc     edi
                 mov     ecx,regehl
                 call    readmem
-                sub     ebp,21
+                sub     ebp,16+2
                 inc     reghl
                 mov     bl,al
                 xor     bl,dh
@@ -518,11 +524,8 @@ emul&opcode:
 OPCPDR          macro   opcode
 
 emul&opcode:
-                inc     edi
-emul&opcode&loop:
                 mov     ecx,regehl
                 call    readmem
-                sub     ebp,21
                 dec     reghl
                 mov     bl,al
                 xor     bl,dh
@@ -552,12 +555,21 @@ emul&opcode&loop:
 
                 ; flag PV 
                 dec     regbc
-                jz      _ret
+                jz      emul&opcode&done
+                
                 or      dl,00000100b
+                
                 test    dl,01000000b
-                jz      emul&opcode&loop
+                jnz     emul&opcode&done
+                
+                dec     edi
+                sub     ebp,21+2
                 ret
 
+emul&opcode&done:
+                inc     edi
+                sub     ebp,16+2
+                ret
 
                 endm
 
@@ -570,7 +582,7 @@ emul&opcode:
                 inc     edi
                 mov     ecx,regehl
                 call    readmem
-                sub     ebp,21
+                sub     ebp,16+2
                 dec     reghl
                 mov     bl,al
                 xor     bl,dh
@@ -751,17 +763,36 @@ emul&opcode:
                 inc     edi
                 mov     iff1,1
                 sub     ebp,4+1
+                
+                cmp     emumode,1
+                je      emul&opcode&x
+
+                cmp     iline,1
+                je      emul&opcode&iline
+
+                FETCHMACRO 0
+                inc     rcounter
+                call    dword ptr [offset iset + eax*4]
+
+                ret
+
+emul&opcode&iline:
+
+                mov     fakeirq,1
+                mov     clocksleft,ebp
+                mov     ebp,0
+                
+                FETCHMACRO 0
+                inc     rcounter
+                call    dword ptr [offset iset + eax*4]
+
+                ret
+
+emul&opcode&x:
                 cmp     iline,0
                 je      _ret
-
-                mov     clocksleft,ebp
-                mov     ebp,5
-                mov     fakeirq,1
-
-                cmp     emumode,1       ; mode FAST
-                jne     _ret
-
                 mov     interrupt,1
+                mov     fakeirq,1
                 ret
 
                 endm
@@ -1529,14 +1560,14 @@ emul&opcode:
 
 ; --------------------------------------------------------------------
 ; LDRA - LD R,A
-
+    
 LDRA            macro   opcode
 
 emul&opcode:    
                 inc     edi
                 mov     byte ptr [offset rcounter],dh
                 mov     rmask,dh
-                and     rmask,07Fh
+                and     rmask,080h
                 sub     ebp,9+2
                 ret
 
@@ -1572,22 +1603,27 @@ emul&opcode:
 OPLDDR          macro   opcode
 
 emul&opcode:    
-                inc     edi
-emul&opcode&a:      
                 mov     ecx,regehl                      ; clock 1 U
                 call    readmem                         ; clock 1 V
                 mov     ecx,regede                      ; clock 2 U
                 call    writemem                        ; clock 2 V
-                sub     ebp,16+2                        ; clock 3 U
                 dec     regde                           ; clock 3 V
                 dec     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
                 and     dl,11000001b                    ; clock 5 V
                 or      dl,[offset LDI_table+eax]
                 dec     regbc                           ; clock 6 U
-                jnz     emul&opcode&a
+                jz      emul&opcode&done
+                or      dl,00000100b
+                dec     edi
+                sub     ebp,21+2                        ; clock 3 U
                 ret
-                
+
+emul&opcode&done:
+                inc     edi
+                sub     ebp,16+2                        ; clock 3 U
+                ret
+
                 endm
 
 ; --------------------------------------------------------------------
@@ -1630,16 +1666,16 @@ emul&opcode:
                 and     dl,11000001b                    ; clock 5 V
                 or      dl,[offset LDI_table+eax]
                 dec     regbc                           ; clock 6 U
-                jz      emul&opcode&a
-                sub     ebp,16+2
-                jns     emul&opcode
+                jz      emul&opcode&done
+                or      dl,00000100b
                 dec     edi
-                ret
-emul&opcode&a:
-                sub     ebp,16+2
-                inc     edi
+                sub     ebp,21+2
                 ret
 
+emul&opcode&done:
+                inc     edi
+                sub     ebp,16+2
+                ret
                 endm
 
 ; --------------------------------------------------------------------
@@ -1787,12 +1823,33 @@ emul&opcode:
                 call    readmem
                 mov     bl,al
                 mov     al,regc
+                push    ebx
                 call    [offset outportxx+eax*4]
+                pop     ebx
+
                 inc     reghl
-                dec     regb
-                and     dl,1
                 mov     al,regb
-                or      dl,[offset DEC_table+eax]
+                dec     al
+                mov     regb,al
+
+                ; S Z 5 3
+                mov     dl,[offset DEC_table+eax]
+                and     dl,11101000b 
+
+                ; N
+                mov     cl,bl
+                shr     cl,6
+                and     cl,2
+                or      dl,cl
+
+                ; C H
+                mov     cl,regc
+                inc     cl       ; forward opcode
+                add     cl,bl
+                sbb     cl,cl
+                and     cl,11h
+                or      dl,cl
+
                 sub     ebp,16+2
                 ret
 
@@ -1826,21 +1883,47 @@ emul&opcode:
 OPOTIR          macro   opcode
 
 emul&opcode:                
-                inc     edi
-emul&opcode&loop:
                 mov     ecx,regehl
                 call    readmem
                 mov     bl,al
                 mov     al,regc
+                push    ebx
                 call    [offset outportxx+eax*4]
+                pop     ebx
+
                 inc     reghl
-                dec     regb
-                and     dl,1
                 mov     al,regb
-                or      dl,[offset DEC_table+eax]
-                sub     ebp,16+2
+                dec     al
+                mov     regb,al
+
+                ; S Z 5 3
+                mov     dl,[offset DEC_table+eax]
+                and     dl,11101000b 
+
+                ; N
+                mov     cl,bl
+                shr     cl,6
+                and     cl,2
+                or      dl,cl
+
+                ; C H
+                mov     cl,regc
+                inc     cl       ; forward opcode
+                add     cl,bl
+                sbb     cl,cl
+                and     cl,11h
+                or      dl,cl
+
                 test    dl,01000000b
-                jz      emul&opcode&loop
+                jnz     emul&opcode&done
+
+                dec     edi
+                sub     ebp,21+2
+                ret
+
+emul&opcode&done:
+                inc     edi
+                sub     ebp,16+2
                 ret
 
                 endm

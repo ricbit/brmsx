@@ -61,7 +61,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.152',13,10
+msg00           db      'BrMSX 1.155',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -85,7 +85,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.152',13,10
+msg22           db      'BrMSX 1.155',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -114,6 +114,8 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '(default)',13,10
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
+                db      '-ifreq <n>     change interrupt frequency '
+                db      '(default is 60)',13,10
                 db      '-roma <n>      select MegaROM Mapper for '
                 db      'cartridge A (default=autodetect)',13,10
                 db      '-romb <n>      select MegaROM Mapper for '
@@ -128,6 +130,15 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '               8=Panasonic FM-PAC with 8kb SRAM',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
+                db      '-megaram <n>   select size of MegaRAM '
+                db      '(default=1)',13,10
+                db      '               0=128kb 1=256kb 2=512kb 3=1Mb 4=2Mb',13,10
+                db      'Press enter to continue.$'
+help_message2   db      13
+                db      '-mapper <n>    select size of Memory Mapper '
+                db      '(default=1)',13,10
+                db      '               0=64kb 1=128kb 2=256kb 3=512kb '
+                db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-korean        enable korean memory layout '
                 db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
                 db      '-mmx           MMX video engine ('
@@ -136,8 +147,6 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '2=512x384 3=256x192)',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
-                db      'Press enter to continue.$'
-help_message2   db      13
                 db      '-green         enable green monitor emulation',13,10
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
@@ -151,7 +160,11 @@ help_message2   db      13
                 db      '-scc           enable SCC sound',13,10
                 db      '-fmpac         enable FM-PAC sound (MSX Music)'
                 db      13,10
+                db      '-sr <n>        select the sample rate '
+                db      '(default is 45455)',13,10
                 db      '-speaker       sound through the PC speaker',13,10
+                db      '-speaq <n>     select quality for PC speaker sound'
+                db      ' (range is 1 to 9)',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
@@ -159,8 +172,12 @@ help_message2   db      13
                 db      'emulation',13,10
                 db      '-tape <file>   use <file> as cassete image',13,10
                 db      '-joy           enable joystick emulation',13,10
+                db      'Press enter to continue.$'
+help_message3   db      13
                 db      '-joysens <n>   adjust joystick sensibility '
                 db      '(range is 0 to 7, default is 3)',13,10
+                db      '-snespad       enable SNES pad connected in '
+                db      'LPT1',13,10
                 db      '-fakejoy       make the keyboard act as '
                 db      'joystick A',13,10
                 db      '-autofire      enable the automatic fire',13,10
@@ -170,8 +187,6 @@ help_message2   db      13
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
-                db      'Press enter to continue.$'
-help_message3   db      13
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
@@ -250,6 +265,12 @@ switch_autorun   db      '-autorun',0
 switch_fmpac     db      '-fmpac',0
 switch_nosprcol  db      '-nosprcol',0
 switch_mount     db      '-mount',0
+switch_megaram   db      '-megaram',0
+switch_mapper    db      '-mapper',0
+switch_speaq     db      '-speaq',0
+switch_sr        db      '-sr',0
+switch_ifreq     db      '-ifreq',0
+switch_snespad   db      '-snespad',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -293,8 +314,14 @@ switch_table:
                 dd      offset switch_fmpac
                 dd      offset switch_nosprcol
                 dd      offset switch_mount
+                dd      offset switch_megaram
+                dd      offset switch_mapper
+                dd      offset switch_speaq
+                dd      offset switch_sr
+                dd      offset switch_ifreq
+                dd      offset switch_snespad
 
-switch_total    dd      41
+switch_total    dd      47
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -338,6 +365,44 @@ switch_callback:
                 dd      offset callback_fmpac
                 dd      offset callback_nosprcol
                 dd      offset callback_mount
+                dd      offset callback_megaram
+                dd      offset callback_mapper
+                dd      offset callback_speaq
+                dd      offset callback_sr
+                dd      offset callback_ifreq
+                dd      offset callback_snespad
+
+cart1table:
+                dd      128*1024
+                dd      256*1024
+                dd      512*1024
+                dd      1024*1024
+                dd      2048*1024
+
+cart1mask:
+                db      00Fh
+                db      01Fh
+                db      03Fh
+                db      07Fh
+                db      0FFh
+
+mapper_table:
+                dd      64*1024
+                dd      128*1024
+                dd      256*1024
+                dd      512*1024
+                dd      1024*1024
+                dd      2048*1024
+                dd      4096*1024
+
+mapper_mask:
+                db      003h
+                db      007h
+                db      00Fh
+                db      01Fh
+                db      03Fh
+                db      07Fh
+                db      0FFh
 
 align 4
 
@@ -382,6 +447,8 @@ rommappera      dd      2
 rommapperb      dd      2
 rommapper       dd      2
 firsttime       dd      1
+cart1size       dd      512*1024
+mappersize      dd      128*1024
 
 ; --------------------------------------------------------------------
 
@@ -609,8 +676,8 @@ _main_idlerom:
                 mov     ecx,8192/4
                 rep     stosd
 
-                ; allocate 128kb to msx ram
-                mov     eax,128*1024
+                ; allocate memory to msx ram
+                mov     eax,mappersize
                 call    _getmem
                 jc      no_memory
                 mov     msxram,eax
@@ -651,7 +718,7 @@ _main_idlerom:
                 mov     timebuffer,eax
 
                 ; alloc always 512kb to cart1                
-                mov     eax,512*1024 ; 256*1024
+                mov     eax,cart1size ;512*1024 
                 call     _getmem
                 jc      no_memory
                 mov     cart1,eax
@@ -1736,6 +1803,120 @@ callback_mount_second:
                 mov     diskenabled,2
                 ret
 
+callback_megaram:
+                mov     secondarg,1
+                mov     eax,offset callback_megaram_second
+                mov     second_callback,eax
+                ret
+
+callback_megaram_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                and     eax,0FFh
+                mov     ecx,dword ptr [offset cart1table+eax*4]
+                mov     cart1size,ecx
+                movzx   ecx,byte ptr [offset cart1mask+eax]
+                mov     megamask,ecx
+                ret
+
+callback_mapper:
+                mov     secondarg,1
+                mov     eax,offset callback_mapper_second
+                mov     second_callback,eax
+                ret
+
+callback_mapper_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                and     eax,0FFh
+                mov     ecx,dword ptr [offset mapper_table+eax*4]
+                mov     mappersize,ecx
+                movzx   ecx,byte ptr [offset mapper_mask+eax]
+                mov     mappermask,ecx
+                ret
+
+callback_speaq:
+                mov     secondarg,1
+                mov     eax,offset callback_speaq_second
+                mov     second_callback,eax
+                ret
+
+callback_speaq_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                jnz     callback_speaq_noadjust
+                inc     al
+callback_speaq_noadjust:
+                and     eax,0FFh
+                mov     speaq,eax
+                ret
+
+callback_sr:
+                mov     secondarg,1
+                mov     eax,offset callback_sr_second
+                mov     second_callback,eax
+                ret
+
+callback_sr_second:
+                mov     eax,0
+                mov     ebx,eax
+                mov     esi,offset emptyspace
+
+callback_sr_loop:
+                mov     bl,[esi]
+                cmp     bl,0
+                je      callback_sr_set
+
+                lea     eax,[eax+eax*4]
+                lea     eax,[ebx+eax*2]
+                sub     eax,'0'
+                inc     esi
+                jmp     callback_sr_loop
+
+callback_sr_set:
+                cmp     eax,0
+                je      _ret
+                mov     _samplerate,eax
+                ret
+
+callback_ifreq:
+                mov     secondarg,1
+                mov     eax,offset callback_ifreq_second
+                mov     second_callback,eax
+                ret
+
+callback_ifreq_second:
+                mov     eax,0
+                mov     ebx,eax
+                mov     esi,offset emptyspace
+
+callback_ifreq_loop:
+                mov     bl,[esi]
+                cmp     bl,0
+                je      callback_ifreq_set
+
+                lea     eax,[eax+eax*4]
+                lea     eax,[ebx+eax*2]
+                sub     eax,'0'
+                inc     esi
+                jmp     callback_ifreq_loop
+
+callback_ifreq_set:
+                cmp     eax,0
+                je      _ret
+                mov     _verticalrate,eax
+                mov     ebx,eax
+                mov     eax,036912Eh
+                mov     edx,0
+                div     ebx
+                mov     TC,eax
+                ret
+
+callback_snespad:
+                mov     snespad,1
+                mov     joyenable,1
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -1801,7 +1982,7 @@ read_rom_place_16kb:
                 call    close_file
                 or      eax,eax
                 ret
-
+                                            
 read_rom_8kb:
                 ; read the rom
                 mov     edx,transf_buffer

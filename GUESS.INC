@@ -159,6 +159,10 @@ guess_table:
         dd      0+2
         dd      offset name_donkey_kong
                 
+        dd      0FF3874F0h
+        dd      5+2
+        dd      offset name_romancia
+
         dd      0
 
 ; name table
@@ -174,6 +178,9 @@ name_fmpac_original:
 
 name_daiva:
         db      'Daiva, Story 4$'
+
+name_romancia:
+        db      'Romancia / Dragon Slayer Jr.$'
 
 name_craze:
         db      'Craze$'
@@ -254,7 +261,7 @@ name_1942_msx1:
         db      '1942 (MSX1 version)$'
 
 name_xanadu:
-        db      'Xanadu$'
+        db      'Xanadu / Dragon Slayer II$'
 
 name_shalom:
         db      'Shalom$'

@@ -2155,6 +2155,7 @@ eval_base_address_begin:
                 and     al,7
                 shl     al,5
                 or      al,00011100b
+                
                 or      bitmask,al
 
                 ; check for the undocumented feature in image table

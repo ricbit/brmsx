@@ -19,3 +19,7 @@ extrn noise_counter: dword
 extrn init_adlib: near
 extrn reset_adlib: near
 extrn fm_single_register: near
+extrn soundplaying: dword
+extrn _samplerate: dword
+extrn _skipfactor: dword
+extrn _verticalrate: dword

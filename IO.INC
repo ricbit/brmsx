@@ -58,3 +58,4 @@ extrn wait_next_vsync: near
 extrn adjust_clock: near
 extrn oldmode: dword
 extrn fastforward: dword
+extrn speaq: dword

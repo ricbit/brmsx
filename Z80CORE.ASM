@@ -221,7 +221,7 @@ EMULABEL        fakeirq,emtype,brtype
 
                 test    byte ptr [offset vdpregs+1],BIT_5
                 JUMP    jz,loop,emtype,brtype
-
+                ;
                 mov     iff1,0
                 inc     rcounter
                 call    z80_interrupt

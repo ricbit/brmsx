@@ -313,6 +313,7 @@ changevideomode_vesa2:
 change_sound:
                 mov     eax,sounddetected
                 xor     soundenabled,eax
+                xor     soundplaying,2
                 ret
 
 ; --------------------------------------------------------------------

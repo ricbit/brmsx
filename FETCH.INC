@@ -1,5 +1,3 @@
-TC     equ     59659
-
 ; FETCHMACRO ---------------------------------------------------------
 ; fetch a byte from Z80 memory (macro version)
 ; in, edi: address
@@ -8,8 +6,13 @@ TC     equ     59659
 
 FETCHMACRO      macro   skip
                 
-                lea     esi,[edi+skip]                  ; clock 1 U
-                lea     ebx,[edi+skip]                  ; clock 1 V
+                if      (skip EQ 0)
+                  mov     esi,edi
+                  mov     ebx,edi
+                else
+                  lea     esi,[edi+skip]                  
+                  lea     ebx,[edi+skip]                  
+                endif
                 shr     esi,13                          ; clock 2 U
                 and     ebx,01fffh                      ; clock 2 V
                 mov     esi,[offset mem+esi*4]          ; clock 4 U [AGI]
@@ -20,18 +23,20 @@ FETCHMACRO      macro   skip
 ; -------------------------------------------------------------------- 
 
 FETCH1          macro   opcode
+                local   emul_fetch
+                local   emul_continue
 
                 cmp     ebx,01FFFh
-                jne     emul&opcode&_fetch
+                jne     emul_fetch 
 
                 call    fetch1
-                jmp     emul&opcode&_continue
+                jmp     emul_continue 
 
-emul&opcode&_fetch:
+emul_fetch:
 
                 mov     al,[esi+ebx+1]
 
-emul&opcode&_continue:
+emul_continue:
 
                 endm
 

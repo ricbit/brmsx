@@ -147,3 +147,5 @@ extrn autorun: dword
 extrn megaram: dword
 extrn fmreg: byte
 extrn fmenabled: dword
+extrn mappermask: dword
+extrn TC: dword

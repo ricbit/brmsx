@@ -71,6 +71,8 @@ public fakejoy
 public autofire
 public autospeed
 public autorun
+public mappermask
+public TC
 
 public fetch
 public fetch1
@@ -368,7 +370,7 @@ iff1            dd      0
 interrupt       dd      0
 error           dd      0
 rcounter        dd      0        
-clockcounter    dd      TC
+clockcounter    dd      59659
 emulatemode     dd      0
 megarommode     dd      0
 z80counter      db      8 dup (0)
@@ -377,11 +379,13 @@ reset_flag      dd      0
 imtype          dd      1
 iline           dd      0
 fakeirq         dd      0
+TC              dd      59659
 megaram         dd      0
-clocksleft      dd      TC
+clocksleft      dd      59659
 ramslot         dd      offset slot2
 cart2slot       dd      offset slot3
 megamask        dd      01Fh
+mappermask      dd      07h
 allram          db      0AAh
 rmask           db      0
 regi            db      0
@@ -672,6 +676,7 @@ megarom0_switchbank_SCC:
 
                 sub     ecx,09880h
                 cmp     al,byte ptr [offset sccregs+ecx]
+                
                 je      _ret
 
                 mov     byte ptr [offset sccregs+ecx],al
@@ -776,6 +781,10 @@ megarom2_switchbank_SCC:
                 jae     _ret
 
                 sub     ecx,09880h
+                ;;
+                cmp     al,byte ptr [offset sccregs+ecx]
+                je      _ret
+                ;;
                 mov     byte ptr [offset sccregs+ecx],al
                 
                 mov     ebx,ecx
@@ -914,6 +923,7 @@ callback_megarom5:
                 add     ebx,ecx
                 pop     ecx
                 
+                add     ecx,ecx
                 mov     dword ptr [eax+esi*8],ebx
                 mov     dword ptr [offset megablock+esi*4],ecx
                 add     ebx,2000h
@@ -1335,15 +1345,16 @@ synch_emulation:
 ; checkpsg -----------------------------------------------------------
 
 checkpsg:
-                cmp     speaker,1
-                jne     checkpsg_start
-
-                call    compose_speaker
+                ;cmp     speaker,1
+                ;jne     checkpsg_start
+                ;
+                ;call    compose_speaker
 
 checkpsg_start:
                 cmp     psgclear,1
                 je      checkpsg_clear
-                add     psgclocks,TC
+                mov     esi,TC
+                add     psgclocks,esi
                 ret
 
 checkpsg_clear:
@@ -1696,7 +1707,8 @@ reset_cpu:
                 mov     regepc,0
 
                 ; lots of clocks
-                mov     clockcounter,TC
+                mov     esi,TC
+                mov     clockcounter,esi
 
                 ; enable all ROM
                 mov     bl,0
@@ -2093,14 +2105,17 @@ outemulAB_reset:
 ; --------------------------------------------------------------------
 
 MAPPER          macro   page
+                local   hidden_mapper
 
                 mov     al,prim_slotreg
                 shr     al,page*2
-                and     al,3h
-                cmp     al,2
-                jne     _ret
+                mov     cl,allram
+                and     eax,3h
+                and     ecx,3h
+                cmp     eax,ecx
+                jne     hidden_mapper
 
-                and     ebx,7h
+                and     ebx,mappermask
                 shl     ebx,14
                 add     ebx,msxram
                 mov     esi,ramslot
@@ -2109,6 +2124,16 @@ MAPPER          macro   page
                 add     ebx,2000h
                 mov     dword ptr [esi+page*16+8],ebx
                 mov     dword ptr [offset mem+page*8+4],ebx
+                ret
+
+hidden_mapper:
+                and     ebx,mappermask
+                shl     ebx,14
+                add     ebx,msxram
+                mov     esi,ramslot
+                mov     dword ptr [esi+page*16],ebx
+                add     ebx,2000h
+                mov     dword ptr [esi+page*16+8],ebx
                 ret
 
                 endm

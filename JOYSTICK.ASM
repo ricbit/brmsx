@@ -15,9 +15,11 @@ public joyenable
 public calibrate_joystick
 public read_joystick
 public joysens
+public snespad
 
 ; DATA ---------------------------------------------------------------
 
+snespad         dd      0
 joyx            dd      0
 joyy            dd      0
 joyxmax         dd      0
@@ -101,7 +103,11 @@ calibrate_joystick:
 ; output: al=joybyte
 
 read_joystick:
+                cmp     snespad,1
+                je      read_snespad
+
                 pushad
+
                 call    joystick_sample
                 mov     bl,00001111b
 
@@ -134,6 +140,90 @@ read_joystick_no_up:
                 popad
                 mov     al,joymsx
                 or      al,joybutton
+                ret
+
+; read_snespad -------------------------------------------------------
+; read the status of a SNES pad connected on LPT1
+
+read_snespad:
+                pushad
+                mov     bl,0FFh
+
+                ; B 
+                mov     al,0FAh
+                call    read_snes_byte
+
+                ; Y
+                mov     al,0F9h
+                call    read_snes_byte
+                rol     al,4
+                and     bl,al
+                
+                ; Select
+                mov     al,0F9h
+                call    read_snes_byte
+                
+                ; Start
+                mov     al,0F9h
+                call    read_snes_byte
+
+                ; Up
+                mov     al,0F9h
+                call    read_snes_byte
+                and     bl,al
+                
+                ; Down
+                mov     al,0F9h
+                call    read_snes_byte
+                rol     al,1
+                and     bl,al
+                
+                ; Left
+                mov     al,0F9h
+                call    read_snes_byte
+                rol     al,2
+                and     bl,al
+                
+                ; Right
+                mov     al,0F9h
+                call    read_snes_byte
+                rol     al,3
+                and     bl,al
+                
+                ; A
+                mov     al,0F9h
+                call    read_snes_byte
+                
+                ; X
+                mov     al,0F9h
+                call    read_snes_byte
+                rol     al,5
+                and     bl,al
+                
+                rept    2
+                mov     al,0F9h
+                call    read_snes_byte
+                endm
+
+                mov     joymsx,bl
+                popad
+                mov     al,joymsx
+
+                ret
+
+read_snes_byte:
+                mov     dx,0378h
+                out     dx,al
+
+                mov     al,0F8h
+                out     dx,al
+
+                inc     dx
+                in      al,dx
+                and     al,040h
+                shr     al,6
+                or      al,0FEh
+
                 ret
 
 code32          ends

@@ -39,6 +39,10 @@ public noise_counter
 public init_adlib
 public reset_adlib
 public fm_single_register
+public soundplaying
+public _samplerate
+public _skipfactor
+public _verticalrate
 
 ; DATA ---------------------------------------------------------------
 
@@ -51,11 +55,20 @@ include fm.inc
 include fmoper.inc
 include fminstr.inc
 
+align 4
+
 SAMPLERATE              equ     45455
+_samplerate             dd      45455
+
 VERTICALRATE            equ     60
+_verticalrate           dd      60
+
 SKIPFACTOR              equ     4
+_skipfactor             dd      4
 
 DSP_TIME_CTE            equ     (256-(1000000/SAMPLERATE))
+_dsp_time_cte           dd      DSP_TIME_CTE
+
 MSXCLOCK                equ     (2*1788055)
 
 ;CONV_FACTOR            equ     (MSXCLOCK/16/SAMPLERATE*65536)  
@@ -64,22 +77,25 @@ CONV_FACTOR             equ     322247
 ;SINGLEINT              equ     SAMPLERATE/VERTICALRATE
 SINGLEINT               equ     757
 BUFFERSIZE              equ     (SINGLEINT*SKIPFACTOR)
+_buffersize             dd      0
 
 ;CLOCKSPERSAMPLE        equ     (MSXCLOCK/SAMPLERATE*256)
 CLOCKSPERSAMPLE         equ     20140
 
 ;SCCFACTOR              equ     (32/32*MSXCLOCK/SAMPLERATE*65536)
 SCCFACTOR               equ     5155955
+_sccfactor              dd      0
 
 ;ENVELOPEFACTOR         equ     (MSXCLOCK/SAMPLERATE*65536*8)
 ENVELOPEFACTOR          equ     41247642
+_envelopefactor         dd      0
 
 ;FMFACTOR               equ     (256*MSXCLOCK/2^18/72/SAMPLERATE*65536*256)
 FMFACTOR                equ     17903
 
-noisestream             db      BUFFERSIZE dup (0)
-envstream               db      BUFFERSIZE dup (0)
-doublebuffer            db      BUFFERSIZE dup (0)
+noisestream             db      8192 dup (0) ;BUFFERSIZE dup (0)
+envstream               db      8192 dup (0) ;BUFFERSIZE dup (0)
+doublebuffer            db      8192 dup (0) ;BUFFERSIZE dup (0)
 
 align 4
 
@@ -97,9 +113,6 @@ soundenabled            dd      0
 sbbaseaddr              dd      0220h
 sbirq                   dd      5
 sbdma                   dd      1
-  
-dsp_time_cte            dd      DSP_TIME_CTE
-dsp_buffer_size         dd      BUFFERSIZE
 
 sb_stub_buf             db      21 dup (0)
 oldsbpirqvect           dd      0
@@ -110,6 +123,7 @@ dmaready                dd      0
 sb_flushed              dd      0
 buffer_flushed          dd      0
 
+soundplaying            dd      0
 
 align 4
 
@@ -229,6 +243,97 @@ init_sound_blaster:
                 add     DSP_WRITE_STATUS,eax
                 add     DSP_DATA_AVAIL,eax
                 call    reset_dsp
+                
+                ; DSP_TIME_CTE equ (256-(1000000/SAMPLERATE))
+
+                mov     eax,1000000
+                mov     edx,0
+                mov     ebx,_samplerate
+                div     ebx
+                mov     ebx,256
+                sub     ebx,eax
+                mov     _dsp_time_cte,ebx
+
+                ; CONV_FACTOR equ (MSXCLOCK/16/SAMPLERATE*65536)  
+
+                mov     eax,06912E000h
+                mov     edx,03h
+                mov     ebx,_samplerate
+                div     ebx
+                mov     dword ptr [offset patch__11+2],eax
+                mov     dword ptr [offset patch__12+2],eax
+                mov     dword ptr [offset patch__13+2],eax
+                mov     dword ptr [offset patch__14+2],eax
+                mov     dword ptr [offset patch__15+2],eax
+                
+                ; SINGLEINT equ SAMPLERATE/VERTICALRATE
+                ; BUFFERSIZE equ (SINGLEINT*SKIPFACTOR)
+
+                mov     eax,_samplerate
+                mov     ebx,_skipfactor
+                mul     ebx
+                mov     ebx,_verticalrate
+                div     ebx
+                mov     _buffersize,eax
+                mov     dword ptr [offset patch__21+2],eax
+                mov     dword ptr [offset patch__22+2],eax
+                mov     dword ptr [offset patch__23+2],eax
+                mov     dword ptr [offset patch__24+2],eax
+                mov     dword ptr [offset patch__25+2],eax
+                mov     dword ptr [offset patch__26+2],eax
+                mov     dword ptr [offset patch__27+2],eax
+                mov     dword ptr [offset patch__210+2],eax
+                mov     dword ptr [offset patch__211+2],eax
+                mov     dword ptr [offset patch__212+2],eax
+                mov     dword ptr [offset patch__213+2],eax
+                mov     dword ptr [offset patch__214+2],eax
+                mov     dword ptr [offset patch__215+2],eax
+                mov     dword ptr [offset patch__216+2],eax
+                mov     dword ptr [offset patch__217+2],eax
+                mov     dword ptr [offset patch__218+2],eax
+                mov     dword ptr [offset patch__219+2],eax
+                mov     dword ptr [offset patch__220+2],eax
+                mov     dword ptr [offset patch__221+2],eax
+                mov     dword ptr [offset patch__222+2],eax
+                mov     dword ptr [offset patch__223+2],eax
+
+                ; CLOCKSPERSAMPLE equ (MSXCLOCK/SAMPLERATE*256)
+                mov     eax,036912E00h
+                mov     edx,0
+                mov     ebx,_samplerate
+                div     ebx
+                mov     dword ptr [offset patch__31+2],eax
+                mov     dword ptr [offset patch__32+2],eax
+                mov     dword ptr [offset patch__33+2],eax
+                mov     dword ptr [offset patch__34+2],eax
+                mov     dword ptr [offset patch__35+2],eax
+                mov     dword ptr [offset patch__36+2],eax
+                mov     dword ptr [offset patch__37+2],eax
+                mov     dword ptr [offset patch__38+2],eax
+                mov     dword ptr [offset patch__39+2],eax
+                mov     dword ptr [offset patch__310+2],eax
+                mov     dword ptr [offset patch__311+2],eax
+                mov     dword ptr [offset patch__312+2],eax
+                mov     dword ptr [offset patch__313+2],eax
+                mov     dword ptr [offset patch__314+2],eax
+                mov     dword ptr [offset patch__315+2],eax
+                mov     dword ptr [offset patch__316+2],eax
+                mov     dword ptr [offset patch__317+2],eax
+
+                ; SCCFACTOR equ (32/32*MSXCLOCK/SAMPLERATE*65536)
+                mov     eax,912E0000h
+                mov     edx,036h
+                mov     ebx,_samplerate
+                div     ebx
+                mov     _sccfactor,eax
+
+                ; ENVELOPEFACTOR equ (MSXCLOCK/SAMPLERATE*65536*8)
+                mov     eax,89700000h
+                mov     edx,01B4h
+                mov     ebx,_samplerate
+                div     ebx
+                mov     _envelopefactor,eax
+
                 ret
   
 ; init_dma_buffer ----------------------------------------------------
@@ -238,7 +343,7 @@ init_sound_blaster:
 
 init_dma_buffer:
                 mov     edi,dmabuffer
-                mov     ecx,BUFFERSIZE
+                mov     ecx,_buffersize ;BUFFERSIZE
                 mov     al,0
                 rep     stosb
 
@@ -296,13 +401,20 @@ play:
                 movzx   edx,byte ptr [offset DMA_page_table+edx]
                 out     dx,al
 
-                mov     al,((BUFFERSIZE-1) and 0FFh)
+                mov     ebx,_buffersize
+                dec     ebx
+
+                ;mov     al,((BUFFERSIZE-1) and 0FFh)
+                mov     al,bl
+
                 mov     edx,sbdma
                 shl     edx,1
                 inc     edx
                 out     dx,al
 
-                mov     al,(((BUFFERSIZE-1) shr 8) and 0FFh)
+                ;mov     al,(((BUFFERSIZE-1) shr 8) and 0FFh)
+                mov     al,bh
+
                 out     dx,al
 
                 mov     eax,sbdma
@@ -312,16 +424,24 @@ play:
                 mov     bl,040h
                 call    write_dsp
 
-                mov     ebx,dsp_time_cte
+                mov     ebx,_dsp_time_cte
                 call    write_dsp
 
                 mov     bl,048h
                 call    write_dsp
                 
-                mov     bl,((BUFFERSIZE-1) and 0FFh)
+                mov     ebx,_buffersize
+                dec     ebx
+
+                ;mov     bl,((BUFFERSIZE-1) and 0FFh)
                 call    write_dsp
                 
-                mov     bl,(((BUFFERSIZE-1) shr 8) and 0FFh)
+                mov     ebx,_buffersize
+                dec     ebx
+                mov     bl,bh
+                
+                ;mov     bl,(((BUFFERSIZE-1) shr 8) and 0FFh)
+
                 call    write_dsp
 
                 mov     bl,090h
@@ -343,7 +463,11 @@ my_sb_irq_handler:
 
                 mov     edi,dmabuffer
                 mov     esi,offset doublebuffer ; dmatemp
-                mov     ecx,(BUFFERSIZE+4)/4
+                ;mov     ecx,(BUFFERSIZE+4)/4
+                mov     ecx,_buffersize
+                shr     ecx,2
+                inc     ecx
+
                 rep     movsd
 
                 mov     edx,DSP_DATA_AVAIL
@@ -420,6 +544,8 @@ turnoff_sbirq:
 ; turns on the sound system
 
 sound_on:
+                or      soundplaying,1
+                
                 cmp     soundenabled,0
                 je      _ret
                 cmp     emulatemode,1
@@ -442,6 +568,15 @@ sound_on:
 ; turns off the sound system
 
 sound_off:
+                and     soundplaying,0FFFFFFFEh
+                
+                cmp     speaker,1
+                jne     sound_off_sb
+
+                call    speaker_shutup
+                ret
+
+sound_off_sb:
                 cmp     soundenabled,0
                 je      _ret
                 call    turnoff_sbirq
@@ -634,7 +769,7 @@ compose_soundstream_update_buffer:
 
                 mov     esi,dmatemp
                 mov     edi,offset doublebuffer
-                mov     ecx,BUFFERSIZE
+                mov     ecx,_buffersize ;BUFFERSIZE
                 rep     movsb
                 
                 popad
@@ -646,7 +781,7 @@ compose_soundstream_update_buffer:
 compose_click:
 
                 mov     ecx,0
-                mov     edi,BUFFERSIZE
+                mov     edi,_buffersize ; BUFFERSIZE
                 mov     esi,dmatemp
                 mov     ebp,timebuffer
                 mov     ebp,[ebp]
@@ -655,7 +790,7 @@ compose_click:
 
 compose_click_loop:
                 mov     [esi],al
-                add     ecx,CLOCKSPERSAMPLE
+patch__31:      add     ecx,CLOCKSPERSAMPLE
                 inc     esi                
                 
                 cmp     ecx,ebp
@@ -695,7 +830,7 @@ compose_channel_notclick:
 compose_cassete:
 
                 mov     ecx,0
-                mov     edi,BUFFERSIZE
+                mov     edi,_buffersize ;BUFFERSIZE
                 mov     esi,dmatemp
                 mov     ebp,timebuffer
                 mov     ebp,[ebp]
@@ -706,7 +841,7 @@ compose_cassete_loop:
                 add     [esi],al
                 inc     esi                
 
-                add     ecx,CLOCKSPERSAMPLE
+patch__32:      add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jb      compose_cassete_nextsample
 
@@ -783,7 +918,7 @@ PSG_full:
                 je      PSG_really_nothing
 
 PSG_full_loop:                
-                add     esi,CONV_FACTOR
+patch__11:      add     esi,CONV_FACTOR
                 cmp     esi,ebx
                 jle     PSG_full_mix
 
@@ -794,14 +929,14 @@ PSG_full_mix:
                 mov     dl,[edi+offset noisestream]
                 and     dl,ah
                 and     dl,al
-                add     ecx,CLOCKSPERSAMPLE
+patch__33:      add     ecx,CLOCKSPERSAMPLE
 patch2:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__21:      cmp     edi,BUFFERSIZE
                 jne     PSG_full_loop
 
                 jmp     PSG_exit
@@ -815,14 +950,14 @@ PSG_only_noise:
 PSG_only_noise_loop:                
                 mov     dl,[edi+offset noisestream]
                 and     dl,ah
-                add     ecx,CLOCKSPERSAMPLE
+patch__34:      add     ecx,CLOCKSPERSAMPLE
 patch6:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__22:      cmp     edi,BUFFERSIZE
                 jne     PSG_only_noise_loop
 
                 jmp     PSG_exit
@@ -834,7 +969,7 @@ PSG_only_music:
                 je      PSG_really_nothing
 
 PSG_only_music_loop:                
-                add     esi,CONV_FACTOR
+patch__12:      add     esi,CONV_FACTOR
                 cmp     esi,ebx
                 jle     PSG_only_music_mix
 
@@ -844,14 +979,14 @@ PSG_only_music_loop:
 PSG_only_music_mix:
                 mov     dl,al
                 and     dl,ah
-                add     ecx,CLOCKSPERSAMPLE
+patch__35:      add     ecx,CLOCKSPERSAMPLE
 patch4:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__23:      cmp     edi,BUFFERSIZE
                 jne     PSG_only_music_loop
 
                 jmp     PSG_exit
@@ -864,12 +999,12 @@ PSG_nothing:
 
 PSG_nothing_loop:
 patch3:         add     [edi+12345678h],ah
-                add     ecx,CLOCKSPERSAMPLE
+patch__36:      add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jae     compose_channel_check
                 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__24:      cmp     edi,BUFFERSIZE
                 jne     PSG_nothing_loop
 
                 jmp     PSG_exit
@@ -877,12 +1012,12 @@ patch3:         add     [edi+12345678h],ah
 ; --------------------------------------------------------------------
                 
 PSG_really_nothing:
-                add     ecx,CLOCKSPERSAMPLE
+patch__37:      add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jae     compose_channel_check
                 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__25:      cmp     edi,BUFFERSIZE
                 jne     PSG_really_nothing
 
                 jmp     PSG_exit
@@ -892,7 +1027,7 @@ PSG_really_nothing:
 PSG_only_music_envelope:
                 
 PSG_only_music_envelope_loop:                
-                add     esi,CONV_FACTOR
+patch__13:      add     esi,CONV_FACTOR
                 cmp     esi,ebx
                 jle     PSG_only_music_envelope_mix
 
@@ -902,14 +1037,14 @@ PSG_only_music_envelope_loop:
 PSG_only_music_envelope_mix:
                 mov     dl,al
                 and     dl,[edi+offset envstream]
-                add     ecx,CLOCKSPERSAMPLE
+patch__38:      add     ecx,CLOCKSPERSAMPLE
 patch8:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__26:      cmp     edi,BUFFERSIZE
                 jne     PSG_only_music_envelope_loop
 
                 jmp     PSG_exit
@@ -921,14 +1056,14 @@ PSG_only_noise_envelope:
 PSG_only_noise_envelope_loop:                
                 mov     dl,[edi+offset noisestream]
                 and     dl,[edi+offset envstream]
-                add     ecx,CLOCKSPERSAMPLE
+patch__39:      add     ecx,CLOCKSPERSAMPLE
 patch9:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__27:      cmp     edi,BUFFERSIZE
                 jne     PSG_only_noise_envelope_loop
 
                 jmp     PSG_exit
@@ -938,7 +1073,7 @@ patch9:         add     [edi+12345678h],dl
 PSG_full_envelope:
 
 PSG_full_envelope_loop:                
-                add     esi,CONV_FACTOR
+patch__14:      add     esi,CONV_FACTOR
                 cmp     esi,ebx
                 jle     PSG_full_envelope_mix
 
@@ -949,14 +1084,14 @@ PSG_full_envelope_mix:
                 mov     dl,[edi+offset noisestream]
                 and     dl,[edi+offset envstream]
                 and     dl,al
-                add     ecx,CLOCKSPERSAMPLE
+patch__310:     add     ecx,CLOCKSPERSAMPLE
 patch1:         add     [edi+12345678h],dl
 
                 cmp     ecx,ebp
                 jae     compose_channel_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__210:     cmp     edi,BUFFERSIZE
                 jne     PSG_full_envelope_loop
 
                 jmp     PSG_exit
@@ -968,12 +1103,12 @@ PSG_nothing_envelope:
 PSG_nothing_envelope_loop:
                 mov     al,[edi+offset envstream]
 patch5:         add     [edi+12345678h],al
-                add     ecx,CLOCKSPERSAMPLE
+patch__311:     add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jae     compose_channel_check
                 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__211:     cmp     edi,BUFFERSIZE
                 jne     PSG_nothing_envelope_loop
 
                 jmp     PSG_exit
@@ -1005,7 +1140,7 @@ compose_channel_notpsg:
                 call    modify_parameters
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__212:     cmp     edi,BUFFERSIZE
                 jne     compose_channel_long_loop
 
 ; --------------------------------------------------------------------
@@ -1149,7 +1284,7 @@ compose_scc_loop:
                 add     edx,ebx 
 patchscc2:      mov     al,[esi+12345678h]
                 and     edx,2097151 ; this is 32*65536-1
-                add     ecx,CLOCKSPERSAMPLE
+patch__312:     add     ecx,CLOCKSPERSAMPLE
                 mov     esi,edx
                 mov     al,[eax+offset SCC_table]
                 shr     esi,16
@@ -1159,7 +1294,7 @@ patchscc1:      add     [edi+12345678h],al
                 jae     compose_scc_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__213:     cmp     edi,BUFFERSIZE
                 jne     compose_scc_loop
 
 ; --------------------------------------------------------------------
@@ -1202,7 +1337,7 @@ compose_channel_notscc:
 
 compose_scc_nextsample:
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__214:     cmp     edi,BUFFERSIZE
                 jne     compose_scc_loop
 
                 jmp     compose_scc_exit
@@ -1250,7 +1385,7 @@ modify_parameters_scc:
                 je      modify_parameters_scc_samefreq
 
                 mov     edx,0
-                mov     eax,SCCFACTOR
+                mov     eax,_sccfactor ;SCCFACTOR
                 div     ebx
                 mov     ebx,eax
 
@@ -1273,7 +1408,9 @@ modify_parameters_scc_samefreq:
                 shr     ch,cl
                 test    ch,1
                 jnz     modify_parameters_scc_skip1
-                mov     ah,0
+                ;;;
+                ;;;mov     ah,0
+                mov     ebx,0
 
 modify_parameters_scc_skip1:
 
@@ -1321,7 +1458,7 @@ compose_fm_loop:
                 add     edx,ebx 
 patchfm2:       mov     al,[esi+12345678h]
                 ; there should be an "and" here but this routine is tricky
-                add     ecx,CLOCKSPERSAMPLE
+patch__313:     add     ecx,CLOCKSPERSAMPLE
                 mov     esi,edx
                 mov     al,[eax+offset SCC_table]
                 shr     esi,16+8
@@ -1331,7 +1468,7 @@ patchfm1:       add     [edi+12345678h],al
                 jae     compose_fm_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__215:     cmp     edi,BUFFERSIZE
                 jne     compose_fm_loop
 
 ; --------------------------------------------------------------------
@@ -1371,7 +1508,7 @@ compose_channel_notfm:
 
 compose_fm_nextsample:
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__216:     cmp     edi,BUFFERSIZE
                 jne     compose_fm_loop
 
                 jmp     compose_fm_exit
@@ -1476,7 +1613,7 @@ compose_noise_long_loop:
 ; --------------------------------------------------------------------
                 
 compose_noise_loop:
-                add     esi,CONV_FACTOR
+patch__15:      add     esi,CONV_FACTOR
                 cmp     esi,ebx
                 jle     compose_noise_mix
 
@@ -1504,12 +1641,12 @@ compose_noise_one:
 compose_noise_mix:
                 mov     [edi+offset noisestream],al
 
-                add     ecx,CLOCKSPERSAMPLE
+patch__314:     add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jae     compose_noise_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__217:     cmp     edi,BUFFERSIZE
                 jne     compose_noise_loop
 
                 jmp     noise_exit
@@ -1536,12 +1673,12 @@ compose_noise_danger_loop_go:
                 sbb     esi,esi
                 and     ebx,esi
 
-                add     ecx,CLOCKSPERSAMPLE
+patch__315:     add     ecx,CLOCKSPERSAMPLE
                 cmp     ecx,ebp
                 jae     compose_noise_check_now
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__218:     cmp     edi,BUFFERSIZE
                 jne     compose_noise_danger_loop
 
                 pop     esi
@@ -1581,7 +1718,7 @@ compose_noise_notpsg:
                 call    modify_parameters_noise
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__219:     cmp     edi,BUFFERSIZE
                 jne     compose_noise_long_loop
 
 noise_exit:
@@ -1732,7 +1869,7 @@ compose_purenoise_loop:
                 and     ebp,ecx
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__220:     cmp     edi,BUFFERSIZE
                 jne     compose_purenoise_loop
 
                 mov     noise_counter,edx
@@ -1781,14 +1918,14 @@ compose_envelope_first_loop:
                 mov     esi,edx
                 shr     esi,16+8
 patchenv1:      mov     al,[esi+12345678h]
-                add     ecx,CLOCKSPERSAMPLE
+patch__316:     add     ecx,CLOCKSPERSAMPLE
                 mov     [edi+offset envstream],al
 
                 cmp     ecx,ebp
                 jae     compose_envelope_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__221:     cmp     edi,BUFFERSIZE
                 jne     compose_envelope_first_loop
 
                 jmp     compose_envelope_exit
@@ -1811,14 +1948,14 @@ compose_envelope_loop:
                 mov     esi,edx
                 shr     esi,16+8
 patchenv2:      mov     al,[esi+12345678h+16]
-                add     ecx,CLOCKSPERSAMPLE
+patch__317:     add     ecx,CLOCKSPERSAMPLE
                 mov     [edi+offset envstream],al
 
                 cmp     ecx,ebp
                 jae     compose_envelope_check
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__222:     cmp     edi,BUFFERSIZE
                 jne     compose_envelope_loop
 
 ; --------------------------------------------------------------------
@@ -1862,7 +1999,7 @@ compose_envelope_notpsg:
                 call    modify_parameters_envelope
 
                 inc     edi
-                cmp     edi,BUFFERSIZE
+patch__223:     cmp     edi,BUFFERSIZE
                 jne     compose_envelope_outer_loop
 
                 jmp     compose_envelope_exit
@@ -1889,7 +2026,7 @@ modify_parameters_envelope:
                 je      modify_parameters_envelope_samefreq
 
                 mov     edx,0
-                mov     eax,ENVELOPEFACTOR
+                mov     eax,_envelopefactor ;ENVELOPEFACTOR
                 div     ebx
                 mov     ebx,eax
 
