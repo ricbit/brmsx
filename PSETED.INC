@@ -105,7 +105,7 @@ psetEDxx:
 	psetED67: dd prinED67
 	psetED68: dd prinXX
 	psetED69: dd prinXX
-	psetED6A: dd prinXX
+	psetED6A: dd prinED6A
 	psetED6B: dd prinXX
 	psetED6C: dd prinXX
 	psetED6D: dd prinXX

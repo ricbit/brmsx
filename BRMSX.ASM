@@ -96,6 +96,9 @@ _main0:
                 je     _main1
                 cmp     eax,08000h
                 jne     cartridge_not_supported
+                mov     ecx,cart1
+                add     ecx,4000h
+                mov     dword ptr [offset slot1+16],ecx
 _main1:
                 mov     edx,cart1
                 mov     ecx,eax

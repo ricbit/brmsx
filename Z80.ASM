@@ -600,11 +600,11 @@ fetchw:         mov     esi,edi                         ; clock 1 U
                 mov     ax,word ptr [esi+ebx]           ; clock 6 U [AGI]
                 ret
 fetchw_slow:  
-                mov     ebx,[offset mem+esi*4]          ; clock 4 U
-                inc     esi                             ; clock 4 V
-                mov     al,byte ptr [ebx+01fffh]        ; clock 6 U [AGI]
-                mov     ebx,[offset mem+esi*4]          ; clock 6 V
-                mov     ah,byte ptr [ebx]               ; clock 8 U [AGI]
+                call    fetch
+                inc     di
+                mov     ah,al
+                call    fetch
+                dec     di
                 ret
 
 
@@ -1515,54 +1515,28 @@ XORHL           AE
 XORREG          AF,dh
                 
 ; B0 - OR B
-emulB0:         inc     edi
-                or      dh,regb
-                setflag_or
-                ret
+ORREG           B0,regb
 
 ; B1 - OR C
-emulB1:         inc     edi
-                or      dh,regc
-                setflag_or
-                ret
+ORREG           B1,regc
 
 ; B2 - OR D
-emulB2:         inc     edi
-                or      dh,regd
-                setflag_or
-                ret
+ORREG           B2,regd
 
 ; B3 - OR E
-emulB3:         inc     edi
-                or      dh,rege
-                setflag_or
-                ret
+ORREG           B3,rege
 
 ; B4 - OR H
-emulB4:         inc     edi
-                or      dh,regh
-                setflag_or
-                ret
+ORREG           B4,regh
 
 ; B5 - OR L
-emulB5:         inc     edi
-                or      dh,regl
-                setflag_or
-                ret
+ORREG           B5,regl
 
 ; B6 - OR (HL)
-emulB6:         inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      dh,al
-                setflag_or
-                ret
+ORHL            B6
 
 ; B7 - OR A
-emulB7:         inc     edi
-                or      dh,dh
-                setflag_or
-                ret
+ORREG           B7,dh
 
 ; B8 - CP B
 emulB8:         inc     edi
@@ -2197,84 +2171,52 @@ RLCHL           CB06
 RLCREG          CB07,dh
 
 ; CB 10 - RL B
-emulCB10:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcl     regb,1
-                setflag_rl
-                ret
+RLREG           CB10,regb
 
 ; CB 11 - RL C
-emulCB11:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcl     regc,1
-                setflag_rl
-                ret
+RLREG           CB11,regc
 
 ; CB 12 - RL D
-emulCB12:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcl     regd,1
-                setflag_rl
-                ret
+RLREG           CB12,regd
+
+; CB 13 - RL E
+RLREG           CB13,rege
 
 ; CB 14 - RL H
-emulCB14:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcl     regh,1
-                setflag_rl
-                ret
+RLREG           CB14,regh
 
 ; CB 15 - RL L
-emulCB15:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcl     regl,1
-                setflag_rl
-                ret
+RLREG           CB15,regl
+
+; CB 16 - RL (HL)
+RLHL            CB16
+
+; CB 17 - RL A
+RLREG           CB17,dh
 
 ; CB 18 - RR B
-emulCB18:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcr     regb,1
-                setflag_rr
-                ret
+RRREG           CB18,regb
 
 ; CB 19 - RR C
-emulCB19:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcr     regc,1
-                setflag_rr
-                ret
+RRREG           CB19,regc
+
+; CB 1A - RR D
+RRREG           CB1A,regd
 
 ; CB 1B - RR E
-emulCB1B:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcr     rege,1
-                setflag_rr
-                ret
+RRREG           CB1B,rege
 
 ; CB 1C - RR H
-emulCB1C:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcr     regh,1
-                setflag_rr
-                ret
+RRREG           CB1C,regh
 
 ; CB 1D - RR L
-emulCB1D:       inc     edi
-                mov     bl,dl
-                shr     bl,1
-                rcr     regl,1
-                setflag_rr
-                ret
+RRREG           CB1D,regl
+
+; CB 1E - RR (HL)
+RRHL            CB1E
+
+; CB 1F - RR A
+RRREG           CB1F,dh
 
 ; CB 21 - SLA C
 emulCB21:       inc     edi
@@ -2693,52 +2635,125 @@ RESHL           CBBE,7
 ; CB BF - RES 7,A
 RESREG          CBBF,dh,7
 
+; CB C0 - SET 0,B
+SETREG          CBC0,regb,0
+
 ; CB C1 - SET 0,C
-emulCBC1:       inc     edi
-                or      regc,BIT_0
-                ret
+SETREG          CBC1,regc,0
+
+; CB C2 - SET 0,D
+SETREG          CBC2,regd,0
+
+; CB C3 - SET 0,E
+SETREG          CBC3,rege,0
+
+; CB C4 - SET 0,H
+SETREG          CBC4,regh,0
+
+; CB C5 - SET 0,L
+SETREG          CBC5,regl,0
 
 ; CB C6 - SET 0,(HL)
-emulCBC6:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_0
-                call    writemem
-                ret
+SETHL           CBC6,0
+
+; CB C7 - SET 0,A
+SETREG          CBC7,dh,0
+
+; CB C8 - SET 1,B
+SETREG          CBC8,regb,1
+
+; CB C9 - SET 1,C
+SETREG          CBC9,regc,1
+
+; CB CA - SET 1,D
+SETREG          CBCA,regd,1
+
+; CB CB - SET 1,E
+SETREG          CBCB,rege,1
+
+; CB CC - SET 1,H
+SETREG          CBCC,regh,1
+
+; CB CD - SET 1,L
+SETREG          CBCD,regl,1
 
 ; CB CE - SET 1,(HL)
-emulCBCE:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_1
-                call    writemem
-                ret
+SETHL           CBCE,1
 
 ; CB CF - SET 1,A
-emulCBCF:       inc     edi
-                or      dh,BIT_1
-                ret
+SETREG          CBCF,dh,1
+
+; CB D0 - SET 2,B
+SETREG          CBD0,regb,2
+
+; CB D1 - SET 2,C
+SETREG          CBD1,regc,2
+
+; CB D2 - SET 2,D
+SETREG          CBD2,regd,2
+
+; CB D3 - SET 2,E
+SETREG          CBD3,rege,2
+
+; CB D4 - SET 2,H
+SETREG          CBD4,regh,2
+
+; CB D5 - SET 2,L
+SETREG          CBD5,regl,2
+
+; CB D6 - SET 2,(HL)
+SETHL           CBD6,2
 
 ; CB D7 - SET 2,A
-emulCBD7:       inc     edi
-                or      dh,BIT_2
-                ret
+SETREG          CBD7,dh,2
+
+; CB D8 - SET 3,B
+SETREG          CBD8,regb,3
+
+; CB D9 - SET 3,C
+SETREG          CBD9,regc,3
+
+; CB DA - SET 3,D
+SETREG          CBDA,regd,3
+
+; CB DB - SET 3,E
+SETREG          CBDB,rege,3
+
+; CB DC - SET 3,H
+SETREG          CBDC,regh,3
+
+; CB DD - SET 3,L
+SETREG          CBDD,regl,3
 
 ; CB DE - SET 3,(HL)
-emulCBDE:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_3
-                call    writemem
-                ret
+SETHL           CBDE,3
+
+; CB DF - SET 3,A
+SETREG          CBDF,dh,3
+
+; CB E0 - SET 4,B
+SETREG          CBE0,regb,4
+
+; CB E1 - SET 4,C
+SETREG          CBE1,regc,4
+
+; CB E2 - SET 4,D
+SETREG          CBE2,regd,4
+
+; CB E3 - SET 4,E
+SETREG          CBE3,rege,4
+
+; CB E4 - SET 4,H
+SETREG          CBE4,regh,4
+
+; CB E5 - SET 4,L
+SETREG          CBE5,regl,4
 
 ; CB E6 - SET 4,(HL)
-emulCBE6:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_4
-                call    writemem
-                ret
+SETHL           CBE6,4
+
+; CB E7 - SET 4,A
+SETREG          CBE7,dh,4
 
 ; CB E8 - SET 5,B
 SETREG          CBE8,regb,5
@@ -2759,36 +2774,58 @@ SETREG          CBEC,regh,5
 SETREG          CBED,regl,5
 
 ; CB EE - SET 5,(HL)
-emulCBEE:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_5
-                call    writemem
-                ret
+SETHL           CBEE,5
 
 ; CB EF - SET 5,A
 SETREG          CBEF,dh,5
 
+; CB F0 - SET 6,B
+SETREG          CBF0,regb,6
+
+; CB F1 - SET 6,C
+SETREG          CBF1,regc,6
+
 ; CB F2 - SET 6,D
-emulCBF2:       inc     edi
-                or      regd,BIT_6
-                ret
+SETREG          CBF2,regd,6
+
+; CB F3 - SET 6,E
+SETREG          CBF3,rege,6
+
+; CB F4 - SET 6,H
+SETREG          CBF4,regh,6
+
+; CB F5 - SET 6,L
+SETREG          CBF5,regl,6
 
 ; CB F6 - SET 6,(HL)
-emulCBF6:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_6
-                call    writemem
-                ret
+SETHL           CBF6,6
+
+; CB F7 - SET 6,A
+SETREG          CBF7,dh,6
+
+; CB F8 - SET 7,B
+SETREG          CBF8,regb,7
+
+; CB F9 - SET 7,C
+SETREG          CBF9,regc,7
+
+; CB FA - SET 7,D
+SETREG          CBFA,regd,7
+
+; CB FB - SET 7,E
+SETREG          CBFB,rege,7
+
+; CB FC - SET 7,H
+SETREG          CBFC,regh,7
+
+; CB FD - SET 7,L
+SETREG          CBFD,regl,7
 
 ; CB FE - SET 7,(HL)
-emulCBFE:       inc     edi
-                mov     ecx,regehl
-                call    readmem
-                or      al,BIT_7
-                call    writemem
-                ret
+SETHL           CBFE,7
+
+; CB FF - SET 7,A
+SETREG          CBFF,dh,7
 
 ; DD 09 - ADD IX,BC
 emulDD09:       inc     edi
@@ -3231,6 +3268,15 @@ emulED62:       inc     edi
 
 ; ED 67 - RRD
 OPRRD           ED67
+
+; ED 6A - ADC HL,HL
+emulED6A:       inc     edi
+                mov     bl,dl
+                shr     bl,1
+                mov     ecx,regehl
+                adc     reghl,cx
+                setflag_adc
+                ret
 
 ; ED 6F - RLD
 emulED6F:       inc     edi

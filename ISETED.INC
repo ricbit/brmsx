@@ -105,7 +105,7 @@ isetEDxx:
 	isetED67: dd emulED67
 	isetED68: dd emulXX
 	isetED69: dd emulXX
-	isetED6A: dd emulXX
+	isetED6A: dd emulED6A
 	isetED6B: dd emulXX
 	isetED6C: dd emulXX
 	isetED6D: dd emulXX

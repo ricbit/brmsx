@@ -324,6 +324,19 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SETREG - SET nn,rr nn=[0..7] rr=[a,b,c,d,e,h,l]
+
+SETREG          macro   opcode,reg,bit
+
+emul&opcode:                
+                inc     edi
+                or      reg,BIT_&bit
+                mov     ebp,8
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; RESHL - RES nn,(HL)
 
 RESHL          macro   opcode,bit
@@ -333,6 +346,22 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 and     al,NBIT_&bit
+                call    writemem
+                mov     ebp,15
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SETHL - SET nn,(HL)
+
+SETHL          macro   opcode,bit
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                or      al,BIT_&bit
                 call    writemem
                 mov     ebp,15
                 ret
@@ -351,6 +380,82 @@ emul&opcode:
                 mov     al,dl
                 and     dl,1
                 mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RRREG - RR rr rr=[a,b,c,d,e,h,l]
+
+RRREG           macro   opcode,reg
+
+emul&opcode:                
+                inc     edi
+                shr     dl,1
+                mov     dl,reg
+                rcr     reg,1
+                and     dl,1
+                mov     al,reg
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RLREG - RL rr rr=[a,b,c,d,e,h,l]
+
+RLREG           macro   opcode,reg
+
+emul&opcode:                
+                inc     edi
+                shr     dl,1
+                mov     dl,0
+                rcl     reg,1
+                mov     al,reg
+                adc     dl,dl
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RLHL - RL (HL)
+
+RLHL            macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                shr     dl,1
+                mov     dl,0
+                rcl     al,1
+                adc     dl,dl
+                call    writemem
+                mov     ebp,8
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; RRHL - RR (HL)
+
+RRHL            macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                shr     dl,1
+                mov     dl,al
+                rcr     al,1
+                and     dl,1
+                call    writemem
+                mov     ebp,15
                 or      dl,[offset LOGICAL_table+eax]
                 ret
 
@@ -514,19 +619,6 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
-; SETREG - SET nn,rr nn=[0..7] rr=[a,b,c,d,e,h,l]
-
-SETREG          macro   opcode,reg,bit
-
-emul&opcode:                
-                inc     edi
-                or      reg,BIT_&bit
-                mov     ebp,8
-                ret
-
-                endm
-
-; --------------------------------------------------------------------
 ; XORREG - XOR rr rr=[a,b,c,d,e,h,l]
 
 XORREG          macro   opcode,reg
@@ -551,6 +643,39 @@ emul&opcode:
                 mov     ecx,regehl
                 call    readmem
                 xor     dh,al
+                mov     al,dh
+                mov     ebp,7
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; ORREG - OR rr rr=[a,b,c,d,e,h,l]
+
+ORREG           macro   opcode,reg
+
+emul&opcode:                
+                inc     edi
+                or      dh,reg
+                mov     al,dh
+                mov     ebp,4
+                mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; ORHL - OR (HL)
+
+ORHL            macro   opcode
+
+emul&opcode:                
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                or      dh,al
+                mov     al,dh
                 mov     ebp,7
                 mov     dl,[offset LOGICAL_table+eax]
                 ret
