@@ -22,6 +22,7 @@ public render_screen2
 public render
 public clear
 public lastscreen
+public sprite_render
 
 ; DATA ---------------------------------------------------------------
 
@@ -39,8 +40,9 @@ enabled         dd      1
 linenumber      dd      0
 stacksave       dd      0
 colorsave       dd      0
-lastscreen      db      0
+spriteenable    dd      0
 spriteline      db      192 dup (0)
+lastscreen      db      0
 
 ; render_screen0 -----------------------------------------------------
 ; render a screen 0 page
@@ -130,6 +132,7 @@ render05:
                 dec     ebp
                 jnz     render06
 
+                mov     spriteenable,0
                 ret
 
 ; render_screen1 -----------------------------------------------------
@@ -242,7 +245,8 @@ render11:       push    ebp
                 dec     ebp
                 jnz     render10
 
-                jmp     sprite_render
+                mov     spriteenable,1
+                ret
 
 ; PIPE2_DOS ----------------------------------------------------------
 ; this is the inner loop for render_screen2 function
@@ -421,7 +425,8 @@ render21:
                 dec     ebp
                 jnz     render23
 
-                jmp     sprite_render
+                mov     spriteenable,1
+                ret
 
 ; sprite_render ------------------------------------------------------
 ; draw the sprites directly on the pentium video memory
@@ -429,6 +434,9 @@ render21:
 align 4
 
 sprite_render:
+
+                cmp     spriteenable,1
+                jne     _ret
 
                 test    byte ptr [offset vdpregs+1],BIT_1
                 jnz     sprite16

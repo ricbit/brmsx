@@ -26,6 +26,7 @@ include bit.inc
 include opcode.inc
 include z80supp.inc
 include pmode.inc
+include gui.inc
 
 public fetch
 public fetchw
@@ -61,11 +62,11 @@ public rmask
 public regi
 public emulatemode
 public megarommode
-public z80rate
 public psgreg
 public prim_slotreg
 public ppic
 public megablock
+public z80rate
 
 public slot0
 public slot1
@@ -127,6 +128,7 @@ public PVS53_table
 public PVN53_table
 public INC_table
 public DEC_table
+public CP_table
 
 ; DATA ---------------------------------------------------------------
 
@@ -160,6 +162,7 @@ include daas.inc
 include inc.inc
 include dec.inc
 include int.inc
+include cp.inc
 
 align 4
 
@@ -274,8 +277,8 @@ rcounter        dd      0
 clockcounter    dd      0
 emulatemode     dd      0
 megarommode     dd      0
-z80rate         dd      0
 z80counter      db      8 dup (0)
+z80rate         dd      0
 rmask           db      0
 regi            db      0
 
@@ -782,9 +785,8 @@ OPRLA           17
 emul18:         inc     edi
                 call    fetch
                 movsx   ebx,al
-                inc     edi
                 mov     ebp,12+2
-                add     edi,ebx
+                lea     edi,[edi+ebx+1]
                 ret
 
 ; 19 - ADD HL,DE

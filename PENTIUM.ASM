@@ -98,7 +98,7 @@ setup_profile:
                 xor     edx,edx
                 ;                     msr 13          msr 12
                 ;                     ------          ------
-                mov     eax,00000000110111110000000011100001b
+                mov     eax,00000000110101100000000011010111b
                 mov     ecx,011h
                 wrmsr
                 mov     ecx,012h

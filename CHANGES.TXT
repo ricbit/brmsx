@@ -1,3 +1,15 @@
+release 1.44:
+
+- fixed undocument flag affection for CP opcodes
+- optimized JR and JRCC
+- moved gui code from IO.ASM to GUI.ASM
+- added a new bar graph 
+  1st bar: z80 emulation
+  2nd bar: screen renderer
+  3rd bar: sprite renderer
+  4th bar: blitting time
+  5th bar: overhead of bar graph
+
 release 1.43:
 
 - added a message line at the bottom of debugger screen
@@ -32,7 +44,7 @@ release 1.38: [*] public version
   1st bar: z80 emulation
   2nd bar: screen renderer+sprite renderer
   3rd bar: blitting time
-  4rd bar: overhead of bar graph
+  4th bar: overhead of bar graph
   key "G" turns on/off the bar graph
 
 release 1.37: [*] public version

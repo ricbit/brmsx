@@ -15,9 +15,9 @@ extrn end_counter: near
 include pmode.inc
 include pentium.inc
 include vdp.inc
+include gui.inc
 include z80.inc
 include bit.inc
-include number.inc
 
 public printmsg
 public printasc
@@ -91,13 +91,6 @@ measurestatus   dd      0
 measureend      dd      0
 
 bargraphmode    dd      0
-
-rendercounter   db      8 dup (0)
-renderrate      dd      0
-blitcounter     db      8 dup (0)
-blitrate        dd      0
-guicounter      db      8 dup (0)
-guirate         dd      0
 
 msg00           db      13,10,'$'
 
@@ -576,6 +569,14 @@ my_irq_handler:
                 mov     eax,dword ptr [offset rendercounter]
                 mov     renderrate,eax
 
+                mov     eax,offset spritecounter
+                call    start_counter
+                call    sprite_render
+                mov     eax,offset spritecounter
+                call    end_counter
+                mov     eax,dword ptr [offset spritecounter]
+                mov     spriterate,eax
+
                 mov     eax,offset guicounter
                 call    start_counter
                 call    draw_gui
@@ -601,89 +602,6 @@ my_irq_handler0:
                 popad
                 sti
                 iretd
-
-; draw_gui -----------------------------------------------------------
-
-draw_gui:
-                cmp     bargraphmode,0
-                je      _ret
-                mov     edi,0
-                mov     eax,z80rate
-                call    drawline
-                mov     edi,8
-                mov     eax,renderrate
-                call    drawline
-                mov     edi,16
-                mov     eax,blitrate
-                call    drawline
-                mov     edi,24
-                mov     eax,guirate
-                call    drawline
-                ret
-
-drawline:
-                mov     ebx,100
-                mul     ebx                
-                xor     edx,edx
-                mov     ebx,dword ptr [offset clockrate]
-                div     ebx
-                mov     ecx,50
-                mov     esi,eax
-                shr     esi,1
-                shl     edi,8
-                add     edi,blitbuffer
-                mov     ebx,0F0Dh
-drawline1:      
-                cmp     ecx,esi
-                jbe     drawline2
-                irp     i,<0,1,2,3,4,5,6>
-                mov     byte ptr [edi+256*i],bh
-                endm
-                jmp     drawline_loop
-drawline2:
-                irp     i,<0,1,2,3,4,5,6>
-                mov     byte ptr [edi+256*i],bl
-                endm
-drawline_loop:
-                inc     edi
-                dec     ecx
-                jnz     drawline1
-
-                sub     edi,30
-                mov     ebx,10
-                xor     edx,edx
-                div     ebx
-                mov     esi,eax
-                shl     esi,6
-                add     esi,offset number_font
-                irp     i,<0,1,2,3,4>
-                mov     ebx,[esi+i*8]
-                mov     ecx,[esi+i*8+4]
-                and     [edi+(i+1)*256],ebx
-                and     [edi+(i+1)*256+4],ecx
-                xor     ebx,0FFFFFFFFh
-                xor     ecx,0FFFFFFFFh
-                and     ebx,004040404h
-                and     ecx,004040404h
-                or      [edi+(i+1)*256],ebx
-                or      [edi+(i+1)*256+4],ecx
-                endm
-                mov     esi,edx
-                shl     esi,6
-                add     esi,offset number_font
-                irp     i,<0,1,2,3,4>
-                mov     ebx,[esi+i*8]
-                mov     ecx,[esi+i*8+4]
-                and     [edi+(i+1)*256+5],ebx
-                and     [edi+(i+1)*256+4+5],ecx
-                xor     ebx,0FFFFFFFFh
-                xor     ecx,0FFFFFFFFh
-                and     ebx,004040404h
-                and     ecx,004040404h
-                or      [edi+(i+1)*256+5],ebx
-                or      [edi+(i+1)*256+4+5],ecx
-                endm
-                ret
 
 ; my_kb_irq_handler --------------------------------------------------
 ; this is the handler of the keyboard irq

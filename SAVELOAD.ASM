@@ -14,6 +14,7 @@ include io.inc
 extrn msxram: dword
 extrn msxvram: dword
 extrn transf_buffer: dword
+extrn writemessage: near
 
 public save_state
 public load_state
@@ -22,6 +23,7 @@ public load_state
 
 filename        db      'BRMSX.STA',0
 fileid          db      'MSXSTATE',26,0
+msgfnf          db      'File not found$'
 
 ; WRITE_DWORD --------------------------------------------------------
 ; write a word in the state file, but by reading a dword
@@ -253,6 +255,7 @@ load_state:
 
                 mov     edx,offset filename
                 call    open_file
+                jc      file_not_found
 
 ; --------------------------------------------------------------------
 
@@ -365,6 +368,12 @@ load_state:
                 
                 call    close_file
                 ret
+
+; --------------------------------------------------------------------
+
+file_not_found:
+                mov     eax,offset msgfnf
+                jmp     writemessage
 
 code32          ends
                 end

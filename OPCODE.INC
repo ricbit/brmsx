@@ -241,8 +241,8 @@ emul&opcode:
                 inc     edi
                 call    fetch
                 inc     edi
-                movsx   ebx,al  
                 mov     ecx,regii
+                movsx   ebx,al  
                 add     cx,bx
                 call    readmem
                 and     dh,al
@@ -312,7 +312,8 @@ CPREG           macro   opcode,reg
 
 emul&opcode:                
                 inc     edi                             ; clock 1 U
-                mov     bh,reg                          ; clock 1 V
+                mov     al,reg                          ; clock 1 V
+                xor     ebx,ebx
                 mov     ebp,4+1
                 jmp     opcpreg
 
@@ -327,7 +328,7 @@ emul&opcode:
                 inc     edi                             ; clock 1 U
                 mov     ecx,regehl
                 call    readmem
-                mov     bh,al
+                xor     ebx,ebx
                 mov     ebp,7+2
                 jmp     opcpreg
 
@@ -342,7 +343,7 @@ emul&opcode:
                 inc     edi                             ; clock 1 U
                 call    fetch
                 inc     edi
-                mov     bh,al
+                xor     ebx,ebx
                 mov     ebp,7+2
                 jmp     opcpreg
 
@@ -361,7 +362,7 @@ emul&opcode:
                 inc     edi
                 add     cx,bx
                 call    readmem
-                mov     bh,al
+                xor     ebx,ebx
                 mov     ebp,19+3
                 jmp     opcpreg
 
@@ -587,16 +588,17 @@ emul&opcode&a:  add     edi,3
 
 JRCC            macro   opcode,jcc,flagtype
 
-emul&opcode:    inc     edi
-                call    fetch
-                inc     edi
+emul&opcode:    
                 test    dl,flagtype
                 jcc     emul&opcode&a    
+                inc     edi
+                call    fetch
                 movsx   ebx,al
                 mov     ebp,12+2
-                add     edi,ebx
+                lea     edi,[edi+ebx+1]
                 ret
 emul&opcode&a:  mov     ebp,7+2
+                add     edi,2
                 ret
 
                 endm

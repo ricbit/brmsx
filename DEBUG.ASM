@@ -25,6 +25,7 @@ extrn end_profile: near
 
 public debug
 public printmsgd
+public writemessage
 
 ; DATA ---------------------------------------------------------------
 
@@ -105,12 +106,12 @@ writemessage:
 ; write a 8-byte hex number in the message field
 
 write8:
-                mov     ebx,eax
+                push    eax
                 shr     eax,16
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
-                mov     eax,ebx
+                pop     eax
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
@@ -786,12 +787,12 @@ command_0:
                 call    getchar
                 call    settextmode
                 pop     eax
-                mov     ebx,eax
+                push    eax
                 shr     eax,16
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
-                mov     eax,ebx
+                pop     eax
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
@@ -830,12 +831,12 @@ command_1:
                 call    getchar
                 call    settextmode
                 pop     eax
-                mov     ebx,eax
+                push    eax
                 shr     eax,16
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
-                mov     eax,ebx
+                pop     eax
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
@@ -860,12 +861,12 @@ command_2:
                 call    getchar
                 call    settextmode
                 pop     eax
-                mov     ebx,eax
+                push    eax
                 shr     eax,16
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
-                mov     eax,ebx
+                pop     eax
                 call    convhex4
                 mov     eax,offset tmphex4
                 call    writemessage
