@@ -117,7 +117,7 @@ psetDDCBxx:
 	psetDDCB73: dd prinXX
 	psetDDCB74: dd prinXX
 	psetDDCB75: dd prinXX
-	psetDDCB76: dd prinXX
+	psetDDCB76: dd prinDDCB76
 	psetDDCB77: dd prinXX
 	psetDDCB78: dd prinXX
 	psetDDCB79: dd prinXX

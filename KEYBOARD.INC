@@ -1,11 +1,3 @@
-BIT_0           equ     00000001b
-BIT_1           equ     00000010b
-BIT_2           equ     00000100b
-BIT_3           equ     00001000b
-BIT_4           equ     00010000b
-BIT_5           equ     00100000b
-BIT_6           equ     01000000b
-BIT_7           equ     10000000b
 
 keyboardtable:
 	key_00: db 0,0

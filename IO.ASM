@@ -9,6 +9,7 @@ code32  segment para public use32
 include pmode.inc
 include msx.inc
 include z80.inc
+include bit.inc
 
 public printmsg
 public printasc

@@ -26,7 +26,7 @@ isetCBxx:
 	isetCB18: dd emulCB18
 	isetCB19: dd emulCB19
 	isetCB1A: dd emulXX
-	isetCB1B: dd emulXX
+	isetCB1B: dd emulCB1B
 	isetCB1C: dd emulCB1C
 	isetCB1D: dd emulCB1D
 	isetCB1E: dd emulXX
@@ -64,7 +64,7 @@ isetCBxx:
 	isetCB3E: dd emulXX
 	isetCB3F: dd emulCB3F
 	isetCB40: dd emulXX
-	isetCB41: dd emulXX
+	isetCB41: dd emulCB41
 	isetCB42: dd emulXX
 	isetCB43: dd emulXX
 	isetCB44: dd emulXX
@@ -94,7 +94,7 @@ isetCBxx:
 	isetCB5C: dd emulXX
 	isetCB5D: dd emulXX
 	isetCB5E: dd emulCB5E
-	isetCB5F: dd emulXX
+	isetCB5F: dd emulCB5F
 	isetCB60: dd emulXX
 	isetCB61: dd emulXX
 	isetCB62: dd emulXX
@@ -107,7 +107,7 @@ isetCBxx:
 	isetCB69: dd emulXX
 	isetCB6A: dd emulXX
 	isetCB6B: dd emulXX
-	isetCB6C: dd emulXX
+	isetCB6C: dd emulCB6C
 	isetCB6D: dd emulXX
 	isetCB6E: dd emulCB6E
 	isetCB6F: dd emulCB6F
@@ -121,10 +121,10 @@ isetCBxx:
 	isetCB77: dd emulCB77
 	isetCB78: dd emulXX
 	isetCB79: dd emulXX
-	isetCB7A: dd emulXX
-	isetCB7B: dd emulXX
-	isetCB7C: dd emulXX
-	isetCB7D: dd emulXX
+	isetCB7A: dd emulCB7A
+	isetCB7B: dd emulCB7B
+	isetCB7C: dd emulCB7C
+	isetCB7D: dd emulCB7D
 	isetCB7E: dd emulCB7E
 	isetCB7F: dd emulCB7F
 	isetCB80: dd emulXX
@@ -177,11 +177,11 @@ isetCBxx:
 	isetCBAF: dd emulXX
 	isetCBB0: dd emulXX
 	isetCBB1: dd emulXX
-	isetCBB2: dd emulXX
+	isetCBB2: dd emulCBB2
 	isetCBB3: dd emulXX
 	isetCBB4: dd emulXX
 	isetCBB5: dd emulXX
-	isetCBB6: dd emulXX
+	isetCBB6: dd emulCBB6
 	isetCBB7: dd emulXX
 	isetCBB8: dd emulCBB8
 	isetCBB9: dd emulXX
@@ -190,7 +190,7 @@ isetCBxx:
 	isetCBBC: dd emulXX
 	isetCBBD: dd emulXX
 	isetCBBE: dd emulCBBE
-	isetCBBF: dd emulXX
+	isetCBBF: dd emulCBBF
 	isetCBC0: dd emulXX
 	isetCBC1: dd emulCBC1
 	isetCBC2: dd emulXX
@@ -205,7 +205,7 @@ isetCBxx:
 	isetCBCB: dd emulXX
 	isetCBCC: dd emulXX
 	isetCBCD: dd emulXX
-	isetCBCE: dd emulXX
+	isetCBCE: dd emulCBCE
 	isetCBCF: dd emulCBCF
 	isetCBD0: dd emulXX
 	isetCBD1: dd emulXX
@@ -241,11 +241,11 @@ isetCBxx:
 	isetCBEF: dd emulXX
 	isetCBF0: dd emulXX
 	isetCBF1: dd emulXX
-	isetCBF2: dd emulXX
+	isetCBF2: dd emulCBF2
 	isetCBF3: dd emulXX
 	isetCBF4: dd emulXX
 	isetCBF5: dd emulXX
-	isetCBF6: dd emulXX
+	isetCBF6: dd emulCBF6
 	isetCBF7: dd emulXX
 	isetCBF8: dd emulXX
 	isetCBF9: dd emulXX

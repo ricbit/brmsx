@@ -7,6 +7,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include pmode.inc
+include bit.inc
 
 extrn msxvram: near
 extrn vdpregs: near
@@ -92,68 +93,112 @@ render04:
 ; render a screen 1 page
 
 render_screen1:
-                mov     dx,03C8h
-                mov     al,0
-                out     dx,al
-                inc     dx
-                out     dx,al
-                out     dx,al
-                out     dx,al
-                mov     al,32
-                out     dx,al
-                out     dx,al
-                out     dx,al
-                mov     esi,offset msxvram+1800h        ; tabela de nomes
-                mov     ebx,offset msxvram              ; tabela de chars
+                ; esi = name table
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     eax,0fh
+                shl     eax,10
+                mov     eax,1800h ;;
+                lea     esi,[offset msxvram+eax]
+
+                ; ebx = character pattern table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,07h
+                shl     eax,11
+                mov     eax,0 ;;
+                lea     ebx,[offset msxvram+eax]
+
+                ; ecx = color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     eax,2000h ;;
+                lea     ecx,[offset msxvram+eax]
+
+                ; edi = pentium video memory
                 mov     edi,0a0000h+32
-                mov     ecx,0
-                
+                sub     edi,_code32a
+
+                ; mask the temporary registers
+                xor     edx,edx
+                xor     eax,eax
+
+                ; for each line
                 mov     ebp,24
-                ; draw a screen
+render10:       push    ebp
 
-render16:
-                push    ebp
+                ; for each char
                 mov     ebp,32
-                ; draw a line
+render11:       push    ebp
 
-render15:
-                push    ebp
-                mov     cl,[esi]
+                ; fetch the character
+                mov     al,[esi]
+
+                ; fetch the color for that character
+                mov     dl,al
+                shr     dl,3
+                mov     dl,[ecx+edx]
+                push    ecx
+                mov     ecx,edx
+                push    esi
+
+                ; for each subline
                 mov     ebp,8
-                ; draw a char
-render14:
-                push    ebp
-                mov     dl,[ebx+ecx*8]
-                mov     ebp,8
-                ; draw a subline
-render13:                
-                shl     dl,1                    ; clock 1 U
-                mov     al,0                    ; clock 1 V
-                rcl     al,1                    ; clock 2
-                mov     gs:[edi],al             ; clock 3 U
-                inc     edi                     ; clock 3 V
-                dec     ebp                     ; clock 4 U
-                jnz     render13                ; clock 4 V
+render12:       push    ebp
 
-                pop     ebp                     
-                inc     ebx                     
-                add     edi,320-8
-                dec     ebp                     
-                jnz     render14                
+                ; fetch the pattern for that subline
+                mov     dl,[ebx+eax*8]
 
-                sub     ebx,8
+                ; get the foreground mask
+                mov     ebp,[offset foregroundmask+edx*8]
+
+                ; get the background mask
+                mov     esi,[offset backgroundmask+edx*8]
+
+                ; blend with the foreground color
+                and     ebp,[offset foregroundcolor+ecx*4]
+
+                ; blend with the background color
+                and     esi,[offset backgroundcolor+ecx*4]
+
+                ; mix the colors
+                or      ebp,esi
+
+                ; display the subline
+                mov     [edi],ebp
+
+                ; do it again for the next four pixels
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                mov     esi,[offset backgroundmask+edx*8+4]
+                and     ebp,[offset foregroundcolor+ecx*4]
+                and     esi,[offset backgroundcolor+ecx*4]
+                or      ebp,esi
+                mov     [edi+4],ebp
+
+                add     edi,320
+                inc     ebx
+
                 pop     ebp
-                inc     esi
+                dec     ebp
+                jnz     render12
+
                 sub     edi,320*8-8
-                dec     ebp
-                jnz     render15
+                sub     ebx,8
+
+                pop     esi
+                pop     ecx
+
+                inc     esi
 
                 pop     ebp
-                add     edi,320*7+64
                 dec     ebp
-                jnz     render16
+                jnz     render11
 
-                ret
+                sub     edi,8*32-320*8
+
+                pop     ebp
+                dec     ebp
+                jnz     render10
+
+                jmp     sprite_render
 
 ; render_screen2 -----------------------------------------------------
 ; render a screen 2 page
@@ -275,6 +320,31 @@ render22:       push    ebp
                 jnz     render23
 
                 ret
+
+; sprite_render ------------------------------------------------------
+; draw the sprites directly on the pentium video memory
+
+sprite_render:
+
+                test    byte ptr [offset vdpregs+1],BIT_1
+                jnz     sprite16
+                ret
+
+sprite16:       
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     sprite16M
+
+                ; sprites 16x16 without magnification
+
+                ; esi = sprite attribute table
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     eax,07fh
+                shl     eax,7
+                lea     esi,[offset msxvram+eax]
+
+                ret
+
+sprite16M:      ret
 
 ; render -------------------------------------------------------------
 ; render the MSX screen, based on VDP registers and VRAM

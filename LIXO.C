@@ -7,7 +7,8 @@ void main (void) {
   int file;
   unsigned char buff[32768];
 
-  file=open ("disk.rom",O_BINARY|O_RDONLY);
+  file=open ("antartic.bin",O_BINARY|O_RDONLY);
+  read (file,buff,7);
   read (file,buff,32768/2);
   close (file);
   printf ("cart1: \n");

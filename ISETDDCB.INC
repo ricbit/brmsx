@@ -117,7 +117,7 @@ isetDDCBxx:
 	isetDDCB73: dd emulXX
 	isetDDCB74: dd emulXX
 	isetDDCB75: dd emulXX
-	isetDDCB76: dd emulXX
+	isetDDCB76: dd emulDDCB76
 	isetDDCB77: dd emulXX
 	isetDDCB78: dd emulXX
 	isetDDCB79: dd emulXX
