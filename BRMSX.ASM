@@ -19,7 +19,7 @@ public cart1
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.0',13,10
+msg00           db      'BrMSX 1.28',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -43,6 +43,10 @@ _main:          sti
                 mov     eax,offset msg00
                 call    printmsg
 
+                mov     eax,esp
+                call    printhex4
+                call    crlf
+                
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem

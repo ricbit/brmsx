@@ -467,16 +467,19 @@ emulate_loop:
                 call    fetch
                 inc     rcounter
                 call    [offset iset + eax*4]
+                cmp     interrupt,1
+                je      emulate_interrupt
+                add     clockcounter,ebp
                 cmp     error,1
                 je      emulate_exit
-                add     clockcounter,ebp
                 cmp     clockcounter,59659
                 jb      emulate_loop
 emulate_synch:  
+  ;              je      emulate_loop
                 cmp     interrupt,1
                 jne     emulate_synch
-                mov     clockcounter,0
 emulate_interrupt:
+                mov     clockcounter,0
                 mov     interrupt,0
                 cmp     exit_now,1
                 je      emulate_exit
@@ -485,6 +488,7 @@ emulate_interrupt:
                 mov     iff1,0 
                 dec     edi
                 and     edi,0ffffh
+                inc     rcounter
                 call    emulFF
                 jmp     emulate_loop
 emulate_exit:
@@ -641,14 +645,16 @@ OPRRCA          0F
 
 ; 10 - DJNZ dd
 emul10:         inc     edi
-                mov     ebp,8
                 call    fetch
                 inc     edi
                 dec     regb
                 jz      emul10a
                 movsx   ebx,al
                 add     edi,ebx
-emul10a:        ret
+                mov     ebp,13
+                ret
+emul10a:        mov     ebp,8
+                ret
 
 ; 11 - LD DE,dddd
 emul11:         inc     edi
@@ -718,15 +724,7 @@ LDREGIMM        1E,rege
 OPRRA           1F
 
 ; 20 - JR NZ,dd
-emul20:         inc     edi
-                mov     ebp,7
-                call    fetch
-                inc     edi
-                test    dl,ZERO_FLAG
-                jnz     emul20a         ; remember ZERO_FLAG=1 => result is 0
-                movsx   ebx,al
-                add     edi,ebx
-emul20a:        ret
+JRCC            20,jnz,ZERO_FLAG
 
 ; 21 - LD HL,dddd
 emul21:         inc     edi
@@ -767,15 +765,7 @@ LDREGIMM        26,regh
 OPDAA           27
 
 ; 28 - JR Z,dd
-emul28:         inc     edi
-                mov     ebp,7
-                call    fetch
-                inc     edi
-                test    dl,ZERO_FLAG    
-                jz      emul28a
-                movsx   ebx,al
-                add     edi,ebx
-emul28a:        ret
+JRCC            28,jz,ZERO_FLAG
 
 ; 29 - ADD HL,HL
 ADDREGWREGW     29,regl,regh,regl,regh,11
@@ -814,15 +804,7 @@ emul2F:         inc     edi
                 ret
 
 ; 30 - JR NC,dd
-emul30:         inc     edi
-                mov     ebp,7
-                call    fetch
-                inc     edi
-                test    dl,CARRY_FLAG
-                jnz     emul30a
-                movsx   ebx,al
-                add     edi,ebx
-emul30a:        ret
+JRCC            30,jnz,CARRY_FLAG
 
 ; 31 - LD SP,dddd
 emul31:         inc     edi
@@ -864,17 +846,7 @@ emul37:         inc     edi
                 ret
 
 ; 38 - JR C,dd
-emul38:         inc     edi
-                mov     ebp,7
-                call    fetch
-                inc     edi
-                test    dl,CARRY_FLAG
-                jz      emul38a
-                movsx   ebx,al
-                add     edi,ebx
-emul38a:        ret
-
-
+JRCC            38,jz,CARRY_FLAG
 
 ; 39 - ADD HL,SP
 ADDREGWREGW     39,regl,regh,regspl,regsph,11
@@ -1677,7 +1649,7 @@ emulE3:         inc     edi
                 mov     regh,al
                 mov     al,bl
                 call    writemem
-                mov     ebp,4
+                mov     ebp,8
                 ret
 
 ; E4 - CALL PO,dddd

@@ -466,6 +466,25 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; JRCC - JR cc,dd
+
+JRCC            macro   opcode,jcc,flagtype
+
+emul&opcode:    inc     edi
+                call    fetch
+                inc     edi
+                test    dl,flagtype
+                jcc     emul&opcode&a    
+                movsx   ebx,al
+                mov     ebp,12
+                add     edi,ebx
+                ret
+emul&opcode&a:  mov     ebp,7
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; LDREGREG - LD rr,rr rr=[b,c,d,e,h,l]
 
 LDREGREG        macro   opcode,reg1,reg2

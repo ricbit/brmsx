@@ -63,8 +63,7 @@ emulED4B:       inc     edi
                 ret
 
 ; ED 4D - RETI
-emulED4D:       mov     iff1,1
-                jmp     emulC9
+emulED4D:       jmp     emulC9
 
 ; ED 51 - OUT (C),D
 OUTCREG         ED51,regd
@@ -253,6 +252,7 @@ emulEDB0a:      mov     ecx,regehl
                 inc     regde
                 dec     regbc
                 jnz     emulEDB0a
+                sub     ebp,5
                 ret
 
 ; ED B1 - CPIR
@@ -267,11 +267,13 @@ emulEDB1b:      mov     ecx,regehl
                 dec     regbc
                 jnz     emulEDB1b
                 and     dl,10111011b
+                sub     ebp,5
                 ret
 emulEDB1a:      
                 inc     reghl
                 dec     regbc
                 or      dl,01000100b
+                sub     ebp,5
                 ret
 
 ; ED B8 - LDDR
@@ -286,6 +288,7 @@ emulEDB8a:      mov     ecx,regehl
                 dec     regde
                 dec     regbc
                 jnz     emulEDB8a
+                sub     ebp,5
                 ret
 
 ; ED B9 - CPDR
@@ -300,11 +303,13 @@ emulEDB9b:      mov     ecx,regehl
                 dec     regbc
                 jnz     emulEDB9b
                 and     dl,10111011b
+                sub     ebp,5
                 ret
 emulEDB9a:      
                 dec     reghl
                 dec     regbc
                 or      dl,01000100b
+                sub     ebp,5
                 ret
 
 code32          ends
