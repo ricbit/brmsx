@@ -15,6 +15,7 @@ extrn msxvram: dword
 extrn vdpregs: near
 extrn blitbuffer: dword
 extrn palette: near
+extrn dirtyname: dword
 
 public render_screen0
 public render_screen1
@@ -23,6 +24,8 @@ public render
 public clear
 public lastscreen
 public sprite_render
+public imagetype
+public nametable
 
 ; DATA ---------------------------------------------------------------
 
@@ -41,6 +44,9 @@ linenumber      dd      0
 stacksave       dd      0
 colorsave       dd      0
 spriteenable    dd      0
+imagetype       dd      0
+nametable       dd      0
+firstscreen     dd      1
 spriteline      db      192 dup (0)
 lastscreen      db      0
 
@@ -135,14 +141,152 @@ render05:
                 mov     spriteenable,0
                 ret
 
-; render_screen1 -----------------------------------------------------
-; render a screen 1 page
+; render_screen1_dirty -----------------------------------------------
+; render a screen 1 page using dirty blocks
 
-render_screen1:
+render_screen1_dirty:
+                mov     firstscreen,0
+                
                 ; esi = name table
                 movzx   eax,byte ptr [offset vdpregs+2]
                 and     eax,0fh
                 shl     eax,10
+                mov     nametable,eax
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
+
+                ; ebx = character pattern table
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     eax,07h
+                shl     eax,11
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
+
+                ; ecx = color table
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
+
+                ; edi = pentium video memory
+                mov     edi,blitbuffer
+
+                ; edx = dirty table
+                mov     edx,dirtyname
+
+                ; mask the temporary registers
+                xor     eax,eax
+
+                ; for each line
+                mov     ebp,24
+render10d:      push    ebp
+
+                ; for each char
+                mov     ebp,32
+render11d:      push    ebp
+
+                mov     al,[edx]
+                or      al,al
+                jz      render12d
+
+                push    edx
+
+                ; fetch the character
+                mov     al,[esi]
+
+                ; fetch the color for that character
+                xor     edx,edx
+                mov     dl,al
+                shr     dl,3
+                mov     dl,[ecx+edx]
+
+                push    ecx
+                push    esi
+                push    eax
+                push    ebx
+                
+                lea     ebx,[ebx+eax*8]
+                mov     eax,[offset foregroundcolor+edx*4]
+                mov     ecx,[offset backgroundcolor+edx*4]
+
+                ; for each subline
+
+                ; fetch the pattern for that subline
+                mov     dl,[ebx]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                ; get the foreground mask
+                mov     ebp,[offset foregroundmask+edx*8]
+
+                ; get the background mask
+                mov     esi,[offset backgroundmask+edx*8]
+
+                ; blend with the foreground color
+                and     ebp,eax
+
+                ; blend with the background color
+                and     esi,ecx
+
+                ; mix the colors
+                or      ebp,esi
+                mov     esi,[offset backgroundmask+edx*8+4]
+
+                ; display the subline
+                mov     [edi+i*256],ebp
+
+                ; do it again for the next four pixels
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                and     esi,ecx
+                and     ebp,eax
+                or      ebp,esi
+                mov     dl,[ebx+i+1]
+                mov     [edi+4+i*256],ebp
+
+                endm
+
+                pop     ebx
+                pop     eax
+                pop     esi
+                pop     ecx
+                pop     edx
+
+render12d:
+
+                add     edi,8
+                inc     esi
+                inc     edx
+
+                pop     ebp
+                dec     ebp
+                jnz     render11d
+
+                add     edi,256*7
+
+                pop     ebp
+                dec     ebp
+                jnz     render10d
+
+                mov     spriteenable,1
+                ret
+
+
+; render_screen1 -----------------------------------------------------
+; render a screen 1 page
+
+render_screen1:
+                cmp     firstscreen,1
+                je      render_screen1_linear
+                cmp     imagetype,1
+                je      render_screen1_dirty
+
+render_screen1_linear:
+                mov     firstscreen,0
+                ; esi = name table
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     eax,0fh
+                shl     eax,10
+                mov     nametable,eax
                 mov     esi,msxvram
                 lea     esi,[esi+eax]
 
@@ -669,6 +813,10 @@ clear:
                 mov     edi,blitbuffer
                 mov     ecx,320*200/4
                 rep     stosd
+                mov     eax,0FFFFFFFFh
+                mov     edi,dirtyname
+                mov     ecx,32*24/4
+                rep     stosd
                 mov     dx,03C8h
                 mov     al,1
                 out     dx,al
@@ -677,6 +825,7 @@ clear:
                 out     dx,al
                 out     dx,al
                 out     dx,al
+                mov     firstscreen,1
                 pop     es
                 ret
 

@@ -50,6 +50,8 @@ stateon         db      'ON $'
 stateoff        db      'OFF$'
 intdi           db      'DI$'
 intei           db      'EI$'
+imagedynamic    db      'DYNAMIC$'
+imagestatic     db      ' STATIC$'
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -265,6 +267,20 @@ print_bar0:
                 call    convhex4
                 mov     eax,offset tmphex4
                 COORD   40,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the image type
+
+                cmp     imagetype,0
+                jne     print_image0
+                mov     eax,offset imagedynamic
+                jmp     print_image1
+print_image0:
+                mov     eax,offset imagestatic
+print_image1:
+                COORD   72,22
                 call    printmsgd
 
 ; --------------------------------------------------------------------
@@ -663,6 +679,8 @@ debug_loop:
                 call    crlf
                 cmp     al,'D'
                 je      command_d      
+                cmp     al,'N'
+                je      command_n
                 cmp     al,'0'
                 je      command_0
                 cmp     al,'M'
@@ -679,6 +697,8 @@ debug_loop:
                 ;je      command_k
                 cmp     al,'A'
                 je      command_a
+                cmp     al,'I'
+                je      command_i
                 cmp     al,'L'
                 je      command_l
                 cmp     al,'G'
@@ -722,6 +742,17 @@ command_f:
                 jmp     debug_loop
 
 command_v:      call    changevideomode
+                jmp     debug_loop
+
+command_n:
+                mov     eax,nametable
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
+                jmp     debug_loop
+
+command_i:
+                xor     imagetype,1
                 jmp     debug_loop
 
 command_a:

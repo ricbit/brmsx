@@ -14,6 +14,7 @@ include io.inc
 include number.inc
 
 extrn blitbuffer: dword
+extrn dirtyname: dword
 
 public rendercounter
 public spritecounter
@@ -62,6 +63,12 @@ draw_gui:
                 mov     edi,32
                 mov     eax,guirate
                 call    drawline
+                mov     eax,0FFFFFFFFh
+                mov     edi,dirtyname
+                irp     j,<0,1,2,3,4>
+                mov     [edi+j*32],eax
+                mov     [edi+4+j*32],eax
+                endm
                 ret
 
 drawline:

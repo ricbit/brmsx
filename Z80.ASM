@@ -19,8 +19,10 @@ extrn isetFDxx: near
 extrn emulEDFF: near
 extrn start_counter: near
 extrn end_counter: near
+extrn dirtyname: dword
 
 include io.inc
+include vdp.inc
 include debug.inc
 include bit.inc
 include opcode.inc
@@ -1890,9 +1892,20 @@ emulXX:         mov     error,1
 outemulXX:      ret
 
 outemul98:      mov     ecx,msxvram
-                add     ecx,vdpaddresse
-                mov     [ecx],bl
+                mov     esi,vdpaddresse
+                mov     [ecx+esi],bl
                 inc     vdpaddress
+                cmp     imagetype,0
+                je      _ret
+                cmp     lastscreen,0
+                jne     _ret
+                ; screen 1
+                sub     esi,nametable
+                js      _ret
+                cmp     esi,32*24
+                jge     _ret
+                add     esi,dirtyname
+                mov     byte ptr [esi],1
                 ret
 
 outemul99:      cmp     vdpcond,0

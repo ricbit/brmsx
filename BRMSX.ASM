@@ -21,13 +21,14 @@ public blitbuffer
 public transf_buffer
 public diskimage
 public cart1
+public dirtyname
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.44',13,10
+msg00           db      'BrMSX 1.45',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -58,6 +59,7 @@ msxrom          dd      ?
 cart1           dd      ?
 transf_buffer   dd      ?
 diskimage       dd      ?
+dirtyname       dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -242,6 +244,12 @@ _main2:
                 jc      no_memory
                 mov     blitbuffer,eax
 
+                ; allocate 32*24 to dirty name table
+                mov     eax,32*24
+                call    _getmem
+                jc      no_memory
+                mov     dirtyname,eax
+
                 ; allocate 720kb to disk image
                 mov     eax,720*1024
                 call    _gethimem
@@ -303,7 +311,7 @@ _main_dontmeasure:
                 ; enter debug mode
                 
                 ; don't ask 
-                db 365 dup (090h)
+                db 165 dup (090h)
 
                 call    crlf
                 mov     eax,offset msg10

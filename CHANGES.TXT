@@ -1,3 +1,7 @@
+release 1.45:
+
+- added a new, super-fast STATIC renderer for screen 1
+
 release 1.44:
 
 - fixed undocument flag affection for CP opcodes

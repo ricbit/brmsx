@@ -11,6 +11,7 @@ code32  segment para public use32
 extrn blitbuffer: dword
 extrn start_counter: near
 extrn end_counter: near
+extrn dirtyname: dword
 
 include pmode.inc
 include pentium.inc
@@ -781,6 +782,10 @@ blit:
                 rep     movsd                
                 ret
 blit0:
+                cmp     imagetype,1
+                je      blit_dirty_320
+
+blit_linear_320:
                 mov     esi,blitbuffer
                 mov     edi,0a0000h+32
                 sub     edi,_code32a
@@ -791,6 +796,49 @@ blit0_0:
                 add     edi,64
                 dec     edx
                 jnz     blit0_0
+                ret
+
+blit_dirty_320:
+                cmp     lastscreen,0
+                jne     blit_linear_320
+                mov     ebx,dirtyname
+                mov     esi,blitbuffer
+                mov     edi,0a0000h+32
+                sub     edi,_code32a
+                mov     ecx,24
+
+blit_dirty_320_line:
+                mov     edx,32
+
+blit_dirty_320_char:
+
+                mov     al,[ebx]
+                or      al,al
+                jz      blit_dirty_320_next
+                mov     byte ptr [ebx],0
+
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                mov     eax,[esi+i*256]
+                mov     ebp,[esi+i*256+4]
+                mov     [edi+i*320],eax
+                mov     [edi+i*320+4],ebp
+
+                endm
+
+blit_dirty_320_next:
+
+                inc     ebx
+                add     esi,8
+                add     edi,8
+                dec     edx
+                jnz     blit_dirty_320_char
+
+                add     esi,8*256-8*32
+                add     edi,8*320-8*32
+                dec     ecx
+                jnz     blit_dirty_320_line
+
                 ret
 
 code32          ends

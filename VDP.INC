@@ -5,3 +5,5 @@ extrn sprite_render: near
 extrn render: near
 extrn clear: near
 extrn lastscreen: byte
+extrn imagetype: dword
+extrn nametable: dword
