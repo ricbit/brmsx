@@ -1,6 +1,5 @@
 OBJECTS = pmode.o brmsx.o debug.o patch.o \
-	  compiler.o compcb.o comped.o \
-	  io.o saveload.o gui.o blit.o psg.o \
+	  io.o saveload.o gui.o blit.o psg.o vdp.o drive.o \
 	  serial.o mouse.o pentium.o vesa.o joystick.o winsock.o \
 	  z80.o z80sing.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o printdd.o printfd.o
@@ -8,37 +7,17 @@ TASM = tasm
 TASMFLAGS = /ml /m2 /q /la
 ECHO = rbecho
 
-all : rbecho.exe brmsx.exe brmsxwin.exe brmsxmmx.exe
+all : rbecho.exe brmsx.exe
 
 rbecho.exe: rbecho.c
 	gcc $^ -o $@ 
 
-brmsx.exe : $(OBJECTS) vdpdos.o
+brmsx.exe : $(OBJECTS)
 	$(ECHO) objects.lst $^
 	tlink /3 /x @objects.lst , $@
-
-brmsxwin.exe : $(OBJECTS) vdpwin.o
-	$(ECHO) objects.lst $^
-	tlink /3 /x @objects.lst , $@
-
-brmsxmmx.exe : $(OBJECTS) vdpmmx.o
-	$(ECHO) objects.lst $^
-	tlink /3 /x @objects.lst , $@
-
-vdpdos.o : vdp.asm
-	$(TASM) $(TASMFLAGS) /dDOS $^,$@
-
-vdpwin.o : vdp.asm
-	$(TASM) $(TASMFLAGS) /dWIN $^,$@
-
-vdpmmx.o : vdp.asm
-	$(TASM) $(TASMFLAGS) /dMMX $^,$@
 
 %.o : %.asm
 	$(TASM) $(TASMFLAGS) $^,$@
-
-z80.o : z80.asm opcode.inc
-	$(TASM) $(TASMFLAGS) z80.asm,$@
 
 clean :
 	del *.o

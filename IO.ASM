@@ -11,6 +11,7 @@ code32  segment para public use32
 extrn blitbuffer: dword
 extrn start_counter: near
 extrn end_counter: near
+extrn tape_pos: dword
 
 include pmode.inc
 include pentium.inc
@@ -24,6 +25,7 @@ include mouse.inc
 include vesa.inc
 
 public printmsg
+public printnul
 public printasc
 public printhex4
 public printhex2
@@ -68,6 +70,8 @@ public wait_vsync
 public find_first
 public find_next
 public set_correct_palette
+public setkb
+public noled
 
 ; DATA ---------------------------------------------------------------
 
@@ -102,6 +106,7 @@ on_off          dd      1
 videomode       dd      0
 cpupaused       dd      0
 key_extended    dd      0
+noled           dd      0
 
 clockrate       db      8 dup (0)
 measurestatus   dd      0
@@ -139,6 +144,25 @@ printasc:       push    eax
                 ret
 
         
+; printnul -----------------------------------------------------------
+; print a NULL-terminated message
+; eax=address of message
+
+printnul:
+                push    ebx
+                mov     ebx,eax
+printnul_loop:
+                mov     al,[ebx]
+                or      al,al
+                jz      printnul_exit
+                call    printasc
+                inc     ebx
+                jmp     printnul_loop
+printnul_exit:
+                pop     ebx
+                ret
+
+
 ; printspace ---------------------------------------------------------
 ; print a space
 
@@ -929,6 +953,9 @@ my_kb_irq_handler:
                 mov     ds:exit_now,1
 
 my_kb_irq_handler1:
+                cmp     al,64
+                je      my_kb_irq_handler_f6
+
                 cmp     al,88
                 je      my_kb_irq_handler_f12
 
@@ -967,6 +994,10 @@ my_kb_irq_handler_exit:
 
 my_kb_irq_handler_f12:
                 xor     cpupaused,1
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_f6:
+                mov     tape_pos,0
                 jmp     my_kb_irq_handler_exit
 
 my_kb_irq_handler_keypadplus:
@@ -1014,6 +1045,7 @@ my_kb_irq_handler_extended_signal:
 ;      carry = 1 -> error                
 
 open_file:                
+                push    eax
                 add     edx,_code32a
                 mov     eax,edx
                 shr     edx,4
@@ -1025,6 +1057,7 @@ open_file:
                 int     33h
                 mov     ax,v86r_ax
                 mov     v86r_bx,ax
+                pop     eax
                 ret
 
 ; create_file --------------------------------------------------------
@@ -1034,6 +1067,7 @@ open_file:
 ;      carry = 1 -> error                
 
 create_file:                
+                push    eax
                 add     edx,_code32a
                 mov     eax,edx
                 shr     edx,4
@@ -1046,6 +1080,7 @@ create_file:
                 int     33h
                 mov     ax,v86r_ax
                 mov     v86r_bx,ax
+                pop     eax
                 ret
 
 ; read_file ----------------------------------------------------------
@@ -1206,6 +1241,56 @@ find_next:
 
                 pop     edi
                 ret
+
+;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+waitforkb:                              ; Wait for keyboard ready
+        mov ecx,20000h
+waitforkbl:
+        in al,64h
+        test al,2
+        loopnz waitforkbl
+        ret
+
+;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+setkb:                                  ; Set KB, LOCKS=BL
+        cmp     noled,1
+        je      _ret
+        cli
+        mov al,0edh
+        call outtokb
+        mov al,bl
+        call outtokb
+        mov al,0f4h
+        call    outtokb
+        sti
+        ret
+;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+outtokb:
+        mov ah,al
+        mov bh,1 ;3
+outtokbl0:
+        call waitforkb
+        mov al,ah
+        out 60h,al
+        mov ecx,4000h
+outtokbl1:
+        in al,61h
+        test al,10h
+        jz $-4
+        in al,61h
+        test al,10h
+        jnz $-4
+        in al,64h
+        test al,1
+        loopz outtokbl1
+        in al,60h
+        cmp al,0fah
+        je _ret
+        dec bh
+        jnz outtokbl0
+        ret
+
 
 
 code32          ends

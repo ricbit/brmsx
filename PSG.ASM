@@ -344,6 +344,9 @@ turnoff_sbirq:
 sound_on:
                 cmp     soundenabled,0
                 je      _ret
+                cmp     emulatemode,1
+                je      _ret
+
                 call    init_dma_buffer
 
                 mov     eax,offset psgregstack
@@ -417,7 +420,7 @@ write_master_volume:
 compose_soundstream:
                 
                 cmp     soundenabled,0
-                je      _ret
+                je      compose_soundstream_off
 
                 pushad
 
@@ -491,13 +494,17 @@ compose_soundstream_noscc:
                 mov     eax,offset sccregstack
                 mov     sccpointer,eax
 
-                mov     psgpos,0
                 mov     psgclear,1
+                mov     psgpos,0
 
 compose_soundstream_exit:
 
                 mov     dmaready,1
                 popad
+                ret
+
+compose_soundstream_off:
+                mov     psgpos,0
                 ret
 
 ; compose_click ------------------------------------------------------

@@ -13,15 +13,20 @@ include bit.inc
 
 extrn emulC9: near
 extrn diskimage: dword
+extrn tapeimage: dword
+extrn msxram: dword
 
 public emulEDFF
+public tape_pos
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
 boot:           db      512 dup (0)
+tape_pos        dd      0
 saveslot        db      0
+
 
 ; --------------------------------------------------------------------
 
@@ -39,10 +44,29 @@ emulEDFF:
                 cmp     edi,04016h+1
                 je      patch_GETDPB
 
+                cmp     edi,000E1h+1
+                je      patch_TAPION
+
+                cmp     edi,000E4h+1
+                je      patch_TAPIN
+
+                cmp     edi,000E7h+1
+                je      patch_TAPIOF
+
+                cmp     edi,000EAh+1
+                je      patch_TAPOON
+
+                cmp     edi,000EDh+1
+                je      patch_TAPOUT
+
+                cmp     edi,000F0h+1
+                je      patch_TAPOOF
+
                 ; patch not found
                 inc     edi
                 sub     ebp,4
                 ret
+
 ; --------------------------------------------------------------------
 ; PHYDIO: read/write sectors
 
@@ -241,7 +265,101 @@ patch_GETDPB:
                 inc     ecx
 
                 mov     edx,0
-                
+
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPION: search tape for start header
+; return: carry if terminated by CTRL-STOP, DI
+
+patch_TAPION:
+                mov     iff1,0
+                mov     esi,tape_pos
+                add     esi,7
+                and     esi,0FFF8h
+                mov     eax,0BADEA61Fh
+                mov     ecx,0FFFFh
+                sub     ecx,esi
+                shr     ecx,2
+                add     esi,tapeimage
+patch_TAPION_again:
+                repz    scasd
+                cmp     ecx,0
+                je      patch_TAPION_failed
+                cmp     dword ptr [esi+4],0747D13CCh
+                jne     patch_TAPION_again
+                add     esi,8
+                sub     esi,tapeimage
+                mov     tape_pos,esi
+                and     dl,NBIT_0
+                mov     eax,0
+                jmp     emulC9
+
+patch_TAPION_failed:
+                or      dl,BIT_0
+                mov     eax,0
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPIN: read a byte from tape
+; return: A=byte read, carry if error of CTRL-STOP
+
+patch_TAPIN:
+                mov     ecx,tape_pos
+                add     ecx,tapeimage
+                mov     dh,[ecx]
+                inc     tape_pos
+                and     tape_pos,0FFFFh
+                and     dl,NBIT_0
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPIOF: end tape read
+; return: EI
+
+patch_TAPIOF:
+                mov     iff1,1
+                and     dl,NBIT_0
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPOON: write start header to tape
+; return: carry if CTRL-STOP,DI
+
+patch_TAPOON:
+                mov     ecx,tape_pos
+                add     ecx,7
+                and     ecx,0FFF8h
+                add     ecx,tapeimage
+                mov     dword ptr [ecx],0BADEA61Fh
+                mov     dword ptr [ecx+4],0747D13CCh
+                add     tape_pos,8
+                and     tape_pos,0FFFFh
+                mov     iff1,0
+                and     dl,NBIT_0
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPOUT: write a byte to tape
+; enter: A=byte
+; return: carry if CTRL-STOP
+
+patch_TAPOUT:
+                mov     ecx,tape_pos
+                add     ecx,tapeimage
+                mov     [ecx],dh
+                inc     tape_pos
+                and     tape_pos,0FFFFh
+                and     dl,NBIT_0
+                jmp     emulC9
+
+; --------------------------------------------------------------------
+; TAPOON: end tape write
+; return: EI
+
+patch_TAPOOF:
+                and     dl,NBIT_0
+                mov     iff1,1
                 jmp     emulC9
 
 ; --------------------------------------------------------------------

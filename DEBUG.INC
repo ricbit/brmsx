@@ -6,3 +6,5 @@ extrn changebargraph: near
 
 extrn quitnow: dword
 extrn vesa2found: dword
+
+extrn startdebugger: dword

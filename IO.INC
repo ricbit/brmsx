@@ -1,4 +1,5 @@
 extrn printmsg:near
+extrn printnul:near
 extrn printasc:near
 extrn printhex2:near
 extrn printhex4:near
@@ -42,3 +43,5 @@ extrn wait_vsync: near
 extrn find_first: near
 extrn find_next: near
 extrn set_correct_palette: near
+extrn setkb: near
+extrn noled: dword

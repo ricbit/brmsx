@@ -2,7 +2,22 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
-release 1.05:
+release 1.122:
+
+- support to tape images (.CAS files)
+- support for 0000h 16kb cartridges ("keystone")
+- idle bus emulation
+- port-based disk emulation ("hello", "prokit zapper")
+- caps lock led emulation ("valkyr")
+- disk drive led emulation (in scroll lock led)
+- command line switches
+- fixed bug in sound buffer
+- 64kb of memory mapper in slot 2
+- new debug command : "?"
+- emulation of SCC wavesample-RAM ("kgc")
+- fixed another irq bug ("Valkyr")
+
+release 1.105:
 
 - fixed bug in old konami games like pingpong
 - keyboard click
@@ -12,7 +27,7 @@ release 1.05:
 - new debugger screen with new debug options
 - fake SCC sound (wave samples are not emulated)
 
-release 1.04:
+release 1.104:
 
 - fixed bug on video cache of SCREEN 1
 - support for joystick in both port-A and port-B

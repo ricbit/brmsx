@@ -416,15 +416,15 @@ outportxx:
 	; CF
  dd outemulXX
 	; D0
- dd outemulXX
+ dd outemulD0
 	; D1
- dd outemulXX
+ dd outemulD1
 	; D2
- dd outemulXX
+ dd outemulD2
 	; D3
- dd outemulXX
+ dd outemulD3
 	; D4
- dd outemulXX
+ dd outemulD4
 	; D5
  dd outemulXX
 	; D6
@@ -504,10 +504,10 @@ outportxx:
 	; FB
  dd outemulXX
 	; FC
- dd outemulXX
+ dd outemulFC
 	; FD
- dd outemulXX
+ dd outemulFD
 	; FE
- dd outemulXX
+ dd outemulFE
 	; FF
- dd outemulXX
+ dd outemulFF

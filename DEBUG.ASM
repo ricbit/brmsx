@@ -21,6 +21,7 @@ include serial.inc
 include psg.inc
 include mouse.inc
 include joystick.inc
+include drive.inc
 
 include debugsrc.inc
 include debugsr2.inc
@@ -45,6 +46,8 @@ public changebargraph
 
 public quitnow
 public vesa2found
+
+public startdebugger
 
 ; DATA ---------------------------------------------------------------
 
@@ -91,6 +94,7 @@ align 4
 quitnow         dd      0
 vesa2found      dd      0
 debugtype       dd      1
+startdebugger   dd      0
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -860,6 +864,20 @@ print2_dump3&i:
                 endm
 
 ; --------------------------------------------------------------------
+
+                ; print the drive registers
+
+                irp     i,<0,1,2,3,4>
+
+                mov     al,byte ptr [offset driveD0+i]
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   50,15+i
+                call    printmsgd
+
+                endm
+                
+; --------------------------------------------------------------------
                 
                 ; blit the temp buffer to screen 
                 
@@ -1068,18 +1086,18 @@ print_scc1:
 ; init_compiler ------------------------------------------------------
 ; initialize the luts for the compile pipeline
 
-init_compiler:
-                mov     ecx,131072 ; 64kb*8 /4
-                mov     eax,0
-                mov     edi,dirtycode
-                rep     stosd
-                mov     ecx,262144 ;1048576/4
-                mov     eax,0C3C3C3C3h
-                mov     edi,compbuffer
-                rep     stosd
-                mov     ebx,compbuffer
-                mov     nextopcode,ebx
-                ret
+;init_compiler:
+;                mov     ecx,131072 ; 64kb*8 /4
+;                mov     eax,0
+;                mov     edi,dirtycode
+;                rep     stosd
+;                mov     ecx,262144 ;1048576/4
+;                mov     eax,0C3C3C3C3h
+;                mov     edi,compbuffer
+;                rep     stosd
+;                mov     ebx,compbuffer
+;                mov     nextopcode,ebx
+;                ret
 
 ; --------------------------------------------------------------------
 
@@ -1087,6 +1105,8 @@ debug:
                 ;call    init_compiler
                 call    set_com_baseaddr
                 call    clear_text
+                cmp     startdebugger,1
+                je      debug_loop
                 jmp     command_s
 debug_loop:                
                 cmp     quitnow,1
@@ -1122,14 +1142,16 @@ debug_loop:
                 je      command_y
                 cmp     al,'F'
                 je      command_f
+                cmp     al,'?'
+                je      command_find
                 cmp     al,'H'
-                je      command_help
+                je      command_h
                 cmp     al,'J'
                 je      command_j
                 cmp     al,'K'
                 je      command_k
-                ;cmp     al,'R'
-                ;je      command_r
+                cmp     al,'R'
+                je      command_r
                 cmp     al,'A'
                 je      command_a
                 cmp     al,'I'
@@ -1150,8 +1172,8 @@ debug_loop:
                 ;je      command_z
                 cmp     al,'N'
                 je      command_n
-                ;cmp     al,'E'
-                ;je      command_e
+                cmp     al,'E'
+                je      command_e
                 cmp     al,'Q'
                 je      command_exit
                 cmp     al,27
@@ -1179,6 +1201,21 @@ command_pgup_2:
                 and     memdump,0FFFFh
                 jmp     debug_loop
 
+command_find:
+                COORD   14,23
+                call    set_cursor_position
+                call    gethex4
+                mov     edx,eax
+command_find_next:
+                mov     ecx,memdump
+                call    readmemw
+                cmp     ax,dx
+                je      debug_loop
+                inc     memdump
+                cmp     memdump,0FFFFh
+                je      debug_loop
+                jmp     command_find_next
+
 command_pgdown:
                 cmp     debugtype,1
                 jne     command_pgdown_2
@@ -1191,7 +1228,8 @@ command_pgdown_2:
                 jmp     debug_loop
 
 command_e:
-                call    init_compiler
+                mov     bl,7
+                call    setkb
                 jmp     debug_loop
 
 command_n:
@@ -1216,10 +1254,7 @@ command_z:
                 jmp     debug_loop
 
 command_r:
-                call    UART_init
-                call    UART_receive_idstring
-                mov     eax,offset modenormal
-                call    writemessage
+                call    save_histogram
                 jmp     debug_loop
 
 command_x:
@@ -1300,20 +1335,15 @@ command_p:
 
 command_h:
                 call    setgraphmode
-                call    turnon_irq
+                call    clear
                 call    turnon_kb_irq
-                call    setup_profile
+                call    turnon_irq
+                call    sound_on
                 call    emulate_histogr
-                call    end_profile
-                push    edx eax
-                call    turnoff_kb_irq
+                call    sound_off
                 call    turnoff_irq
+                call    turnoff_kb_irq
                 call    settextmode
-                pop     eax
-                call    write8
-                add     messagepointer,2
-                pop     eax
-                call    write8
                 jmp     debug_loop
 
 command_0:

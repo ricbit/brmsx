@@ -28,6 +28,8 @@ extrn emulFF: near
 extrn emulXX: near
 extrn soundbuffer: dword
 extrn timebuffer: dword
+extrn sccram: dword
+extrn msxram: dword
 
 include io.inc
 include vdp.inc
@@ -45,6 +47,7 @@ include flags.inc
 include z80sing.inc
 include mouse.inc
 include joystick.inc
+include drive.inc
 
 public fetch
 public fetch1
@@ -76,6 +79,7 @@ public psgclocks
 public psgclear
 public sccdetected
 public sccenabled
+public newleds
 
 public opsubreg
 public opsbcreg
@@ -358,6 +362,8 @@ align 4
 prim_slotreg    db      0
 keyboard_line   db      0
 ppic            db      0
+newleds         db      0
+oldleds         db      7
 
 align 4
 
@@ -566,6 +572,11 @@ megarom0_switchbank:
                 ; SCC selection
                 mov     sccactive,1
                 mov     sccdetected,1
+                cmp     sccenabled,1
+                jne     _ret
+                mov     ebx,sccram
+                mov     dword ptr [offset mem+esi*4],ebx
+                mov     dword ptr [offset slot1+esi*8],ebx
 
                 ret
 
@@ -584,33 +595,32 @@ megarom0_switchbank_SCC:
                 cmp     sccactive,1
                 jne     megarom0_switchbank_doit
 
+                cmp     sccenabled,1
+                jne     megarom0_switchbank_doit
+
                 ; SCC write
 
-                cmp     ecx,09880h
-                jb      _ret
+                cmp     cl,80h
+                jb      megarom0_switchbank_SCC_write
 
-                cmp     ecx,09890h
+                cmp     cl,90h
                 jae     _ret
 
                 sub     ecx,09880h
                 mov     byte ptr [offset sccregs+ecx],al
                 
                 mov     ebx,ecx
-                mov     ecx,psgpos
-                add     ebx,80h
+                add     ebx,080h
+                xchg    al,bl
 
-                mov     esi,soundbuffer
-                mov     byte ptr [esi+ecx*2],bl
-                mov     [esi+ecx*2+1],al
+                jmp     sound_buffer
 
-                mov     esi,timebuffer
-                mov     ebx,clocksleft
-                sub     ebx,ebp
-                add     ebx,psgclocks
-                mov     [esi+ecx*4],ebx
-
-                inc     psgpos
-
+megarom0_switchbank_SCC_write:
+                mov     ch,0
+                mov     esi,sccram
+                irp     i,<8,9,10,11,12,13,14,15>
+                mov     byte ptr [esi+ecx+1000h+i*100h],al
+                endm
                 ret
 
 ; writemem -----------------------------------------------------------
@@ -827,31 +837,7 @@ EMULABEL        continue,emtype,brtype
 
                 call    pre_dirty
 
-                mov     eax,offset rendercounter
-                call    start_counter
-                cli
-                call    render
-                sti
-                mov     eax,offset rendercounter
-                call    end_counter
-                mov     eax,dword ptr [offset rendercounter]
-                mov     renderrate,eax
-
-                mov     eax,offset spritecounter
-                call    start_counter
-                call    sprite_render
-                mov     eax,offset spritecounter
-                call    end_counter
-                mov     eax,dword ptr [offset spritecounter]
-                mov     spriterate,eax
-
-                mov     eax,offset guicounter
-                call    start_counter
-                call    draw_gui
-                mov     eax,offset guicounter
-                call    end_counter
-                mov     eax,dword ptr [offset guicounter]
-                mov     guirate,eax
+                call    video_processing
 
                 cmp     vsyncflag,1
                 JUMP    jne,vsyncskip,emtype,brtype
@@ -879,7 +865,6 @@ EMULABEL        nextint,emtype,brtype
 
                 mov     ebp,clocksleft
                 call    checkpsg
-                ;add     psgclocks,ebp
                 mov     clocksleft,59659
                 mov     interrupt,0
                 
@@ -888,13 +873,16 @@ EMULABEL        nextint,emtype,brtype
                 cmp     exit_now,1
                 JUMP    je,exit,emtype,brtype
                 
+                call    set_keyboard_leds
                 call    check_joystick
                 call    check_client
+                
+                ; not very convinced about this one
+                or      vdpstatus,10000000b
                 
                 test    byte ptr [vdpregs+1],00100000b
                 JUMP    jz,loop,emtype,brtype
                 
-                or      vdpstatus,10000000b
                 mov     iline,1
                 cmp     iff1,1
                 JUMP    jne,loop,emtype,brtype
@@ -923,6 +911,38 @@ checkpsg:
 checkpsg_clear:
                 mov     psgclocks,0
                 mov     psgclear,0
+                ret
+
+; video_processing ---------------------------------------------------
+; perform all video processing including render, sprite and gui
+
+video_processing:
+                mov     eax,offset rendercounter
+                call    start_counter
+                cli
+                call    render
+                sti
+                mov     eax,offset rendercounter
+                call    end_counter
+                mov     eax,dword ptr [offset rendercounter]
+                mov     renderrate,eax
+
+                mov     eax,offset spritecounter
+                call    start_counter
+                call    sprite_render
+                mov     eax,offset spritecounter
+                call    end_counter
+                mov     eax,dword ptr [offset spritecounter]
+                mov     spriterate,eax
+
+                mov     eax,offset guicounter
+                call    start_counter
+                call    draw_gui
+                mov     eax,offset guicounter
+                call    end_counter
+                mov     eax,dword ptr [offset guicounter]
+                mov     guirate,eax
+
                 ret
 
 ; z80_interrupt ------------------------------------------------------
@@ -1004,6 +1024,26 @@ check_client:
                 call    UART_receive
                 mov     psgjoyb,al
                 popad
+                ret
+
+; set_keyboard_leds --------------------------------------------------
+; set the keyboard leds
+
+set_keyboard_leds:
+                push    eax
+                mov     al,newleds
+                cmp     al,oldleds
+                je      set_keyboard_leds_exit
+                pushad
+                mov     bl,newleds
+                mov     oldleds,bl
+                call    setkb
+                popad
+                pop     eax
+                ret
+
+set_keyboard_leds_exit:
+                pop     eax
                 ret
 
 ; check_joystick -----------------------------------------------------
@@ -1135,6 +1175,18 @@ reset_cpu:
                 mov     eax,0
                 rep     stosd
 
+                ; clear scc memory
+                mov     edi,sccram
+                mov     ecx,8192/4
+                mov     eax,0
+                rep     stosd
+
+                ; clear scc registers
+                mov     edi,offset sccregs
+                mov     ecx,16/4
+                mov     eax,0
+                rep     stosd
+
                 ; if a megarom is loaded, then init it
                 cmp     dword ptr [offset slot1+16+4],2
                 jne     reset_cpu_nomegarom
@@ -1170,7 +1222,29 @@ print:
                 call    [offset pset + eax*4]
                 ret
 
-; --------------------------------------------------------------------
+; sound_buffer -------------------------------------------------------
+; add a sound event to the sound buffer
+; enter al=register, bl=value
+; destroy ecx,ebx,esi
+                
+sound_buffer:
+                mov     ecx,psgpos
+                cmp     ecx,32768
+                jae     _ret
+
+                mov     esi,soundbuffer
+                mov     [esi+ecx*2],al
+                mov     [esi+ecx*2+1],bl
+
+                mov     esi,timebuffer
+                mov     ebx,clocksleft
+                sub     ebx,ebp
+                add     ebx,psgclocks
+                mov     [esi+ecx*4],ebx
+
+                inc     psgpos
+
+                ret
 
 ; --------------------------------------------------------------------
 
@@ -1253,21 +1327,7 @@ outemulA1:      mov     al,psgselect
                 cmp     al,13
                 ja      _ret
 
-                mov     ecx,psgpos
-
-                mov     esi,soundbuffer
-                mov     [esi+ecx*2],al
-                mov     [esi+ecx*2+1],bl
-
-                mov     esi,timebuffer
-                mov     ebx,clocksleft
-                sub     ebx,ebp
-                add     ebx,psgclocks
-                mov     [esi+ecx*4],ebx
-
-                inc     psgpos
-
-                ret
+                jmp     sound_buffer
 
 outemulA8:      mov     prim_slotreg,bl
                 ; frame 0
@@ -1328,23 +1388,19 @@ outemulAA:
                 and     bl,0fh
                 mov     keyboard_line,bl
 
-                mov     ecx,psgpos
+                mov     bl,al
+                xor     bl,255
+                and     bl,BIT_6
+                shr     bl,4
+                and     newleds,NBIT_2
+                or      newleds,bl
 
-                mov     esi,soundbuffer
-                mov     byte ptr [esi+ecx*2],16
-                and     al,80h
+                mov     bl,16
+                and     al,080h
                 shr     al,2
-                mov     [esi+ecx*2+1],al
+                xchg    al,bl
 
-                mov     esi,timebuffer
-                mov     ebx,clocksleft
-                sub     ebx,ebp
-                add     ebx,psgclocks
-                mov     [esi+ecx*4],ebx
-
-                inc     psgpos
-
-                ret
+                jmp     sound_buffer
 
 outemulAB:
                 test    bl,BIT_7
@@ -1369,6 +1425,39 @@ outemulAB_reset:
                 xor     bh,255
                 and     bl,bh
                 jmp     outemulAA
+
+MAPPER          macro   page
+
+                mov     al,prim_slotreg
+                shr     al,page*2
+                and     al,3h
+                cmp     al,2
+                jne     _ret
+
+                and     ebx,3h
+                xor     ebx,3
+                shl     ebx,14
+                add     ebx,msxram
+                mov     dword ptr [offset slot2+page*16],ebx
+                mov     dword ptr [offset mem+page*8],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset slot2+page*16+8],ebx
+                mov     dword ptr [offset mem+page*8+4],ebx
+                ret
+
+                endm
+
+outemulFC:
+                MAPPER  0
+
+outemulFD:
+                MAPPER  1
+
+outemulFE:
+                MAPPER  2
+
+outemulFF:
+                MAPPER  3
 
 ; --------------------------------------------------------------------
 
@@ -1410,6 +1499,10 @@ inemul98:       mov     ecx,msxvram
 inemul99:       mov     bl,vdpstatus
                 and     vdpstatus,01111111b
                 mov     vdpcond,0
+                ret
+
+inemulAA:
+                mov     bl,ppic
                 ret
 
 inemulA2:       mov     al,psgselect

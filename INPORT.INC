@@ -340,7 +340,7 @@ inportxx:
 	; A9
  dd inemulA9
 	; AA
- dd inemulXX
+ dd inemulAA
 	; AB
  dd inemulXX
 	; AC
@@ -416,15 +416,15 @@ inportxx:
 	; CF
  dd inemulXX
 	; D0
- dd inemulXX
+ dd inemulD0
 	; D1
- dd inemulXX
+ dd inemulD1
 	; D2
- dd inemulXX
+ dd inemulD2
 	; D3
- dd inemulXX
+ dd inemulD3
 	; D4
- dd inemulXX
+ dd inemulD4
 	; D5
  dd inemulXX
 	; D6

@@ -6,10 +6,10 @@
 LOWMIN          = 0             ; minimum free low memory (in K)
 EXTMIN          = 0             ; minimum free extended memory (in K)
 SELECTORS       = 8             ; extra selectors for allocation
-STAKMAIN        = 100h          ; main execution stream stack size (in para)
-STAKRMODE       = 10h           ; real mode call stack size (in para)
-STAKPMODE       = 20h           ; protected mode call stack size (in para)
-MODENESTING     = 8             ; max number of nested mode switches
+STAKMAIN        = 400h          ; main execution stream stack size (in para)
+STAKRMODE       = 80h           ; real mode call stack size (in para)
+STAKPMODE       = 100h          ; protected mode call stack size (in para)
+MODENESTING     = 15            ; max number of nested mode switches
 
 RMODENUM        = (MODENESTING+1) shr 1
 PMODENUM        = MODENESTING shr 1

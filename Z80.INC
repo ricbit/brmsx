@@ -117,3 +117,4 @@ extrn psgclear: dword
 extrn sccregs: byte
 extrn sccdetected: dword
 extrn sccenabled: dword
+extrn newleds: byte

@@ -40,6 +40,7 @@ public screenselect
 public dirtyname
 public dirtypattern
 public enabled
+public enginetype
 
 ; DATA ---------------------------------------------------------------
 
@@ -82,6 +83,11 @@ falsesprite     db      2*256 dup (0)
 spriteline      db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
+enginetype      dd      1
+
+DOS_ENGINE      EQU     0
+WIN_ENGINE      EQU     1
+MMX_ENGINE      EQU     2
 
 ; render_screen0 -----------------------------------------------------
 ; render a screen 0 page
@@ -342,6 +348,130 @@ render11:       push    ebp
                 mov     spriteenable,1
                 ret
 
+; render_screen2_dirty (macro version) -------------------------------
+
+RENDER_SCREEN2_DIRTY_MACRO macro videoengine
+
+                call    wash_sprite
+
+                ; esi = name table
+                mov     eax,nametable
+                mov     esi,msxvram
+                lea     esi,[esi+eax]
+
+                ; ebx = character pattern table
+                mov     eax,patterntable
+                mov     ebx,msxvram
+                lea     ebx,[ebx+eax]
+                mov     patternsave,ebx
+
+                ; ecx = color table
+                mov     eax,colortable
+                mov     ecx,msxvram
+                lea     ecx,[ecx+eax]
+                mov     colorsave,ecx
+
+                ; edi = blit buffer
+                mov     edi,blitbuffer
+
+                ; edx = dirty table name
+                ; ebx = dirty table pattern
+                mov     edx,offset dirtyname
+                mov     ebx,offset dirtypattern
+
+                ; mask the temporary registers
+                xor     eax,eax
+
+                ; for each sector
+                mov     ebp,3
+
+EMULABEL        render23d,videoengine
+
+                push    ebp
+
+                if      (videoengine EQ DOS_ENGINE)
+                  xor   ecx,ecx
+                else
+                  mov   ecx,colorsave
+                endif
+
+                ; for each line
+                mov     ebp,8
+
+EMULABEL        render20d,videoengine
+
+                push    ebp
+
+                ; for each char
+                mov     ebp,32
+
+EMULABEL        render21d,videoengine
+
+                mov     al,[edx]
+                or      al,al
+                JUMP    jnz,render2d_draw,videoengine
+
+                mov     al,[esi]
+                cmp     byte ptr [ebx+eax],0
+                JUMP    je,render2d_next,videoengine
+                mov     byte ptr [edx],1
+
+
+EMULABEL        render2d_draw,videoengine
+
+                ; fetch the character
+                mov     al,[esi]
+                push    ebp
+                push    esi
+
+                push    ebx
+                push    edx
+
+                xor     edx,edx
+                mov     ebx,patternsave
+
+                if      (videoengine EQ DOS_ENGINE)
+                  PIPE2_DOS
+                else
+                  if (videoengine EQ MMX_ENGINE)
+                    PIPE2_MMX
+                  else
+                    PIPE2_WIN
+                  endif
+                endif
+
+                pop     edx
+                pop     ebx
+
+                pop     esi
+                pop     ebp
+                
+EMULABEL        render2d_next,videoengine
+
+                inc     esi
+                add     edi,8
+                inc     edx
+                dec     ebp
+                JUMP    jnz,render21d,videoengine
+
+                pop     ebp
+                add     edi,256*7
+                dec     ebp
+                JUMP    jnz,render20d,videoengine
+
+                add     ebx,256                                         
+                add     patternsave,256*8
+                add     colorsave,256*8
+
+                pop     ebp
+                dec     ebp
+                JUMP    jnz,render23d,videoengine
+
+                mov     spriteenable,1
+                ret
+
+                endm
+
 ; PIPE2_DOS ----------------------------------------------------------
 ; this is the inner loop for render_screen2 function
 ; it uses the esp as a general register
@@ -494,6 +624,20 @@ PIPE2_MMX       macro
 
                 endm
 
+; macro definitions --------------------------------------------------
+
+EMULABEL           macro   name,engine
+
+name&_&engine:
+
+                endm
+
+JUMP            macro   jump,name,engine
+
+                jump    name&_&engine
+
+                endm
+
 ; render_screen2_dirty -----------------------------------------------
 ; render a screen 2 page using dirty blocks
 ; WARNING: this function must ALWAYS be 
@@ -501,7 +645,24 @@ PIPE2_MMX       macro
 
 render_screen2_dirty:
 
-                call    wash_sprite
+                cmp     enginetype,0
+                jne     render_screen2_dirty_win
+                RENDER_SCREEN2_DIRTY_MACRO DOS_ENGINE
+
+render_screen2_dirty_win:
+                cmp     enginetype,1
+                jne     render_screen2_dirty_mmx
+                RENDER_SCREEN2_DIRTY_MACRO WIN_ENGINE
+
+render_screen2_dirty_mmx:
+                RENDER_SCREEN2_DIRTY_MACRO MMX_ENGINE
+
+; render_screen2 (macro version) -------------------------------------
+
+RENDER_SCREEN2_MACRO macro videoengine                
+                
+                cmp     imagetype,1
+                je      render_screen2_dirty
 
                 ; esi = name table
                 mov     eax,nametable
@@ -512,7 +673,6 @@ render_screen2_dirty:
                 mov     eax,patterntable
                 mov     ebx,msxvram
                 lea     ebx,[ebx+eax]
-                mov     patternsave,ebx
 
                 ; ecx = color table
                 mov     eax,colortable
@@ -523,20 +683,18 @@ render_screen2_dirty:
                 ; edi = blit buffer
                 mov     edi,blitbuffer
 
-                ; edx = dirty table name
-                ; ebx = dirty table pattern
-                mov     edx,offset dirtyname
-                mov     ebx,offset dirtypattern
-
                 ; mask the temporary registers
                 xor     eax,eax
+                xor     edx,edx
 
                 ; for each sector
                 mov     ebp,3
-render23d:      
+
+EMULABEL        render23,videoengine
+
                 push    ebp
 
-                ifdef   DOS
+                if   (videoengine EQ DOS_ENGINE)
                   xor   ecx,ecx
                 else
                   mov   ecx,colorsave
@@ -544,71 +702,56 @@ render23d:
 
                 ; for each line
                 mov     ebp,8
-render20d:      push    ebp
+
+EMULABEL        render20,videoengine
+                
+                push    ebp
 
                 ; for each char
                 mov     ebp,32
-render21d:       
-                mov     al,[edx]
-                or      al,al
-                jnz     render2d_draw
 
-                mov     al,[esi]
-                cmp     byte ptr [ebx+eax],0
-                je      render2d_next
-                mov     byte ptr [edx],1
-
-render2d_draw:
+EMULABEL        render21,videoengine
+                
                 ; fetch the character
                 mov     al,[esi]
                 push    ebp
                 push    esi
 
-                push    ebx
-                push    edx
-
-                xor     edx,edx
-                mov     ebx,patternsave
-
-                ifdef   DOS
+                if (videoengine EQ DOS_ENGINE)
                   PIPE2_DOS
                 else
-                  ifdef MMX
+                  if (videoengine EQ MMX_ENGINE)
                     PIPE2_MMX
                   else
                     PIPE2_WIN
                   endif
                 endif
 
-                pop     edx
-                pop     ebx
+                add     edi,8
 
                 pop     esi
                 pop     ebp
                 
-render2d_next:
-
                 inc     esi
-                add     edi,8
-                inc     edx
                 dec     ebp
-                jnz     render21d
+                JUMP    jnz,render21,videoengine
 
                 pop     ebp
                 add     edi,256*7
                 dec     ebp
-                jnz     render20d
+                JUMP    jnz,render20,videoengine
 
-                add     ebx,256                                         
-                add     patternsave,256*8
+                add     ebx,256*8
                 add     colorsave,256*8
 
                 pop     ebp
                 dec     ebp
-                jnz     render23d
+                JUMP    jnz,render23,videoengine
 
                 mov     spriteenable,1
                 ret
+
+                endm
 
 ; render_screen2 -----------------------------------------------------
 ; render a screen 2 page
@@ -616,89 +759,19 @@ render2d_next:
 ;          called with interrupts DISABLED
 
 render_screen2:
-                cmp     imagetype,1
-                je      render_screen2_dirty
-
-render_screen2_linear:
                 
-                ; esi = name table
-                mov     eax,nametable
-                mov     esi,msxvram
-                lea     esi,[esi+eax]
+                cmp     enginetype,0
+                jne     render_screen2_win
+                RENDER_SCREEN2_MACRO DOS_ENGINE
 
-                ; ebx = character pattern table
-                mov     eax,patterntable
-                mov     ebx,msxvram
-                lea     ebx,[ebx+eax]
+render_screen2_win:
+                cmp     enginetype,1
+                jne     render_screen2_mmx
+                RENDER_SCREEN2_MACRO WIN_ENGINE
 
-                ; ecx = color table
-                mov     eax,colortable
-                mov     ecx,msxvram
-                lea     ecx,[ecx+eax]
-                mov     colorsave,ecx
+render_screen2_mmx:
+                RENDER_SCREEN2_MACRO MMX_ENGINE
 
-                ; edi = blit buffer
-                mov     edi,blitbuffer
-
-                ; mask the temporary registers
-                xor     eax,eax
-                xor     edx,edx
-
-                ; for each sector
-                mov     ebp,3
-render23:       push    ebp
-
-                ifdef   DOS
-                  xor   ecx,ecx
-                else
-                  mov   ecx,colorsave
-                endif
-
-                ; for each line
-                mov     ebp,8
-render20:       push    ebp
-
-                ; for each char
-                mov     ebp,32
-render21:       
-                ; fetch the character
-                mov     al,[esi]
-                push    ebp
-                push    esi
-
-                ifdef   DOS
-                  PIPE2_DOS
-                else
-                  ifdef MMX
-                    PIPE2_MMX
-                  else
-                    PIPE2_WIN
-                  endif
-                endif
-
-                add     edi,8
-
-                pop     esi
-                pop     ebp
-                
-                inc     esi
-                dec     ebp
-                jnz     render21
-
-                pop     ebp
-                add     edi,256*7
-                dec     ebp
-                jnz     render20
-
-                add     ebx,256*8
-                add     colorsave,256*8
-
-                pop     ebp
-                dec     ebp
-                jnz     render23
-
-                mov     spriteenable,1
-                ret
 
 ; render_screen3 -----------------------------------------------------
 ; render a screen 3 page
@@ -829,6 +902,9 @@ sprite16N1:     push    ecx eax
                 jl      sprite_crop
                 cmp     eax,192-16
                 jge     sprite_crop
+
+                ;;;
+                jmp     sprite_crop
                 
                 mov     ch,al
                 mov     edi,blitbuffer

@@ -1,5 +1,8 @@
+- fix read_rom
+- fix megarom block selectors
+
 - fix border color in 256 mode
-- add video cache for screen 0
+- add video cache for screen 0/3
 - improve video cache in screen 2 (is it worth?)
 - add sprites 8x8
 - add sprite zoom
@@ -8,5 +11,5 @@
 - improve gui
 - finish the compiler
 - noise/envelope in sound
-- add low-level and high-level disk functions
+- add high-level disk functions
 - add true-disk emulation
