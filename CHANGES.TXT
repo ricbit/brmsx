@@ -1,8 +1,12 @@
+release 1.48:
+
+- dynamic CPU optimizer: auto-detect konami combo
+
 release 1.47:
 
-- now the numeric display averages 10 samples
-  and has three digits
+- now the numeric display averages 10 samples and has three digits
 - fixed bugs on screen 2 block renderer
+- moved blit code from IO.ASM to BLIT.ASM
 
 release 1.46:
 

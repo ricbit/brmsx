@@ -14,6 +14,7 @@ include z80.inc
 include vdp.inc
 include pentium.inc
 include saveload.inc
+include blit.inc
 
 include debugsrc.inc
 

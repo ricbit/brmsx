@@ -32,6 +32,7 @@ public colortable
 public sprattrtable
 public eval_sprite_coords
 public dirty_sprite
+public firstscreen
 
 ; DATA ---------------------------------------------------------------
 

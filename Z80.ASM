@@ -787,9 +787,15 @@ OPRLA           17
 ; 18 - JR dd
 emul18:         inc     edi
                 call    fetch
+                cmp     al,0FEh
+                je      emul18a
                 movsx   ebx,al
                 mov     ebp,12+2
                 lea     edi,[edi+ebx+1]
+                ret
+emul18a:
+                dec     edi
+                mov     clockcounter,60000
                 ret
 
 ; 19 - ADD HL,DE
@@ -1986,6 +1992,7 @@ outemul99a:     mov     vdpcond,0
 outemul99b:     and     ebx,00000111b
                 mov     al,vdptemp
                 mov     byte ptr [offset vdpregs+ebx],al
+                mov     firstscreen,1
                 cmp     ebx,7
                 je      set_border_color
                 ret
