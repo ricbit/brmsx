@@ -45,3 +45,11 @@ extrn find_next: near
 extrn set_correct_palette: near
 extrn setkb: near
 extrn noled: dword
+extrn savesnap: dword
+extrn greenflag: dword
+extrn pal_normal: dword      
+extrn pal_filtered: dword
+extrn pal_gui: dword
+extrn palette_green: byte
+extrn filtered_palette_green: byte
+extrn gui_palette_green: byte

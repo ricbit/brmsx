@@ -466,7 +466,7 @@ start_gui:
                 mov     menu_locked,0
                 
                 ; update palette
-                mov     ebx,offset gui_palette
+                mov     ebx,pal_gui
                 mov     ecx,256
                 call    fill_palette
                 mov     firstscreen,1

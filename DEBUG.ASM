@@ -16,7 +16,6 @@ include pentium.inc
 include saveload.inc
 include blit.inc
 include bit.inc
-include compiler.inc
 include serial.inc
 include psg.inc
 include mouse.inc

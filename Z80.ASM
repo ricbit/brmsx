@@ -48,6 +48,7 @@ include z80sing.inc
 include mouse.inc
 include joystick.inc
 include drive.inc
+include saveload.inc
 
 public fetch
 public fetch1
@@ -345,6 +346,7 @@ vdpregs         db      8 dup (0)
 vsyncflag       dd      0
 vdptemp         db      0
 vdpstatus       db      0
+vdplookahead    db      0
 
 ; PSG registers
 align 4
@@ -356,6 +358,7 @@ psgselect       db      0
 psgreg          db      16 dup (0)
 psgjoya         db      00111111b
 psgjoyb         db      00111111b
+psgkana         db      0
 
 ; SCC registers
 
@@ -821,9 +824,11 @@ EMULABEL        interrupt,emtype,brtype
 
                 pushad
                 call    check_mouse
-                call    z80paused
                 call    process_frame
                 popad
+                
+                ; must be called without pushads
+                call    z80paused
 
                 mov     eax,offset z80counter
                 call    start_counter
@@ -1118,6 +1123,9 @@ check_joystick_exit:
 ; must preserve ebp,eax,edx,edi,esp
 
 z80paused:
+                cmp     savesnap,1
+                je      z80paused_savesnap
+                
                 cmp     cpupaused,1
                 jne     _ret
                 
@@ -1140,6 +1148,15 @@ z80paused:
                 mov     edi,regepc
                 mov     reset_flag,0
 
+                ret
+
+z80paused_savesnap:
+                pushad
+                call    sound_off
+                call    save_snapshot_pcx
+                call    sound_on
+                mov     savesnap,0
+                popad
                 ret
 
 ; emulate ------------------------------------------------------------
@@ -1205,6 +1222,8 @@ reset_cpu:
 
                 ; disable interrupts
                 mov     iff1,0
+                mov     iline,0
+                mov     fakeirq,0
 
                 ; clear keyboard matrix
                 mov     edi,offset keymatrix
@@ -1286,7 +1305,7 @@ sound_buffer:
                 mov     [esi+ecx*2+1],bl
 
                 mov     esi,timebuffer
-                mov     ebx,59659 ;clocksleft
+                mov     ebx,59659 
                 sub     ebx,ebp
                 add     ebx,psgclocks
                 mov     [esi+ecx*4],ebx
@@ -1351,10 +1370,25 @@ outemul99:      cmp     vdpcond,0
 outemul99a:     mov     vdpcond,0
                 test    bl,10000000b
                 jnz     outemul99b
+                cmp     bl,01000000b
+                jb      outemul99_read
                 and     bl,00111111b
                 mov     vdpaddressh,bl
                 mov     bl,vdptemp
                 mov     vdpaddressl,bl
+                ret
+outemul99_read:
+                and     bl,00111111b
+                mov     vdpaddressh,bl
+                mov     bl,vdptemp
+                mov     vdpaddressl,bl
+                mov     ecx,vdpaddresse
+                mov     esi,msxvram
+                mov     bl,[esi+ecx]
+                mov     vdplookahead,bl
+                inc     ecx
+                and     ecx,03FFFh
+                mov     vdpaddresse,ecx
                 ret
 outemul99b:     and     ebx,00000111b
                 mov     al,vdptemp
@@ -1385,10 +1419,27 @@ outemulA0:
 
 outemulA1:      mov     al,psgselect        
                 mov     [offset psgreg+eax],bl
+                cmp     al,15
+                je      outemulA1_kana
                 cmp     al,13
                 ja      _ret
 
                 jmp     sound_buffer
+
+outemulA1_kana:
+                and     bl,80h
+                cmp     psgkana,bl
+                je      _ret
+                
+                ; Kana LED
+                mov     psgkana,bl
+                xor     bl,255
+                and     bl,BIT_7
+                shr     bl,6
+                and     newleds,NBIT_1
+                or      newleds,bl
+                
+                ret
 
 outemulA8:      mov     prim_slotreg,bl
                 
@@ -1496,7 +1547,8 @@ outemulFF:
 
 ; byte to be inputed returns in bl register
 
-inemulXX:       ret
+inemulXX:       mov     bl,0FFh
+                ret
 
 inemul8E:
                 mov     eax,0
@@ -1521,12 +1573,13 @@ inemul8E_page2:
                 ret
 
 inemul98:       mov     ecx,msxvram
-                mov     eax,vdpaddresse
-                mov     bl,[ecx+eax]
-                inc     eax
-                and     eax,03FFFh
-                mov     vdpaddresse,eax
-                xor     eax,eax
+                mov     esi,vdpaddresse
+                mov     bl,vdplookahead
+                mov     bh,[ecx+esi]
+                inc     esi
+                and     esi,03FFFh
+                mov     vdpaddresse,esi
+                mov     vdplookahead,bh
                 ret
 
 inemul99:       mov     bl,vdpstatus

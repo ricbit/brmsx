@@ -903,9 +903,6 @@ sprite16N1:     push    ecx eax
                 cmp     eax,192-16
                 jge     sprite_crop
 
-                ;;;
-                jmp     sprite_crop
-                
                 mov     ch,al
                 mov     edi,blitbuffer
                 add     edi,ecx

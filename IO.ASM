@@ -72,6 +72,14 @@ public find_next
 public set_correct_palette
 public setkb
 public noled
+public savesnap
+public greenflag
+public pal_normal      
+public pal_filtered    
+public pal_gui         
+public palette_green
+public filtered_palette_green
+public gui_palette_green
 
 ; DATA ---------------------------------------------------------------
 
@@ -79,9 +87,14 @@ align 4
 
 include keyboard.inc
 include keyext.inc
+
 include palette.inc
 include guipal.inc
 include filpal.inc
+
+include palgreen.inc
+include guigreen.inc
+include filgreen.inc
 
 tmphex4         db      '0000$'         ; temp buffer for print routines
 tmphex2         equ     tmphex4+2
@@ -107,6 +120,11 @@ videomode       dd      0
 cpupaused       dd      0
 key_extended    dd      0
 noled           dd      0
+savesnap        dd      0
+greenflag       dd      0
+pal_normal      dd      offset palette
+pal_filtered    dd      offset filtered_palette
+pal_gui         dd      offset gui_palette
 
 clockrate       db      8 dup (0)
 measurestatus   dd      0
@@ -312,12 +330,12 @@ set_correct_palette:
                 cmp     videomode,2
                 jne     set_correct_palette_16
 
-                mov     ebx,offset filtered_palette
+                mov     ebx,pal_filtered
                 mov     ecx,256
                 jmp     fill_palette
 
 set_correct_palette_16:
-                mov     ebx,offset palette
+                mov     ebx,pal_normal
                 mov     ecx,16
                 jmp     fill_palette
 
@@ -332,7 +350,7 @@ setgraphmode:
                 mov     al,10h
                 int     33h
 
-                mov     ebx,offset palette
+                mov     ebx,pal_normal
                 mov     ecx,16
                 call    fill_palette
 
@@ -365,7 +383,7 @@ setgraphmode:
 setgraphmode_vesa:
                 call    set_vesa_mode
                 
-                mov     ebx,offset filtered_palette
+                mov     ebx,pal_filtered
                 mov     ecx,256
                 call    fill_palette
                 
@@ -439,7 +457,12 @@ set_border_color:
                 push    eax ebx edx
                 movzx   eax,byte ptr [offset vdpregs+7]
                 and     eax,0fh
-                lea     ebx,[offset palette+eax+eax*2]
+                ;lea     ebx,[offset palette+eax+eax*2]
+                mov     ebx,pal_normal
+                ;lea     ebx,[ebx+eax+eax*2]
+                add     ebx,eax
+                add     ebx,eax
+                add     ebx,eax
                 mov     al,0
                 mov     dx,03C8h
                 out     dx,al
@@ -458,7 +481,12 @@ set_border_color:
                 ; must also set the color 2
                 movzx   eax,byte ptr [offset vdpregs+7]
                 shr     eax,4
-                lea     ebx,[offset palette+eax+eax*2]
+                ;lea     ebx,[offset palette+eax+eax*2]
+                mov     ebx,pal_normal
+                ;lea     ebx,[ebx+eax+eax*2]
+                add     ebx,eax
+                add     ebx,eax
+                add     ebx,eax
                 
                 dec     edx
                 mov     al,2
@@ -494,7 +522,9 @@ set_border_color_512x384:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
+                ;lea     ebx,[offset filtered_palette+eax]
                 mov     al,[ebx]
                 out     dx,al
                 mov     al,[ebx+1]
@@ -507,7 +537,10 @@ set_border_color_512x384:
                 and     eax,0Fh
                 lea     eax,[eax+eax*2]
                 shl     eax,4
-                lea     ebx,[offset filtered_palette+eax+3]
+                mov     ebx,pal_filtered
+                ;add     ebx,eax
+                ;lea     ebx,[offset filtered_palette+eax+3]
+                lea     ebx,[ebx+eax+3]
 
                 mov     ecx,15*3
 set_border_color_512x384_loop1:
@@ -523,7 +556,9 @@ set_border_color_512x384_loop1:
                 lea     eax,[eax+eax*2]
                 shl     eax,4
                 mov     esi,10h
-                lea     ebx,[offset filtered_palette+eax+3]
+                mov     ebx,pal_filtered
+                lea     ebx,[ebx+eax+3]
+                ;lea     ebx,[offset filtered_palette+eax+3]
 
                 dec     edx
                 mov     ecx,15
@@ -562,7 +597,9 @@ set_border_color_512x384_scr0:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
+                ;lea     ebx,[offset filtered_palette+eax]
 
                 mov     al,[ebx]
                 out     dx,al
@@ -576,7 +613,9 @@ set_border_color_512x384_scr0:
                 and     eax,0Fh
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
+                ;lea     ebx,[offset filtered_palette+eax]
 
                 mov     al,[ebx]
                 out     dx,al
@@ -588,7 +627,9 @@ set_border_color_512x384_scr0:
                 ; set the color 02h
                 movzx   eax,byte ptr [offset vdpregs+7]
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -608,7 +649,9 @@ set_border_color_512x384_scr0:
                 and     eax,0Fh
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -628,7 +671,9 @@ set_border_color_512x384_scr0:
                 shr     eax,4
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -650,7 +695,9 @@ set_border_color_512x384_scr0:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -664,7 +711,9 @@ set_border_color_512x384_scr0:
                 shr     eax,4
                 or      eax,10h
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -680,7 +729,9 @@ set_border_color_512x384_scr0:
                 shl     ebx,4
                 or      eax,ebx
                 lea     eax,[eax+eax*2]
-                lea     ebx,[offset filtered_palette+eax]
+                ;lea     ebx,[offset filtered_palette+eax]
+                mov     ebx,pal_filtered
+                add     ebx,eax
 
                 mov     al,[ebx]
                 out     dx,al
@@ -1021,6 +1072,9 @@ my_kb_irq_handler1:
                 cmp     al,78
                 je      my_kb_irq_handler_keypadplus
 
+                cmp     al,67
+                je      my_kb_irq_handler_f9
+
                 cmp     al,74
                 je      my_kb_irq_handler_keypadminus
 
@@ -1057,6 +1111,10 @@ my_kb_irq_handler_f12:
 
 my_kb_irq_handler_f6:
                 mov     tape_pos,0
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_f9:
+                mov     savesnap,1
                 jmp     my_kb_irq_handler_exit
 
 my_kb_irq_handler_keypadplus:

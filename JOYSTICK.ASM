@@ -14,6 +14,7 @@ include bit.inc
 public joyenable
 public calibrate_joystick
 public read_joystick
+public joysens
 
 ; DATA ---------------------------------------------------------------
 
@@ -26,6 +27,7 @@ joyymin         dd      0
 joyenable       dd      0
 joybutton       db      0
 joymsx          db      0
+joysens         db      3
 
 ; joystick_sample ----------------------------------------------------
 ; get a sample from the joystick
@@ -70,7 +72,8 @@ calibrate_joystick:
                 call    joystick_sample
 
                 mov     eax,joyx
-                shr     eax,3
+                mov     cl,joysens
+                shr     eax,cl
                 
                 mov     ebx,joyx
                 add     ebx,eax
@@ -81,7 +84,7 @@ calibrate_joystick:
                 mov     joyxmin,ebx
 
                 mov     eax,joyy
-                shr     eax,3
+                shr     eax,cl
                 
                 mov     ebx,joyy
                 add     ebx,eax

@@ -22,6 +22,7 @@ extrn writemessage: near
 public save_state
 public load_state
 public save_histogram
+public save_snapshot_pcx
 
 ; DATA ---------------------------------------------------------------
 
@@ -428,6 +429,9 @@ save_snapshot_pcx:
                 cmp     videomode,2
                 je      save_snapshot_pcx_512
 
+                cmp     videomode,0
+                jne     save_snapshot_pcx_256
+
                 mov     edx,offset pcx_header
                 mov     ecx,128
                 call    custom_write
@@ -466,24 +470,70 @@ save_snapshot_pcx_inner:
                 sti
                 ret
 
+save_snapshot_pcx_256:
+                
+                mov     edx,offset pcx_header
+                mov     ecx,128
+                call    custom_write
+
+                mov     ebp,192
+                mov     esi,0A0000h
+                sub     esi,_code32a
+save_snapshot_pcx_outer_256:
+                mov     edi,transf_buffer
+                mov     ecx,256
+save_snapshot_pcx_inner_256:
+                mov     al,[esi]
+                mov     byte ptr [edi],11000001b
+                mov     [edi+1],al
+                inc     esi
+                add     edi,2
+                dec     ecx
+                jnz     save_snapshot_pcx_inner_256
+
+                push    esi ebp
+                mov     edx,transf_buffer
+                mov     ecx,512
+                call    custom_write
+                pop     ebp esi
+
+                dec     ebp
+                jnz     save_snapshot_pcx_outer_256
+
+                mov     al,12
+                WRITE_IMM
+
+                call    save_snapshot_pcx_palette
+                
+                call    close_file
+                sti
+                ret
+
+
 save_snapshot_pcx_palette:                
                 mov     ebp,256
-                mov     edx,03C8h
+                mov     edx,03C7h
                 mov     al,0
                 out     dx,al
-                inc     dx
+                add     dx,2
 save_snapshot_pcx_palette_loop:
                 in      al,dx
                 shl     al,2
+                push    edx
                 WRITE_IMM
+                pop     edx
                 
                 in      al,dx
                 shl     al,2
+                push    edx
                 WRITE_IMM
+                pop     edx
                 
                 in      al,dx
                 shl     al,2
+                push    edx
                 WRITE_IMM
+                pop     edx
                 
                 dec     ebp
                 jnz     save_snapshot_pcx_palette_loop

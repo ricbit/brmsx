@@ -2,13 +2,21 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
-release 1.127:
+release 1.128:
 
 - "-ramslot" select slot 2 (expert) or 3 (hotbit)
 - fixed a minor bug in load rom ("Magical Kid Wiz")
 - fixed a bug in Sound Blasters configured to IRQs greater than 7
 - fixed the IRQ bug!!!! ("Astro MC", "Aekrus", "Titanic 2")
 - now brmsx can read from cd-roms
+- save screen snapshot to BRMSX.PCX
+- option to adjust joystick sensivity ("-joysens")
+- support to undocumented behavior of VDP in VRAM reads ("TMNT")
+- improved idle bus emulation (now reading an unconnected I/O port return FF)
+- support to korean memory layout
+- emulation of Kana LED (on Num Lock LED, require japanese or korean roms)
+- support to 180kb (40/1) and 360kb (40/2) .DSK disk images
+- emulation of the green monitor!! (use the option "-green")
 
 release 1.126:
 

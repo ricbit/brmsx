@@ -33,6 +33,7 @@ public driveD4
 public portenabled
 
 extrn diskimage: dword
+extrn disksize: dword
 
 ; DATA ---------------------------------------------------------------
 
@@ -141,10 +142,17 @@ outemulD0_read_sector:
                 ; current_byte is
                 ; disk_image+(track*18+sector+side*9)*512
 
+                mov     esi,disksize
+                mov     cl,0
+                cmp     esi,45
+                jbe     outemulD0_read_sector_180
+                mov     cl,1
+outemulD0_read_sector_180:
                 movzx   eax,current_track
                 movzx   ebx,current_sector
                 lea     eax,[eax+eax*8]
-                lea     eax,[ebx+eax*2]
+                shl     eax,cl
+                lea     eax,[ebx+eax]
                 movzx   ebx,driveD4
                 shr     ebx,4
                 and     ebx,1
@@ -165,10 +173,17 @@ outemulD0_write_sector:
                 ; current_byte is
                 ; disk_image+(track*18+sector+side*9)*512
 
+                mov     esi,disksize
+                mov     cl,0
+                cmp     esi,45
+                jbe     outemulD0_write_sector_180
+                mov     cl,1
+outemulD0_write_sector_180:
                 movzx   eax,current_track
                 movzx   ebx,current_sector
                 lea     eax,[eax+eax*8]
-                lea     eax,[ebx+eax*2]
+                shl     eax,cl
+                lea     eax,[ebx+eax]
                 movzx   ebx,driveD4
                 shr     ebx,4
                 and     ebx,1

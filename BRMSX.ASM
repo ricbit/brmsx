@@ -41,6 +41,7 @@ public soundbuffer
 public timebuffer
 public sccram
 public tapeimage
+public disksize
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -50,7 +51,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.126',13,10
+msg00           db      'BrMSX 1.128',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -74,7 +75,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.126',13,10
+msg22           db      'BrMSX 1.128',13,10
                 db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -89,6 +90,7 @@ msg27           db      'DISK.ROM invalid or not found',13,10,'$'
 msg28           db      'Tape: $'
 msg29           db      'Tape image not found',13,10,'$'
 msg30           db      'Tape image greater than 64kb',13,10,'$'
+msg31           db      'MSXHAN.ROM invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cart1.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -98,6 +100,8 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-turbo         turbo emulation speed',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
+                db      '-korean        enable korean memory layout '
+                db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
                 db      '-win           windows video engine '
                 db      '(slower, default)',13,10
                 db      '-dos           dos video engine (fast but does not '
@@ -108,6 +112,7 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '2=512x384 3=256x192)',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
+                db      '-green         enable green monitor emulation',13,10
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
                 db      '-nocache       disable video cache',13,10
@@ -116,14 +121,16 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
+                db      'Press enter to continue.$'
+help_message2   db      13
                 db      '-disklow       low-level, port-based disk '
                 db      'emulation (default)',13,10
                 db      '-diskhigh      high-level, patch-based disk '
                 db      'emulation',13,10
-                db      'Press enter to continue.$'
-help_message2   db      13
                 db      '-tape <file>   use <file> as cassete image',13,10
                 db      '-joy           enable joystick emulation',13,10
+                db      '-joysens <n>   adjust joystick sensibility '
+                db      '(range is 0 to 7, default is 3)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
@@ -145,6 +152,7 @@ msgMMX          db      '(MMX)$'
 msgpoint        db      '.$'
 rom_name        db      'MSX.ROM',0
 disk_rom_name   db      'DISK.ROM',0
+msxhan_name     db      'MSXHAN.ROM',0
 blasterenv      db      'BLASTER',0
 addrstr         db      3 dup (0)
 
@@ -190,6 +198,9 @@ switch_frame    db      '-frame',0
 switch_tape     db      '-tape',0
 switch_nopent   db      '-nopentium',0
 switch_ramslot  db      '-ramslot',0
+switch_joysens  db      '-joysens',0
+switch_korean   db      '-korean',0
+switch_green    db      '-green',0
 
 switch_table:
                 dd      offset switch_mmx
@@ -221,8 +232,11 @@ switch_table:
                 dd      offset switch_tape
                 dd      offset switch_nopent
                 dd      offset switch_ramslot
+                dd      offset switch_joysens
+                dd      offset switch_korean
+                dd      offset switch_green
 
-switch_total    dd      29
+switch_total    dd      32
 
 switch_callback: 
                 dd      offset callback_mmx
@@ -254,6 +268,9 @@ switch_callback:
                 dd      offset callback_tape
                 dd      offset callback_nopent
                 dd      offset callback_ramslot
+                dd      offset callback_joysens
+                dd      offset callback_korean
+                dd      offset callback_green
 
 align 4
 
@@ -277,6 +294,7 @@ timebuffer      dd      ?
 sccram          dd      ?
 idlerom         dd      ?
 tapeimage       dd      ?
+msxhan          dd      ?
 
 diskenabled     dd      0
 cpugraphok      dd      0
@@ -286,6 +304,8 @@ novesa          dd      0
 noenter         dd      0
 filesize        dd      0
 nopentium       dd      0
+korean          dd      0
+disksize        dd      0
 
 ; --------------------------------------------------------------------
 
@@ -589,8 +609,11 @@ main_nodrivea:
 
                 mov     diskenabled,1
                 call    read_size_file
-                cmp     eax,720*1024
-                jne     disk_size_not_supported
+                ;cmp     eax,720*1024
+                ;jne     disk_size_not_supported
+                mov     ebx,eax
+                shr     ebx,10+2
+                mov     disksize,ebx
 
                 ; allocate 720kb to disk image
                 mov     eax,720*1024
@@ -598,16 +621,16 @@ main_nodrivea:
                 jc      no_memory
                 mov     diskimage,eax
                 
-                mov     ebx,720/16
+                mov     ebx,disksize ;720/16
                 mov     edi,diskimage
 _main4:               
-                mov     ecx,16384
+                mov     ecx,4096 ; 16384
                 mov     edx,transf_buffer
                 push    ebx
                 call    read_file
                 pop     ebx
                 mov     esi,transf_buffer
-                mov     ecx,16384/4
+                mov     ecx,4096/4 ;16384/4
                 rep     movsd
                 dec     ebx
                 jnz     _main4
@@ -661,6 +684,38 @@ _main4:
 _main_noport:
 _main_nodrive:
 
+                ; check for korean support
+                cmp     korean,1
+                jne     _main_nokorean
+
+                ; allocate 16kb for disk.rom
+                mov     eax,16*1024
+                call    _getmem
+                jc      no_memory
+                mov     msxhan,eax
+
+                ; load MSXHAN.ROM from disk
+                mov     edx,offset msxhan_name
+                call    open_file
+                jc      msxhan_error
+                call    read_size_file
+                cmp     eax,04000h
+                jne     msxhan_error
+                mov     edx,transf_buffer
+                mov     ecx,16*1024
+                call    read_file
+                call    close_file
+                mov     esi,transf_buffer
+                mov     edi,msxhan
+                mov     ecx,16384/4
+                rep     movsd
+
+                mov     eax,msxhan
+                mov     dword ptr [offset slot0+16*2],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot0+16*2+8],eax
+
+_main_nokorean:
                 ; check for tape emulation
                 cmp     byte ptr [offset tape_name],0
                 je      _main_notape
@@ -921,6 +976,11 @@ tape_not_found:
 
 tape_too_large:
                 mov     eax,offset msg30
+                call    printmsg
+                jmp     _exit
+
+msxhan_error:
+                mov     eax,offset msg31
                 call    printmsg
                 jmp     _exit
 
@@ -1401,6 +1461,33 @@ callback_ramslot_second_3:
                 mov     allram,0FFh
                 ret
 
+callback_joysens:
+                mov     secondarg,1
+                mov     eax,offset callback_joysens_second
+                mov     second_callback,eax
+                ret
+
+callback_joysens_second:
+                mov     al,byte ptr [offset emptyspace]
+                sub     al,'0'
+                mov     joysens,al
+                call    calibrate_joystick
+                ret
+
+callback_korean:
+                mov     korean,1
+                ret
+
+callback_green:
+                mov     greenflag,1
+                mov     eax,offset palette_green
+                mov     pal_normal,eax
+                mov     eax,offset filtered_palette_green
+                mov     pal_filtered,eax
+                mov     eax,offset gui_palette_green
+                mov     pal_gui,eax
+                ret
+
 ; read_rom -----------------------------------------------------------
 ; read a ROM file from the disk
 ; enter: edx = offset of rom name 
@@ -1587,14 +1674,14 @@ flush_dsk:
                 mov     edx,offset drivea_name
                 call    create_file
 
-                mov     ebx,720/16
+                mov     ebx,disksize ;720/16
                 mov     esi,diskimage
 flush_dsk_loop:               
                 mov     edi,transf_buffer
-                mov     ecx,16384/4
+                mov     ecx,4096/4 ; 16384/4
                 rep     movsd
 
-                mov     ecx,16384
+                mov     ecx,4096 ;16384
                 mov     edx,transf_buffer
                 push    ebx
                 call    write_file
