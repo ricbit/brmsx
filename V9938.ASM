@@ -17,8 +17,10 @@ include pmode.inc
 include pentium.inc
 include blit.inc
 include render.inc
+include v9958.inc
 
 extrn msxvram: dword
+extrn msxvram_swap: dword
 extrn vdplog: dword
 extrn blitbuffer: dword
 extrn redbuffer: dword
@@ -42,6 +44,14 @@ public sprite_render_msx2
 public dirty_palette
 public render_msx2
 public set_adjust_exit
+public masterclocklow  
+public masterclockhigh 
+public vdptiming
+public vram_interlace
+public vram_deinterlace
+public adjustbuffer
+public set_adjust
+public screen6_table
 
 LOGIC_SINGLE  EQU 0
 LOGIC_DOUBLE  EQU 1
@@ -52,6 +62,7 @@ align 4
 include screen0l.inc
 include screen6.inc
 include adjust.inc
+include sprite8.inc
 
 align 4
 
@@ -61,6 +72,8 @@ all10           dq      1010101010101010h
 falsesprite     db      32*32*2 dup (0)
 falsemask       db      32 dup (0)
 
+sprite_color_mask dd 0
+
 dirty_palette   db      16 dup (1)
 
 save_ebp        dd      0
@@ -69,6 +82,15 @@ vdp_page        dd      0
 adjustbuffer    dd      0
 scr2_pat2col    dd      0
 scr2_col2pat    dd      0
+
+masterclocklow  dd      0
+masterclockhigh dd      0
+
+saveclocklow    dd      0
+saveclockhigh   dd      0
+
+vdptiming       dd      1
+command_in_use  dd      0
 
 size_hx         dd      0
 and_hx          dd      0
@@ -105,7 +127,7 @@ callback_44     dd      _ret
 callback_07     dd      _ret
 
 callback_vdp:
-                dd      _ret                    ; STOP
+                dd      vdp_command_STOP        ; STOP
                 dd      _ret                    ; RESERVED
                 dd      _ret                    ; RESERVED
                 dd      _ret                    ; RESERVED
@@ -249,6 +271,12 @@ register_action:
                 je      outemul99_palette_msx2
                 cmp     bl,14
                 je      outemul99_page_msx2
+                cmp     bl,25
+                je      outemul99_scroll_raster
+                cmp     bl,26
+                je      outemul99_scroll_raster
+                cmp     bl,27
+                je      outemul99_scroll_raster
                 cmp     bl,44
                 je      check_cpu_move 
                 cmp     bl,46
@@ -259,6 +287,10 @@ outemul99_update_msx2:
 
 check_cpu_move:
                 jmp     dword ptr [offset callback_44]
+
+outemul99_scroll_raster:
+                mov     force_raster,1 
+                ret
 
 outemul99_page_msx2:
                 ; select page
@@ -405,7 +437,7 @@ inemul99_msx2:
                 mov     bl,vdpstatus
                 and     vdpstatus,00111111b
                 ;;; msx2+ intro
-                or      vdpstatus,BIT_5
+                ;or      vdpstatus,BIT_5
                 ;;;
                 mov     vdpcond,0
                 mov     iline,0
@@ -413,13 +445,33 @@ inemul99_msx2:
 
 inemul99_msx2_reg2:
                 mov     bl,byte ptr [offset vdpstatus+2]
-                xor     bl,020h 
-                mov     cl,bl
-                mov     byte ptr [offset vdpstatus+2],cl
+
+                ; check for horizontal retrace
+                and     bl,NBIT_5
+                cmp     ebp,100
+                ja      inemul99_msx2_reg2_nohretrace
+                or      bl,BIT_5
+inemul99_msx2_reg2_nohretrace:
+
+                ; check for vertical retrace
                 and     bl,NBIT_6
                 cmp     current_line,211
-                jbe     _ret
+                jbe     inemul99_msx2_reg2_novretrace
                 or      bl,BIT_6
+
+inemul99_msx2_reg2_novretrace:
+                cmp     command_in_use,1
+                jne     _ret
+
+                or      bl,BIT_0
+                mov     ecx,saveclocklow
+                sub     ecx,masterclocklow
+                mov     ecx,saveclockhigh
+                sbb     ecx,masterclockhigh
+                jnc     _ret
+
+                mov     command_in_use,0
+                and     bl,NBIT_0
                 ret
 
 inemul99_msx2_reg1:
@@ -760,6 +812,13 @@ next:
 
                 endm
 
+; vdp_command_STOP ---------------------------------------------------
+
+vdp_command_STOP:
+                mov     command_in_use,0
+                and     byte ptr [offset vdpstatus+2],NBIT_0
+                ret
+
 ; vdp_command_HMMM ---------------------------------------------------
 
 vdp_command_HMMM:
@@ -859,6 +918,22 @@ vdp_command_HMMM_inner:
 
                 dec     ebx
                 jnz     vdp_command_HMMM_outer
+
+                cmp     vdptiming,1
+                jne     vdp_command_HMMM_exit
+
+                mov     command_in_use,1
+                mov     eax,pNX
+                mov     ecx,pNY
+                mul     ecx
+                mov     ecx,2078
+                mul     ecx
+                shr     eax,8
+                add     eax,masterclocklow
+                mov     saveclocklow,eax
+                mov     eax,masterclockhigh
+                adc     eax,0
+                mov     saveclockhigh,eax
 
 vdp_command_HMMM_exit:
                 popad
@@ -1448,6 +1523,21 @@ vdp_command_LMMM_inner:
 
                 dec     ebx
                 jnz     vdp_command_LMMM_outer
+
+                cmp     vdptiming,1
+                jne     vdp_command_LMMM_exit
+
+                mov     command_in_use,1
+                mov     eax,pNX
+                mov     ecx,pNY
+                mul     ecx
+                mov     ecx,22
+                mul     ecx
+                add     eax,masterclocklow
+                mov     saveclocklow,eax
+                mov     eax,masterclockhigh
+                adc     eax,0
+                mov     saveclockhigh,eax
 
 vdp_command_LMMM_exit:
                 popad
@@ -2156,6 +2246,22 @@ render_msx2_clear_512:
                 popad
                 ret
 
+; load_border_color --------------------------------------------------
+; load the border color in al based on the current screen
+
+load_border_color:
+                cmp     actualscreen,8
+                je      load_border_color_scr8
+
+                mov     al,byte ptr [offset vdpregs+7]
+                and     al,0Fh
+                or      al,10h
+                ret
+
+load_border_color_scr8:
+                mov     al,byte ptr [offset vdpregs+7]
+                ret
+
 ; set_adjust ---------------------------------------------------------
 ; perform the correction on blitbuffer 
 ; in order to apply the set adjust
@@ -2191,6 +2297,48 @@ set_adjust_512:
 set_adjust_exit:
                 pushad  
 
+                call    check_scroll_mask
+
+                ; check if we are in 192 lines mode
+                test    byte ptr [offset vdpregs+9],BIT_7
+                jnz     set_adjust_exit_start
+
+                cmp     last_line,192
+                jb      set_adjust_exit_start
+
+                cmp     videomode,7
+                je      set_adjust_192_256
+                cmp     text_columns,80
+                je      set_adjust_192_512
+                cmp     actualscreen,6
+                je      set_adjust_192_512
+                cmp     actualscreen,7
+                je      set_adjust_192_512
+
+set_adjust_192_256:
+                mov     edi,adjustbuffer
+                add     edi,192*256
+                call    load_border_color
+                mov     ah,al
+                mov     bx,ax
+                shl     eax,16
+                mov     ax,bx
+                mov     ecx,(212-192)*256/4
+                rep     stosd
+                jmp     set_adjust_exit_start
+
+set_adjust_192_512:
+                mov     edi,adjustbuffer
+                add     edi,192*512
+                call    load_border_color
+                mov     ah,al
+                mov     bx,ax
+                shl     eax,16
+                mov     ax,bx
+                mov     ecx,(212-192)*512/4
+                rep     stosd
+
+set_adjust_exit_start:
                 mov     eax,first_line
                 cmp     eax,last_line
                 ja      set_adjust_exit_ret
@@ -2209,7 +2357,6 @@ set_adjust_exit_256:
                 mov     edx,[offset set_adjust_table_256+ecx*8]
                 mov     edi,blitbuffer
                 sub     edi,edx
-                ;mov     edi,eax
                 mov     eax,first_line
                 shl     eax,7
                 lea     edi,[edi+eax*2]
@@ -2234,8 +2381,6 @@ set_adjust_exit_256:
                 
 set_adjust_exit_256_negative:
                 neg     ecx
-                ;mov     ecx,0
-                ;sub     ecx,dword ptr [offset set_adjust_table_256+ecx*8+4]
 
 set_adjust_exit_256_loop:
                 push    ecx edi
@@ -2255,7 +2400,6 @@ set_adjust_exit_512:
                 mov     edx,[offset set_adjust_table_512+ecx*8]
                 mov     edi,blitbuffer
                 sub     edi,edx
-                ;mov     edi,eax
                 mov     eax,first_line
                 shl     eax,7
                 lea     edi,[edi+eax*2]
@@ -2279,7 +2423,6 @@ set_adjust_exit_512:
                 jmp     set_adjust_exit_512_loop
                 
 set_adjust_exit_512_negative:
-                ;neg     ecx
                 mov     ecx,0
                 sub     ecx,dword ptr [offset set_adjust_table_256+ecx*8+4]
 
@@ -2293,6 +2436,72 @@ set_adjust_exit_512_loop:
                 jnz     set_adjust_exit_512_loop
                 popad
                 ret
+
+; check_scroll_mask --------------------------------------------------
+; check if the scroll mask is enabled
+
+check_scroll_mask:
+                cmp     msxmodel,2
+                jb      _ret
+
+                test    byte ptr [offset vdpregs+25],BIT_1
+                jz      _ret
+
+                mov     eax,first_line
+                cmp     eax,last_line
+                ja      _ret
+
+                cmp     videomode,7
+                je      check_scroll_mask_256
+                cmp     text_columns,80
+                je      check_scroll_mask_512
+                cmp     actualscreen,6
+                je      check_scroll_mask_512
+                cmp     actualscreen,7
+                je      check_scroll_mask_512
+
+check_scroll_mask_256:
+                mov     ecx,last_line
+                sub     ecx,first_line
+                inc     ecx
+                mov     edi,first_line
+                shl     edi,8
+                add     edi,adjustbuffer
+                call    load_border_color
+                mov     ah,al
+                mov     bx,ax
+                shl     eax,16
+                mov     ax,bx
+check_scroll_mask_256_loop:
+                mov     [edi],eax
+                mov     [edi+4],eax
+                add     edi,256
+                dec     ecx
+                jnz     check_scroll_mask_256_loop
+                ret
+
+check_scroll_mask_512:
+                mov     ecx,last_line
+                sub     ecx,first_line
+                inc     ecx
+                mov     edi,first_line
+                shl     edi,9
+                add     edi,adjustbuffer
+                call    load_border_color
+                mov     ah,al
+                mov     bx,ax
+                shl     eax,16
+                mov     ax,bx
+check_scroll_mask_512_loop:
+                mov     [edi],eax
+                mov     [edi+4],eax
+                mov     [edi+8],eax
+                mov     [edi+8+4],eax
+                add     edi,512
+                dec     ecx
+                jnz     check_scroll_mask_512_loop
+                ret
+
 
 ; render_screen0_msx2 ------------------------------------------------
 ; render a screen 0 page
@@ -2660,6 +2869,9 @@ render_screen4:
 ; render the SCREEN 5
 
 render_screen5:
+                cmp     msxmodel,1
+                ja      render_screen5_msx2p
+
                 call    set_adjust
 
                 cmp     enginetype,0
@@ -2854,6 +3066,9 @@ render_screen5_mmx_inner:
 ; render the SCREEN 6
 
 render_screen6:
+                cmp     msxmodel,1
+                ja      render_screen6_msx2p
+
                 call    set_adjust
 
                 cmp     videomode,7
@@ -3324,11 +3539,11 @@ render_screen8_inner:
                 and     edx,0FFFF0000h
                 and     esi,00000FFFFh
                 or      esi,edx
-
+       
                 dec     ebx
                 jnz     render_screen8_outer
 
-                mov     spriteenable,0
+                mov     spriteenable,2
 
                 ret
 
@@ -3339,6 +3554,16 @@ render_screen8_inner:
 align 4
 
 sprite_render_msx2:
+                mov     sprite_color_mask,10101010h
+
+                ; check for screen 8
+                cmp     actualscreen,8
+                jne     sprite_render_msx2_start
+                
+                mov     sprite_color_mask,0
+
+sprite_render_msx2_start:
+
                 ; check for screen enabled
                 test    byte ptr [offset vdpregs+1],BIT_6
                 jz      _ret
@@ -3453,7 +3678,7 @@ sprite_render_line_msx2_normal:
                 and     ebx,esi
                 or      ebx,[ecx+32+i]
                 and     edx,eax
-                or      ebx,10101010h
+                or      ebx,sprite_color_mask
                 mov     [edi+i],ebx
                 mov     [ebp+i],edx
                 endm
@@ -3577,7 +3802,7 @@ sprite_render_next_clear:
 
 draw_sprite_image_msx2:
                 test    byte ptr [offset vdpregs+1],BIT_1
-                jz      _ret
+                jz      draw_sprite_image_8_msx2 
 
 draw_sprite_image_16_msx2:       
                 test    byte ptr [offset vdpregs+1],BIT_0
@@ -3592,13 +3817,12 @@ draw_sprite_image_16_msx2:
                 add     ecx,sprpatttable
                 lea     ecx,[ecx+eax*8]
 
-                ; eval color mask of sprite
-                mov     al,[esi+3]
-                mov     eax,[offset backgroundcolor+eax*4]
-
                 mov     edx,0
                 mov     edi,offset falsesprite
                 mov     ebx,0
+
+                cmp     actualscreen,8
+                je      draw_sprite_image_16N_loop_msx2_scr8
 
 draw_sprite_image_16N_loop_msx2:                     
                 push    esi
@@ -3668,7 +3892,49 @@ draw_sprite_image_16N_loop_msx2:
                 mov     edx,16
                 ret
 
-draw_sprite_image_16N_loop_msx2_or:
+draw_sprite_image_8_msx2:
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jnz     _ret
+                
+                ; only 8x8N is supported
+                
+                ; clear buffers to fool brmsx into thinking
+                ; that a 8x8 sprite is a 16x16 sprite
+                ; this is slow but it will be fixed in the next version :)
+                mov     edi,offset falsesprite
+                mov     ecx,16*16*2/4
+                mov     eax,0
+                rep     stosd
+
+                mov     edi,offset falsemask
+                mov     ecx,32/4
+                mov     eax,0
+                rep     stosd
+
+                ; eval address of sprite image
+                movzx   eax,byte ptr [esi+2]
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+                lea     ecx,[ecx+eax*8]
+
+                mov     edx,0
+                mov     edi,offset falsesprite
+                mov     ebx,0
+
+draw_sprite_image_8N_loop_msx2:                     
+                push    esi
+
+                mov     eax,esi
+                sub     eax,sprattrtable
+                sub     eax,msxvram
+                shr     eax,2
+                shl     eax,4
+                add     eax,sprattrtable
+                add     eax,msxvram
+                sub     eax,512
+                mov     al,[eax+edx]
+
+                mov     byte ptr [offset falsemask+edx],al
                 and     eax,0Fh
                 mov     eax,[offset backgroundcolor+eax*4]
                 
@@ -3685,16 +3951,74 @@ draw_sprite_image_16N_loop_msx2_or:
                 and     ebp,[offset foregroundmask+ebx*8]
 
                 ; put back to screen
-                or      [edi],esi
-                or      [edi+32],ebp
+                mov     [edi],esi
+                mov     [edi+32],ebp
 
                 ; do it again for the next four pixels
                 
                 mov     esi,[offset backgroundmask+ebx*8+4]
                 mov     ebp,eax
                 and     ebp,[offset foregroundmask+ebx*8+4]
-                or      [edi+4],esi
-                or      [edi+4+32],ebp
+                mov     [edi+4],esi
+                mov     [edi+4+32],ebp
+                
+                ; fill the other 8 pixels with nothing
+                mov     eax,0FFFFFFFFh
+                mov     [edi+8],eax
+                mov     [edi+8+4],eax
+                
+                pop     esi
+                
+                add     edi,64
+                inc     ecx
+                inc     edx
+                cmp     edx,8
+                jne     draw_sprite_image_8N_loop_msx2
+
+                mov     edx,16
+                ret
+
+draw_sprite_image_16N_loop_msx2_scr8:
+                push    esi
+
+                mov     eax,esi
+                sub     eax,sprattrtable
+                sub     eax,msxvram
+                shr     eax,2
+                shl     eax,4
+                add     eax,sprattrtable
+                add     eax,msxvram
+                sub     eax,512
+                mov     al,[eax+edx]
+
+                mov     byte ptr [offset falsemask+edx],al
+                and     eax,0Fh
+                mov     eax,dword ptr [offset screen8_sprite_color+eax*4]
+                ;mov     eax,[offset backgroundcolor+eax*4]
+                
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                ; get the sprite mask
+                mov     esi,[offset backgroundmask+ebx*8]
+
+                ; get the sprite color
+                mov     ebp,eax
+
+                ; blend with the sprite image
+                and     ebp,[offset foregroundmask+ebx*8]
+
+                ; put back to screen
+                mov     [edi],esi
+                mov     [edi+32],ebp
+
+                ; do it again for the next four pixels
+                
+                mov     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                mov     [edi+4],esi
+                mov     [edi+4+32],ebp
                 
                 ; do it again for the next eight pixels
                 
@@ -3703,14 +4027,14 @@ draw_sprite_image_16N_loop_msx2_or:
                 mov     esi,[offset backgroundmask+ebx*8]
                 mov     ebp,eax
                 and     ebp,[offset foregroundmask+ebx*8]
-                or      [edi+8],esi
-                or      [edi+8+32],ebp
+                mov     [edi+8],esi
+                mov     [edi+8+32],ebp
                 
                 mov     esi,[offset backgroundmask+ebx*8+4]
                 mov     ebp,eax
                 and     ebp,[offset foregroundmask+ebx*8+4]
-                or      [edi+12],esi
-                or      [edi+12+32],ebp
+                mov     [edi+12],esi
+                mov     [edi+12+32],ebp
 
                 pop     esi
                 
@@ -3718,7 +4042,7 @@ draw_sprite_image_16N_loop_msx2_or:
                 inc     ecx
                 inc     edx
                 cmp     edx,16
-                jne     draw_sprite_image_16N_loop_msx2
+                jne     draw_sprite_image_16N_loop_msx2_scr8
 
                 mov     edx,16
                 ret
@@ -3742,7 +4066,62 @@ eval_sprite_coords1_msx2:
                 mov     cl,[esi+1]      ; x coordinate
 
                 ret
-                
+
+vram_interlace:
+                cmp     actualscreen,6
+                ja      _ret
+
+                pushad
+
+                mov     edi,msxvram
+                mov     esi,msxvram_swap
+                mov     ecx,65536
+
+vram_interlace_loop:
+                mov     al,[edi]
+                mov     [esi],al
+                mov     al,[edi+65536]
+                mov     [esi+1],al
+                inc     edi
+                add     esi,2
+                dec     ecx
+                jnz     vram_interlace_loop
+
+                mov     eax,msxvram
+                mov     ebx,msxvram_swap
+                mov     msxvram,ebx
+                mov     msxvram_swap,eax
+
+                popad
+                ret
+
+vram_deinterlace:
+                cmp     actualscreen,7
+                jb      _ret
+
+                pushad
+
+                mov     edi,msxvram
+                mov     esi,msxvram_swap
+                mov     ecx,65536
+
+vram_deinterlace_loop:
+                mov     al,[edi]
+                mov     [esi],al
+                mov     al,[edi+1]
+                mov     [esi+65536],al
+                add     edi,2
+                inc     esi
+                dec     ecx
+                jnz     vram_deinterlace_loop
+
+                mov     eax,msxvram
+                mov     ebx,msxvram_swap
+                mov     msxvram,ebx
+                mov     msxvram_swap,eax
+
+                popad
+                ret
 
 code32          ends
                 end

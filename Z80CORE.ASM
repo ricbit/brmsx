@@ -45,6 +45,8 @@ public emulate_fakeirq_msx2
 public current_line
 public halted
 public clocks_line
+public force_raster
+public save_vdpregs
 
 ; DATA ---------------------------------------------------------------
 
@@ -68,6 +70,11 @@ first_line      dd      0
 last_line       dd      211
 halted          dd      0
 clocks_line     dd      212
+force_raster    dd      0
+already_draw    dd      0
+
+align 4
+save_vdpregs    db      64 dup (0)
 
 ; --------------------------------------------------------------------
 
@@ -296,7 +303,7 @@ EMULATE_MSX2    macro emtype,brtype
                 local   emulate_exit
                 local   emulate_nextline
                 local   emulate_continue
-                local   skip_render
+                local   emulate_continue_2
                 local   emulate_norender
                 local   turbo_skip
                 local   skip_truevsync
@@ -331,6 +338,15 @@ emulate_loop:
                 mov     ebx,clocks_line
                 add     soundclocks,ebx
 
+                add     masterclocklow,ebx
+                mov     ebx,0
+                adc     masterclockhigh,ebx
+
+                mov     ebx,trclock_line
+                add     trclock,ebx
+
+                mov     already_draw,0
+
                 mov     ebx,current_line
                 
                 movzx   esi,byte ptr [offset vdpregs+23]
@@ -343,23 +359,13 @@ emulate_loop:
 
                 ;cmp     ebx,212
                 ;je      emulate_continue
+                
+                ;or      byte ptr [offset vdpstatus+1],BIT_0
 
                 test    byte ptr [offset vdpregs+0],BIT_4
                 jz      emulate_continue
 
-                pushad
-                cmp     ebx,211
-                jae     skip_render
-                mov     last_line,ebx
-                push    ebx
-                call    render
-                call    sprite_render
-                call    set_adjust_exit
-                pop     ebx
-                mov     first_line,ebx
-                inc     first_line
-skip_render:
-                popad
+                call    render_slice
 
                 or      byte ptr [offset vdpstatus+1],BIT_0
 
@@ -381,6 +387,13 @@ skip_render:
                 jmp     emulate_loop
 
 emulate_continue:
+                cmp     force_raster,1
+                jne     emulate_continue_2
+
+                call    render_slice
+                mov     force_raster,0
+
+emulate_continue_2:
                 inc     ebx
                 cmp     ebx,280
                 jne     emulate_nextline
@@ -523,6 +536,35 @@ remove_halted_condition:
 
                 mov     halted,0
                 inc     edi
+                ret
+
+; render_slice -------------------------------------------------------
+
+render_slice:
+                cmp     already_draw,1
+                je      _ret
+
+                pushad
+                cmp     ebx,211
+                jae     skip_render
+                mov     last_line,ebx
+                push    ebx
+                call    render
+                call    sprite_render
+                call    set_adjust_exit
+                pop     ebx
+                mov     first_line,ebx
+                inc     first_line
+skip_render:
+                mov     esi,offset vdpregs
+                mov     edi,offset save_vdpregs
+                mov     ecx,64/4
+                rep     movsd
+
+                popad
+
+                mov     already_draw,1
+
                 ret
 
 ; emulate ------------------------------------------------------------

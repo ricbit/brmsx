@@ -1,4 +1,20 @@
 guess_table:
+        dd      027B96E52h 
+        dd      0+2
+        dd      offset name_aleste
+
+        dd      0E829BCEAh
+        dd      0+2
+        dd      offset name_super_runner
+
+        dd      096BB9B9Dh
+        dd      0+2
+        dd      offset name_scramble_formation
+        
+        dd      02562AEA4h
+        dd      5+2
+        dd      offset name_xevious
+
         dd      0DA05ECD8h
         dd      5+2
         dd      offset name_zanac_ex
@@ -228,6 +244,18 @@ guess_table:
 
 ; name table
 
+name_aleste:
+        db      'Aleste$'
+
+name_super_runner:
+        db      'Super Runner$'
+
+name_scramble_formation:
+        db      'Scramble Formation$'
+
+name_xevious:
+        db      'Xevious$'
+
 name_zanac_ex:
         db      'Zanac EX$'
 
@@ -322,7 +350,7 @@ name_parodius:
         db      'Parodius$'
 
 name_nemesis_2_fudeba:
-        db      'Nemesis 2 (Ademir version)$'
+        db      'Nemesis 2 (Ademir version, no SCC)$'
 
 name_mirai:
         db      'Mirai$'

@@ -26,11 +26,13 @@ include z80core.inc
 include mount.inc
 include symdeb.inc
 include v9938.inc
+include v9958.inc
 include extended.inc
 
 public _main
 public msxram
 public msxvram
+public msxvram_swap
 public blitbuffer
 public collisionfield
 public transf_buffer
@@ -80,7 +82,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 2.5',13,10
+msg00           db      'BrMSX 2.6',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -104,7 +106,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 2.5',13,10
+msg22           db      'BrMSX 2.6',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -208,9 +210,12 @@ help_message2   db      13
                 db      'Press enter to continue.$'
 help_message3   db      13
                 db      '-allspr        disable 5th sprite ocultation',13,10
-                db      'detection',13,10
-                db      '-nosprcol      disable sprite collision '
-                db      '-vdptiming     enable emulation of VDP timing',13,10
+                db      '-nosprcol      disable sprite collision ',13,10
+                db      '-vdptiming     enable emulation of VDP timing '
+                db      '(default in MSX-1 mode)',13,10
+                db      '-novdptiming   disable emulation of VDP timing '
+                db      '(default in MSX-2 and 2+ modes)',13,10
+                db      '-trtimer       enable high resolution timer',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
@@ -239,11 +244,11 @@ help_message3   db      13
                 db      '-joy           enable joystick emulation',13,10
                 db      '-joysens <n>   adjust joystick sensibility '
                 db      '(range is 0 to 7, default is 3)',13,10
+                db      'Press enter to continue.$'
+help_message4   db      13
                 db      '-snespad       enable SNES pad connected in '
                 db      'LPT1',13,10
                 db      '-autofire      enable the automatic fire',13,10
-                db      'Press enter to continue.$'
-help_message4   db      13
                 db      '-autorun       enable the automatic run',13,10
                 db      '-autospeed <n> adjust speed for autofire '
                 db      '(range is 0 to 9, default is 5)',13,10
@@ -355,8 +360,10 @@ switch_vdplog    db      '-vdplog',0
 switch_truevsync db      '-truevsync',0
 switch_joynet    db      '-joynet',0
 switch_msx2p     db      '-msx2+',0
-switch_ciel      db      '-ciel',0
-switch_advram    db      '-advram',0
+switch_ciel             db      '-ciel',0
+switch_advram           db      '-advram',0
+switch_trtimer          db      '-trtimer',0
+switch_novdptiming      db      '-novdptiming',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -416,8 +423,10 @@ switch_table:
                 dd      offset switch_msx2p
                 dd      offset switch_ciel
                 dd      offset switch_advram
+                dd      offset switch_trtimer
+                dd      offset switch_novdptiming
 
-switch_total    dd      57
+switch_total    dd      59
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -477,6 +486,8 @@ switch_callback:
                 dd      offset callback_msx2p
                 dd      offset callback_ciel
                 dd      offset callback_advram
+                dd      offset callback_trtimer
+                dd      offset callback_novdptiming
 
 cart1table:
                 dd      128*1024
@@ -514,6 +525,7 @@ align 4
 
 msxram                  dd      ?
 msxvram                 dd      ?
+msxvram_swap            dd      ?
 blitbuffer              dd      ?
 collisionfield          dd      ?
 msxrom                  dd      ?
@@ -769,6 +781,18 @@ _main_idlerom:
                 call    _getmem
                 jc      no_memory
                 mov     msxvram,eax
+
+                ; allocate the msx vram swap
+                mov     eax,vramsize
+                call    _getmem
+                jc      no_memory
+                mov     msxvram_swap,eax
+
+                ; allocate the saveline (msx2+)
+                mov     eax,512*3
+                call    _getmem
+                jc      no_memory
+                mov     saveline,eax
 
                 ; clear msx vram
                 mov     edi,msxvram
@@ -2196,6 +2220,26 @@ callback_ciel:
 
 callback_advram:
                 mov     advram,1
+                mov     imagetype,0
+                ret
+
+callback_trtimer:
+                mov     eax,offset inemulE6
+                mov     dword ptr [offset inportxx+0E6h*4],eax
+                
+                mov     eax,offset inemulE7
+                mov     dword ptr [offset inportxx+0E7h*4],eax
+                
+                mov     eax,offset outemulE6
+                mov     dword ptr [offset outportxx+0E6h*4],eax
+                
+                mov     eax,offset outemulE7
+                mov     dword ptr [offset outportxx+0E7h*4],eax
+                
+                ret
+
+callback_novdptiming:
+                mov     vdptiming,0       
                 ret
 
 ; read_rom -----------------------------------------------------------

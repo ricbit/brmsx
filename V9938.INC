@@ -16,3 +16,11 @@ extrn sprite_render_msx2: near
 extrn dirty_palette: byte
 extrn render_msx2: near
 extrn set_adjust_exit: near
+extrn masterclocklow: dword  
+extrn masterclockhigh: dword 
+extrn vdptiming: dword
+extrn vram_interlace: near
+extrn vram_deinterlace: near
+extrn adjustbuffer: dword
+extrn set_adjust: near
+extrn screen6_table: byte

@@ -154,7 +154,7 @@ extrn fmenabled: dword
 extrn mappermask: dword
 extrn TC: dword
 extrn inemul98_timing: dword
-extrn inemul98: dword
+extrn inemul98: near
 extrn mapper_banks: byte
 extrn extended_slot_0: byte
 extrn memlock: byte
@@ -165,7 +165,13 @@ extrn vdpaddresse: dword
 extrn outemulB4: near
 extrn outemulB5: near
 extrn inemulB5: near
+extrn inemulE6: near
+extrn inemulE7: near
+extrn outemulE6: near
+extrn outemulE7: near
 extrn truevsync: dword
 extrn joynet: dword
 extrn advram: byte
 extrn out_highbyte: byte
+extrn trclock: dword
+extrn trclock_line: dword

@@ -86,6 +86,10 @@ public vdpaddresse
 public outemulB4
 public outemulB5
 public inemulB5
+public inemulE6
+public inemulE7
+public outemulE6
+public outemulE7
 
 public fetch
 public fetch1
@@ -119,6 +123,8 @@ public psgselect
 public megaram
 public fmenabled
 public advram
+public trclock
+public trclock_line
 
 public opsubreg
 public opsbcreg
@@ -456,6 +462,9 @@ cart2slot       dd      offset slot3
 megamask        dd      01Fh
 mappermask      dd      07h
 timingclock     dd      0
+                dd      0
+trclock         dd      0
+trclock_line    dd      996445
 allram          db      0AAh
 rmask           db      0
 regi            db      0
@@ -2552,6 +2561,56 @@ outemulB5_select_mode:
                 ret
 
 ; --------------------------------------------------------------------
+; Turbo-R high resolution timer (low byte)
+
+outemulE6:
+                shl     ebx,16
+                and     ebx,000FF0000h
+                
+                push    edx
+                mov     eax,clocks_line
+                sub     eax,ebp
+                mov     ecx,4681
+                mul     ecx
+                mov     edx,eax
+
+                add     eax,trclock
+                and     eax,0FF00FFFFh
+                or      eax,ebx
+                sub     eax,edx
+                mov     trclock,eax
+
+                pop     edx
+                mov     eax,0
+                
+                ret
+
+; --------------------------------------------------------------------
+; Turbo-R high resolution timer (low byte)
+
+outemulE7:
+                shl     ebx,24
+                and     ebx,0FF000000h
+                
+                push    edx
+                mov     eax,clocks_line
+                sub     eax,ebp
+                mov     ecx,4681
+                mul     ecx
+                mov     edx,eax
+
+                add     eax,trclock
+                and     eax,000FFFFFFh
+                or      eax,ebx
+                sub     eax,edx
+                mov     trclock,eax
+
+                pop     edx
+                mov     eax,0
+                
+                ret
+
+; --------------------------------------------------------------------
 
 MAPPER          macro   page
                 local   hidden_mapper
@@ -2756,6 +2815,38 @@ inemulB5:
 
 inemulB5_select_mode:
                 mov     bl,rtc_mode
+                ret
+
+; --------------------------------------------------------------------
+; Turbo-R high resolution timer (low byte)
+
+inemulE6:
+                push    edx
+                mov     eax,clocks_line
+                sub     eax,ebp
+                mov     ecx,4681
+                mul     ecx
+                pop     edx
+                add     eax,trclock
+                shr     eax,16
+                mov     bl,al
+                mov     eax,0
+                ret
+
+; --------------------------------------------------------------------
+; Turbo-R high resolution timer (high byte)
+
+inemulE7:
+                push    edx
+                mov     eax,clocks_line
+                sub     eax,ebp
+                mov     ecx,4681
+                mul     ecx
+                pop     edx
+                add     eax,trclock
+                shr     eax,16
+                mov     bl,ah
+                mov     eax,0
                 ret
 
 ; --------------------------------------------------------------------

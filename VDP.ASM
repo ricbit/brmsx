@@ -1872,6 +1872,8 @@ eval_base_address_scr2_doc:
 ; --------------------------------------------------------------------
 
 eval_screen2_msx2:
+                call    vram_deinterlace
+                
                 ; M3 set - screen 2
 
                 mov     actualscreen,2
@@ -2012,6 +2014,8 @@ eval_base_address_scr2_doc_msx2:
 ; --------------------------------------------------------------------
 
 eval_screen4:
+                call    vram_deinterlace                
+
                 ; screen 4
 
                 mov     actualscreen,4
@@ -2154,6 +2158,8 @@ eval_base_address_scr4_doc:
 ; --------------------------------------------------------------------
 
 eval_screen1:
+                call    vram_deinterlace
+                
                 ; M3,M2,M1 reset - screen 1
 
                 mov     actualscreen,1
@@ -2245,6 +2251,8 @@ eval_screen1:
 ; --------------------------------------------------------------------
 
 eval_screen0:
+                call    vram_deinterlace
+
                 ; M3,M1 set, M2 reset - screen 0
 
                 mov     actualscreen,0
@@ -2301,6 +2309,8 @@ eval_screen0:
 ; --------------------------------------------------------------------
 
 eval_screen0_msx2:
+                call    vram_deinterlace
+
                 ; screen 0, 40 columns, MSX2 version
 
                 mov     actualscreen,0
@@ -2357,6 +2367,8 @@ eval_screen0_msx2:
 ; --------------------------------------------------------------------
 
 eval_screen0_80_msx2:
+                call    vram_deinterlace
+
                 ; screen 0, 80 columns, MSX2 version
 
                 mov     actualscreen,0
@@ -2414,6 +2426,8 @@ eval_screen0_80_msx2:
 ; --------------------------------------------------------------------
 
 eval_screen5:
+                call    vram_deinterlace
+
                 ; screen 5
 
                 mov     actualscreen,5
@@ -2472,6 +2486,8 @@ eval_screen5:
 ; --------------------------------------------------------------------
 
 eval_screen6:
+                call    vram_deinterlace
+
                 ; screen 6
 
                 mov     actualscreen,6
@@ -2530,6 +2546,8 @@ eval_screen6:
 ; --------------------------------------------------------------------
 
 eval_screen7:
+                call    vram_interlace
+
                 ; screen 7
 
                 mov     actualscreen,7
@@ -2588,6 +2606,7 @@ eval_screen7:
 ; --------------------------------------------------------------------
 
 eval_screen8:
+                call    vram_interlace
                 ; screen 8
 
                 mov     actualscreen,8
@@ -2646,6 +2665,7 @@ eval_screen8:
 ; --------------------------------------------------------------------
 
 eval_screen3:
+                call    vram_deinterlace
                 
                 ; M3,M2 set, M1 reset - screen 3
                 
