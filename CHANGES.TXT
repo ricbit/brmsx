@@ -2,12 +2,16 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
-release 1.135: 
+release 1.136: 
 
 - lots of missing MSX keys were added (cedilha,acento,[,],\)
 - fixed a minor bug in the "clocks left" section of debugger
 - support to another undocumented feature of VDP ("LIKE", "Thing BB")
 - support to MegaROM Mapper #4 ("Valis")
+- support to 8x8 sprites ("LIKE", "Alcazar")
+- new command of debugger: "U dddd" (change address of disassembler)
+- new command of debugger: "E dddd xx" (edit memory)
+- huge user's manual
 
 release 1.134:
 

@@ -98,6 +98,7 @@ debugtype       dd      1
 startdebugger   dd      0
 firstone        dd      0
 nextbp          dd      0
+disasm_address  dd      0
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -610,7 +611,7 @@ print_im_print:
                 ; disassemble the program
 
                 mov     ecx,0
-                mov     edi,regepc
+                mov     edi,disasm_address
                 mov     firstone,1
 print_dis0:
                 xor     eax,eax
@@ -1181,6 +1182,8 @@ debug_loop:
                 je      command_0
                 cmp     al,'M'
                 je      command_m
+                cmp     al,'U'
+                je      command_u
                 cmp     al,'X'
                 je      command_x
                 cmp     al,'S'
@@ -1282,11 +1285,6 @@ command_pgdown_2:
                 and     memdump,0FFFFh
                 jmp     debug_loop
 
-command_e:
-                mov     bl,7
-                call    setkb
-                jmp     debug_loop
-
 command_n:
                 call    changesession
                 jmp     debug_loop
@@ -1297,6 +1295,27 @@ command_d:
                 call    gethex4
                 and     eax,0FFFFh
                 mov     memdump,eax
+                jmp     debug_loop
+
+command_u:
+                COORD   14,23
+                call    set_cursor_position
+                call    gethex4
+                and     eax,0FFFFh
+                mov     disasm_address,eax
+                jmp     debug_loop
+
+command_e:
+                COORD   14,23
+                call    set_cursor_position
+                call    gethex4
+                and     eax,0FFFFh
+                push    eax
+                call    printspace
+                call    gethex2
+                and     eax,0FFh
+                pop     ecx
+                call    writemem
                 jmp     debug_loop
 
 command_y:              
@@ -1384,6 +1403,8 @@ command_b:
                 call    turnoff_irq
                 call    settextmode
                 call    crlf
+                mov     edi,regepc
+                mov     disasm_address,edi
                 jmp     debug_loop
 
 command_stepover:
@@ -1400,6 +1421,8 @@ command_stepover:
                 call    turnoff_irq
                 call    settextmode
                 call    crlf
+                mov     edi,regepc
+                mov     disasm_address,edi
                 jmp     debug_loop
 
 command_p:
@@ -1473,6 +1496,8 @@ command_s_go:
                 call    turnoff_irq
                 call    turnoff_kb_irq
                 call    settextmode
+                mov     edi,regepc
+                mov     disasm_address,edi
                 jmp     debug_loop
 
 command_c:      
@@ -1507,6 +1532,8 @@ command_t:
                 mov     ebp,clockcounter
                 mov     eax,0
                 call    trace
+                mov     edi,regepc
+                mov     disasm_address,edi
                 jmp     debug_loop
 
 command_exit:

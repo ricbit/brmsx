@@ -7,6 +7,7 @@ extrn printspace:near
 extrn crlf: near
 extrn getchar: near
 extrn gethex4: near
+extrn gethex2: near
 extrn testkbd: near
 extrn setgraphmode: near
 extrn settextmode: near

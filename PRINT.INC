@@ -8,8 +8,7 @@ PRINTOP100      macro number,desc
 msg&number:     db      desc
 prin&number:    mov     isize,1
                 mov     eax,offset msg&number
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -18,8 +17,7 @@ PRINTOP200      macro number,desc
 msg&number:     db      desc
 prin&number:    mov     isize,2
                 mov     eax,offset msg&number
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -31,8 +29,7 @@ prin&number:    mov     isize,2
                 call    printmsgp
                 inc     edi
                 call    fetch
-                call    printhex2p
-                ret
+                jmp     printhex2p
 
                 endm
                                   
@@ -47,8 +44,7 @@ prin&number:    mov     isize,2
                 call    fetch
                 call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -60,8 +56,7 @@ prin&number:    mov     isize,3
                 call    printmsgp
                 inc     edi
                 call    fetchw
-                call    printhex4p
-                ret
+                jmp     printhex4p
 
                 endm
 
@@ -76,8 +71,7 @@ prin&number:    mov     isize,3
                 call    fetchw
                 call    printhex4p
                 mov     eax,offset msg&number&b
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -92,8 +86,7 @@ prin&number:    mov     isize,3
                 call    fetch
                 call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -108,8 +101,7 @@ prin&number:    mov     isize,4
                 call    fetchw
                 call    printhex4p
                 mov     eax,offset msg&number&b
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -127,8 +119,7 @@ prin&number:    mov     isize,4
                 call    printmsgp
                 inc     edi
                 call    fetch
-                call    printhex2p
-                ret
+                jmp     printhex2p
 
                 endm
 
@@ -143,8 +134,7 @@ prin&number:    mov     isize,4
                 call    fetch
                 call    printhex2p
                 mov     eax,offset msg&number&b
-                call    printmsgp
-                ret
+                jmp     printmsgp
 
                 endm
 
@@ -156,8 +146,7 @@ prin&number:    mov     isize,4
                 call    printmsgp
                 add     edi,2
                 call    fetchw
-                call    printhex4p
-                ret
+                jmp     printhex4p
 
                 endm
 

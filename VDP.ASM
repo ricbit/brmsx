@@ -900,7 +900,7 @@ sprite_render:
 
                 test    byte ptr [offset vdpregs+1],BIT_1
                 jnz     sprite16
-                ret
+                jmp     sprite8
 
 sprite16:       
                 test    byte ptr [offset vdpregs+1],BIT_0
@@ -1193,6 +1193,135 @@ sprite_crop_draw_x_nextline:
 sprite16N2:
                 pop     ecx
 sprite16N7:
+                ret
+
+sprite8:       
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jz      sprite8N
+                ret
+
+                ; sprites 8x8 without magnification
+
+sprite8N:
+                ; clear sprite line buffer
+                ;call    clear_sprite_buffer
+                
+                ; esi = sprite attribute table
+                mov     esi,msxvram
+                add     esi,sprattrtable
+
+                ; ecx = sprite image table
+                mov     ecx,msxvram
+                add     ecx,sprpatttable
+
+                ; edi = blit buffer
+                mov     edi,blitbuffer
+
+                ; mask temporary registers
+                xor     eax,eax
+                xor     ebx,ebx
+
+                ; find last sprite
+                mov     ebp,32
+sprite8N5:
+                mov     ah,[esi]
+                cmp     ah,0D0h
+                je      sprite8N6
+                add     esi,4
+                dec     ebp
+                jnz     sprite8N5
+sprite8N6:     
+                sub     esi,4
+                mov     eax,32
+                sub     eax,ebp
+                mov     ebp,eax
+                jz      _ret
+
+                ; for each sprite
+sprite8N1:     push    ecx eax
+
+                ; check if the sprite is transparent
+                mov     cl,[esi+3]
+                and     cl,0Fh
+                jz      sprite8N3
+
+                call    eval_sprite_coords
+                cmp     ecx,0
+                js      sprite8N3
+                cmp     ecx,256-8
+                jge     sprite8N3
+                cmp     eax,0
+                jl      sprite8N3
+                cmp     eax,192-16
+                jge     sprite8N3
+
+                mov     ch,al
+                mov     edi,blitbuffer
+                add     edi,ecx
+                
+                ; load effective initial address in edi
+                push    edi
+
+                ; load address of sprite image in ecx
+                mov     al,[esi+2]
+                mov     ecx,sprpatttable
+                add     ecx,msxvram
+                lea     ecx,[ecx+eax*8]
+
+                ; for each subline
+                xor     ebx,ebx
+                xor     eax,eax
+                mov     edx,8
+                push    esi
+                push    ebp
+                mov     al,[esi+3]
+                mov     eax,[offset backgroundcolor+eax*4]
+sprite8N4:
+
+                ; fetch the image for the subline
+                mov     bl,[ecx]
+
+                ; get the contents of blit buffer
+                mov     esi,[edi]
+
+                ; blend with the sprite image
+                and     esi,[offset backgroundmask+ebx*8]
+
+                ; get the sprite color
+                mov     ebp,eax
+
+                ; blend with the sprite image
+                and     ebp,[offset foregroundmask+ebx*8]
+
+                ; mix the sprite color with the sprite image
+                or      esi,ebp
+
+                ; put back to screen
+                mov     [edi],esi
+
+                ; do it again for the next four pixels
+                mov     esi,[edi+4]
+                and     esi,[offset backgroundmask+ebx*8+4]
+                mov     ebp,eax
+                and     ebp,[offset foregroundmask+ebx*8+4]
+                or      esi,ebp
+                mov     [edi+4],esi
+                
+sprite8N8:
+                add     edi,256
+                inc     ecx
+                dec     edx
+                jnz     sprite8N4
+
+                pop     ebp
+                pop     esi
+                pop     edi
+
+sprite8N3:
+                pop     eax ecx
+                sub     esi,4
+                dec     ebp
+                jnz     sprite8N1
                 ret
 
 ; clear_sprite_buffer ------------------------------------------------

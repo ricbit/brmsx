@@ -178,9 +178,11 @@ EMULABEL        exit,emtype,brtype
 
 EMULABEL        fakeirq,emtype,brtype
 
-                mov     fakeirq,0
                 mov     eax,0
                 mov     ebp,clocksleft
+                ;
+                ;
+                mov     fakeirq,0
                 mov     iff1,0
                 inc     rcounter
                 call    z80_interrupt

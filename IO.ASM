@@ -33,6 +33,7 @@ public printspace
 public getchar
 public toupper
 public gethex4
+public gethex2
 public setgraphmode
 public settextmode
 public crlf
@@ -262,6 +263,19 @@ gethex4:
                 and     eax,0fh
                 add     ecx,eax
                 mov     eax,ecx
+                ret
+
+; gethex2 ------------------------------------------------------------
+; get a two-digit hex from the kdb and return in al (with echo)
+
+gethex2:
+                call    gethex
+                and     eax,0fh
+                mov     ecx,eax
+                shl     ecx,4
+                call    gethex
+                and     eax,0fh
+                add     eax,ecx
                 ret
 
 ; wait_vsync ----------------------------------------------------------
