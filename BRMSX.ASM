@@ -65,6 +65,8 @@ public vdplog
 public drivea_name
 public load_disk_image
 public noise_uncompressed
+public alf_uncompressed
+public temp_screen
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -76,7 +78,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.170',13,10
+msg00           db      'BrMSX 1.172',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -100,7 +102,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.170',13,10
+msg22           db      'BrMSX 1.172',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -134,6 +136,9 @@ msg41           db      'MSX2EXT.ROM invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
+                db      '-msx1          select MSX-1 emulation '
+                db      '(default)',13,10
+                db      '-msx2          select MSX-2 emulation',13,10
                 db      '-normal        normal emulation speed '
                 db      '(default)',13,10
                 db      '-fast          fast emulation speed',13,10
@@ -154,12 +159,12 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '               7=ASCII 16kb with 2kb SRAM',13,10
                 db      '               8=Panasonic FM-PAC with 8kb SRAM',13,10
                 db      '               9=Konami with 8-bit DAC',13,10
+                db      'Press enter to continue.$'
+help_message2   db      13
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
                 db      '(default) or 3',13,10
                 db      '-korean        enable korean memory layout '
                 db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
-                db      'Press enter to continue.$'
-help_message2   db      13
                 db      '-megaram <n>   select size of MegaRAM '
                 db      '(default=1)',13,10
                 db      '               0=128kb 1=256kb 2=512kb 3=1Mb 4=2Mb',13,10
@@ -194,10 +199,10 @@ help_message2   db      13
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
-                db      '-psggraph      enable PSG graph',13,10
-                db      '-nosound       disable the sound engine',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-psggraph      enable PSG graph',13,10
+                db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
                 db      '-fmpac         enable FM-PAC sound (MSX Music)'
                 db      13,10
@@ -232,6 +237,8 @@ help_message3   db      13
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
                 db      '-client        computer is client',13,10
+                db      'Press enter to continue.$'
+help_message4   db      13
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
@@ -502,6 +509,8 @@ redbuffer               dd      ?
 bluebuffer              dd      ?
 extendedrom             dd      ?
 noise_uncompressed      dd      ?
+alf_uncompressed        dd      ?
+temp_screen             dd      ?
 
 diskenabled        dd      0
 cpugraphok         dd      0
@@ -820,6 +829,20 @@ _main_idlerom:
 
                 call    uncompress_noise
 
+                ; alloc 16kb to alf table
+                mov     eax,16384
+                call     _getmem
+                jc      no_memory
+                mov     alf_uncompressed,eax
+
+                call    uncompress_alf
+
+                ; alloc 3840*2 to temp_screen and inter_screen
+                mov     eax,3840*2
+                call     _getmem
+                jc      no_memory
+                mov     temp_screen,eax
+
                 ; alloc always 512kb to cart1                
                 mov     eax,cart1size 
                 call     _getmem
@@ -940,6 +963,8 @@ main_nocart2:
                 rep     stosd
 
                 ; print drive A name
+                cmp     diskenabled,2
+                je      main_dont_print_disk_image_name
                 mov     eax,offset msg25
                 call    printmsg
                 mov     al,'"'
@@ -949,6 +974,7 @@ main_nocart2:
                 mov     al,'"'
                 call    printasc
                 call    crlf
+main_dont_print_disk_image_name:
 
                 ; load disk image from disk
                 call    load_disk_image
@@ -1167,9 +1193,19 @@ _main_novesa_512_15:
 _main_novesa:
                 cmp     videomode,2
                 jne     _main_nores2
+                cmp     videomode,8
+                jne     _main_nores2
+                cmp     videomode,9
+                jne     _main_nores2
                 test    vesa2found,1
                 jnz     _main_notrouble
+
+                cmp     msxmodel,0
+                jne     _main_novesa_msx2
                 mov     videomode,0
+                jmp     _main_nores2
+_main_novesa_msx2:
+                mov     videomode,7
 
 _main_nores2:
                 cmp     videomode,6
@@ -1609,6 +1645,9 @@ callback_help:
                 call    printmsg
                 call    getchar
                 mov     eax,offset help_message3
+                call    printmsg
+                call    getchar
+                mov     eax,offset help_message4
                 call    printmsg
                 jmp     _exit
 

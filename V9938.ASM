@@ -508,49 +508,34 @@ write_vdplog:
                 call    crlf
                 call    crlf
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+32]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+33]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+34]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+35]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+36]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+37]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+38]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+39]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+40]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+41]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+42]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+43]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+44]
                 call    printhex2
-                call    crlf
                 mov     al,byte ptr [offset vdpregs+45]
                 call    printhex2
-                call    crlf
 
                 popad
 

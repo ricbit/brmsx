@@ -1,4 +1,12 @@
 guess_table:
+        dd      07F551509h
+        dd      3+2
+        dd      offset name_treasure_usas
+        
+        dd      0AE07FC77h
+        dd      3+2
+        dd      offset name_vampire_killer
+        
         dd      0DE8DC68Fh
         dd      2+2
         dd      offset name_kings_valley_2_msx2
@@ -196,6 +204,12 @@ guess_table:
 
 ; name table
 
+name_treasure_usas:
+        db      'The Treasure of Usas$'
+
+name_vampire_killer:
+        db      'Vampire Killer$'
+
 name_solid_snake:
         db      'Solid Snake$'
 
@@ -337,4 +351,3 @@ name_valis:
 name_hydlide_3:
         db      'Hydlide 3$'
 
-        

@@ -24,15 +24,6 @@ include drive.inc
 include z80core.inc
 include symdeb.inc
 
-include debugsrc.inc
-include debugsr2.inc
-include debugsr3.inc
-include debugsr4.inc
-include debugsr5.inc
-include helpsrc.inc
-include srsrc.inc
-include clsrc.inc
-
 extrn msxrom: near
 extrn pentiumfound: dword
 extrn isize: dword
@@ -42,6 +33,7 @@ extrn dirtycode: dword
 extrn compbuffer: dword
 extrn msxvram: dword
 extrn sccram: dword
+extrn temp_screen: dword
 
 public debug
 public printmsgd
@@ -58,9 +50,32 @@ public startdebugger
 
 ; DATA ---------------------------------------------------------------
 
+debug_screen: 
+include debug1.inc
+
+debug2_screen: 
+include debug2.inc
+
+debug3_screen: 
+include debug3.inc
+
+debug4_screen: 
+include debug4.inc
+
+debug5_screen: 
+include debug5.inc
+
+help_screen: 
+include help.inc
+
+server_screen: 
+include server.inc
+
+client_screen: 
+include client.inc
+
 align 4
 
-temp_screen     db      3840 dup (0)
 message         db      80*2 dup (0)
 messagepointer  dd      0
 memdump         dd      0
@@ -211,7 +226,7 @@ printmsgd:
                 shl     edi,5
                 and     edx,0FFh
                 lea     edi,[edi+edx*2]
-                add     edi,offset temp_screen
+                add     edi,temp_screen 
 printmsgd1:
                 mov     dl,[eax]
                 cmp     dl,'$'
@@ -237,7 +252,7 @@ printnuld:
                 shl     edi,5
                 and     edx,0FFh
                 lea     edi,[edi+edx*2]
-                add     edi,offset temp_screen
+                add     edi,temp_screen 
 printnuld1:
                 mov     dl,[eax]
                 cmp     dl,0
@@ -268,14 +283,17 @@ printyesno_go:
 ; --------------------------------------------------------------------
                 
 emulate_client:                
+                mov     esi,offset client_screen
+                call    uncompress_screen
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset client_screen
+                mov     esi,temp_screen
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
                 pop     es
+
                 call    turnon_kb_irq
                 call    UART_init
                 call    UART_send_idstring
@@ -389,6 +407,45 @@ checkpentium1:
                 or      eax,eax
                 ret
 
+uncompress_screen:
+                mov     edi,temp_screen 
+                add     edi,3840
+
+uncompress_loop:
+                movzx   ecx,byte ptr [esi]
+                test    ecx,ecx
+                jz      uncompress_inter
+
+                shl     cl,1
+                jc      uncompress_multi
+
+                inc     esi
+                rep     movsb
+                jmp     uncompress_loop
+
+uncompress_multi:
+                inc     esi
+                mov     al,[esi]
+                inc     esi
+                rep     stosb
+                jmp     uncompress_loop
+
+uncompress_inter:
+                mov     esi,temp_screen
+                add     esi,3840
+                mov     edi,temp_screen
+                mov     ecx,3840/2
+uncompress_inter_loop:
+                mov     al,[esi]
+                mov     [edi],al
+                mov     al,[esi+3840/2]
+                mov     [edi+1],al
+                inc     esi
+                add     edi,2
+                dec     ecx
+                jnz     uncompress_inter_loop
+                ret
+
 ; render_debug -------------------------------------------------------
 ; render a debug screen
 
@@ -409,9 +466,7 @@ render_debug:
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug_screen
-                mov     edi,offset temp_screen
-                mov     ecx,3840/4
-                rep     movsd
+                call    uncompress_screen
 
                 call    status_bar
 
@@ -810,7 +865,7 @@ print_mega:
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset temp_screen
+                mov     esi,temp_screen 
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
@@ -825,9 +880,8 @@ render_debug2:
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug2_screen
-                mov     edi,offset temp_screen
-                mov     ecx,3840/4
-                rep     movsd
+                call    uncompress_screen
+
 
                 call    status_bar
 
@@ -1088,7 +1142,7 @@ print_screen0x:
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset temp_screen
+                mov     esi,temp_screen
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
@@ -1299,9 +1353,8 @@ render_debug3:
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug3_screen
-                mov     edi,offset temp_screen
-                mov     ecx,3840/4
-                rep     movsd
+                call    uncompress_screen
+
 
                 call    status_bar
 
@@ -1367,7 +1420,7 @@ blit_screen:
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset temp_screen
+                mov     esi,temp_screen 
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
@@ -1382,9 +1435,8 @@ render_debug4:
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug4_screen
-                mov     edi,offset temp_screen
-                mov     ecx,3840/4
-                rep     movsd
+                call    uncompress_screen
+
 
                 call    status_bar
 
@@ -1511,9 +1563,8 @@ render_debug5:
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug5_screen
-                mov     edi,offset temp_screen
-                mov     ecx,3840/4
-                rep     movsd
+                call    uncompress_screen
+
 
                 call    status_bar
 
@@ -1981,14 +2032,17 @@ command_x:
 ; --------------------------------------------------------------------
 
 command_help:
+                mov     esi,offset help_screen
+                call    uncompress_screen
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset help_screen
+                mov     esi,temp_screen 
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
                 pop     es
+
                 call    getchar
                 jmp     debug_loop
 
@@ -2159,14 +2213,17 @@ command_s:
                 je      emulate_client
                 cmp     sessionmode,1
                 jne     command_s_go
+                mov     esi,offset server_screen
+                call    uncompress_screen
                 push    es
                 mov     ax,gs
                 mov     es,ax
-                mov     esi,offset server_screen
+                mov     esi,temp_screen 
                 mov     edi,0b8000h
                 mov     ecx,80*24*2/4
                 rep     movsd
                 pop     es
+
                 call    UART_init
                 call    UART_receive_idstring
 command_s_go:

@@ -33,6 +33,7 @@ extrn codetable: dword
 extrn cart_sram: dword
 extrn cart1: dword
 extrn extendedrom: dword
+extrn smart_print: near
 
 include io.inc
 include vdp.inc
@@ -1920,6 +1921,11 @@ reset_cpu:
                 mov     bl,0
                 call    outemulA8
 
+                ; select slot 0.0 when slot 0 is expanded
+                mov     al,0
+                mov     ecx,0FFFFh
+                call    writemem
+
                 ; disable interrupts
                 mov     iff1,0
                 mov     iline,0
@@ -1989,7 +1995,10 @@ reset_cpu_hard:
 
 print:
                 call    fetch
-                call    [offset pset + eax*4]
+                push    ebx
+                mov     ebx,[offset pset + eax*4]
+                call    smart_print
+                pop     ebx
                 ret
 
 ; sound_buffer -------------------------------------------------------

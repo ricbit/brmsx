@@ -32,6 +32,7 @@ public printmsgp
 public printhex2p
 public printhex4p
 public printnulp
+public smart_print
 
 ; DATA ---------------------------------------------------------------
 
@@ -79,42 +80,163 @@ printhex2p:
 
 ; --------------------------------------------------------------------
 
+smart_print:
+                push    ecx
+                movzx   ecx,byte ptr [ebx]
+
+                cmp     ecx,1
+                je      print_100
+                cmp     ecx,2
+                je      print_200
+                cmp     ecx,3
+                je      print_211
+                cmp     ecx,5
+                je      print_221
+                cmp     ecx,8
+                je      print_321
+                cmp     ecx,11
+                je      print_42x
+
+                inc     ebx
+                call    ebx
+                pop     ecx
+                ret
+
+print_100:
+                mov     isize,1
+                lea     eax,[ebx+1]
+                call    printmsgp
+                pop     ecx
+                ret
+
+print_200:                
+                mov     isize,2
+                lea     eax,[ebx+1]
+                call    printmsgp
+                pop     ecx
+                ret
+
+print_221:                
+                mov     isize,2
+                lea     eax,[ebx+1]
+                call    printmsgp
+                push    eax
+                inc     edi
+                call    fetch
+                call    printhex2p
+                pop     eax
+                inc     eax
+                call    printmsgp
+                pop     ecx
+                ret
+
+print_42x:                
+                mov     isize,4
+                lea     eax,[ebx+1]
+                call    printmsgp
+                push    eax
+                add     edi,2
+                call    fetch
+                call    printhex2p
+                pop     eax
+                inc     eax
+                call    printmsgp
+                pop     ecx
+                ret
+
+print_211:                
+                mov     isize,2
+                lea     eax,[ebx+1]
+                call    printmsgp
+                inc     edi
+                call    fetch
+                call    printhex2p
+                pop     ecx
+                ret
+
+print_321:                
+                mov     isize,3
+                lea     eax,[ebx+1]
+                call    printmsgp
+                push    eax
+                add     edi,2
+                call    fetch
+                call    printhex2p
+                pop     eax
+                inc     eax
+                call    printmsgp
+                pop     ecx
+                ret
+
+; --------------------------------------------------------------------
+
 prinCB:         
+                db      0
                 inc     edi
                 call    fetch
                 dec     edi
-                jmp     [offset psetCBxx+eax*4]
+                push    ebx
+                mov     ebx,[offset psetCBxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
 
 prinDD:         
+                db      0
                 inc     edi
                 call    fetch
                 dec     edi
-                jmp     [offset psetDDxx+eax*4]
+                push    ebx
+                mov     ebx,[offset psetDDxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
 
 prinDDCB:       
+                db      0
                 add     edi,3
                 call    fetch
                 sub     edi,3
-                jmp     [offset psetDDCBxx+eax*4]
+                push    ebx
+                mov     ebx,[offset psetDDCBxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
 
 prinED:         
+                db      0
                 inc     edi
                 call    fetch
                 dec     edi
-                jmp     [offset psetEDxx+eax*4]
+                push    ebx
+                mov     ebx,[offset psetEDxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
+
 
 prinFD:         
+                db      0
                 inc     edi
                 call    fetch
                 dec     edi
-                jmp     [offset psetFDxx+eax*4]
+                push    ebx
+                mov     ebx,[offset psetFDxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
+
 
 prinFDCB:       
+                db      0
                 add     edi,3
                 call    fetch
                 sub     edi,3
-                jmp     [offset psetFDCBxx+eax*4]
-
+                push    ebx
+                mov     ebx,[offset psetFDCBxx+eax*4]
+                call    smart_print
+                pop     ebx
+                ret
 
 PRINTOP100      00,'NOP$'
 PRINTOP312      01,'LD BC,$'

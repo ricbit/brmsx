@@ -12,7 +12,6 @@ include pmode.inc
 include z80.inc
 include io.inc
 include bit.inc
-include number.inc
 include vdp.inc
 include psg.inc
 include blit.inc
@@ -31,6 +30,7 @@ extrn rommappera: dword
 extrn load_disk_image: near
 extrn drivea_name: byte
 extrn msxmodel: dword
+extrn alf_uncompressed: dword
 
 public rendercounter
 public spritecounter
@@ -50,11 +50,13 @@ public draw_gui
 public start_gui
 public turnoff_flag
 public patch__47
+public uncompress_alf
 
 ; DATA ---------------------------------------------------------------
 
 align 4
 
+include number.inc
 include alf.inc
 include logo.inc
 include cursor.inc
@@ -168,6 +170,27 @@ psgcolor:
                 db      10,10,11,11,09,09,08,08
 
 ; CODE ---------------------------------------------------------------
+
+; uncompress_alf -----------------------------------------------------
+; uncompress the alf
+
+uncompress_alf:
+                mov     ecx,16384/8
+                mov     esi,offset alf_pattern_z
+                mov     edi,alf_uncompressed
+uncompress_alf_loop:
+                mov     bl,[esi]
+                irp     i,<0,1,2,3,4,5,6,7>
+                rol     bl,1
+                sbb     al,al
+                mov     [edi],al
+                inc     edi
+                endm
+                inc     esi
+                dec     ecx
+                jnz     uncompress_alf_loop
+
+                ret
 
 ; draw_gui -----------------------------------------------------------
 ; draw the gui in blitbuffer
@@ -894,7 +917,7 @@ printgr_loop:
                 jz      _ret
 
                 shl     edx,6
-                add     edx,offset alf_pattern
+                add     edx,alf_uncompressed ;offset alf_pattern
 
                 irp     i,<0,1,2,3,4,5,6,7>
 

@@ -429,9 +429,19 @@ save_snapshot_pcx:
                 cmp     videomode,2
                 je      save_snapshot_pcx_512
 
+                cmp     videomode,8
+                je      save_snapshot_pcx_512
+
+                cmp     videomode,9
+                je      save_snapshot_pcx_512
+
+                cmp     videomode,7
+                je      save_snapshot_pcx_320
+                
                 cmp     videomode,0
                 jne     save_snapshot_pcx_256
 
+save_snapshot_pcx_320:
                 mov     edx,offset pcx_header
                 mov     ecx,128
                 call    custom_write

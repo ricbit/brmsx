@@ -19,3 +19,4 @@ extrn vsyncrate: dword
 
 extrn turnoff_flag: dword
 extrn patch__47: near
+extrn uncompress_alf: near

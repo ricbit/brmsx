@@ -5,126 +5,104 @@
 
 PRINTOP100      macro number,desc
 
+prin&number:    
+                db      1
 msg&number:     db      desc
-prin&number:    xor     eax,eax
-                inc     eax
-                mov     isize,eax
-                mov     eax,offset msg&number
-                jmp     printmsgp
 
                 endm
 
 PRINTOP200      macro number,desc
 
-msg&number:     db      desc
 prin&number:    
-                xor     eax,eax
-                inc     eax
-                inc     eax
-                mov     isize,eax
-                mov     eax,offset msg&number
-                jmp     printmsgp
+                db      2
+msg&number:     db      desc
 
                 endm
 
 PRINTOP211      macro   number,desc        
 
-msg&number:     db      desc
 prin&number:    
-                xor     eax,eax
-                inc     eax
-                inc     eax
-                mov     isize,eax
-                mov     eax,offset msg&number
-                call    printmsgp
-                inc     edi
-                call    fetch
-                jmp     printhex2p
+                db      3
+msg&number:     db      desc
 
                 endm
                                   
 PRINTOP2JR      macro   number,desc        
 
-msg&number:     db      desc
 prin&number:    
+                db      4
                 xor     eax,eax
                 inc     eax
                 inc     eax
                 mov     isize,eax
                 mov     eax,offset msg&number
                 jmp     _printop2jr
+msg&number:     db      desc
 
                 endm
                                   
 PRINTOP221      macro   number,desc1,desc2
 
+prin&number:    
+                db      5
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    
-                xor     eax,eax
-                inc     eax
-                inc     eax
-                mov     isize,eax
-                mov     eax,offset msg&number&a
-                call    printmsgp
-                inc     edi
-                call    fetch
-                call    printhex2p
-                mov     eax,offset msg&number&b
-                jmp     printmsgp
 
                 endm
 
 PRINTOP312      macro number,desc
 
-msg&number:     db      desc
-prin&number:    mov     isize,3
+prin&number:    
+                db      6
+                mov     isize,3
                 mov     eax,offset msg&number
                 jmp    _printop312
+msg&number:     db      desc
 
                 endm
 
 PRINTOP322      macro number,desc1,desc2
 
-msg&number&a:   db      desc1
-msg&number&b:   db      desc2
-prin&number:    mov     isize,3
+prin&number:    
+                db      7
+                mov     isize,3
                 mov     eax,offset msg&number&a
                 call    _printop322
                 mov     eax,offset msg&number&b
                 jmp     printmsgp
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
 
                 endm
 
 PRINTOP321      macro number,desc1,desc2
 
+prin&number:    
+                db      8
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     isize,3
-                mov     eax,offset msg&number&a
-                call    _printop321
-                mov     eax,offset msg&number&b
-                jmp     printmsgp
 
                 endm
 
 PRINTOP422      macro number,desc1,desc2
 
-msg&number&a:   db      desc1
-msg&number&b:   db      desc2
-prin&number:    mov     isize,4
+prin&number:    
+                db      9
+                mov     isize,4
                 mov     eax,offset msg&number&a
                 call    _printop422
                 mov     eax,offset msg&number&b
                 jmp     printmsgp
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
 
                 endm
 
 PRINTOP421      macro number,desc1,desc2
 
-msg&number&a:   db      desc1
-msg&number&b:   db      desc2
-prin&number:    mov     isize,4
+prin&number:    
+                db      10
+                mov     isize,4
                 mov     eax,offset msg&number&a
                 call    printmsgp
                 add     edi,2
@@ -135,30 +113,28 @@ prin&number:    mov     isize,4
                 inc     edi
                 call    fetch
                 jmp     printhex2p
+msg&number&a:   db      desc1
+msg&number&b:   db      desc2
 
                 endm
 
 PRINTOP42X      macro number,desc1,desc2
 
+prin&number:    
+                db      11
 msg&number&a:   db      desc1
 msg&number&b:   db      desc2
-prin&number:    mov     isize,4
-                mov     eax,offset msg&number&a
-                call    printmsgp
-                add     edi,2
-                call    fetch
-                call    printhex2p
-                mov     eax,offset msg&number&b
-                jmp     printmsgp
 
                 endm
 
 PRINTOP412      macro number,desc
 
-msg&number:     db      desc
-prin&number:    mov     isize,4
+prin&number:    
+                db      12
+                mov     isize,4
                 mov     eax,offset msg&number
                 jmp     _printop412
+msg&number:     db      desc
 
                 endm
 

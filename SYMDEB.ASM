@@ -258,6 +258,7 @@ search_label:
                 cmp     ecx,1
                 jc      search_label_ret
 
+                inc     ecx
                 repnz   scasw
                 
                 cmp     ecx,1
