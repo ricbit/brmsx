@@ -8,89 +8,80 @@
 code32  segment para public use32
         assume cs:code32, ds:code32
 
+include pmode.inc
 include io.inc
 include z80.inc
 include vdp.inc
 include pentium.inc
+include debugsrc.inc
 
 extrn msxrom: near
 extrn pentiumfound: dword
 
 public debug
-public showreg
 
 ; DATA ---------------------------------------------------------------
 
-tabregaf        db      'AF=$'
-tabregbc        db      ' BC=$'
-tabregde        db      ' DE=$'
-tabreghl        db      ' HL=$'
-tabregsp        db      ' SP=$'
-tabregpc        db      ' PC=$'
+align 4
+
+temp_screen     db      3840 dup (0)
 tabspace        db      ' $'
 tabprompt       db      '> $'
-msgmode00       db      'emulation mode set to NORMAL',13,10,'$'
-msgmode01       db      'emulation mode set to FAST',13,10,'$'
-msgmode02       db      'emulation mode set to TURBO',13,10,'$'
 msgmega00       db      'megarom type 0 - konami 8kb',13,10,'$'
 msgmega05       db      'megarom type 5 - ascii 16kb',13,10,'$'
-msgvideo00      db      'video mode set to 320x200',13,10,'$'
-msgvideo01      db      'video mode set to 256x200',13,10,'$'
-msggui00        db      'bar graph is now off',13,10,'$'
-msggui01        db      'bar graph is now on',13,10,'$'
 msgpentiumonly  db      'this option requires a pentium',13,10,'$'
+res320          db      '320x200$'
+res256          db      '256x200$'
+modenormal      db      'NORMAL$'
+modefast        db      'FAST  $'
+modeturbo       db      'TURBO $'
+stateon         db      'ON $'
+stateoff        db      'OFF$'
 
-; showreg ------------------------------------------------------------
-; show the contents of Z80 registers
+; COORD --------------------------------------------------------------
+; convert coordinates from ASCII.EXE system to 
+; the dh,dl format used by printmsgd
 
-showreg:
-                pushad
+COORD           macro   x,y
 
-                mov     eax,offset tabregaf
-                call    printmsg
-                movzx   eax,regaf
-                call    printhex4
-                
-                mov     eax,offset tabregbc
-                call    printmsg
-                movzx   eax,regbc
-                call    printhex4
+                mov     dx,(y-1)*256+(x-1)
 
-                mov     eax,offset tabregde
-                call    printmsg
-                movzx   eax,regde
-                call    printhex4
+                endm
 
-                mov     eax,offset tabreghl
-                call    printmsg
-                movzx   eax,reghl
-                call    printhex4
+; clear_text ---------------------------------------------------------
+; clear the text screen
 
-                mov     eax,offset tabregsp
-                call    printmsg
-                movzx   eax,regsp
-                call    printhex4
-
-                mov     eax,offset tabregpc
-                call    printmsg
-                movzx   eax,regpc
-                call    printhex4
-
-                call    crlf
-                call    crlf
-
-                movzx   eax,regpc
-                call    printhex4
-                mov     eax,offset tabspace
-                call    printmsg
-                mov     eax,0
-                mov     ecx,0
-                movzx   edi,regpc
-                call    print
-                call    crlf
-
-                popad
+clear_text:
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     edi,0b8000h
+                mov     ecx,80*25*2/4
+                rep     stosd
+                pop     es
                 ret
+
+; printmsgd ----------------------------------------------------------
+; print a message in dos format, 
+; drawing directly in the temp buffer
+; enter: dh=row, dl=column
+;        eax= offset of message
+
+printmsgd:
+                movzx   edi,dh
+                lea     edi,[edi+edi*4]
+                shl     edi,5
+                movzx   edx,dl
+                lea     edi,[edi+edx*2]
+                add     edi,offset temp_screen
+printmsgd1:
+                mov     dl,[eax]
+                cmp     dl,'$'
+                jz      _ret
+                mov     [edi],dl
+                add     edi,2
+                inc     eax
+                jmp     printmsgd1
 
 ; dumpmem ------------------------------------------------------------
 ; show a dump of a region of memory pointed by eax
@@ -134,45 +125,20 @@ dumpmem4:       call    printasc
 changemode:
                 inc     emulatemode
                 cmp     emulatemode,3
-                je      changemode0
-                cmp     emulatemode,1
-                je      changemode1
-                mov     eax,offset msgmode02
-                jmp     changemode3
-changemode0:
+                jne     _ret
                 mov     emulatemode,0
-                mov     eax,offset msgmode00
-                jmp     changemode3
-changemode1:
-                mov     eax,offset msgmode01
-changemode3:
-                call    printmsg
                 ret
 
 ; --------------------------------------------------------------------
 
 changevideomode:
                 xor     videomode,1
-                jnz     changevideomode1
-                mov     eax,offset msgvideo00
-                call    printmsg
-                ret
-changevideomode1:
-                mov     eax,offset msgvideo01
-                call    printmsg
                 ret
 
 ; --------------------------------------------------------------------
 
 changebargraph:
                 xor     bargraphmode,1
-                jnz     changebargraph1
-                mov     eax,offset msggui00
-                call    printmsg
-                ret
-changebargraph1:
-                mov     eax,offset msggui01
-                call    printmsg
                 ret
 
 ; --------------------------------------------------------------------
@@ -210,12 +176,179 @@ checkpentium1:
                 or      eax,eax
                 ret
 
+; render_debug -------------------------------------------------------
+; render a debug screen
+
+render_debug:
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug_screen
+                mov     edi,offset temp_screen
+                mov     ecx,3840/4
+                rep     movsd
+
+; --------------------------------------------------------------------
+                
+                ; print the resolution
+                
+                cmp     videomode,1
+                je      print_res1
+                mov     eax,offset res320
+                jmp     print_res0
+print_res1:
+                mov     eax,offset res256
+print_res0:
+                COORD   15,21
+                call    printmsgd
+                
+; --------------------------------------------------------------------
+
+                ; print the emulation mode
+
+                cmp     emulatemode,0
+                jne     print_mode1
+                mov     eax,offset modenormal
+                jmp     print_mode0
+print_mode1:
+                cmp     emulatemode,1
+                jne     print_mode2
+                mov     eax,offset modefast
+                jmp     print_mode0
+print_mode2:
+                mov     eax,offset modeturbo
+print_mode0:
+                COORD   73,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the bar graph status
+
+                cmp     bargraphmode,1
+                je      print_bar1
+                mov     eax,offset stateoff
+                jmp     print_bar0
+print_bar1:
+                mov     eax,offset stateon
+print_bar0:
+                COORD   57,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the frame skipping factor
+
+                mov     eax,framerate
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   40,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the contents of Z80 registers
+
+                mov     eax,regeaf
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,2
+                call    printmsgd
+
+                mov     eax,regebc
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,3
+                call    printmsgd
+
+                mov     eax,regede
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,4
+                call    printmsgd
+
+                mov     eax,regehl
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,5
+                call    printmsgd
+
+                mov     eax,regeix
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,6
+                call    printmsgd
+
+                mov     eax,regeiy
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,7
+                call    printmsgd
+
+                mov     eax,regepc
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,8
+                call    printmsgd
+
+                mov     eax,regesp
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,9
+                call    printmsgd
+
+                mov     eax,regeafl
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   59,2
+                call    printmsgd
+
+                mov     eax,regebcl
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   59,3
+                call    printmsgd
+
+                mov     eax,regedel
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   59,4
+                call    printmsgd
+
+                mov     eax,regehll
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   59,5
+                call    printmsgd
+
+; --------------------------------------------------------------------
+                
+                ; dump the msx memory
+                
+; --------------------------------------------------------------------
+                
+                ; blit the temp buffer to screen 
+                
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset temp_screen
+                mov     edi,0b8000h
+                mov     ecx,3840/4
+                rep     movsd
+                pop     es
+
+                ret
+
 ; --------------------------------------------------------------------
 
 debug:          
+                call    clear_text
 debug_loop:                
-                mov     eax,offset tabprompt                                
-                call    printmsg
+                ;mov     eax,offset tabprompt                                
+                ;call    printmsg      
+                call    render_debug
+                COORD   12,23
+                call    set_cursor_position
                 call    getchar
                 call    toupper
                 call    printasc
@@ -234,8 +367,6 @@ debug_loop:
                 je      command_f
                 ;cmp     al,'K'
                 ;je      command_k
-                cmp     al,'R'
-                je      command_r
                 cmp     al,'G'
                 je      command_g
                 cmp     al,'T'
@@ -253,6 +384,8 @@ debug_loop:
                 jmp     debug_loop
 
 command_d:
+                COORD   14,23
+                call    set_cursor_position
                 call    gethex4
                 pushad
                 call    crlf
@@ -267,6 +400,8 @@ command_g:
                 jmp     debug_loop
 
 command_f:
+                COORD   14,23
+                call    set_cursor_position
                 call    gethex4
                 and     eax,0ffffh
                 mov     framerate,eax
@@ -282,6 +417,8 @@ command_m:
                 jmp     debug_loop
 
 command_b:
+                COORD   14,23
+                call    set_cursor_position
                 call    gethex4
                 and     eax,0ffffh
                 mov     breakpoint,eax
@@ -385,17 +522,13 @@ command_2:
                 call    crlf
                 jmp     debug_loop
 
-command_r:
-                call    showreg
-                jmp     debug_loop
-
 command_t:
                 movzx   edi,regpc
                 movzx   edx,regaf
                 mov     eax,0
                 mov     ecx,0
                 call    trace
-                jmp     command_r
+                jmp     debug_loop
 
 command_exit:
                 ret

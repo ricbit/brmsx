@@ -26,7 +26,7 @@ extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.38',13,10
+msg00           db      'BrMSX 1.39',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
@@ -37,6 +37,7 @@ msg06           db      'Processor type: $'
 msg07           db      'Clock: $'
 msg08           db      ' Mhz',13,10,'$'
 msg09           db      ' kb',13,10,'$'
+msg10           db      'Press any key to start... $'
 msgnocpuid      db      '486 or lower',13,10,'$'
 msg386          db      '386',13,10,'$'
 msg486          db      '486',13,10,'$'
@@ -303,6 +304,9 @@ _main_dontmeasure:
                 db 5*3*5 dup (090h)
 
                 call    crlf
+                mov     eax,offset msg10
+                call    printmsg
+                call    getchar
                 call    debug
   
                 ; exit to dos

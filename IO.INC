@@ -27,3 +27,6 @@ extrn measurespeed: near
 extrn clockrate: byte
 extrn printdecimal: near
 extrn bargraphmode: dword
+extrn set_cursor_position: near
+extrn convhex4: near
+extrn tmphex4: byte

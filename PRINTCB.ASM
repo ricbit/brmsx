@@ -15,57 +15,10 @@ include psetED.inc
 include print.inc
 
 extrn prinXX: near
+extrn printopcode: near
 
 public psetCBxx
 public psetEDxx
-
-; --------------------------------------------------------------------
-
-printopcode:
-                mov     ebp,4
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
-
-                inc     edi
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
-
-                inc     edi
-                push    edx
-                call    fetch
-                call    printhex2
-                call    printspace
-                pop     edx
-                dec     ebp
-                dec     edx
-                jz      printopcode0
-
-                inc     edi
-                call    fetch
-                call    printhex2
-                call    printspace
-                ret
-printopcode0:
-                push    ebp
-                call    printspace
-                call    printspace
-                call    printspace
-                pop     ebp
-                dec     ebp
-                jnz     printopcode0
-                ret
 
 ; --------------------------------------------------------------------
 

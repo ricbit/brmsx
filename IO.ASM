@@ -17,6 +17,7 @@ include pentium.inc
 include vdp.inc
 include z80.inc
 include bit.inc
+include number.inc
 
 public printmsg
 public printasc
@@ -48,6 +49,9 @@ public measurespeed
 public clockrate
 public printdecimal
 public bargraphmode
+public set_cursor_position
+public tmphex4
+public convhex4
 
 ; DATA ---------------------------------------------------------------
 
@@ -132,6 +136,18 @@ printspace:
                 ret
 
         
+; set_cursor_postion -------------------------------------------------
+; set the cursor position
+; enter dh=row dl=column
+
+set_cursor_position:
+                mov     v86r_dx,dx
+                mov     v86r_bh,0
+                mov     v86r_ah,2
+                mov     al,10h
+                int     33h
+                ret
+
 ; getchar ------------------------------------------------------------
 ; wait for key and return ascii code in al
 
@@ -590,13 +606,13 @@ draw_gui:
                 mov     edi,0
                 mov     eax,z80rate
                 call    drawline
-                mov     edi,5
+                mov     edi,8
                 mov     eax,renderrate
                 call    drawline
-                mov     edi,10
+                mov     edi,16
                 mov     eax,blitrate
                 call    drawline
-                mov     edi,15
+                mov     edi,24
                 mov     eax,guirate
                 call    drawline
                 ret
@@ -607,27 +623,50 @@ drawline:
                 xor     edx,edx
                 mov     ebx,dword ptr [offset clockrate]
                 div     ebx
-                mov     ecx,100
+                mov     ecx,50
+                mov     esi,eax
+                shr     esi,1
                 shl     edi,8
                 add     edi,blitbuffer
                 mov     ebx,0F0Dh
 drawline1:      
-                cmp     ecx,eax
+                cmp     ecx,esi
                 jbe     drawline2
-                mov     byte ptr [edi],bh
-                mov     byte ptr [edi+256],bh
-                mov     byte ptr [edi+256*2],bh
-                mov     byte ptr [edi+256*3],bh
-                jmp     drawline_exit
+                irp     i,<0,1,2,3,4,5,6>
+                mov     byte ptr [edi+256*i],bh
+                endm
+                jmp     drawline_loop
 drawline2:
-                mov     byte ptr [edi],bl
-                mov     byte ptr [edi+256],bl
-                mov     byte ptr [edi+256*2],bl
-                mov     byte ptr [edi+256*3],bl
-drawline_exit:
+                irp     i,<0,1,2,3,4,5,6>
+                mov     byte ptr [edi+256*i],bl
+                endm
+drawline_loop:
                 inc     edi
                 dec     ecx
                 jnz     drawline1
+
+                sub     edi,50
+                mov     ebx,10
+                xor     edx,edx
+                div     ebx
+                mov     esi,eax
+                shl     esi,6
+                add     esi,offset number_font
+                irp     i,<0,1,2,3,4>
+                mov     ebx,[esi+i*8]
+                mov     ecx,[esi+i*8+4]
+                and     [edi+(i+1)*256],ebx
+                and     [edi+(i+1)*256+4],ecx
+                endm
+                mov     esi,edx
+                shl     esi,6
+                add     esi,offset number_font
+                irp     i,<0,1,2,3,4>
+                mov     ebx,[esi+i*8]
+                mov     ecx,[esi+i*8+4]
+                and     [edi+(i+1)*256+5],ebx
+                and     [edi+(i+1)*256+4+5],ecx
+                endm
                 ret
 
 ; my_kb_irq_handler --------------------------------------------------

@@ -22,10 +22,18 @@ extrn psetEDxx: near
 
 public pset
 public prinXX
+public printopcode
+
+; DATA ---------------------------------------------------------------
+
+align 4
+
+isize           dd      0
 
 ; --------------------------------------------------------------------
 
 printopcode:
+                mov     isize,edx
                 mov     ebp,4
                 push    edx
                 call    fetch

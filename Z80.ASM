@@ -92,9 +92,14 @@ public regeaf
 public regebc
 public regede
 public regehl
+public regeafl
+public regebcl
+public regedel
+public regehll
 public regesp
 public regeix
 public regeiy
+public regepc
 public vdpregs
 
 public BIT0_table
@@ -523,20 +528,14 @@ EMULABEL        loop,emtype,brtype
                 inc     rcounter
                 call    [offset iset + eax*4]
                 
-                if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
-                add     clockcounter,ebp
-                endif
-                
-                cmp     interrupt,1
-                JUMP    je,interrupt,emtype,brtype
-
-                if      ((emtype EQ NORMAL) OR (emtype EQ TURBO))
-                cmp     clockcounter,59659
-                JUMP    jb,loop,emtype,brtype
-                endif
-
-                if      emtype EQ FAST
-                JUMP    jmp,loop,emtype,brtype
+                if      (emtype EQ FAST)
+                  cmp   interrupt,1
+                  JUMP  je,interrupt,emtype,brtype
+                  JUMP  jmp,loop,emtype,brtype
+                else
+                  add   clockcounter,ebp
+                  cmp   clockcounter,59659
+                  JUMP  jb,loop,emtype,brtype
                 endif
 
                 mov     eax,offset z80counter

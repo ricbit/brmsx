@@ -61,7 +61,12 @@ extrn regeaf: dword
 extrn regebc: dword
 extrn regede: dword
 extrn regehl: dword
+extrn regeafl: dword
+extrn regebcl: dword
+extrn regedel: dword
+extrn regehll: dword
 extrn regesp: dword
+extrn regepc: dword
 extrn regeix: dword
 extrn regeiy: dword
 extrn readmem: near

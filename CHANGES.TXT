@@ -1,4 +1,11 @@
-release 1.38:
+release 1.39:
+
+- added a numeric display in the bar graph
+- now only the mode fast check for interrupts before the synch
+  with this, emulation get faster in modes normal and turbo
+  and mode normal should have no bugs when run in very slow machines
+
+release 1.38: [*] public version
 
 - added a bar graph to display emulator performance
   1st bar: z80 emulation
