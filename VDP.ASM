@@ -73,6 +73,7 @@ screenselect    dd      ? ; nothing
                 dd      ? ; sprite image table
 dirtyname       db      32*24 dup (0)
 dirtypattern    db      256*3 dup (0)
+dirtysprite     db      32 dup (0)
 spriteline      db      192 dup (0)
 lastscreen      db      0
 actualscreen    db      0
@@ -455,6 +456,8 @@ PIPE2_WIN       macro
 ;          called with interrupts DISABLED
 
 render_screen2_dirty:
+
+                call    wash_sprite
 
                 ; esi = name table
                 mov     eax,nametable
@@ -915,7 +918,7 @@ eval_sprite_coords1:
 ; CHECK --------------------------------------------------------------
 ; mark one block as dirty
 
-CHECK           macro offx,offy,name
+CHECK           macro   offx,offy,name
 
                 push    ecx eax
 
@@ -1173,7 +1176,6 @@ eval_base_address1:
 ; these are the functions to perform dirty operations on screen 2
 
 dirty_screen2_nothing:
-dirty_screen2_sprpatt:
                 mov     [ecx+esi],bl
                 ret
 
@@ -1208,14 +1210,24 @@ dirty_screen2_color:
 dirty_screen2_sprattr:                
                 mov     eax,ecx
                 and     ecx,0FFFFFFFCh
-                push    esi eax
+                push    esi eax ecx
                 add     esi,ecx
                 call    eval_sprite_coords
                 call    dirty_sprite
-                pop     eax esi
+                pop     ecx eax esi
                 mov     [esi+eax],bl
+                add     esi,ecx
                 call    eval_sprite_coords
                 call    dirty_sprite
+                xor     eax,eax
+                ret
+
+dirty_screen2_sprpatt:
+                mov     eax,ecx
+                sub     ecx,sprpatttable
+                shr     ecx,5
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtysprite+ecx],1
                 xor     eax,eax
                 ret
 
@@ -1238,6 +1250,40 @@ dirty_screen1_name:
                 mov     [eax+esi],bl
                 mov     byte ptr [offset dirtyname+ecx],1
                 xor     eax,eax
+                ret
+
+; wash_sprite --------------------------------------------------------
+; this function removes the "dirty" conditions of sprite 
+; by passing the condition to the screen behind it
+
+wash_sprite:
+
+                mov     edx,32
+                mov     esi,sprattrtable
+                add     esi,msxvram
+                xor     eax,eax
+
+wash_sprite_loop:
+                cmp     byte ptr [esi],0D0h
+                je      wash_sprite_end
+                mov     al,[esi+2]
+                shr     al,2
+                cmp     byte ptr [offset dirtysprite+eax],1
+                jne     wash_sprite_next
+
+                call    eval_sprite_coords
+                call    dirty_sprite
+
+wash_sprite_next:
+                add     esi,4
+                dec     edx
+                jnz     wash_sprite_loop
+
+wash_sprite_end:
+                mov     edi,offset dirtysprite
+                mov     eax,0
+                mov     ecx,32/4
+                rep     stosd
                 ret
 
 code32          ends

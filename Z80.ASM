@@ -512,11 +512,11 @@ readmemw:
                 ret
 
 readmemw_slow:
-                call    readmem
-                mov     ah,al
                 inc     ecx
                 call    readmem
                 dec     ecx
+                mov     ah,al
+                call    readmem
                 ret
 
 ; megarom0_switchbank ------------------------------------------------
@@ -602,16 +602,22 @@ writememw:
                 je      writememw_slow
                 ; lock
                 cmp     dword ptr [offset memlock+esi*4],0
-                jne     writemem0
+                jne     writememw0
                 ;
                 mov     esi,[offset mem+esi*4]          
                 mov     word ptr [esi+ebx],ax           
                 ret
 
+writememw0:
+                mov     ah,0
+                jmp     writemem0
+
 writememw_slow:
-                xchg    ah,al
+                push    eax
+                mov     ah,0
                 call    writemem
-                mov     al,ah
+                pop     eax
+                shr     eax,8
                 inc     ecx
                 call    writemem
                 dec     ecx

@@ -1,3 +1,8 @@
+release 1.61:
+
+- fixed bug on writememw: now the intro of Super Laydock works
+- fixed bug on readmemw
+
 release 1.60:
 
 - fixed bug on 16-bit ADC and SBC 
