@@ -1,3 +1,8 @@
+release 1.35:
+
+- did more optimization on screen 2 renderer
+- added info screen: free low/high memory and cpu type
+
 release 1.34:
 
 - optimized the screen 0 renderer: speed gain is 1.8%

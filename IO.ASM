@@ -200,6 +200,7 @@ setgraphmode1:
                 out     dx,al
                 inc     ebx
                 loop    setgraphmode1
+
                 ret
 
 ; set_border_color ----------------------------------------------------

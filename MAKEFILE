@@ -1,15 +1,22 @@
-OBJECTS = pmode.o brmsx.o io.o debug.o patch.o \
+OBJECTS = pmode.o brmsx.o debug.o patch.o \
+	  io.o pentium.o \
 	  z80.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o
 TASMFLAGS = /ml /m2 /q /la
+ECHO = rbecho
 
-all : brmsx.exe brmsxwin.exe
+all : rbecho.exe brmsx.exe brmsxwin.exe
+
+rbecho.exe: rbecho.c
+	gcc $^ -o $@ 
 
 brmsx.exe : $(OBJECTS) vdpdos.o
-	tlink /3 /x $^, $@
+	$(ECHO) objects.lst $^
+	tlink /3 /x @objects.lst , $@
 
 brmsxwin.exe : $(OBJECTS) vdpwin.o
-	tlink /3 /x $^, $@
+	$(ECHO) objects.lst $^
+	tlink /3 /x @objects.lst , $@
 
 vdpdos.o : vdp.asm
 	tasm $(TASMFLAGS) /dDOS $^,$@
@@ -27,6 +34,4 @@ clean :
 	del *.o
 	del *.exe
 	del *.lst
-	del *.inn        
-	del *.pro
 	del cart1.rom

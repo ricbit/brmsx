@@ -37,6 +37,7 @@ align 4
 enabled         dd      1
 linenumber      dd      0
 stacksave       dd      0
+colorsave       dd      0
 lastscreen      db      0
 spriteline      db      192 dup (0)
 
@@ -239,10 +240,8 @@ render11:       push    ebp
 
 PIPE2_DOS       macro
                 
-                push    ecx
                 mov     stacksave,esp
-                mov     esp,ecx
-                xor     ecx,ecx
+                mov     esp,colorsave
 
                 ; fetch the pattern for that subline
                 mov     dl,[ebx+eax*8]
@@ -277,7 +276,6 @@ PIPE2_DOS       macro
                 endm
                 
                 mov     esp,stacksave
-                pop     ecx
                 
                 endm
 
@@ -353,6 +351,7 @@ render_screen2:
                 shl     eax,6
                 mov     ecx,msxvram
                 lea     ecx,[ecx+eax]
+                mov     colorsave,ecx
 
                 ; edi = pentium video memory
                 mov     edi,blitbuffer
@@ -365,6 +364,12 @@ render_screen2:
                 ; for each sector
                 mov     ebp,3
 render23:       push    ebp
+
+                ifdef   DOS
+                  xor   ecx,ecx
+                else
+                  mov   ecx,colorsave
+                endif
 
                 ; for each line
                 mov     ebp,8
@@ -399,7 +404,7 @@ render21:
                 jnz     render20
 
                 add     ebx,256*8
-                add     ecx,256*8
+                add     colorsave,256*8
 
                 pop     ebp
                 dec     ebp

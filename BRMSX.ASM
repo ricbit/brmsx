@@ -9,6 +9,7 @@ code32  segment para public use32
         assume cs:code32, ds:code32
 
 include pmode.inc
+include pentium.inc
 include io.inc
 include z80.inc
 include debug.inc
@@ -20,13 +21,23 @@ public blitbuffer
 public diskimage
 public cart1
 
+extrn detect_cpu: near
+
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.34',13,10
+msg00           db      'BrMSX 1.35',13,10
                 db      'by Ricardo Bittencourt',13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Cartridge not supported',13,10,'$'
 msg03           db      'Disk size not supported',13,10,'$'
+msg04           db      'Low memory free: $'
+msg05           db      'High memory free: $'
+msg06           db      'Processor type: $'
+msgnocpuid      db      '486 or lower',13,10,'$'
+msg386          db      '386',13,10,'$'
+msg486          db      '486',13,10,'$'
+msg586          db      'Pentium',13,10,'$'
+msg686          db      'Pentium Pro or better',13,10,'$'
 rom_name        db      'MSX.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
@@ -47,6 +58,54 @@ _main:          sti
                 mov     eax,offset msg00
                 call    printmsg
 
+                ; print info on free low memory
+                mov     eax,offset msg04
+                call    printmsg
+                call    _lomemsize
+                shr     eax,10
+                call    printhex4
+                call    crlf
+
+                ; print info on free high memory
+                mov     eax,offset msg05
+                call    printmsg
+                call    _himemsize
+                shr     eax,10
+                call    printhex4
+                call    crlf
+
+                ; print processor type
+                mov     eax,offset msg06
+                call    printmsg
+                call    detect_cpu
+                or      eax,eax
+                jnz     _main_386
+                mov     eax,offset msgnocpuid
+                call    printmsg
+                jmp     _main_cpuexit
+_main_386:
+                cmp     eax,3
+                jnz     _main_486
+                mov     eax,offset msg386
+                call    printmsg
+                jmp     _main_cpuexit
+_main_486:
+                cmp     eax,4
+                jnz     _main_586
+                mov     eax,offset msg486
+                call    printmsg
+                jmp     _main_cpuexit
+_main_586:
+                cmp     eax,5
+                jnz     _main_686
+                mov     eax,offset msg586
+                call    printmsg
+                jmp     _main_cpuexit
+_main_686:
+                mov     eax,offset msg686
+                call    printmsg
+
+_main_cpuexit:
                 ; allocate 32kb to msx rom
                 mov     eax,32768
                 call    _getmem
@@ -214,6 +273,7 @@ _main4:
 
 _main3:
                 ; enter debug mode
+                call    crlf
                 call    debug
 
                 ; exit to dos
