@@ -36,6 +36,7 @@ emulED43:       inc     edi
                 mov     al,regb
                 call    writemem
                 xor     eax,eax
+                mov     ebp,20
                 ret
 
 ; ED 44 - NEG
@@ -58,6 +59,7 @@ emulED4B:       inc     edi
                 mov     regb,al
                 xor     eax,eax
                 add     edi,2
+                mov     ebp,20
                 ret
 
 ; ED 4D - RETI
@@ -81,10 +83,12 @@ emulED53:       inc     edi
                 mov     al,regd
                 call    writemem
                 xor     eax,eax
+                mov     ebp,20
                 ret
 
 ; ED 56 - IM 1
 emulED56:       inc     edi
+                mov     ebp,8
                 ret
 
 ; ED 57 - LD A,I
@@ -107,6 +111,7 @@ emulED5B:       inc     edi
                 mov     regd,al
                 xor     eax,eax
                 add     edi,2
+                mov     ebp,20
                 ret
 
 ; ED 5F - LD A,R
@@ -144,6 +149,7 @@ emulED73:       inc     edi
                 mov     al,regsph
                 call    writemem
                 xor     eax,eax
+                mov     ebp,20
                 ret
 
 ; ED 78 - IN A,(C)
@@ -157,6 +163,7 @@ emulED78:       inc     edi
                 and     dl,00000001b
                 and     cl,11111100b
                 or      dl,cl
+                mov     ebp,12
                 ret
 
 ; ED 79 - OUT (C),A
@@ -176,6 +183,7 @@ emulED7B:       inc     edi
                 mov     regsph,al
                 xor     eax,eax
                 add     edi,2
+                mov     ebp,20
                 ret
 
 ; ED A0 - LDI
@@ -193,6 +201,7 @@ emulEDA0:       inc     edi
                 and     cl,01000000b 
                 shr     cl,4
                 or      dl,cl
+                mov     ebp,16
                 ret
 
 ; ED A2 - INI
@@ -209,6 +218,7 @@ emulEDA2:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
+                mov     ebp,16
                 ret
 
 ; ED A3 - OUTI
@@ -225,17 +235,20 @@ emulEDA3:       inc     edi
                 and     dl,10111111b
                 and     cl,01000010b ;check
                 or      dl,cl
+                mov     ebp,16
                 ret
 
 ; ED A8 - LDD
-OPLDD             EDA8
+OPLDD           EDA8
 
 ; ED B0 - LDIR
 emulEDB0:       inc     edi
+                mov     ebp,0
 emulEDB0a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
+                add     ebp,21
                 inc     reghl
                 inc     regde
                 dec     regbc
@@ -244,10 +257,12 @@ emulEDB0a:      mov     ecx,regehl
 
 ; ED B1 - CPIR
 emulEDB1:       inc     edi
+                mov     ebp,0
 emulEDB1b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB1a
+                add     ebp,21
                 inc     reghl
                 dec     regbc
                 jnz     emulEDB1b
@@ -261,10 +276,12 @@ emulEDB1a:
 
 ; ED B8 - LDDR
 emulEDB8:       inc     edi
+                mov     ebp,0
 emulEDB8a:      mov     ecx,regehl
                 call    readmem
                 mov     ecx,regede
                 call    writemem
+                add     ebp,21
                 dec     reghl
                 dec     regde
                 dec     regbc
@@ -273,10 +290,12 @@ emulEDB8a:      mov     ecx,regehl
 
 ; ED B9 - CPDR
 emulEDB9:       inc     edi
+                mov     ebp,0
 emulEDB9b:      mov     ecx,regehl
                 call    readmem
                 cmp     dh,al
                 jz      emulEDB9a
+                add     ebp,21
                 dec     reghl
                 dec     regbc
                 jnz     emulEDB9b

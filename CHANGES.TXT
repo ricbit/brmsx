@@ -1,3 +1,8 @@
+release 1.26:
+
+- fixed timings of instructions in Z80??.ASM
+- added synchronization at interrupt-level
+
 release 1.25:
 
 - optimized LD rr,dd
@@ -5,3 +10,4 @@ release 1.25:
 - sorted OPCODE.INC file
 - added RL (II+dd)
 - added ADD II,rrw
+- fixed timings of instructions on OPCODE.INC

@@ -44,6 +44,7 @@ emulFD21:       inc     edi
                 add     edi,2
                 mov     regeiy,eax
                 xor     eax,eax
+                mov     ebp,14
                 ret
 
 ; FD 22 - LD (dddd),IY
@@ -57,6 +58,7 @@ emulFD22:       inc     edi
                 mov     al,regiyh
                 call    writemem
                 xor     eax,eax
+                mov     ebp,20
                 ret
 
 ; FD 23 - INC IY
@@ -76,6 +78,7 @@ emulFD2A:       inc     edi
                 mov     regiyh,al
                 xor     eax,eax
                 add     edi,2
+                mov     ebp,20
                 ret
 
 ; FD 2B - DEC IY
@@ -157,6 +160,7 @@ emulFDBE:       inc     edi
                 call    readmem
                 cmp     dh,al
                 setflag_cp
+                mov     ebp,19
                 ret
 
 ; FD CB - group FD CB
@@ -178,6 +182,7 @@ emulFDE1:       inc     edi
                 mov     regiyh,al
                 inc     cx
                 mov     regesp,ecx
+                mov     ebp,14
                 ret
 
 ; FD E5 - PUSH IY
@@ -190,10 +195,12 @@ emulFDE5:       inc     edi
                 mov     al,regiyl
                 call    writemem
                 mov     regesp,ecx
+                mov     ebp,15
                 ret
 
 ; FD E9 - JP (IY)
 emulFDE9:       mov     edi,regeiy
+                mov     ebp,8
                 ret
 
 ; FD CB 06 - RLC (IY+dd)

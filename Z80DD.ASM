@@ -44,6 +44,7 @@ emulDD21:       inc     edi
                 add     edi,2
                 mov     regeix,eax
                 xor     eax,eax
+                mov     ebp,14
                 ret
 
 ; DD 22 - LD (dddd),IX
@@ -57,6 +58,7 @@ emulDD22:       inc     edi
                 mov     al,regixh
                 call    writemem
                 xor     eax,eax
+                mov     ebp,20
                 ret
 
 ; DD 23 - INC IX
@@ -76,6 +78,7 @@ emulDD2A:       inc     edi
                 mov     regixh,al
                 xor     eax,eax
                 add     edi,2
+                mov     ebp,20
                 ret
 
 ; DD 2B - DEC IX
@@ -166,6 +169,7 @@ emulDDBE:       inc     edi
                 call    readmem
                 cmp     dh,al
                 setflag_cp
+                mov     ebp,19
                 ret
 
 ; DD CB - group DD CB
@@ -187,6 +191,7 @@ emulDDE1:       inc     edi
                 mov     regixh,al
                 inc     cx
                 mov     regesp,ecx
+                mov     ebp,14
                 ret
 
 ; DD E5 - PUSH IX
@@ -199,10 +204,12 @@ emulDDE5:       inc     edi
                 mov     al,regixl
                 call    writemem
                 mov     regesp,ecx
+                mov     ebp,15
                 ret
 
 ; DD E9 - JP (IX)
 emulDDE9:       mov     edi,regeix
+                mov     ebp,8
                 ret
 
 ; DD CB 06 - RLC (IX+dd)
