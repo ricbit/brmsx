@@ -42,7 +42,7 @@ extrn disksize: dword
 
 align 4
 
-portenabled     dd      0
+portenabled     dd      1
 
 driveD0         db      0
 driveD1         db      0

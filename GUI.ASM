@@ -674,7 +674,7 @@ start_gui_exit_now:
                 rep     stosd
                 mov     firstscreen,1
                 mov     enabled,1
-
+                mov     palette_scr8,0
                 call    set_correct_palette
 
                 ret
@@ -1017,6 +1017,9 @@ check_selection_locked:
 ; prepare the gui to open the "load rom" window
 
 load_rom:
+                cmp     msxmodel,0
+                jne     load_rom_exit
+
                 cmp     menu_locked,1
                 je      load_rom_now
                 mov     menu_locked,1
@@ -1101,6 +1104,10 @@ load_rom_unlock:
                 mov     menu_locked,0
                 call    clear
                 mov     firstscreen,1
+                ret
+
+load_rom_exit:
+                mov     cpupaused,0
                 ret
 
 ; load_dsk -----------------------------------------------------------
@@ -1462,7 +1469,11 @@ search_directory_ret:
 
 reset_cpu_now:
                 call    release_button
+                cmp     msxmodel,0
+                jne     reset_cpu_now_exit
+
                 call    reset_cpu
+reset_cpu_now_exit:
                 mov     cpupaused,0
                 ret
 
@@ -1471,6 +1482,10 @@ reset_cpu_now:
 
 turn_off_now:
                 call    release_button
+                cmp     msxmodel,0
+                jne     turn_off_now_exit
+
+
                 call    set_correct_palette
                 call    sound_on
                 mov     ebx,0
@@ -1521,6 +1536,10 @@ noise_sound:
 
                 mov     sb_flushed,0
                 call    compose_soundstream
+                ret
+
+turn_off_now_exit:
+                mov     cpupaused,0
                 ret
 
 ; draw_noise_screen --------------------------------------------------
@@ -1603,18 +1622,34 @@ quit_emulator:
 
 save_sta:
                 call    release_button
+                
+                cmp     msxmodel,0
+                jne     save_sta_exit
+
                 mov     reset_flag,1
                 mov     cpupaused,0
                 jmp     save_state
+
+save_sta_exit:
+                mov     cpupaused,0
+                ret
 
 ; load_sta -----------------------------------------------------------
 ; load the current state from a file called BRMSX.STA     
 
 load_sta:
                 call    release_button
+
+                cmp     msxmodel,0
+                jne     load_sta_exit
+
                 mov     reset_flag,1
                 mov     cpupaused,0
                 jmp     load_state
+
+load_sta_exit:
+                mov     cpupaused,0
+                ret
 
 ; --------------------------------------------------------------------
 

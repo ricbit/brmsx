@@ -1878,7 +1878,15 @@ command_e:
                 call    gethex2
                 and     eax,0FFh
                 pop     ecx
+                cmp     debugtype,4
+                je      command_e_vram
                 call    writemem
+                jmp     debug_loop
+
+command_e_vram:
+                and     ecx,03FFFh
+                add     ecx,msxvram
+                mov     [ecx],al
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------

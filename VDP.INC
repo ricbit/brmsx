@@ -34,3 +34,11 @@ extrn spriteenable: dword
 extrn foregroundmask: byte
 extrn backgroundmask: byte
 extrn backgroundcolor: byte
+extrn foregroundcolor: byte
+extrn foregroundcolor_MMX: byte
+extrn backgroundcolor_MMX: byte
+extrn colorsave: dword
+extrn scr2inc: dword
+extrn scr2inc_color: dword  
+extrn scr2offset: dword      
+extrn bitmask: byte

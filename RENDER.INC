@@ -1,6 +1,88 @@
 MSX1_RENDER     EQU     0
 MSX2_RENDER     EQU     1
 
+DOS_ENGINE      EQU     0
+WIN_ENGINE      EQU     1
+MMX_ENGINE      EQU     2
+
+BITMASK_YES     EQU     0
+BITMASK_NO      EQU     1
+
+; PIPE1 --------------------------------------------------------------
+; this is the inner loop for render_screen1_* functions
+
+PIPE1           macro   render_model
+
+                ; fetch the character
+                mov     al,[esi]
+
+                ; fetch the color for that character
+                xor     edx,edx
+                mov     dl,al
+                shr     dl,3
+                mov     dl,[ecx+edx]
+
+                push    ecx
+                push    esi
+                push    eax
+                push    ebx
+                
+                lea     ebx,[ebx+eax*8]
+                mov     eax,[offset foregroundcolor+edx*4]
+                mov     ecx,[offset backgroundcolor+edx*4]
+
+                ; for each subline
+
+                ; fetch the pattern for that subline
+                mov     dl,[ebx]
+                
+                irp     i,<0,1,2,3,4,5,6,7>
+
+                ; get the foreground mask
+                mov     ebp,[offset foregroundmask+edx*8]
+
+                ; get the background mask
+                mov     esi,[offset backgroundmask+edx*8]
+
+                ; blend with the foreground color
+                and     ebp,eax
+
+                ; blend with the background color
+                and     esi,ecx
+
+                ; mix the colors
+                or      ebp,esi
+                mov     esi,[offset backgroundmask+edx*8+4]
+
+                if      render_model EQ MSX2_RENDER
+                or      ebp,10101010h
+                endif
+
+                ; display the subline
+                mov     [edi+i*256],ebp
+
+                ; do it again for the next four pixels
+                mov     ebp,[offset foregroundmask+edx*8+4]
+                and     esi,ecx
+                and     ebp,eax
+                or      ebp,esi
+                mov     dl,[ebx+i+1]
+                
+                if      render_model EQ MSX2_RENDER
+                or      ebp,10101010h
+                endif
+
+                mov     [edi+4+i*256],ebp
+
+                endm
+
+                pop     ebx
+                pop     eax
+                pop     esi
+                pop     ecx
+                
+                endm
+
 ; PIPE2_DOS ----------------------------------------------------------
 ; this is the inner loop for render_screen2 function
 
@@ -257,12 +339,14 @@ render2d_next:
 
 ; render_screen2 (macro version) -------------------------------------
 
-RENDER_SCREEN2_MACRO macro videoengine,render_model
+RENDER_SCREEN2_MACRO macro videoengine,render_model,currentbuffer
                 local   render_screen2_next
                 local   render23
                 local   render20
                 local   render21
                 
+                if      render_model EQ MSX1_RENDER                
+
                 cmp     everyframe,1
                 je      render_screen2_next
                 
@@ -270,6 +354,8 @@ RENDER_SCREEN2_MACRO macro videoengine,render_model
                 je      render_screen2_dirty
 
 render_screen2_next:
+
+                endif
 
                 ; esi = name table
                 mov     eax,nametable
@@ -297,7 +383,7 @@ render_screen2_next:
                 endif
 
                 ; edi = blit buffer
-                mov     edi,blitbuffer
+                mov     edi,currentbuffer
 
                 ; mask the temporary registers
                 xor     eax,eax

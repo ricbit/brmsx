@@ -81,7 +81,9 @@ public inemul98
 public vdpaddressh
 public vdpaddressl
 public vdpaddresse
-
+public outemulB4
+public outemulB5
+public inemulB5
 
 public fetch
 public fetch1

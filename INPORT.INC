@@ -362,7 +362,7 @@ inportxx:
 	; B4
  dd inemulXX
 	; B5
- dd inemulB5
+ dd inemulXX
 	; B6
  dd inemulXX
 	; B7

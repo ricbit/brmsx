@@ -57,7 +57,15 @@ public text_columns
 public spriteenable
 public foregroundmask
 public backgroundmask
+public foregroundcolor
 public backgroundcolor
+public foregroundcolor_MMX
+public backgroundcolor_MMX
+public colorsave
+public scr2inc         
+public scr2inc_color   
+public scr2offset      
+public bitmask
 
 ; DATA ---------------------------------------------------------------
 
@@ -76,13 +84,6 @@ include scr2und.inc
 include sprzoom.inc
 
 align 4
-
-DOS_ENGINE      EQU     0
-WIN_ENGINE      EQU     1
-MMX_ENGINE      EQU     2
-
-BITMASK_YES     EQU     0
-BITMASK_NO      EQU     1
 
 enabled         dd      1
 linenumber      dd      0
@@ -138,8 +139,8 @@ all10           dq      1010101010101010h
 ; render a screen 0 page
 
 render_screen0:
-                cmp     text_columns,80
-                je      render_screen0_80
+                cmp     msxmodel,0
+                jne     render_screen0_msx2
 
                 mov     esi,msxvram                
                 add     esi,nametable
@@ -217,72 +218,6 @@ render0_psgbugfix:
 
                 ret
 
-; PIPE1 --------------------------------------------------------------
-; this is the inner loop for render_screen1_* functions
-
-PIPE1           macro
-
-                ; fetch the character
-                mov     al,[esi]
-
-                ; fetch the color for that character
-                xor     edx,edx
-                mov     dl,al
-                shr     dl,3
-                mov     dl,[ecx+edx]
-
-                push    ecx
-                push    esi
-                push    eax
-                push    ebx
-                
-                lea     ebx,[ebx+eax*8]
-                mov     eax,[offset foregroundcolor+edx*4]
-                mov     ecx,[offset backgroundcolor+edx*4]
-
-                ; for each subline
-
-                ; fetch the pattern for that subline
-                mov     dl,[ebx]
-                
-                irp     i,<0,1,2,3,4,5,6,7>
-
-                ; get the foreground mask
-                mov     ebp,[offset foregroundmask+edx*8]
-
-                ; get the background mask
-                mov     esi,[offset backgroundmask+edx*8]
-
-                ; blend with the foreground color
-                and     ebp,eax
-
-                ; blend with the background color
-                and     esi,ecx
-
-                ; mix the colors
-                or      ebp,esi
-                mov     esi,[offset backgroundmask+edx*8+4]
-
-                ; display the subline
-                mov     [edi+i*256],ebp
-
-                ; do it again for the next four pixels
-                mov     ebp,[offset foregroundmask+edx*8+4]
-                and     esi,ecx
-                and     ebp,eax
-                or      ebp,esi
-                mov     dl,[ebx+i+1]
-                mov     [edi+4+i*256],ebp
-
-                endm
-
-                pop     ebx
-                pop     eax
-                pop     esi
-                pop     ecx
-                
-                endm
-
 ; render_screen1_dirty -----------------------------------------------
 ; render a screen 1 page using dirty blocks
 
@@ -330,7 +265,7 @@ render11d:
 
 render1_dirty_draw:
                 push    ebp edx
-                PIPE1
+                PIPE1   MSX1_RENDER
                 pop     edx ebp
 
 render1_dirty_next:
@@ -356,6 +291,9 @@ render1_dirty_next:
 ; render a screen 1 page
 
 render_screen1:
+                cmp     msxmodel,0
+                jne     render_screen1_msx2
+
                 cmp     everyframe,1
                 je      render_screen1_linear
 
@@ -393,7 +331,7 @@ render10:       push    ebp
                 mov     ebp,32
 render11:       push    ebp
 
-                PIPE1
+                PIPE1   MSX1_RENDER
 
                 add     edi,8
                 inc     esi
@@ -436,18 +374,10 @@ render_screen2:
                 
                 cmp     enginetype,0
                 jne     render_screen2_mmx
-                RENDER_SCREEN2_MACRO DOS_ENGINE,MSX1_RENDER
+                RENDER_SCREEN2_MACRO DOS_ENGINE,MSX1_RENDER,blitbuffer
 
 render_screen2_mmx:
-                RENDER_SCREEN2_MACRO MMX_ENGINE,MSX1_RENDER
-
-render_screen2_msx2:
-                cmp     enginetype,0
-                jne     render_screen2_mmx_msx2
-                RENDER_SCREEN2_MACRO DOS_ENGINE,MSX2_RENDER
-
-render_screen2_mmx_msx2:
-                RENDER_SCREEN2_MACRO MMX_ENGINE,MSX2_RENDER
+                RENDER_SCREEN2_MACRO MMX_ENGINE,MSX1_RENDER,blitbuffer
 
 ; render_screen4 -----------------------------------------------------
 ; render a screen 4 page
@@ -463,6 +393,9 @@ render_screen4:
 ; render a screen 3 page
 
 render_screen3:
+                cmp     msxmodel,0
+                jne     render_screen3_msx2
+
                 mov     edi,blitbuffer
 
                 mov     ecx,nametable

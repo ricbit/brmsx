@@ -78,7 +78,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.175',13,10
+msg00           db      'BrMSX 2.1',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -102,7 +102,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 1.175',13,10
+msg22           db      'BrMSX 2.1',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -174,19 +174,21 @@ help_message2   db      13
                 db      '               0=64kb 1=128kb 2=256kb 3=512kb '
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-res <mode>    select screen resolution',13,10 
-                db      '               0=320x200x8  MSX-1 default',13,10
-                db      '               1=256x200x8  MSX-1 large screen'
+                db      '               0 =320x200x8  MSX-1 default',13,10
+                db      '               1 =256x200x8  MSX-1 large screen'
                 db      13,10
-                db      '               2=512x384x8  MSX-1 TV emulation '
+                db      '               2 =512x384x8  MSX-1 TV emulation '
                 db      '(interpolation+scanlines)',13,10
-                db      '               3=256x192x8  MSX-1 square pixels'
+                db      '               3 =256x192x8  MSX-1 square pixels'
                 db      13,10
-                db      '               6=512x384x15 MSX-1 Parrot engine'
+                db      '               6 =512x384x15 MSX-1 Parrot engine'
                 db      13,10
-                db      '               7=320x200x8  MSX-2 default',13,10
-                db      '               8=512x384x8  MSX-2 full width '
+                db      '               7 =320x200x8  MSX-2 default',13,10
+                db      '               8 =512x384x8  MSX-2 full width '
                 db      'support',13,10
-                db      '               9=512x384x8  MSX-2 full width '
+                db      '               9 =512x384x8  MSX-2 full width '
+                db      'support with black scanlines',13,10
+                db      '               11=640x480x8  MSX-2 full screen '
                 db      'support with black scanlines',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
@@ -199,9 +201,9 @@ help_message2   db      13
                 db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
-                db      '-cpugraph      enable CPU performance graph',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
                 db      '-scc           enable SCC sound',13,10
@@ -216,9 +218,9 @@ help_message3   db      13
                 db      '(require DOS2.ROM)',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
                 db      '-disklow       low-level, port-based disk '
-                db      'emulation (default)',13,10
+                db      'emulation (default in MSX-1 mode)',13,10
                 db      '-diskhigh      high-level, patch-based disk '
-                db      'emulation',13,10
+                db      'emulation (default in MSX-2 mode)',13,10
                 db      '-mount <dir>   mount the directory <dir> as '
                 db      'drive A:',13,10
                 db      '-tape <file>   use <file> as cassete image',13,10
@@ -237,9 +239,9 @@ help_message3   db      13
                 db      '(range is 0 to 9, default is 5)',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
                 db      '-com <port>    select COM serial port [1-4]',13,10
-                db      '-client        computer is client',13,10
                 db      'Press enter to continue.$'
 help_message4   db      13
+                db      '-client        computer is client',13,10
                 db      '-server        computer is server',13,10
                 db      '-novesa        disable VESA detection',13,10
                 db      '-noled         disable LED emulation',13,10
@@ -259,12 +261,14 @@ msgMMX           db      '(MMX)$'
 msgpoint         db      '.$'
 rom_name         db      'MSX.ROM',0
 disk_rom_name    db      'DISK.ROM',0
-dos2_rom_name   db      'DOS2.ROM',0
+disk2_rom_name   db      'DISK2.ROM',0
+dos2_rom_name    db      'DOS2.ROM',0
 msxhan_name      db      'MSXHAN.ROM',0
 msx2_rom_name    db      'MSX2.ROM',0
 msx2ext_rom_name db      'MSX2EXT.ROM',0
 blasterenv       db      'BLASTER',0
 addrstr          db      3 dup (0)
+model_diskrom    dd     disk_rom_name
 
 emptyspace      db      128 dup (0)
 argnumber       dd      0
@@ -533,6 +537,7 @@ dos2enabled        dd      0
 symbolic_debugger  dd      0
 msxmodel           dd      0          
 vdplog             dd      0
+forcedisk          dd      0     
 vramsize           dd      16384
 cart1size          dd      512*1024
 mappersize         dd      128*1024
@@ -1750,10 +1755,12 @@ callback_res_640x480xmsx2_scanlines:
 
 callback_disklow:
                 mov     portenabled,1
+                mov     forcedisk,1
                 ret
 
 callback_diskhigh:
                 mov     portenabled,0
+                mov     forcedisk,1
                 ret
 
 callback_joy:
@@ -2779,7 +2786,7 @@ read_disk_rom:
                 mov     diskrom,eax
 
                 ; read disk.rom from disk
-                mov     edx,offset disk_rom_name
+                mov     edx,model_diskrom ;offset disk_rom_name
                 call    open_file
                 jc      disk_rom_error
                 call    read_size_file
@@ -3014,11 +3021,32 @@ read_msx_rom_msx2:
                 mov     eax,offset inemul99_msx2
                 mov     dword ptr [offset inportxx+099h*4],eax
 
+                ; set the RTC ports
+                mov     eax,offset outemulB4
+                mov     dword ptr [offset outportxx+0B4h*4],eax
+                
+                mov     eax,offset outemulB5
+                mov     dword ptr [offset outportxx+0B5h*4],eax
+                
+                mov     eax,offset inemulB5
+                mov     dword ptr [offset inportxx+0B5h*4],eax
+                
                 ; 128kb of VRAM
                 mov     vramsize,128*1024
 
                 ; turn off video cache
                 mov     imagetype,0
+
+                ; select the DISK2.ROM
+                mov     eax,offset disk2_rom_name
+                mov     model_diskrom,eax
+
+                ; enable patch-based emulation
+                ; if the user hasn't selected a disk-model
+                cmp     forcedisk,1
+                je      _ret
+
+                mov     portenabled,0
 
                 ret
 
@@ -3094,6 +3122,7 @@ check_video_mode_msx2:
                 ret
 
 ; --------------------------------------------------------------------
+
 code32          ends
                 end
 

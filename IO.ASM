@@ -94,6 +94,7 @@ public gui_palette_high
 public border_changed
 public set_palette_color
 public vdplog_now
+public palette_scr8
 
 ; DATA ---------------------------------------------------------------
 
@@ -406,6 +407,8 @@ set_correct_palette_16:
                 jmp     fill_palette
 
 set_correct_palette_msx2:
+                cmp     actualscreen,0
+                je      set_correct_palette_scr0
                 cmp     actualscreen,8
                 je      set_correct_palette_scr8
 
@@ -455,6 +458,41 @@ set_correct_palette_scr8:
                 mov     palette_scr8,1
                 ret
 
+set_correct_palette_scr0:
+                cmp     palette_scr8,1
+                jne     set_correct_palette_scr0_now
+                
+                cmp     byte ptr [offset dirty_palette+0],1
+                je      set_correct_palette_scr0_now
+
+                movzx   ecx,byte ptr [offset vdpregs+7]
+                and     ecx,0Fh
+                cmp     byte ptr [offset dirty_palette+ecx],1
+                je      set_correct_palette_scr0_now
+
+                movzx   ecx,byte ptr [offset vdpregs+7]
+                shr     ecx,4
+                cmp     byte ptr [offset dirty_palette+ecx],1
+                je      set_correct_palette_scr0_now
+
+                ret
+
+set_correct_palette_scr0_now:
+                movzx   ecx,byte ptr [offset vdpregs+7]
+                and     ecx,0Fh
+                movzx   ecx,word ptr [offset msx2palette+ecx*2]
+                mov     eax,010h
+                call    set_palette_color
+
+                movzx   ecx,byte ptr [offset vdpregs+7]
+                shr     ecx,4
+                movzx   ecx,word ptr [offset msx2palette+ecx*2]
+                mov     eax,011h
+                call    set_palette_color
+
+                mov     palette_scr8,1
+                ret
+
 ; setgraphmode --------------------------------------------------------
 ; set video mode 13h (320x200x256)
 
@@ -463,6 +501,7 @@ setgraphmode:
                 mov     ecx,16/4
                 mov     edi,offset dirty_palette
                 rep     stosd
+                mov     palette_scr8,0
 
                 cmp     videomode,2
                 je      setgraphmode_vesa

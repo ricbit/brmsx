@@ -162,4 +162,6 @@ extrn msx2palette: byte
 extrn vdpaddressh: byte
 extrn vdpaddressl: byte
 extrn vdpaddresse: dword
-
+extrn outemulB4: near
+extrn outemulB5: near
+extrn inemulB5: near
