@@ -27,3 +27,4 @@ extrn no_collision: dword
 extrn render_col: near
 extrn sprite_collision: near
 extrn direct_color: dword
+extrn eval_base_address_msx2: near

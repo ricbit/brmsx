@@ -69,7 +69,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.162',13,10
+msg00           db      'BrMSX 1.164',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -93,7 +93,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.162',13,10
+msg22           db      'BrMSX 1.164',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -502,6 +502,7 @@ nommx              dd      0
 dos2enabled        dd      0
 symbolic_debugger  dd      0
 msxmodel           dd      0          
+vramsize           dd      16384
 cart1size          dd      512*1024
 mappersize         dd      128*1024
 
@@ -673,6 +674,7 @@ _main_idlerom:
                 mov     dword ptr [offset mem+i*4],eax
                 endm
 
+                ; read the ROMs and select the msx model
                 call    read_msx_rom
 
                 ; allocate 2*64kb to red buffer (used in Parrot engine)
@@ -697,15 +699,16 @@ _main_idlerom:
                 mov     ecx,2*65536/4
                 rep     stosd
 
-                ; allocate 16kb to msx vram
-                mov     eax,16384
+                ; allocate the msx vram
+                mov     eax,vramsize
                 call    _getmem
                 jc      no_memory
                 mov     msxvram,eax
 
                 ; clear msx vram
                 mov     edi,msxvram
-                mov     ecx,16384/4
+                mov     ecx,vramsize
+                shr     ecx,2
                 mov     eax,0
                 rep     stosd
 
@@ -2931,8 +2934,20 @@ read_msx_rom_msx2:
                 mov     eax,offset outemul99_msx2
                 mov     dword ptr [offset outportxx+099h*4],eax
 
+                mov     eax,offset outemul9B_msx2
+                mov     dword ptr [offset outportxx+09Bh*4],eax
+
+                mov     eax,offset inemul98_msx2
+                mov     dword ptr [offset inportxx+098h*4],eax
+
                 mov     eax,offset inemul99_msx2
                 mov     dword ptr [offset inportxx+099h*4],eax
+
+                ; 128kb of VRAM
+                mov     vramsize,128*1024
+
+                ; turn off video cache
+                mov     imagetype,0
                
                 ret
 

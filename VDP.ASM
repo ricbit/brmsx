@@ -49,6 +49,7 @@ public no_collision
 public render_col
 public sprite_collision
 public direct_color
+public eval_base_address_msx2
 
 ; DATA ---------------------------------------------------------------
 
@@ -2052,9 +2053,58 @@ eval_base_address:
 
 eval_base_address_begin:
                 ; first we need to determine the actual screen
+                mov     al,byte ptr [offset vdpregs+0]
+                shr     al,1
+                and     al,1
+                mov     ah,byte ptr [offset vdpregs+1]
+                shr     ah,2
+                and     ah,110b
+                or      al,ah
 
-                test    byte ptr [offset vdpregs+0],BIT_1
-                jz      eval_base_address_scr1
+                cmp     al,0
+                je      eval_screen1
+                cmp     al,1
+                je      eval_screen2
+                cmp     al,2
+                je      eval_screen3
+                jmp     eval_screen0
+
+; eval_base_address_msx2 ---------------------------------------------
+; evaluate the new bases for vdp tables 
+; MSX2 version
+
+eval_base_address_msx2:
+
+                mov     everyframe,0
+
+                ; zoomed sprites always turn off the video cache
+                test    byte ptr [offset vdpregs+1],BIT_0
+                jz      eval_base_address_begin_msx2
+
+                mov     everyframe,1
+
+eval_base_address_begin_msx2:
+                ; first we need to determine the actual screen
+                mov     al,byte ptr [offset vdpregs+0]
+                shr     al,1
+                and     al,7
+                mov     ah,byte ptr [offset vdpregs+1]
+                and     ah,11000b
+                or      al,ah
+
+                cmp     al,10000b
+                je      eval_screen0_msx2 ; 40 columns
+                
+                cmp     al,01000b
+                je      eval_screen3
+
+                cmp     al,00000b
+                je      eval_screen1
+
+                cmp     al,00001b
+                je      eval_screen2
+                
+                jmp     eval_screen0_msx2
 
 ; --------------------------------------------------------------------
 
@@ -2198,13 +2248,6 @@ eval_base_address_scr2_doc:
 
 ; --------------------------------------------------------------------
 
-eval_base_address_scr1:
-
-                test    byte ptr [offset vdpregs+1],(BIT_4 OR BIT_3)
-                jnz     eval_base_address_scr0
-
-; --------------------------------------------------------------------
-
 eval_screen1:
                 ; M3,M2,M1 reset - screen 1
 
@@ -2296,12 +2339,7 @@ eval_screen1:
 
 ; --------------------------------------------------------------------
 
-eval_base_address_scr0:
-                test    byte ptr [offset vdpregs+1],BIT_4
-                jz      eval_base_address_scr3
-
-; --------------------------------------------------------------------
-
+eval_screen0:
                 ; M3,M1 set, M2 reset - screen 0
 
                 mov     actualscreen,0
@@ -2357,7 +2395,63 @@ eval_base_address_scr0:
 
 ; --------------------------------------------------------------------
 
-eval_base_address_scr3:
+eval_screen0_msx2:
+                ; screen 0, 40 columns, MSX2 version
+
+                mov     actualscreen,0
+
+                movzx   eax,byte ptr [offset vdpregs+2]
+                and     al,07Fh
+                shl     eax,10
+                mov     nametable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+3]
+                shl     eax,6
+                mov     colortable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+4]
+                and     al,03Fh
+                shl     eax,11
+                mov     patterntable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+5]
+                and     al,07Fh
+                shl     eax,7
+                mov     sprattrtable,eax
+
+                movzx   eax,byte ptr [offset vdpregs+6]
+                and     al,07h
+                shl     eax,11
+                mov     sprpatttable,eax
+                
+                push    ecx edi
+                
+                mov     eax,0
+                mov     ecx,256/4
+                mov     edi,offset vrammapping
+                rep     stosd
+
+                mov     eax,offset dirty_screen0_nothing
+                mov     dword ptr [offset screenselect+0*4],eax
+                mov     eax,offset dirty_screen0_name
+                mov     dword ptr [offset screenselect+1*4],eax
+                mov     eax,offset dirty_screen0_pattern
+                mov     dword ptr [offset screenselect+2*4],eax
+                mov     eax,offset dirty_screen0_color
+                mov     dword ptr [offset screenselect+3*4],eax
+                mov     eax,offset dirty_screen0_sprattr
+                mov     dword ptr [offset screenselect+4*4],eax
+                mov     eax,offset dirty_screen0_sprpatt
+                mov     dword ptr [offset screenselect+5*4],eax
+                
+                pop     edi ecx
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+
+eval_screen3:
                 
                 ; M3,M2 set, M1 reset - screen 3
                 

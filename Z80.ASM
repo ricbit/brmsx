@@ -79,6 +79,8 @@ public inemul98
 public outemul98_msx2
 public outemul99_msx2
 public inemul99_msx2
+public inemul98_msx2
+public outemul9B_msx2
 
 public fetch
 public fetch1
@@ -457,6 +459,8 @@ vsyncflag       dd      0
 vdpaccess       dd      0
 vdptemp         db      0
 vdplookahead    db      0
+vdpindirect     db      0
+vdpindirectmode db      0
 vdpregs         db      64 dup (0)
 vdpstatus       db      0,0,080h,0,0,0,0,0
 
@@ -2187,6 +2191,12 @@ outemul98_msx2:
                 and     eax,03FFFh
                 mov     vdpaddresse,eax
                 
+                ; select page
+                movzx   eax,byte ptr [offset vdpregs+14]
+                and     eax,7
+                shl     eax,14
+                add     esi,eax
+
                 xor     eax,eax
                 mov     [ecx+esi],bl
                 ret
@@ -2222,29 +2232,39 @@ outemul99_read_msx2:
                 mov     vdpaddressl,bl
                 mov     ecx,vdpaddresse
                 mov     esi,msxvram
+
+                ; select page
+                movzx   eax,byte ptr [offset vdpregs+14]
+                and     eax,7
+                shl     eax,14
+                add     esi,eax
+
                 mov     bl,[esi+ecx]
                 mov     vdplookahead,bl
                 inc     ecx
                 and     ecx,03FFFh
                 mov     vdpaddresse,ecx
-                mov     vdpaccess,0
+                mov     eax,0
+                mov     vdpaccess,eax
                 ret
 
 outemul99b_msx2:     
                 ; write directly to a VDP register
                 and     ebx,00111111b
                 mov     al,vdptemp
-                mov     cl,byte ptr [offset vdpregs+ebx]
-                cmp     cl,al
-                je      _ret
+                ;mov     cl,byte ptr [offset vdpregs+ebx]
+                ;cmp     cl,al
+                ;je      _ret
                 mov     byte ptr [offset vdpregs+ebx],al
                 cmp     bl,7
                 je      set_border_color
                 cmp     bl,1
                 je      outemul99_checkirq_msx2
+                cmp     bl,17
+                je      outemul99_indirect_msx2
 outemul99_update_msx2:
                 mov     firstscreen,1
-                jmp     eval_base_address
+                jmp     eval_base_address_msx2
 
 outemul99_checkirq_msx2:
                 cmp     iline,0
@@ -2282,6 +2302,34 @@ outemul99_irqexit_msx2:
                 jne     outemul99_update_msx2
 
                 xor     eax,eax
+                ret
+
+outemul99_indirect_msx2:                
+                mov     bl,al
+                shr     bl,7
+                mov     vdpindirectmode,bl
+                and     al,03Fh
+                mov     vdpindirect,al
+                ret
+
+; --------------------------------------------------------------------
+; VDP indirect register write
+; MSX2 version
+
+outemul9B_msx2:
+                cmp     vdpindirectmode,0
+                jnz     outemul9B_single
+                
+                ; auto increment
+                movzx   eax,vdpindirect
+                mov     byte ptr [offset vdpregs+eax],bl
+                inc     eax
+                mov     vdpindirect,al
+                ret
+
+outemul9B_single:
+                movzx   eax,vdpindirect
+                mov     byte ptr [offset vdpregs+eax],bl
                 ret
 
 ; --------------------------------------------------------------------
@@ -2570,6 +2618,29 @@ inemul99:       mov     bl,vdpstatus
                 and     vdpstatus,00111111b
                 mov     vdpcond,0
                 mov     iline,0
+                ret
+
+; --------------------------------------------------------------------
+; VDP read VRAM
+; MSX2 version
+
+inemul98_msx2:       
+                mov     ecx,msxvram
+                mov     bl,vdplookahead
+                
+                ; select page
+                movzx   esi,byte ptr [offset vdpregs+14]
+                and     esi,7
+                shl     esi,14
+                add     esi,vdpaddresse
+
+                mov     bh,[ecx+esi]
+                and     esi,03FFFh
+                inc     esi
+                and     esi,03FFFh
+                mov     vdpaddresse,esi
+                mov     vdplookahead,bh
+                mov     vdpcond,0
                 ret
 
 ; --------------------------------------------------------------------
