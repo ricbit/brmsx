@@ -74,6 +74,7 @@ public set_correct_palette
 align 4
 
 include keyboard.inc
+include keyext.inc
 include palette.inc
 include guipal.inc
 include filpal.inc
@@ -100,6 +101,7 @@ exit_now        dd      0
 on_off          dd      1
 videomode       dd      0
 cpupaused       dd      0
+key_extended    dd      0
 
 clockrate       db      8 dup (0)
 measurestatus   dd      0
@@ -917,7 +919,11 @@ my_kb_irq_handler:
                 push    ds 
                 mov     ds,cs:_seldata
                 
-                in      al,060h                
+                in      al,060h
+
+                cmp     key_extended,1
+                je      my_kb_irq_handler_extended
+
                 cmp     al,44h
                 jne     my_kb_irq_handler1
                 mov     ds:exit_now,1
@@ -925,6 +931,9 @@ my_kb_irq_handler:
 my_kb_irq_handler1:
                 cmp     al,88
                 je      my_kb_irq_handler_f12
+
+                cmp     al,224
+                je      my_kb_irq_handler_extended_signal
                 
                 test    al,080h
                 jnz     my_kb_irq_handler2
@@ -933,7 +942,7 @@ my_kb_irq_handler1:
                 mov     cl,byte ptr [offset keyboardtable+eax*2+1]
                 xor     cl,255
                 and     byte ptr [offset keymatrix+ebx],cl
-                jmp     my_kb_irq_handler3
+                jmp     my_kb_irq_handler_exit
 
 my_kb_irq_handler2:                
                 and     eax,07fh
@@ -941,7 +950,7 @@ my_kb_irq_handler2:
                 mov     cl,byte ptr [offset keyboardtable+eax*2+1]
                 or      byte ptr [offset keymatrix+ebx],cl
 
-my_kb_irq_handler3:
+my_kb_irq_handler_exit:
 
                 mov     al,20h
                 out     20h,al
@@ -952,7 +961,29 @@ my_kb_irq_handler3:
 
 my_kb_irq_handler_f12:
                 xor     cpupaused,1
-                jmp     my_kb_irq_handler3
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_extended:
+                mov     key_extended,0
+                test    al,080h
+                jnz     my_kb_irq_handler_extended_released
+                and     eax,07fh
+                movzx   ebx,byte ptr [offset keyboard_ext+eax*2]
+                mov     cl,byte ptr [offset keyboard_ext+eax*2+1]
+                xor     cl,255
+                and     byte ptr [offset keymatrix+ebx],cl
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_extended_released:
+                and     eax,07fh
+                movzx   ebx,byte ptr [offset keyboard_ext+eax*2]
+                mov     cl,byte ptr [offset keyboard_ext+eax*2+1]
+                or      byte ptr [offset keymatrix+ebx],cl
+                jmp     my_kb_irq_handler_exit
+
+my_kb_irq_handler_extended_signal:
+                mov     key_extended,1
+                jmp     my_kb_irq_handler_exit
                 
 ; open_file ----------------------------------------------------------
 ; open a file

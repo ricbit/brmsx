@@ -41,7 +41,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.84',13,10
+msg00           db      'BrMSX 1.100',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -73,6 +73,7 @@ msg686          db      'Pentium Pro or better $'
 msgMMX          db      '(MMX)$'
 msgpoint        db      '.$'
 rom_name        db      'MSX.ROM',0
+disk_rom_name   db      'DISK.ROM',0
 cart1_name      db      'CART1.ROM',0
 drivea_name     db      'DRIVEA.DSK',0
 blasterenv      db      'BLASTER',0
@@ -95,6 +96,7 @@ dmatemp         dd      ?
 filenamelist    dd      ?
 vesaheader      dd      ?
 vesamodeinfo    dd      ?
+diskrom         dd      ?
 
 ; --------------------------------------------------------------------
 
@@ -267,6 +269,12 @@ _main0:
                 add     eax,2000h
                 mov     dword ptr [offset slot2+56],eax
 
+                ; clear msx ram
+                mov     ecx,65536/4
+                mov     edi,msxram
+                mov     eax,0
+                rep     stosd
+
                 ; alloc always 256kb to cart1                
                 mov     eax,256*1024
                 call     _getmem
@@ -301,35 +309,54 @@ _main0:
                 ;jc      no_memory
                 ;mov     dirtycode,eax
 
-                ; allocate 720kb to disk image
-                ;mov     eax,720*1024
-                ;call    _gethimem
-                ;jc      no_memory
-                ;mov     diskimage,eax
-                
                 ; read disk image from file
                 mov     edx,offset drivea_name
                 call    open_file
-                jc      _main3
+                jc      _main_nodrive
                 call    read_size_file
                 cmp     eax,720*1024
                 jne     disk_size_not_supported
 
+                ; allocate 720kb to disk image
+                mov     eax,720*1024
+                call    _getmem
+                jc      no_memory
+                mov     diskimage,eax
+                
                 mov     ebx,720/32
                 mov     edi,diskimage
 _main4:               
                 mov     ecx,32768
                 mov     edx,transf_buffer
+                push    ebx
                 call    read_file
+                pop     ebx
                 mov     esi,transf_buffer
                 mov     ecx,32768/4
                 rep     movsd
-                add     edi,32768
                 dec     ebx
                 jnz     _main4
 
+                ; allocate 16kb for disk.rom
+                mov     eax,16*1024
+                call    _getmem
+                jc      no_memory
+                mov     diskrom,eax
+
+                ; read disk.rom from disk
+                mov     edx,offset disk_rom_name
+                call    open_file
+                mov     edx,diskrom
+                mov     ecx,16*1024
+                call    read_file
+
+                mov     eax,diskrom
+                mov     dword ptr [offset slot3+16],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot3+16+8],eax
+
                 ; patch for PHYDIO
-                mov     eax,dword ptr [offset slot1+16]
+                mov     eax,dword ptr [offset slot3+16]
                 mov     byte ptr [eax+010h],0edh
                 mov     byte ptr [eax+011h],0ffh
 
@@ -341,7 +368,7 @@ _main4:
                 mov     byte ptr [eax+016h],0edh
                 mov     byte ptr [eax+017h],0ffh
 
-_main3:
+_main_nodrive:
                 ; if the computer is a pentium
                 ; then measure its speed
                 cmp     pentiumfound,1
@@ -651,7 +678,7 @@ read_rom:
                 call    read_size_file
                 push    eax
                 mov     eax,cart1
-                mov     ebx,0
+                mov     ebx,1
                 mov     dword ptr [offset slot1+16],eax
                 mov     dword ptr [offset slot1+16+4],ebx
                 add     eax,2000h
@@ -677,6 +704,21 @@ read_rom1:
                 mov     esi,transf_buffer
                 mov     edi,cart1
                 rep     movsb
+                mov     eax,cart1
+                cmp     word ptr [eax+2],0
+                jne     _ret
+                cmp     word ptr [eax+8],0
+                jne     read_rom_basic
+                ret
+
+read_rom_basic:
+                mov     ecx,msxrom
+                mov     dword ptr [offset slot1+16],ecx
+                mov     dword ptr [offset slot1+16+8],ecx
+                mov     ecx,cart1
+                mov     dword ptr [offset slot1+32],ecx
+                add     ecx,2000h
+                mov     dword ptr [offset slot1+32+8],ecx
                 ret
 
 read_megarom:

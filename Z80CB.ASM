@@ -167,6 +167,30 @@ SRAHL           CB2E
 ; CB 2F - SRA A
 SRAREG          CB2F,dh
 
+; CB 30 - SLL B
+SLLREG          CB30,regb
+
+; CB 31 - SLL C
+SLLREG          CB31,regc
+
+; CB 32 - SLL D
+SLLREG          CB32,regd
+
+; CB 33 - SLL E
+SLLREG          CB33,rege
+
+; CB 34 - SLL H
+SLLREG          CB34,regh
+
+; CB 35 - SLL L
+SLLREG          CB35,regl
+
+; CB 36 - SLL (HL)
+SLLHL           CB36
+
+; CB 37 - SLL A
+SLLREG          CB37,dh
+
 ; CB 38 - SRL B
 SRLREG          CB38,regb
 

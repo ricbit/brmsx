@@ -11,9 +11,9 @@ void main (int argc, char **argv) {
 
   buff1=(unsigned char *) malloc (131072);
   file=open (argv[1],O_BINARY|O_RDONLY);
-  read (file,buff1,131072);
+  read (file,buff1,512);
   close (file);
-  for (i=0; i<131072; i++)
+  for (i=0; i<512; i++)
     if (buff1[i]!=0) printf ("error at %06x:%02x\n",i,buff1[i]);
 }
 

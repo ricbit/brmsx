@@ -260,7 +260,8 @@ change_sound:
 ; --------------------------------------------------------------------
 
 changebargraph:
-                xor     bargraphmode,1
+                mov     eax,pentiumfound
+                xor     bargraphmode,eax
                 ret
 
 ; --------------------------------------------------------------------

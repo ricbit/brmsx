@@ -1,257 +1,513 @@
 DAA_select_table:
-		dd	DAA3_table	;00
-		dd	DAA1_table	;01
-		dd	DAA4_table	;02
-		dd	DAA4_table	;03
-		dd	DAA3_table	;04
-		dd	DAA1_table	;05
-		dd	DAA4_table	;06
-		dd	DAA4_table	;07
-		dd	DAA3_table	;08
-		dd	DAA1_table	;09
-		dd	DAA4_table	;0a
-		dd	DAA4_table	;0b
-		dd	DAA3_table	;0c
-		dd	DAA1_table	;0d
-		dd	DAA4_table	;0e
-		dd	DAA4_table	;0f
-		dd	DAA2_table	;10
-		dd	DAA4_table	;11
-		dd	DAA4_table	;12
-		dd	DAA4_table	;13
-		dd	DAA2_table	;14
-		dd	DAA4_table	;15
-		dd	DAA4_table	;16
-		dd	DAA4_table	;17
-		dd	DAA2_table	;18
-		dd	DAA4_table	;19
-		dd	DAA4_table	;1a
-		dd	DAA4_table	;1b
-		dd	DAA2_table	;1c
-		dd	DAA4_table	;1d
-		dd	DAA4_table	;1e
-		dd	DAA4_table	;1f
-		dd	DAA3_table	;20
-		dd	DAA1_table	;21
-		dd	DAA4_table	;22
-		dd	DAA4_table	;23
-		dd	DAA3_table	;24
-		dd	DAA1_table	;25
-		dd	DAA4_table	;26
-		dd	DAA4_table	;27
-		dd	DAA3_table	;28
-		dd	DAA1_table	;29
-		dd	DAA4_table	;2a
-		dd	DAA4_table	;2b
-		dd	DAA3_table	;2c
-		dd	DAA1_table	;2d
-		dd	DAA4_table	;2e
-		dd	DAA4_table	;2f
-		dd	DAA2_table	;30
-		dd	DAA4_table	;31
-		dd	DAA4_table	;32
-		dd	DAA4_table	;33
-		dd	DAA2_table	;34
-		dd	DAA4_table	;35
-		dd	DAA4_table	;36
-		dd	DAA4_table	;37
-		dd	DAA2_table	;38
-		dd	DAA4_table	;39
-		dd	DAA4_table	;3a
-		dd	DAA4_table	;3b
-		dd	DAA2_table	;3c
-		dd	DAA4_table	;3d
-		dd	DAA4_table	;3e
-		dd	DAA4_table	;3f
-		dd	DAA3_table	;40
-		dd	DAA1_table	;41
-		dd	DAA4_table	;42
-		dd	DAA4_table	;43
-		dd	DAA3_table	;44
-		dd	DAA1_table	;45
-		dd	DAA4_table	;46
-		dd	DAA4_table	;47
-		dd	DAA3_table	;48
-		dd	DAA1_table	;49
-		dd	DAA4_table	;4a
-		dd	DAA4_table	;4b
-		dd	DAA3_table	;4c
-		dd	DAA1_table	;4d
-		dd	DAA4_table	;4e
-		dd	DAA4_table	;4f
-		dd	DAA2_table	;50
-		dd	DAA4_table	;51
-		dd	DAA4_table	;52
-		dd	DAA4_table	;53
-		dd	DAA2_table	;54
-		dd	DAA4_table	;55
-		dd	DAA4_table	;56
-		dd	DAA4_table	;57
-		dd	DAA2_table	;58
-		dd	DAA4_table	;59
-		dd	DAA4_table	;5a
-		dd	DAA4_table	;5b
-		dd	DAA2_table	;5c
-		dd	DAA4_table	;5d
-		dd	DAA4_table	;5e
-		dd	DAA4_table	;5f
-		dd	DAA3_table	;60
-		dd	DAA1_table	;61
-		dd	DAA4_table	;62
-		dd	DAA4_table	;63
-		dd	DAA3_table	;64
-		dd	DAA1_table	;65
-		dd	DAA4_table	;66
-		dd	DAA4_table	;67
-		dd	DAA3_table	;68
-		dd	DAA1_table	;69
-		dd	DAA4_table	;6a
-		dd	DAA4_table	;6b
-		dd	DAA3_table	;6c
-		dd	DAA1_table	;6d
-		dd	DAA4_table	;6e
-		dd	DAA4_table	;6f
-		dd	DAA2_table	;70
-		dd	DAA4_table	;71
-		dd	DAA4_table	;72
-		dd	DAA4_table	;73
-		dd	DAA2_table	;74
-		dd	DAA4_table	;75
-		dd	DAA4_table	;76
-		dd	DAA4_table	;77
-		dd	DAA2_table	;78
-		dd	DAA4_table	;79
-		dd	DAA4_table	;7a
-		dd	DAA4_table	;7b
-		dd	DAA2_table	;7c
-		dd	DAA4_table	;7d
-		dd	DAA4_table	;7e
-		dd	DAA4_table	;7f
-		dd	DAA3_table	;80
-		dd	DAA1_table	;81
-		dd	DAA4_table	;82
-		dd	DAA4_table	;83
-		dd	DAA3_table	;84
-		dd	DAA1_table	;85
-		dd	DAA4_table	;86
-		dd	DAA4_table	;87
-		dd	DAA3_table	;88
-		dd	DAA1_table	;89
-		dd	DAA4_table	;8a
-		dd	DAA4_table	;8b
-		dd	DAA3_table	;8c
-		dd	DAA1_table	;8d
-		dd	DAA4_table	;8e
-		dd	DAA4_table	;8f
-		dd	DAA2_table	;90
-		dd	DAA4_table	;91
-		dd	DAA4_table	;92
-		dd	DAA4_table	;93
-		dd	DAA2_table	;94
-		dd	DAA4_table	;95
-		dd	DAA4_table	;96
-		dd	DAA4_table	;97
-		dd	DAA2_table	;98
-		dd	DAA4_table	;99
-		dd	DAA4_table	;9a
-		dd	DAA4_table	;9b
-		dd	DAA2_table	;9c
-		dd	DAA4_table	;9d
-		dd	DAA4_table	;9e
-		dd	DAA4_table	;9f
-		dd	DAA3_table	;a0
-		dd	DAA1_table	;a1
-		dd	DAA4_table	;a2
-		dd	DAA4_table	;a3
-		dd	DAA3_table	;a4
-		dd	DAA1_table	;a5
-		dd	DAA4_table	;a6
-		dd	DAA4_table	;a7
-		dd	DAA3_table	;a8
-		dd	DAA1_table	;a9
-		dd	DAA4_table	;aa
-		dd	DAA4_table	;ab
-		dd	DAA3_table	;ac
-		dd	DAA1_table	;ad
-		dd	DAA4_table	;ae
-		dd	DAA4_table	;af
-		dd	DAA2_table	;b0
-		dd	DAA4_table	;b1
-		dd	DAA4_table	;b2
-		dd	DAA4_table	;b3
-		dd	DAA2_table	;b4
-		dd	DAA4_table	;b5
-		dd	DAA4_table	;b6
-		dd	DAA4_table	;b7
-		dd	DAA2_table	;b8
-		dd	DAA4_table	;b9
-		dd	DAA4_table	;ba
-		dd	DAA4_table	;bb
-		dd	DAA2_table	;bc
-		dd	DAA4_table	;bd
-		dd	DAA4_table	;be
-		dd	DAA4_table	;bf
-		dd	DAA3_table	;c0
-		dd	DAA1_table	;c1
-		dd	DAA4_table	;c2
-		dd	DAA4_table	;c3
-		dd	DAA3_table	;c4
-		dd	DAA1_table	;c5
-		dd	DAA4_table	;c6
-		dd	DAA4_table	;c7
-		dd	DAA3_table	;c8
-		dd	DAA1_table	;c9
-		dd	DAA4_table	;ca
-		dd	DAA4_table	;cb
-		dd	DAA3_table	;cc
-		dd	DAA1_table	;cd
-		dd	DAA4_table	;ce
-		dd	DAA4_table	;cf
-		dd	DAA2_table	;d0
-		dd	DAA4_table	;d1
-		dd	DAA4_table	;d2
-		dd	DAA4_table	;d3
-		dd	DAA2_table	;d4
-		dd	DAA4_table	;d5
-		dd	DAA4_table	;d6
-		dd	DAA4_table	;d7
-		dd	DAA2_table	;d8
-		dd	DAA4_table	;d9
-		dd	DAA4_table	;da
-		dd	DAA4_table	;db
-		dd	DAA2_table	;dc
-		dd	DAA4_table	;dd
-		dd	DAA4_table	;de
-		dd	DAA4_table	;df
-		dd	DAA3_table	;e0
-		dd	DAA1_table	;e1
-		dd	DAA4_table	;e2
-		dd	DAA4_table	;e3
-		dd	DAA3_table	;e4
-		dd	DAA1_table	;e5
-		dd	DAA4_table	;e6
-		dd	DAA4_table	;e7
-		dd	DAA3_table	;e8
-		dd	DAA1_table	;e9
-		dd	DAA4_table	;ea
-		dd	DAA4_table	;eb
-		dd	DAA3_table	;ec
-		dd	DAA1_table	;ed
-		dd	DAA4_table	;ee
-		dd	DAA4_table	;ef
-		dd	DAA2_table	;f0
-		dd	DAA4_table	;f1
-		dd	DAA4_table	;f2
-		dd	DAA4_table	;f3
-		dd	DAA2_table	;f4
-		dd	DAA4_table	;f5
-		dd	DAA4_table	;f6
-		dd	DAA4_table	;f7
-		dd	DAA2_table	;f8
-		dd	DAA4_table	;f9
-		dd	DAA4_table	;fa
-		dd	DAA4_table	;fb
-		dd	DAA2_table	;fc
-		dd	DAA4_table	;fd
-		dd	DAA4_table	;fe
-		dd	DAA4_table	;ff
+	; 00
+	db	0
+	; 01
+	db	1
+	; 02
+	db	2
+	; 03
+	db	3
+	; 04
+	db	0
+	; 05
+	db	1
+	; 06
+	db	2
+	; 07
+	db	3
+	; 08
+	db	0
+	; 09
+	db	1
+	; 0a
+	db	2
+	; 0b
+	db	3
+	; 0c
+	db	0
+	; 0d
+	db	1
+	; 0e
+	db	2
+	; 0f
+	db	3
+	; 10
+	db	4
+	; 11
+	db	5
+	; 12
+	db	6
+	; 13
+	db	7
+	; 14
+	db	4
+	; 15
+	db	5
+	; 16
+	db	6
+	; 17
+	db	7
+	; 18
+	db	4
+	; 19
+	db	5
+	; 1a
+	db	6
+	; 1b
+	db	7
+	; 1c
+	db	4
+	; 1d
+	db	5
+	; 1e
+	db	6
+	; 1f
+	db	7
+	; 20
+	db	0
+	; 21
+	db	1
+	; 22
+	db	2
+	; 23
+	db	3
+	; 24
+	db	0
+	; 25
+	db	1
+	; 26
+	db	2
+	; 27
+	db	3
+	; 28
+	db	0
+	; 29
+	db	1
+	; 2a
+	db	2
+	; 2b
+	db	3
+	; 2c
+	db	0
+	; 2d
+	db	1
+	; 2e
+	db	2
+	; 2f
+	db	3
+	; 30
+	db	4
+	; 31
+	db	5
+	; 32
+	db	6
+	; 33
+	db	7
+	; 34
+	db	4
+	; 35
+	db	5
+	; 36
+	db	6
+	; 37
+	db	7
+	; 38
+	db	4
+	; 39
+	db	5
+	; 3a
+	db	6
+	; 3b
+	db	7
+	; 3c
+	db	4
+	; 3d
+	db	5
+	; 3e
+	db	6
+	; 3f
+	db	7
+	; 40
+	db	0
+	; 41
+	db	1
+	; 42
+	db	2
+	; 43
+	db	3
+	; 44
+	db	0
+	; 45
+	db	1
+	; 46
+	db	2
+	; 47
+	db	3
+	; 48
+	db	0
+	; 49
+	db	1
+	; 4a
+	db	2
+	; 4b
+	db	3
+	; 4c
+	db	0
+	; 4d
+	db	1
+	; 4e
+	db	2
+	; 4f
+	db	3
+	; 50
+	db	4
+	; 51
+	db	5
+	; 52
+	db	6
+	; 53
+	db	7
+	; 54
+	db	4
+	; 55
+	db	5
+	; 56
+	db	6
+	; 57
+	db	7
+	; 58
+	db	4
+	; 59
+	db	5
+	; 5a
+	db	6
+	; 5b
+	db	7
+	; 5c
+	db	4
+	; 5d
+	db	5
+	; 5e
+	db	6
+	; 5f
+	db	7
+	; 60
+	db	0
+	; 61
+	db	1
+	; 62
+	db	2
+	; 63
+	db	3
+	; 64
+	db	0
+	; 65
+	db	1
+	; 66
+	db	2
+	; 67
+	db	3
+	; 68
+	db	0
+	; 69
+	db	1
+	; 6a
+	db	2
+	; 6b
+	db	3
+	; 6c
+	db	0
+	; 6d
+	db	1
+	; 6e
+	db	2
+	; 6f
+	db	3
+	; 70
+	db	4
+	; 71
+	db	5
+	; 72
+	db	6
+	; 73
+	db	7
+	; 74
+	db	4
+	; 75
+	db	5
+	; 76
+	db	6
+	; 77
+	db	7
+	; 78
+	db	4
+	; 79
+	db	5
+	; 7a
+	db	6
+	; 7b
+	db	7
+	; 7c
+	db	4
+	; 7d
+	db	5
+	; 7e
+	db	6
+	; 7f
+	db	7
+	; 80
+	db	0
+	; 81
+	db	1
+	; 82
+	db	2
+	; 83
+	db	3
+	; 84
+	db	0
+	; 85
+	db	1
+	; 86
+	db	2
+	; 87
+	db	3
+	; 88
+	db	0
+	; 89
+	db	1
+	; 8a
+	db	2
+	; 8b
+	db	3
+	; 8c
+	db	0
+	; 8d
+	db	1
+	; 8e
+	db	2
+	; 8f
+	db	3
+	; 90
+	db	4
+	; 91
+	db	5
+	; 92
+	db	6
+	; 93
+	db	7
+	; 94
+	db	4
+	; 95
+	db	5
+	; 96
+	db	6
+	; 97
+	db	7
+	; 98
+	db	4
+	; 99
+	db	5
+	; 9a
+	db	6
+	; 9b
+	db	7
+	; 9c
+	db	4
+	; 9d
+	db	5
+	; 9e
+	db	6
+	; 9f
+	db	7
+	; a0
+	db	0
+	; a1
+	db	1
+	; a2
+	db	2
+	; a3
+	db	3
+	; a4
+	db	0
+	; a5
+	db	1
+	; a6
+	db	2
+	; a7
+	db	3
+	; a8
+	db	0
+	; a9
+	db	1
+	; aa
+	db	2
+	; ab
+	db	3
+	; ac
+	db	0
+	; ad
+	db	1
+	; ae
+	db	2
+	; af
+	db	3
+	; b0
+	db	4
+	; b1
+	db	5
+	; b2
+	db	6
+	; b3
+	db	7
+	; b4
+	db	4
+	; b5
+	db	5
+	; b6
+	db	6
+	; b7
+	db	7
+	; b8
+	db	4
+	; b9
+	db	5
+	; ba
+	db	6
+	; bb
+	db	7
+	; bc
+	db	4
+	; bd
+	db	5
+	; be
+	db	6
+	; bf
+	db	7
+	; c0
+	db	0
+	; c1
+	db	1
+	; c2
+	db	2
+	; c3
+	db	3
+	; c4
+	db	0
+	; c5
+	db	1
+	; c6
+	db	2
+	; c7
+	db	3
+	; c8
+	db	0
+	; c9
+	db	1
+	; ca
+	db	2
+	; cb
+	db	3
+	; cc
+	db	0
+	; cd
+	db	1
+	; ce
+	db	2
+	; cf
+	db	3
+	; d0
+	db	4
+	; d1
+	db	5
+	; d2
+	db	6
+	; d3
+	db	7
+	; d4
+	db	4
+	; d5
+	db	5
+	; d6
+	db	6
+	; d7
+	db	7
+	; d8
+	db	4
+	; d9
+	db	5
+	; da
+	db	6
+	; db
+	db	7
+	; dc
+	db	4
+	; dd
+	db	5
+	; de
+	db	6
+	; df
+	db	7
+	; e0
+	db	0
+	; e1
+	db	1
+	; e2
+	db	2
+	; e3
+	db	3
+	; e4
+	db	0
+	; e5
+	db	1
+	; e6
+	db	2
+	; e7
+	db	3
+	; e8
+	db	0
+	; e9
+	db	1
+	; ea
+	db	2
+	; eb
+	db	3
+	; ec
+	db	0
+	; ed
+	db	1
+	; ee
+	db	2
+	; ef
+	db	3
+	; f0
+	db	4
+	; f1
+	db	5
+	; f2
+	db	6
+	; f3
+	db	7
+	; f4
+	db	4
+	; f5
+	db	5
+	; f6
+	db	6
+	; f7
+	db	7
+	; f8
+	db	4
+	; f9
+	db	5
+	; fa
+	db	6
+	; fb
+	db	7
+	; fc
+	db	4
+	; fd
+	db	5
+	; fe
+	db	6
+	; ff
+	db	7

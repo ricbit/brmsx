@@ -633,6 +633,9 @@ PUSHREGW        C5,regebc,11+1
 ; C6 - ADD A,dd
 ADDIMM          C6
 
+; C7 - RST 0
+OPRST           C7,0
+
 ; C8 - RET Z
 RETCC           C8,ZERO_FLAG,jnz
 

@@ -47,14 +47,14 @@ psetCBxx:
 	psetCB2D: dd prinCB2D
 	psetCB2E: dd prinCB2E
 	psetCB2F: dd prinCB2F
-	psetCB30: dd prinXX
-	psetCB31: dd prinXX
-	psetCB32: dd prinXX
-	psetCB33: dd prinXX
-	psetCB34: dd prinXX
-	psetCB35: dd prinXX
-	psetCB36: dd prinXX
-	psetCB37: dd prinXX
+	psetCB30: dd prinCB30
+	psetCB31: dd prinCB31
+	psetCB32: dd prinCB32
+	psetCB33: dd prinCB33
+	psetCB34: dd prinCB34
+	psetCB35: dd prinCB35
+	psetCB36: dd prinCB36
+	psetCB37: dd prinCB37
 	psetCB38: dd prinCB38
 	psetCB39: dd prinCB39
 	psetCB3A: dd prinCB3A

@@ -11,16 +11,16 @@
 be the fastest and most accurate MSX emulator ever created. The current 
 version of BRMSX emulates an MSX-1 with following hardware:
 
-        Zilog Z80 CPU at 3.57 MHz
-        standard VDP Texas TMS9929
-        standard PSG G.I. AY-3-8910
-        standard PPI Intel 8255
+        CPU: Zilog Z80 at 3.57 MHz
+        VDP: Texas TMS9918
+        PSG: G.I. AY-3-8910
+        PPI: Intel 8255
         support for external ROM cartridges (including Konami MegaROM)
 
 2. Requirements
 
         A 32-bit 80x86 processor is required.
-        BRMSX runs at full framerate in a 486sx25 (without sound).
+        BRMSX runs at full framerate in a 486sx25.
 
         You will need 48kb of free RAM below 640kb, 
         and 327kb of any other memory (may be raw memory, XMS or EMS).
@@ -30,14 +30,11 @@ version of BRMSX emulates an MSX-1 with following hardware:
         but BRMSX may use the special MMX opcodes to run faster.
 
         A VGA board with 256kb of video memory is required.
-        SVGA is not required in this version.
+        SVGA with a VESA 2.0 driver is required to enable the TV emulation.
         The special 256x200 may not work in older monitors.
 
         Sound emulation requires a Sound Blaster compatible card,
         capable of auto-init DMA at 45455 Hz.
-        BRMSX only supports IRQ from 0 to 9 and DMA from 0 to 3.
-        Please contact me if you Sound Blaster is not configured in
-        the above settings.
 
         Multiplayer game requires in both sides an 
         UART capable of 57600 bauds.

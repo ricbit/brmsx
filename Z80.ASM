@@ -156,6 +156,7 @@ public CP_table
 public CPL_table
 public DAA_table
 public DAA_select_table
+public LDI_table
 
 ; DATA ---------------------------------------------------------------
 
@@ -179,17 +180,23 @@ include aritn.inc
 include pvs53.inc
 include pvn53.inc
 include neg.inc
+
+;include daa.inc
+;include daa1.inc
+;include daa2.inc
+;include daa3.inc
+;include daa4.inc
+;include daas.inc
+
 include daa.inc
-include daa1.inc
-include daa2.inc
-include daa3.inc
-include daa4.inc
 include daas.inc
+
 include inc.inc
 include dec.inc
 include int.inc
 include cp.inc
 include cpl.inc
+include ldi.inc
 
 align 4
 
@@ -1058,52 +1065,52 @@ outemulA8:      mov     prim_slotreg,bl
                 ; frame 0
                 and     ebx,03h
                 shl     ebx,6
-                mov     ecx,[offset slot+ebx]
+                mov     ecx,dword ptr [offset slot+ebx]
                 mov     mem00,ecx
-                mov     ecx,[offset slot+ebx+8]
+                mov     ecx,dword ptr [offset slot+ebx+8]
                 mov     mem20,ecx
-                mov     ecx,[offset slot+ebx+4]
+                mov     ecx,dword ptr [offset slot+ebx+4]
                 mov     memlock00,ecx
-                mov     ecx,[offset slot+ebx+4+8]
+                mov     ecx,dword ptr [offset slot+ebx+4+8]
                 mov     memlock20,ecx
                 ; frame 1
                 mov     bl,prim_slotreg
                 shr     bl,2
                 and     ebx,03h
                 shl     ebx,6
-                mov     ecx,[offset slot+ebx+16]
+                mov     ecx,dword ptr [offset slot+ebx+16]
                 mov     mem40,ecx
-                mov     ecx,[offset slot+ebx+16+8]
+                mov     ecx,dword ptr [offset slot+ebx+16+8]
                 mov     mem60,ecx
-                mov     ecx,[offset slot+ebx+16+4]
+                mov     ecx,dword ptr [offset slot+ebx+16+4]
                 mov     memlock40,ecx
-                mov     ecx,[offset slot+ebx+16+4+8]
+                mov     ecx,dword ptr [offset slot+ebx+16+4+8]
                 mov     memlock60,ecx
                 ; frame 2
                 mov     bl,prim_slotreg
                 shr     bl,4
                 and     ebx,03h
                 shl     ebx,6
-                mov     ecx,[offset slot+ebx+32]
+                mov     ecx,dword ptr [offset slot+ebx+32]
                 mov     mem80,ecx
-                mov     ecx,[offset slot+ebx+32+8]
+                mov     ecx,dword ptr [offset slot+ebx+32+8]
                 mov     memA0,ecx
-                mov     ecx,[offset slot+ebx+32+4]
+                mov     ecx,dword ptr [offset slot+ebx+32+4]
                 mov     memlock80,ecx
-                mov     ecx,[offset slot+ebx+32+4+8]
+                mov     ecx,dword ptr [offset slot+ebx+32+4+8]
                 mov     memlockA0,ecx
                 ; frame 3
                 mov     bl,prim_slotreg
                 shr     bl,6
                 and     ebx,03h
                 shl     ebx,6
-                mov     ecx,[offset slot+ebx+48]
+                mov     ecx,dword ptr [offset slot+ebx+48]
                 mov     memC0,ecx
-                mov     ecx,[offset slot+ebx+48+8]
+                mov     ecx,dword ptr [offset slot+ebx+48+8]
                 mov     memE0,ecx
-                mov     ecx,[offset slot+ebx+48+4]
+                mov     ecx,dword ptr [offset slot+ebx+48+4]
                 mov     memlockC0,ecx
-                mov     ecx,[offset slot+ebx+48+4+8]
+                mov     ecx,dword ptr [offset slot+ebx+48+4+8]
                 mov     memlockE0,ecx
                 ret
 

@@ -44,18 +44,39 @@ first version with rcs
 
 RCS file: RCS/BRMSX.ASM
 Working file: BRMSX.ASM
-head: 1.88
+head: 1.93
 branch:
 locks: strict
-	Ricardo: 1.88
+	Ricardo: 1.93
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 15;	selected revisions: 15
+total revisions: 20;	selected revisions: 20
 description:
 startup file
 ----------------------------
-revision 1.88	locked by: Ricardo;
+revision 1.93	locked by: Ricardo;
+date: 1998/02/18 06:11:37;  author: Ricardo;  state: Exp;  lines: +1 -1
+full working version
+----------------------------
+revision 1.92
+date: 1998/02/18 02:33:42;  author: Ricardo;  state: Exp;  lines: +34 -9
+fixed sound bug on "Ping Pong"
+now setting an envelope turns off the sound for that channel
+----------------------------
+revision 1.91
+date: 1998/02/16 06:04:36;  author: Ricardo;  state: Exp;  lines: +2 -1
+fixed rom loading: now the roms are really read-only
+----------------------------
+revision 1.90
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +21 -5
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.89
+date: 1998/02/04 06:42:08;  author: Ricardo;  state: Exp;  lines: +1 -1
+changed version number
+----------------------------
+revision 1.88
 date: 1998/02/04 04:02:27;  author: Ricardo;  state: Exp;  lines: +19 -0
 correct border color on 512x384 mode
 disable 512x384 mode when there is no VESA2 driver
@@ -179,18 +200,23 @@ first version with rcs
 
 RCS file: RCS/DEBUG.ASM
 Working file: DEBUG.ASM
-head: 1.92
+head: 1.93
 branch:
 locks: strict
-	Ricardo: 1.92
+	Ricardo: 1.93
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 19;	selected revisions: 19
+total revisions: 20;	selected revisions: 20
 description:
 code of debugger
 ----------------------------
-revision 1.92	locked by: Ricardo;
+revision 1.93	locked by: Ricardo;
+date: 1998/02/13 17:37:04;  author: Ricardo;  state: Exp;  lines: +2 -1
+bar graph cannot be enabled on the gui
+if the computer is not a pentium
+----------------------------
+revision 1.92
 date: 1998/02/04 04:02:27;  author: Ricardo;  state: Exp;  lines: +9 -0
 correct border color on 512x384 mode
 disable 512x384 mode when there is no VESA2 driver
@@ -273,19 +299,36 @@ first version with rcs
 
 RCS file: RCS/GUI.ASM
 Working file: GUI.ASM
-head: 1.94
+head: 1.98
 branch:
 locks: strict
-	Ricardo: 1.94
+	Ricardo: 1.98
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 21;	selected revisions: 21
+total revisions: 25;	selected revisions: 25
 description:
 GUI code
 including logo and performance bars
 ----------------------------
-revision 1.94	locked by: Ricardo;
+revision 1.98	locked by: Ricardo;
+date: 1998/02/16 06:04:36;  author: Ricardo;  state: Exp;  lines: +1 -1
+fixed rom loading: now the roms are really read-only
+----------------------------
+revision 1.97
+date: 1998/02/16 02:52:12;  author: Ricardo;  state: Exp;  lines: +1 -1
+fixed flag affection for some Z80 opcodes
+----------------------------
+revision 1.96
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +2 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.95
+date: 1998/02/04 06:40:21;  author: Ricardo;  state: Exp;  lines: +6 -1
+fixed minor bug: there is no more garbage on screen
+when cursor loses focus on load_rom menu
+----------------------------
+revision 1.94
 date: 1998/02/04 06:34:57;  author: Ricardo;  state: Exp;  lines: +13 -3
 scroll bar working in all cases
 ----------------------------
@@ -373,19 +416,23 @@ first version with rcs
 
 RCS file: RCS/IO.ASM
 Working file: IO.ASM
-head: 1.83
+head: 1.84
 branch:
 locks: strict
-	Ricardo: 1.83
+	Ricardo: 1.84
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 10;	selected revisions: 10
+total revisions: 11;	selected revisions: 11
 description:
 I/O functions
 interface with MS-DOS and hardware-level functions
 ----------------------------
-revision 1.83	locked by: Ricardo;
+revision 1.84	locked by: Ricardo;
+date: 1998/02/15 23:04:40;  author: Ricardo;  state: Exp;  lines: +35 -4
+extended keys on keyboard handler
+----------------------------
+revision 1.83
 date: 1998/02/04 05:04:41;  author: Ricardo;  state: Exp;  lines: +200 -0
 fixed lots of bugs in screen 0
 ----------------------------
@@ -459,18 +506,34 @@ Initial revision
 
 RCS file: RCS/PATCH.ASM
 Working file: PATCH.ASM
-head: 1.74
+head: 1.78
 branch:
 locks: strict
-	Ricardo: 1.74
+	Ricardo: 1.78
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 5;	selected revisions: 5
 description:
 MSX BIOS patches
 ----------------------------
-revision 1.74	locked by: Ricardo;
+revision 1.78	locked by: Ricardo;
+date: 1998/02/18 06:11:37;  author: Ricardo;  state: Exp;  lines: +7 -1
+write protected the disk
+----------------------------
+revision 1.77
+date: 1998/02/16 02:52:12;  author: Ricardo;  state: Exp;  lines: +7 -2
+fixed flag affection for some Z80 opcodes
+----------------------------
+revision 1.76
+date: 1998/02/13 17:05:04;  author: Ricardo;  state: Exp;  lines: +4 -1
+fixed disk access
+----------------------------
+revision 1.75
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +22 -41
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.74
 date: 1997/12/31 08:27:39;  author: Ricardo;  state: Exp;
 first version with rcs
 =============================================================================
@@ -513,54 +576,85 @@ first version with rcs
 
 RCS file: RCS/PRINT.ASM
 Working file: PRINT.ASM
-head: 1.74
+head: 1.75
 branch:
 locks: strict
-	Ricardo: 1.74
+	Ricardo: 1.75
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
 code for disassembler
 ----------------------------
-revision 1.74	locked by: Ricardo;
+revision 1.75	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +7 -132
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.74
 date: 1997/12/31 08:27:39;  author: Ricardo;  state: Exp;
 first version with rcs
 =============================================================================
 
 RCS file: RCS/PRINTCB.ASM
 Working file: PRINTCB.ASM
-head: 1.74
+head: 1.75
 branch:
 locks: strict
-	Ricardo: 1.74
+	Ricardo: 1.75
+access list:
+symbolic names:
+keyword substitution: kv
+total revisions: 2;	selected revisions: 2
+description:
+disassembler (CB and ED codes)
+----------------------------
+revision 1.75	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +11 -1
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.74
+date: 1997/12/31 08:27:39;  author: Ricardo;  state: Exp;
+first version with rcs
+=============================================================================
+
+RCS file: RCS/PRINTDD.ASM
+Working file: PRINTDD.ASM
+head: 1.1
+branch:
+locks: strict
+	Ricardo: 1.1
 access list:
 symbolic names:
 keyword substitution: kv
 total revisions: 1;	selected revisions: 1
 description:
-disassembler (CB and ED codes)
+disassambler for DD and FD opcodes
 ----------------------------
-revision 1.74	locked by: Ricardo;
-date: 1997/12/31 08:27:39;  author: Ricardo;  state: Exp;
-first version with rcs
+revision 1.1	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;
+Initial revision
 =============================================================================
 
 RCS file: RCS/PSG.ASM
 Working file: PSG.ASM
-head: 1.8
+head: 1.9
 branch:
 locks: strict
-	Ricardo: 1.8
+	Ricardo: 1.9
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 8;	selected revisions: 8
+total revisions: 9;	selected revisions: 9
 description:
 psg emulation code
 ----------------------------
-revision 1.8	locked by: Ricardo;
+revision 1.9	locked by: Ricardo;
+date: 1998/02/18 02:33:42;  author: Ricardo;  state: Exp;  lines: +7 -0
+fixed sound bug on "Ping Pong"
+now setting an envelope turns off the sound for that channel
+----------------------------
+revision 1.8
 date: 1998/01/12 05:44:49;  author: Ricardo;  state: Exp;  lines: +14 -6
 now the sound function can use any dma from 0 to 3
 ----------------------------
@@ -595,18 +689,26 @@ Initial revision
 
 RCS file: RCS/SAVELOAD.ASM
 Working file: SAVELOAD.ASM
-head: 1.74
+head: 1.76
 branch:
 locks: strict
-	Ricardo: 1.74
+	Ricardo: 1.76
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
 functions for save and load machine-state
 ----------------------------
-revision 1.74	locked by: Ricardo;
+revision 1.76	locked by: Ricardo;
+date: 1998/02/18 06:11:37;  author: Ricardo;  state: Exp;  lines: +10 -0
+some changes to make loading more stable
+----------------------------
+revision 1.75
+date: 1998/02/13 17:05:04;  author: Ricardo;  state: Exp;  lines: +3 -0
+fixed save-load for non-megarom games
+----------------------------
+revision 1.74
 date: 1997/12/31 08:27:39;  author: Ricardo;  state: Exp;
 first version with rcs
 =============================================================================
@@ -663,18 +765,26 @@ first version with rcs
 
 RCS file: RCS/VDP.ASM
 Working file: VDP.ASM
-head: 1.78
+head: 1.80
 branch:
 locks: strict
-	Ricardo: 1.78
+	Ricardo: 1.80
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 5;	selected revisions: 5
+total revisions: 7;	selected revisions: 7
 description:
 code for emulation of MSX1-VDP
 ----------------------------
-revision 1.78	locked by: Ricardo;
+revision 1.80	locked by: Ricardo;
+date: 1998/02/18 06:11:37;  author: Ricardo;  state: Exp;  lines: +34 -2
+screen 1 video cache (but it's still not complete).
+----------------------------
+revision 1.79
+date: 1998/02/13 17:05:04;  author: Ricardo;  state: Exp;  lines: +10 -17
+tried to fix sprite-crop Y bug but didn't work
+----------------------------
+revision 1.78
 date: 1998/02/04 05:04:41;  author: Ricardo;  state: Exp;  lines: +0 -32
 fixed lots of bugs in screen 0
 ----------------------------
@@ -724,18 +834,30 @@ Initial revision
 
 RCS file: RCS/Z80.ASM
 Working file: Z80.ASM
-head: 1.84
+head: 1.87
 branch:
 locks: strict
-	Ricardo: 1.84
+	Ricardo: 1.87
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 11;	selected revisions: 11
+total revisions: 14;	selected revisions: 14
 description:
 main Z80 emulation code (interpreter pipeline)
 ----------------------------
-revision 1.84	locked by: Ricardo;
+revision 1.87	locked by: Ricardo;
+date: 1998/02/18 06:11:37;  author: Ricardo;  state: Exp;  lines: +9 -4
+fully operational Z80
+----------------------------
+revision 1.86
+date: 1998/02/16 02:52:12;  author: Ricardo;  state: Exp;  lines: +2 -0
+fixed flag affection for some Z80 opcodes
+----------------------------
+revision 1.85
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +16 -16
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.84
 date: 1998/01/29 19:42:10;  author: Ricardo;  state: Exp;  lines: +73 -0
 reset button
 ----------------------------
@@ -783,18 +905,22 @@ first version with rcs
 
 RCS file: RCS/Z80CB.ASM
 Working file: Z80CB.ASM
-head: 1.75
+head: 1.76
 branch:
 locks: strict
-	Ricardo: 1.75
+	Ricardo: 1.76
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
 Z80 emulation code (CB opcodes)
 ----------------------------
-revision 1.75	locked by: Ricardo;
+revision 1.76	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +24 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.75
 date: 1998/01/05 00:11:03;  author: Ricardo;  state: Exp;  lines: +1 -0
 z80 code is now in z80sing.asm
 ----------------------------
@@ -805,18 +931,22 @@ first version with rcs
 
 RCS file: RCS/Z80DD.ASM
 Working file: Z80DD.ASM
-head: 1.76
+head: 1.77
 branch:
 locks: strict
-	Ricardo: 1.76
+	Ricardo: 1.77
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
 Z80 emulation code (DD opcodes)
 ----------------------------
-revision 1.76	locked by: Ricardo;
+revision 1.77	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +231 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.76
 date: 1998/02/04 04:02:27;  author: Ricardo;  state: Exp;  lines: +13 -13
 fixed waitstates (now there is only one ws at fetch)
 ----------------------------
@@ -831,19 +961,23 @@ first version with rcs
 
 RCS file: RCS/Z80ED.ASM
 Working file: Z80ED.ASM
-head: 1.76
+head: 1.77
 branch:
 locks: strict
-	Ricardo: 1.76
+	Ricardo: 1.77
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
 Z80 emulation code (ED opcodes)
 ,
 ----------------------------
-revision 1.76	locked by: Ricardo;
+revision 1.77	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +6 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.76
 date: 1998/02/04 04:08:31;  author: Ricardo;  state: Exp;  lines: +6 -6
 fixed waitstates
 ----------------------------
@@ -858,18 +992,22 @@ first version with rcs
 
 RCS file: RCS/Z80FD.ASM
 Working file: Z80FD.ASM
-head: 1.76
+head: 1.77
 branch:
 locks: strict
-	Ricardo: 1.76
+	Ricardo: 1.77
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
 Z80 emulation code (FD opcodes)
 ----------------------------
-revision 1.76	locked by: Ricardo;
+revision 1.77	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +243 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.76
 date: 1998/02/04 04:02:27;  author: Ricardo;  state: Exp;  lines: +12 -12
 fixed waitstates (now there is only one ws at fetch)
 ----------------------------
@@ -884,18 +1022,22 @@ first version with rcs
 
 RCS file: RCS/Z80SING.ASM
 Working file: Z80SING.ASM
-head: 1.2
+head: 1.3
 branch:
 locks: strict
-	Ricardo: 1.2
+	Ricardo: 1.3
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
 z80 emulation code - opcodes with a single byte
 ----------------------------
-revision 1.2	locked by: Ricardo;
+revision 1.3	locked by: Ricardo;
+date: 1998/02/08 08:24:04;  author: Ricardo;  state: Exp;  lines: +3 -0
+disk emulation + lots of new Z80 opcodes
+----------------------------
+revision 1.2
 date: 1998/02/04 04:02:27;  author: Ricardo;  state: Exp;  lines: +25 -25
 fixed waitstates (now there is only one ws at fetch)
 ----------------------------

@@ -56,7 +56,7 @@ keyboardtable:
 	key_35: db 2,BIT_4      ; /
 	key_36: db 6,BIT_0      ; RIGHT SHIFT
 	key_37: db 0,0
-	key_38: db 0,0
+	key_38: db 6,BIT_2      ; LEFT ALT
 	key_39: db 8,BIT_0      ; SPACEBAR
 	key_3A: db 6,BIT_3      ; CAPS LOCK
 	key_3B: db 6,BIT_5      ; F1
@@ -73,7 +73,7 @@ keyboardtable:
 	key_46: db 0,0
 	key_47: db 8,BIT_1      ; HOME
 	key_48: db 8,BIT_5      ; UP
-	key_49: db 0,0
+	key_49: db 7,BIT_4      ; PAGE UP
 	key_4A: db 1,BIT_2      ; -
 	key_4B: db 8,BIT_4      ; LEFT
 	key_4C: db 0,0
@@ -81,7 +81,7 @@ keyboardtable:
 	key_4E: db 0,0
 	key_4F: db 0,0
 	key_50: db 8,BIT_6      ; DOWN
-	key_51: db 0,0
+	key_51: db 7,BIT_6      ; PAGE DOWN
 	key_52: db 8,BIT_2      ; INSERT
 	key_53: db 8,BIT_3      ; DELETE
 	key_54: db 0,0

@@ -344,9 +344,15 @@ emul&opcode:
 OPCCF           macro   opcode
 
 emul&opcode:                
+                mov     al,dl
+                and     dl,11000101b
+                shl     al,4
                 xor     dl,1
+                and     al,00010000b
+                or      dl,al
+                mov     al,dh
+                or      dl,[offset PVN53_table+eax]
                 inc     edi
-                and     dl,11101101b
                 sub     ebp,4+1
                 ret
 
@@ -420,23 +426,88 @@ OPCPIR          macro   opcode
 
 emul&opcode:
                 inc     edi
-emul&opcode&b:      
+emul&opcode&loop:
                 mov     ecx,regehl
                 call    readmem
-                cmp     dh,al
-                jz      emul&opcode&a
                 sub     ebp,21
                 inc     reghl
+                mov     bl,al
+                xor     bl,dh
+                mov     bh,dh
+                sub     bh,al
+                mov     al,bh
+                xor     bl,al
+
+                ; flag C is not affected
+
+                ; flags S,Z 
+                and     dl,1
+                or      dl,[offset LOGICAL_table+eax]
+                and     dl,11000001b
+
+                ; flag H
+                and     bl,00010000b
+                or      dl,bl
+
+                ; flag N
+                or      dl,00000010b
+
+                ; flags 5,3
+                shr     bl,4
+                sub     al,bl
+                or      dl,[offset LDI_table+eax]
+
+                ; flag PV 
                 dec     regbc
-                jnz     emul&opcode&b
-                and     dl,10111011b
-                add     ebp,5-2
+                jz      _ret
+                or      dl,00000100b
+                test    dl,01000000b
+                jz      emul&opcode&loop
                 ret
-emul&opcode&a:      
+
+                endm
+
+; --------------------------------------------------------------------
+; OPCPI - CPI
+
+OPCPI           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                sub     ebp,21
                 inc     reghl
+                mov     bl,al
+                xor     bl,dh
+                mov     bh,dh
+                sub     bh,al
+                mov     al,bh
+                xor     bl,al
+
+                ; flag C is not affected
+
+                ; flags S,Z 
+                and     dl,1
+                or      dl,[offset LOGICAL_table+eax]
+                and     dl,11000001b
+
+                ; flag H
+                and     bl,00010000b
+                or      dl,bl
+
+                ; flag N
+                or      dl,00000010b
+
+                ; flags 5,3
+                shr     bl,4
+                sub     al,bl
+                or      dl,[offset LDI_table+eax]
+
+                ; flag PV 
                 dec     regbc
-                or      dl,01000100b
-                add     ebp,5-2
+                jz      _ret
+                or      dl,00000100b
                 ret
 
                 endm
@@ -448,23 +519,89 @@ OPCPDR          macro   opcode
 
 emul&opcode:
                 inc     edi
-emul&opcode&b:      
+emul&opcode&loop:
                 mov     ecx,regehl
                 call    readmem
-                cmp     dh,al
-                jz      emul&opcode&a
                 sub     ebp,21
                 dec     reghl
+                mov     bl,al
+                xor     bl,dh
+                mov     bh,dh
+                sub     bh,al
+                mov     al,bh
+                xor     bl,al
+
+                ; flag C is not affected
+
+                ; flags S,Z 
+                and     dl,1
+                or      dl,[offset LOGICAL_table+eax]
+                and     dl,11000001b
+
+                ; flag H
+                and     bl,00010000b
+                or      dl,bl
+
+                ; flag N
+                or      dl,00000010b
+
+                ; flags 5,3
+                shr     bl,4
+                sub     al,bl
+                or      dl,[offset LDI_table+eax]
+
+                ; flag PV 
                 dec     regbc
-                jnz     emul&opcode&b
-                and     dl,10111011b
-                add     ebp,5-2
+                jz      _ret
+                or      dl,00000100b
+                test    dl,01000000b
+                jz      emul&opcode&loop
                 ret
-emul&opcode&a:      
+
+
+                endm
+
+; --------------------------------------------------------------------
+; OPCPD - CPD
+
+OPCPD           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                sub     ebp,21
                 dec     reghl
+                mov     bl,al
+                xor     bl,dh
+                mov     bh,dh
+                sub     bh,al
+                mov     al,bh
+                xor     bl,al
+
+                ; flag C is not affected
+
+                ; flags S,Z 
+                and     dl,1
+                or      dl,[offset LOGICAL_table+eax]
+                and     dl,11000001b
+
+                ; flag H
+                and     bl,00010000b
+                or      dl,bl
+
+                ; flag N
+                or      dl,00000010b
+
+                ; flags 5,3
+                shr     bl,4
+                sub     al,bl
+                or      dl,[offset LDI_table+eax]
+
+                ; flag PV 
                 dec     regbc
-                or      dl,01000100b
-                add     ebp,5-2
+                jz      _ret
+                or      dl,00000100b
                 ret
 
                 endm
@@ -492,16 +629,12 @@ OPDAA           macro   opcode
 
 emul&opcode:
                 inc     edi
-                xor     ecx,ecx
-                mov     al,dh
-                mov     cl,dl
-                mov     dl,0
-                add     dx,[offset DAA_table+ecx*2]
-                mov     ebx,[offset DAA_select_table+ecx*4]
-                add     dx,[ebx+eax*2]
-                mov     cl,dh
-                or      dl,[offset LOGICAL_table+ecx]
-                and     edx,0ffffh
+                mov     al,dl
+                mov     al,[offset DAA_select_table+eax]
+                shl     eax,9
+                movzx   ebx,dh
+                mov     dx,word ptr [offset DAA_table+ebx*2+eax]
+                mov     eax,0
                 sub     ebp,4+1
                 ret
 
@@ -703,10 +836,7 @@ OPHALT          macro   opcode
 
 emul&opcode:
                 inc     edi
-emul&opcode&a:
-                cmp     interrupt,1
-                jne     emul&opcode&a
-                sub     ebp,4+1
+                mov     ebp,0
                 ret
 
                 endm
@@ -1266,13 +1396,11 @@ emul&opcode:
                 dec     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
                 and     dl,11000001b                    ; clock 5 V
+                or      dl,[offset LDI_table+eax]
                 dec     regbc                           ; clock 6 U
-                jz      emul&opcode&a                   ; clock 6 V
-                or      dl,[offset PVS53_table+eax]     ; clock 7 U
-                ret                                     ; clock 7 V
-emul&opcode&a:
-                or      dl,[offset PVN53_table+eax]     ; clock 7 U
-                ret                                     ; clock 7 V
+                jz      _ret
+                or      dl,00000100b
+                ret
 
                 endm
 
@@ -1284,18 +1412,20 @@ OPLDDR          macro   opcode
 emul&opcode:    
                 inc     edi
 emul&opcode&a:      
-                mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                sub     ebp,21
-                dec     reghl
-                dec     regde
-                dec     regbc
+                mov     ecx,regehl                      ; clock 1 U
+                call    readmem                         ; clock 1 V
+                mov     ecx,regede                      ; clock 2 U
+                call    writemem                        ; clock 2 V
+                sub     ebp,16+2                        ; clock 3 U
+                dec     regde                           ; clock 3 V
+                dec     reghl                           ; clock 4 U
+                add     al,dh                           ; clock 5 U
+                and     dl,11000001b                    ; clock 5 V
+                or      dl,[offset LDI_table+eax]
+                dec     regbc                           ; clock 6 U
                 jnz     emul&opcode&a
-                add     ebp,5-2
                 ret
-
+                
                 endm
 
 ; --------------------------------------------------------------------
@@ -1314,13 +1444,11 @@ emul&opcode:
                 inc     reghl                           ; clock 4 U
                 add     al,dh                           ; clock 5 U
                 and     dl,11000001b                    ; clock 5 V
+                or      dl,[offset LDI_table+eax]
                 dec     regbc                           ; clock 6 U
-                jz      emul&opcode&a                   ; clock 6 V
-                or      dl,[offset PVS53_table+eax]     ; clock 7 U
-                ret                                     ; clock 7 V
-emul&opcode&a:
-                or      dl,[offset PVN53_table+eax]     ; clock 7 U
-                ret                                     ; clock 7 V
+                jz      _ret                            ; clock 6 V
+                or      dl,00000100b
+                ret
 
                 endm
 
@@ -1331,17 +1459,19 @@ OPLDIR          macro   opcode
 
 emul&opcode:    
                 inc     edi
-emul&opcode&a:      
-                mov     ecx,regehl
-                call    readmem
-                mov     ecx,regede
-                call    writemem
-                sub     ebp,21
-                inc     reghl
-                inc     regde
-                dec     regbc
+emul&opcode&a:
+                mov     ecx,regehl                      ; clock 1 U
+                call    readmem                         ; clock 1 V
+                mov     ecx,regede                      ; clock 2 U
+                call    writemem                        ; clock 2 V
+                sub     ebp,16+2                        ; clock 3 U
+                inc     regde                           ; clock 3 V
+                inc     reghl                           ; clock 4 U
+                add     al,dh                           ; clock 5 U
+                and     dl,11000001b                    ; clock 5 V
+                or      dl,[offset LDI_table+eax]
+                dec     regbc                           ; clock 6 U
                 jnz     emul&opcode&a
-                add     ebp,5-2
                 ret
 
                 endm
@@ -1654,7 +1784,7 @@ RLII            macro   opcode,regii
 emul&opcode:                
                 inc     edi
                 movsx   ebx,cl
-                mov     ecx,regehl
+                mov     ecx,regii
                 add     cx,bx
                 call    readmem
                 shr     dl,1
@@ -1913,6 +2043,27 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; RRCII - RRC (II+dd)
+
+RRCII           macro opcode,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,al
+                ror     al,1
+                call    writemem
+                and     dl,1
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; OPRRCA - RRCA
 
 OPRRCA          macro   opcode
@@ -2084,7 +2235,10 @@ OPSCF           macro   opcode
 emul&opcode:                
                 inc     edi
                 or      dl,1
-                and     dl,11101101b
+                and     dl,11000100b
+                mov     al,dh
+                or      dl,1
+                or      dl,[offset PVN53_table+eax]
                 sub     ebp,4+1
                 ret
 
@@ -2174,6 +2328,87 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SLAII - SLA (II+dd)
+
+SLAII           macro   opcode,regii
+
+emul&opcode:
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                adc     dl,dl
+                sub     ebp,15+2
+                call    writemem
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLLREG - SLL rr rr=[a,b,c,d,e,h,l]
+
+SLLREG          macro   opcode,reg
+
+emul&opcode:
+                inc     edi
+                mov     dl,0
+                shl     reg,1
+                adc     dl,dl
+                or      reg,1
+                sub     ebp,8+2
+                mov     al,reg
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLLHL - SLL (HL)
+
+SLLHL           macro   opcode
+
+emul&opcode:
+                inc     edi
+                mov     ecx,regehl
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                adc     dl,dl
+                or      eax,1
+                sub     ebp,15+2
+                call    writemem
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SLLII - SLL (II+dd)
+
+SLLII           macro   opcode,regii
+
+emul&opcode:
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,0
+                shl     al,1
+                adc     dl,dl
+                or      eax,1
+                sub     ebp,15+2
+                call    writemem
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SRAREG - SRA rr rr=[a,b,c,d,e,h,l]
 
 SRAREG          macro   opcode,reg
@@ -2210,6 +2445,27 @@ emul&opcode:
                 endm
 
 ; --------------------------------------------------------------------
+; SRAII - SRA (II+dd)
+
+SRAII           macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
+                call    readmem
+                mov     dl,al
+                sar     al,1
+                and     dl,1
+                call    writemem
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
 ; SRLREG - SRL rr rr=[a,b,c,d,e,h,l]
 
 SRLREG          macro   opcode,reg
@@ -2234,6 +2490,27 @@ SRLHL           macro   opcode
 emul&opcode:                
                 inc     edi
                 mov     ecx,regehl
+                call    readmem
+                mov     dl,al
+                shr     al,1
+                and     dl,1
+                call    writemem
+                sub     ebp,15+2
+                or      dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; SRLII - SRL (II+dd)
+
+SRLII           macro   opcode,regii
+
+emul&opcode:                
+                inc     edi
+                movsx   ebx,cl
+                mov     ecx,regii
+                add     cx,bx
                 call    readmem
                 mov     dl,al
                 shr     al,1
@@ -2369,6 +2646,17 @@ emul&opcode:
                 mov     al,dh
                 sub     ebp,19+2
                 mov     dl,[offset LOGICAL_table+eax]
+                ret
+
+                endm
+
+; --------------------------------------------------------------------
+; XNULL - used in a DD or FD prefix unknown
+
+XNULL           macro   opcode
+
+emul&opcode:                
+                sub     ebp,4+1
                 ret
 
                 endm

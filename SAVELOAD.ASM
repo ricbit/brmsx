@@ -10,6 +10,7 @@ code32  segment para public use32
 
 include z80.inc
 include io.inc
+include vdp.inc
 
 extrn msxram: dword
 extrn msxvram: dword
@@ -332,9 +333,12 @@ load_state:
                 irp     i,<0,1,2,3,4,5,6,7>
 
                 READ_IMM
+                cmp     dword ptr [offset slot1+i*8+4],2
+                jne     load_state_mega_&i
                 mov     esi,i
                 and     eax,0FFh
                 call    megarom0_switchbank
+load_state_mega_&i:
 
                 endm
 
@@ -365,6 +369,15 @@ load_state:
 
                 mov     bl,prim_slotreg
                 call    outemulA8
+
+; --------------------------------------------------------------------
+
+                ; adjust the VDP for correct screen mode
+
+                call    eval_base_address
+                mov     firstscreen,1
+                mov     enabled,0
+                mov     imagetype,0
 
 ; --------------------------------------------------------------------
                 

@@ -134,6 +134,9 @@ LDREGWDDDD      ED7B,regesp,20+2
 ; ED A0 - LDI
 OPLDI           EDA0
 
+; ED A1 - CPI
+OPCPI           EDA1
+
 ; ED A2 - INI
 OPINI           EDA2
 
@@ -142,6 +145,9 @@ OPOUTI          EDA3
 
 ; ED A8 - LDD
 OPLDD           EDA8
+
+; ED A9 - CPD
+OPCPD           EDA9
 
 ; ED B0 - LDIR
 OPLDIR          EDB0

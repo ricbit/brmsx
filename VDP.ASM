@@ -930,22 +930,15 @@ sprite_crop_loop:
 sprite_crop_draw:
                 cmp     eax,192
                 jae     sprite_crop_draw_nextline
-                mov     ebp,[edi]
-                and     ebp,[esi]
-                or      ebp,[esi+4]
-                mov     [edi],ebp
-                mov     ebp,[edi+4]
-                and     ebp,[esi+8]
-                or      ebp,[esi+4+8]
-                mov     [edi+4],ebp
-                mov     ebp,[edi+8]
-                and     ebp,[esi+16]
-                or      ebp,[esi+4+16]
-                mov     [edi+8],ebp
-                mov     ebp,[edi+4+8]
-                and     ebp,[esi+8+16]
-                or      ebp,[esi+4+8+16]
-                mov     [edi+4+8],ebp
+                
+                irp     i,<0,1,2,3>
+
+                mov     ebp,[edi+i*4]
+                and     ebp,[esi+i*8]
+                or      ebp,[esi+i*8+4]
+                mov     [edi+i*4],ebp
+
+                endm
 
 sprite_crop_draw_nextline:
                 add     esi,32
@@ -1051,7 +1044,7 @@ eval_sprite_coords:
                 sub     ecx,eax
 
                 mov     al,[esi]        ; y coordinate
-                cmp     al,0BEh
+                cmp     al,0F0h         ; 0BEh ??
                 jbe     eval_sprite_coords1
                 movsx   eax,al
 
@@ -1391,8 +1384,6 @@ dirty_screen2_sprpatt:
 dirty_screen1_nothing:
 dirty_screen1_pattern:
 dirty_screen1_color:
-dirty_screen1_sprattr:
-dirty_screen1_sprpatt:
                 mov     [ecx+esi],bl
                 ret
 
@@ -1403,6 +1394,40 @@ dirty_screen1_name:
                 sub     ecx,nametable
                 mov     [eax+esi],bl
                 mov     byte ptr [offset dirtyname+ecx],1
+                xor     eax,eax
+                ret
+
+dirty_screen1_sprattr:
+                mov     eax,ecx
+                and     eax,03h
+                jnz     dirty_screen1_sprattr2
+                cmp     bl,0D0h
+                jne     dirty_screen1_sprattr2
+                mov     firstscreen,1
+                mov     [ecx+esi],bl
+                mov     eax,0
+                ret
+dirty_screen1_sprattr2:
+                mov     eax,ecx
+                and     ecx,0FFFFFFFCh
+                push    esi eax ecx
+                add     esi,ecx
+                call    eval_sprite_coords
+                call    dirty_sprite
+                pop     ecx eax esi
+                mov     [esi+eax],bl
+                add     esi,ecx
+                call    eval_sprite_coords
+                call    dirty_sprite
+                xor     eax,eax
+                ret
+
+dirty_screen1_sprpatt:
+                mov     eax,ecx
+                sub     ecx,sprpatttable
+                shr     ecx,5
+                mov     [eax+esi],bl
+                mov     byte ptr [offset dirtysprite+ecx],1
                 xor     eax,eax
                 ret
 

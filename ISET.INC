@@ -198,7 +198,7 @@ iset:
 	 dd emulC4
 	 dd emulC5
 	 dd emulC6
-	 dd emulXX
+	 dd emulC7
 	 dd emulC8
 	 dd emulC9
 	 dd emulCA

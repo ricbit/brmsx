@@ -160,7 +160,7 @@ isetEDxx:
 	isetED9E: dd emulXX
 	isetED9F: dd emulXX
 	isetEDA0: dd emulEDA0
-	isetEDA1: dd emulXX
+	isetEDA1: dd emulEDA1
 	isetEDA2: dd emulEDA2
 	isetEDA3: dd emulEDA3
 	isetEDA4: dd emulXX
@@ -168,7 +168,7 @@ isetEDxx:
 	isetEDA6: dd emulXX
 	isetEDA7: dd emulXX
 	isetEDA8: dd emulEDA8
-	isetEDA9: dd emulXX
+	isetEDA9: dd emulEDA9
 	isetEDAA: dd emulXX
 	isetEDAB: dd emulXX
 	isetEDAC: dd emulXX

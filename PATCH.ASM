@@ -42,9 +42,11 @@ emulEDFF:
                 jmp     emulC9
 
 patch_PHYDIO:
+                mov     iff1,1
+                
                 ; only drive A emulated
                 cmp     dh,0
-                jne     emulC9
+                jne     patch_PHYDIO_driveb
 
                 ; if regb=0 then exit [security trap]
                 cmp     regb,0
@@ -52,7 +54,7 @@ patch_PHYDIO:
 
                 ; read or write?
                 and     dl,1
-                jnz     emulC9
+                jnz     patch_PHYDIO_readonly
 
                 push    ebp
 
@@ -82,7 +84,7 @@ patch_PHYDIO2:
                 call    writemem
                 pop     esi
                 inc     esi
-                inc     ecx
+                inc     cx
                 dec     ebp
                 jnz     patch_PHYDIO2
 
@@ -101,71 +103,76 @@ patch_PHYDIO2:
 
                 jmp     emulC9
 
+patch_PHYDIO_driveb:
+                or      dl,1
+                mov     dh,2
+                jmp     emulC9
+
+patch_PHYDIO_readonly:
+                or      dl,1
+                mov     dh,0
+                mov     regb,0
+                jmp     emulC9
+
 
 patch_DSKCHG:
                 mov     regb,0
-                and     dl,NBIT_0
+                mov     iff1,1
                 jmp     patch_GETDPB
 
 patch_GETDPB:
-                mov     esi,diskimage
-                mov     edi,offset boot
-                mov     ecx,512/4
-                rep     movsd
-                mov     edi,offset boot
                 mov     ecx,regehl
                 inc     ecx
 
                 ; format ID [F8-FF]
-                mov     al,byte ptr [edi+015h]
+                mov     al,0F9h
                 call    writemem
                 inc     ecx
 
                 ; sector size
-                mov     al,byte ptr [edi+0bh]
+                mov     al,0
                 call    writemem
                 inc     ecx
-                mov     al,byte ptr [edi+0ch]
+                
+                mov     al,2
                 call    writemem
                 inc     ecx
 
                 ; directory mask/shift
-                movzx   ebx,word ptr [edi+0bh]
-                shr     ebx,5
-                dec     ebx
-                mov     al,bl
+                mov     al,0fh
                 call    writemem
                 inc     ecx
-                call    patch_GETDPB1
+                
+                mov     al,04h
                 call    writemem
                 inc     ecx
 
                 ; cluster mask/shift
-                mov     bl,byte ptr [edi+0dh]
-                dec     bl
-                mov     al,bl
+                
+                mov     al,1
                 call    writemem
                 inc     ecx
-                call    patch_GETDPB1
-                inc     al
+                
+                mov     al,2
                 call    writemem
                 inc     ecx
 
                 ; sector number of first fat
-                mov     al,byte ptr [edi+0eh]
+                mov     al,1
                 call    writemem
                 inc     ecx
-                mov     al,byte ptr [edi+0fh]
+                
+                mov     al,0
                 call    writemem
                 inc     ecx
 
                 ; number of fats
-                mov     al,byte ptr [edi+10h]
+                mov     al,2
                 call    writemem
                 inc     ecx
 
                 ; number of directory entries
-                mov     al,byte ptr [edi+11h]
+                mov     al,70h
                 call    writemem
                 inc     ecx
 
@@ -174,6 +181,7 @@ patch_GETDPB:
                 mov     al,0eh
                 call    writemem
                 inc     ecx
+                
                 mov     al,0
                 call    writemem
                 inc     ecx
@@ -182,6 +190,7 @@ patch_GETDPB:
                 mov     al,0c9h
                 call    writemem
                 inc     ecx
+                
                 mov     al,02h
                 call    writemem
                 inc     ecx
@@ -195,29 +204,15 @@ patch_GETDPB:
                 mov     al,07h
                 call    writemem
                 inc     ecx
+                
                 mov     al,0
                 call    writemem
                 inc     ecx
-                and     dl,NBIT_0
+
+                mov     edx,0
                 
                 jmp     emulC9
 
-patch_GETDPB1:
-                push    ecx
-                mov     cl,0
-patch_GETDPB3:
-                push    eax
-                mov     bh,1
-                shl     bh,cl
-                and     al,bh
-                pop     eax
-                jz      patch_GETDPB2
-                inc     cl
-                jmp     patch_GETDPB3
-patch_GETDPB2:
-                mov     al,cl
-                pop     ecx
-                ret
 
 code32          ends
                 end

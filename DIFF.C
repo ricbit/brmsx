@@ -13,15 +13,15 @@ void main (int argc, char **argv) {
   buff2=(unsigned char *) malloc (131072);
   buffx=(unsigned char *) malloc (131072);
   file=open (argv[1],O_BINARY|O_RDONLY);
-  read (file,buff1,131072);
+  read (file,buff1,512);
   close (file);
   file=open (argv[2],O_BINARY|O_RDONLY);
-  read (file,buff2,131072);
+  read (file,buff2,512);
   close (file);
-  for (i=0; i<131072; i++)
+  for (i=0; i<512; i++)
     buffx[i]=buff1[i]^buff2[i];
   file=open (argv[3],O_BINARY|O_CREAT|O_WRONLY,S_IRUSR|S_IWUSR);
-  write (file,buffx,131072);
+  write (file,buffx,512);
   close (file);
 }
 

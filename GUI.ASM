@@ -352,7 +352,9 @@ start_gui_loop:
                 rep     stosd
 start_gui_pipeline:
                 call    dirty_mouse
+                cli     
                 call    render
+                sti
                 call    sprite_render
                 call    draw_logo
                 call    read_mouse
@@ -867,7 +869,7 @@ draw_load_rom_mouse:
                 mov     load_rom_selected,eax
 
                 cmp     eax,totalrom
-                jae     _ret
+                jae     draw_load_rom_none
 
                 mov     ecx,040h/4-1
                 lea     edi,[eax+eax*4]
@@ -897,6 +899,11 @@ draw_load_rom_update:
                 mov     firstscreen,1
 
                 ret
+
+draw_load_rom_none:
+                mov     eax,0
+                mov     load_rom_selected,eax
+                jmp     draw_load_rom_update
 
 draw_load_rom_scroll:
                 mov     eax,mousex

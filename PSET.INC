@@ -198,7 +198,7 @@ pset:
 	psetC4: dd prinC4
 	psetC5: dd prinC5
 	psetC6: dd prinC6
-	psetC7: dd prinXX
+	psetC7: dd prinC7
 	psetC8: dd prinC8
 	psetC9: dd prinC9
 	psetCA: dd prinCA

@@ -9,9 +9,11 @@ void main (int argc, char **argv) {
   file=open ("brmsx.sta",O_BINARY|O_RDONLY);
   read (file,buff,0x4b);
   read (file,buff,0x8000);
+  read (file,buff,0x2000);
+  read (file,buff,0x1000);
   close (file);
   file=open (argv[1],O_BINARY|O_CREAT|O_WRONLY,S_IRUSR|S_IWUSR);
-  write (file,buff,0x8000);
+  write (file,buff,512);
   close (file);
 }
 
