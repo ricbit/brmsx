@@ -726,12 +726,6 @@ sprite16N1:     push    ecx eax
                 
                 ; load effective initial address in edi
                 push    edi
-                ;xor     ebx,ebx
-                ;mov     bl,ah
-                ;and     eax,0ffh
-                ;shl     ebx,8
-                ;add     ebx,eax
-                ;add     edi,ebx
 
                 ; load address of sprite image in ecx
                 mov     al,[esi+2]
@@ -749,16 +743,6 @@ sprite16N1:     push    ecx eax
                 mov     al,[esi+3]
                 mov     eax,[offset backgroundcolor+eax*4]
 sprite16N4:
-
-                ; check if it is the fifth on a row
-                ; mov     esi,linenumber
-                ; inc     byte ptr [offset spriteline+esi]
-                ; mov     ebp,esi
-                ; inc     esi
-                ; mov     linenumber,esi
-                ; movzx   esi,byte ptr [offset spriteline+ebp]
-                ; cmp     esi,5
-                ; jae     sprite16N8
 
                 ; fetch the image for the subline
                 mov     bl,[ecx]

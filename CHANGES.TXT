@@ -1,3 +1,7 @@
+release 1.59:
+
+- added video cache for 256x200 mode
+
 release 1.58:
 
 - optimized base address evaluation
