@@ -152,7 +152,7 @@ getchar:
                 mov     v86r_ah,0           
                 mov     al,16h
                 int     33h
-                mov     al,v86r_al
+                mov     ax,v86r_ax
                 ret
 
 ; testkbd ------------------------------------------------------------

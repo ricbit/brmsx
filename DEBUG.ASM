@@ -675,6 +675,8 @@ debug_loop:
                 COORD   12,23
                 call    set_cursor_position
                 call    getchar
+                cmp     ah,0
+                je      command_extended
                 call    clear_text
                 call    toupper
                 call    printasc
@@ -694,11 +696,11 @@ debug_loop:
                 cmp     al,'P'
                 je      command_p
                 cmp     al,'Z'
-                je      command_z
+                je      command_help
                 cmp     al,'F'
                 je      command_f
                 cmp     al,'H'
-                je      command_h
+                je      command_help
                 cmp     al,'J'
                 je      command_j
                 ;cmp     al,'K'
@@ -725,6 +727,13 @@ debug_loop:
                 je      command_exit
                 jmp     debug_loop
 
+command_extended:
+                call    getchar
+                call    convhex4
+                mov     eax,offset tmphex4
+                call    writemessage
+                jmp     debug_loop
+
 command_d:
                 COORD   14,23
                 call    set_cursor_position
@@ -733,7 +742,7 @@ command_d:
                 mov     memdump,eax
                 jmp     debug_loop
 
-command_z:
+command_help:
                 push    es
                 mov     ax,gs
                 mov     es,ax

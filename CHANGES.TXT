@@ -1,3 +1,11 @@
+release 1.60:
+
+- fixed bug on 16-bit ADC and SBC 
+  stupid bug! it was not V flag after all, 
+  the incorrect flag was the Z flag!!!
+  now Zanac starts fine, and F1 Spirit
+  doesn't have those graphics bugs.
+
 release 1.59:
 
 - added video cache for 256x200 mode

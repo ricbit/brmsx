@@ -85,6 +85,11 @@ emul&opcode:
                 and     bl,BIT_4
                 or      dl,bl
                 or      dl,[offset OVERFLOW_table+eax]
+                and     dl,NBIT_6
+                mov     al,rrhigh
+                or      al,rrlow
+                jnz     _ret
+                or      dl,BIT_6
                 ret
 
                 endm
@@ -1520,6 +1525,11 @@ emul&opcode:
                 and     bl,BIT_4
                 or      dl,bl
                 or      dl,[offset OVERFLOW_table+eax]
+                and     dl,NBIT_6
+                mov     al,regh
+                or      al,regl
+                jnz     _ret
+                or      dl,BIT_6
                 ret
 
                 endm

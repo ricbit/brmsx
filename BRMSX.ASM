@@ -28,7 +28,7 @@ extrn pentiumfound: dword
 
 ; DATA ---------------------------------------------------------------
 
-msg00           db      'BrMSX 1.59',13,10
+msg00           db      'BrMSX 1.60',13,10
                 db      'Copyright (C) 1997 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -41,7 +41,7 @@ msg07           db      'Clock: $'
 msg08           db      ' Mhz',13,10,'$'
 msg09           db      ' kb',13,10,'$'
 msg10           db      'Press any key to start... $'
-msgnocpuid      db      '486 or lower',13,10,'$'
+msgnocpuid      db      '486 or below',13,10,'$'
 msg386          db      '386',13,10,'$'
 msg486          db      '486',13,10,'$'
 msg586          db      'Pentium',13,10,'$'
@@ -195,7 +195,7 @@ _main0:
                 mov     dword ptr [offset slot1+16+8],eax
                 pop     eax
                 cmp     eax,04000h
-                je     _main1
+                je      _main1
                 cmp     eax,08000h
                 jne     read_megarom
                 mov     ecx,cart1
