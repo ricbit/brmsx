@@ -44,6 +44,7 @@ public last_line
 public emulate_fakeirq_msx2
 public current_line
 public halted
+public clocks_line
 
 ; DATA ---------------------------------------------------------------
 

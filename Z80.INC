@@ -167,3 +167,5 @@ extrn outemulB5: near
 extrn inemulB5: near
 extrn truevsync: dword
 extrn joynet: dword
+extrn advram: byte
+extrn out_highbyte: byte

@@ -1686,6 +1686,21 @@ print_38:
 
 ; --------------------------------------------------------------------
                 
+                ; print the v9938 status registers
+
+                mov     ecx,0
+                irp     i,<0,1,2,3,4,5,6,7,8,9,10,11>
+                mov     esi,offset vdpstatus+i
+                COORD   30+3*i,19
+                mov     al,[esi]
+                call    convhex4
+                mov     eax,offset tmphex2
+                call    printmsgd
+                inc     esi
+                endm
+
+; --------------------------------------------------------------------
+                
                 ; print the current line
 
                 mov     eax,current_line

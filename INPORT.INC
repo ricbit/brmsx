@@ -308,7 +308,7 @@ inportxx:
 	; 99
  dd inemul99
 	; 9A
- dd inemulXX
+ dd inemul9A
 	; 9B
  dd inemulXX
 	; 9C

@@ -938,6 +938,7 @@ INADD           macro   opcode
 emul&opcode:
                 FETCH1  opcode
                 add     edi,2
+                mov     out_highbyte,dh
                 call    [offset inportxx+eax*4]
                 mov     dh,bl
                 sub     ebp,11+1
@@ -952,6 +953,8 @@ INREG           macro   opcode,reg
 
 emul&opcode:
                 inc     edi
+                mov     al,regb
+                mov     out_highbyte,al
                 mov     al,regc
                 call    [offset inportxx+eax*4]
                 and     ebx,0ffh

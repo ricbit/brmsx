@@ -14,3 +14,4 @@ extrn last_line: dword
 extrn emulate_fakeirq_msx2: near
 extrn current_line: dword
 extrn halted: dword
+extrn clocks_line: dword

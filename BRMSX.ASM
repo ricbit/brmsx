@@ -80,7 +80,7 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 2.4',13,10
+msg00           db      'BrMSX 2.5',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -104,7 +104,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384x8 not found',13,10,'$'
-msg22           db      'BrMSX 2.4',13,10
+msg22           db      'BrMSX 2.5',13,10
                 db      'Copyright (C) 1997-2000 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -144,7 +144,9 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-msx2          select MSX 2 emulation',13,10
                 db      '-msx2+         select MSX 2+ emulation',13,10
                 db      '-normal        normal emulation speed '
-                db      '(default)',13,10
+                db      '(3.57 MHz, default)',13,10
+                db      '-ciel          double emulation speed '
+                db      '(7.14 MHz)',13,10
                 db      '-fast          fast emulation speed',13,10
                 db      '-turbo         turbo emulation speed',13,10
                 db      '-roma <n>      select MegaROM Mapper for '
@@ -160,9 +162,9 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '               6=ASCII 8kb with 8kb SRAM',13,10
                 db      '               7=ASCII 16kb with 2kb SRAM',13,10
                 db      '               8=Panasonic FM-PAC with 8kb SRAM',13,10
-                db      '               9=Konami with 8-bit DAC',13,10
                 db      'Press enter to continue.$'
 help_message2   db      13
+                db      '               9=Konami with 8-bit DAC',13,10
                 db      '-ifreq <n>     change interrupt frequency '
                 db      '(default is 60)',13,10
                 db      '-ramslot <n>   select slot of RAM, can be 2 '
@@ -200,13 +202,14 @@ help_message2   db      13
                 db      '-truevsync     sync with the monitor only '
                 db      '(require monitor with 60Hz refresh)',13,10
                 db      '-green         enable green monitor emulation',13,10
+                db      '-advram        enable ADVRAM emulation',13,10
                 db      '-frame <n>     frame skipping (1 means all '
                 db      'frames rendered, default)',13,10
-                db      '-allspr        disable 5th sprite ocultation',13,10
-                db      '-nosprcol      disable sprite collision '
-                db      'detection',13,10
                 db      'Press enter to continue.$'
 help_message3   db      13
+                db      '-allspr        disable 5th sprite ocultation',13,10
+                db      'detection',13,10
+                db      '-nosprcol      disable sprite collision '
                 db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
                 db      '-nommx         disable MMX optimizations',13,10
@@ -239,11 +242,11 @@ help_message3   db      13
                 db      '-snespad       enable SNES pad connected in '
                 db      'LPT1',13,10
                 db      '-autofire      enable the automatic fire',13,10
+                db      'Press enter to continue.$'
+help_message4   db      13
                 db      '-autorun       enable the automatic run',13,10
                 db      '-autospeed <n> adjust speed for autofire '
                 db      '(range is 0 to 9, default is 5)',13,10
-                db      'Press enter to continue.$'
-help_message4   db      13
                 db      '-fakejoy       make the keyboard act as '
                 db      'joystick A',13,10
                 db      '-nomouse       disable mouse driver detection',13,10
@@ -352,6 +355,8 @@ switch_vdplog    db      '-vdplog',0
 switch_truevsync db      '-truevsync',0
 switch_joynet    db      '-joynet',0
 switch_msx2p     db      '-msx2+',0
+switch_ciel      db      '-ciel',0
+switch_advram    db      '-advram',0
 
 switch_table:
                 dd      offset switch_nommx
@@ -409,8 +414,10 @@ switch_table:
                 dd      offset switch_truevsync
                 dd      offset switch_joynet
                 dd      offset switch_msx2p
+                dd      offset switch_ciel
+                dd      offset switch_advram
 
-switch_total    dd      55
+switch_total    dd      57
 
 switch_callback: 
                 dd      offset callback_nommx
@@ -468,6 +475,8 @@ switch_callback:
                 dd      offset callback_truevsync
                 dd      offset callback_joynet
                 dd      offset callback_msx2p
+                dd      offset callback_ciel
+                dd      offset callback_advram
 
 cart1table:
                 dd      128*1024
@@ -765,7 +774,7 @@ _main_idlerom:
                 mov     edi,msxvram
                 mov     ecx,vramsize
                 shr     ecx,2
-                mov     eax,0 ;055555555h
+                mov     eax,0 
                 rep     stosd
 
                 ; allocate 16kb to cartridge sram
@@ -2178,6 +2187,15 @@ callback_msx2p:
                 mov     msxmodel,2
                 mov     model_mainrom,offset msx2p_rom_name
                 mov     model_subrom,offset msx2pext_rom_name
+                ret
+
+callback_ciel:
+                mov     clocks_line,424
+                mov     TC,59659*2
+                ret
+
+callback_advram:
+                mov     advram,1
                 ret
 
 ; read_rom -----------------------------------------------------------

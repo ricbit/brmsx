@@ -118,6 +118,7 @@ public megadump
 public psgselect
 public megaram
 public fmenabled
+public advram
 
 public opsubreg
 public opsbcreg
@@ -146,6 +147,7 @@ public sccregs
 public clockcounter
 public megamask
 public fmreg
+public out_highbyte
 
 public slot0
 public slot1
@@ -457,6 +459,7 @@ timingclock     dd      0
 allram          db      0AAh
 rmask           db      0
 regi            db      0
+out_highbyte    db      0
 
 ; VDP registers
 align 4
@@ -469,6 +472,8 @@ truevsync       dd      0
 vdpaccess       dd      0
 vdptemp         db      0
 vdplookahead    db      0
+advram          db      0
+advram_enabled  db      0
 vdpregs         db      64 dup (0)
 vdpstatus       db      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 msx2palette     db      16*2 dup (0)
@@ -2076,7 +2081,7 @@ sound_buffer_msx2:
                 mov     [esi+ecx*2+1],bl
 
                 mov     esi,timebuffer
-                mov     ebx,212 ;TC 
+                mov     ebx,clocks_line
                 sub     ebx,ebp
                 add     ebx,psgclocks
                 add     ebx,soundclocks
@@ -2086,6 +2091,120 @@ sound_buffer_msx2:
 
                 ret
 
+; --------------------------------------------------------------------
+
+enable_advram:
+                cmp     advram,1
+                jne     _ret
+
+                push    eax
+                mov     advram_enabled,1
+
+                test    prim_slotreg,110000b
+                jnz     enable_advram_hidden
+
+                mov     eax,msxvram
+                mov     dword ptr [offset mem+4*4],eax
+                add     eax,2000h
+                mov     dword ptr [offset mem+5*4],eax
+
+                mov     dword ptr [offset memlock+4*4],0
+                mov     dword ptr [offset memlock+5*4],0
+
+enable_advram_hidden:
+                cmp     msxmodel,0
+                jne     enable_advram_msx2
+
+                mov     eax,msxvram
+                mov     dword ptr [offset slot0+4*8],eax
+                add     eax,2000h
+                mov     dword ptr [offset slot0+5*8],eax
+
+                mov     dword ptr [offset slot0+4*8+4],0
+                mov     dword ptr [offset slot0+5*8+4],0
+
+                pop     eax
+                ret
+
+enable_advram_msx2:
+                mov     eax,msxvram
+                mov     dword ptr [offset extended_slot_0+4*8],eax
+                add     eax,2000h
+                mov     dword ptr [offset extended_slot_0+5*8],eax
+
+                mov     dword ptr [offset extended_slot_0+4*8+4],0
+                mov     dword ptr [offset extended_slot_0+5*8+4],0
+                pop     eax
+                
+                ret
+
+; --------------------------------------------------------------------
+
+disable_advram:
+                cmp     advram,1
+                jne     _ret
+
+                mov     advram_enabled,0
+
+                test    prim_slotreg,110000b
+                jnz     disable_advram_hidden
+
+                mov     dword ptr [offset memlock+4*4],1
+                mov     dword ptr [offset memlock+5*4],1
+
+disable_advram_hidden:
+                cmp     msxmodel,0
+                jne     disable_advram_msx2
+
+                mov     dword ptr [offset slot0+4*8+4],1
+                mov     dword ptr [offset slot0+5*8+4],1
+                ret
+
+disable_advram_msx2:
+                mov     dword ptr [offset extended_slot_0+4*8+4],1
+                mov     dword ptr [offset extended_slot_0+5*8+4],1
+                
+                ret
+
+; --------------------------------------------------------------------
+
+switch_advram:
+                cmp     advram_enabled,1
+                jne     _ret
+
+                push    ebx
+                and     ebx,7
+                shl     ebx,14
+                add     ebx,msxvram
+                
+                test    prim_slotreg,110000b
+                jnz     enable_advram_hidden
+
+                mov     dword ptr [offset mem+4*4],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset mem+5*4],ebx
+
+                mov     dword ptr [offset memlock+4*4],0
+                mov     dword ptr [offset memlock+5*4],0
+
+switch_advram_hidden:
+                cmp     msxmodel,0
+                jne     switch_advram_msx2
+
+                mov     dword ptr [offset slot0+4*8],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset slot0+5*8],ebx
+
+                pop     ebx
+                ret
+
+switch_advram_msx2:
+                mov     dword ptr [offset extended_slot_0+4*8],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset extended_slot_0+5*8],ebx
+
+                pop     ebx
+                ret
 
 ; --------------------------------------------------------------------
 
@@ -2437,6 +2556,10 @@ outemulB5_select_mode:
 MAPPER          macro   page
                 local   hidden_mapper
 
+                IF      page EQ 2
+                call    switch_advram
+                ENDIF
+
                 mov     al,prim_slotreg
                 shr     al,page*2
                 mov     cl,allram
@@ -2567,6 +2690,14 @@ inemul99:       mov     bl,vdpstatus
                 mov     vdpcond,0
                 mov     iline,0
                 ret
+
+; --------------------------------------------------------------------
+
+inemul9A:       
+                test    out_highbyte,BIT_7
+                jnz     enable_advram
+
+                jmp     disable_advram
 
 ; --------------------------------------------------------------------
 
