@@ -2,6 +2,16 @@ $Log: changes.txt $
 Revision 1.74  1997/12/31 08:26:41  Ricardo
 first version with rcs
 
+release 1.05:
+
+- fixed bug in old konami games like pingpong
+- keyboard click
+- voice through method 1 (PPI 1-bit PCM)
+- voice through method 2 (PSG 4-bit PCM)
+- emulation of port ABh (PPI indirect set/reset bit)
+- new debugger screen with new debug options
+- fake SCC sound (wave samples are not emulated)
+
 release 1.04:
 
 - fixed bug on video cache of SCREEN 1

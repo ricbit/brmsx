@@ -26,6 +26,8 @@ extrn emulED: near
 extrn emulFD: near
 extrn emulFF: near
 extrn emulXX: near
+extrn soundbuffer: dword
+extrn timebuffer: dword
 
 include io.inc
 include vdp.inc
@@ -69,6 +71,11 @@ public error
 public imtype
 public iline
 public clocksleft
+public psgpos
+public psgclocks
+public psgclear
+public sccdetected
+public sccenabled
 
 public opsubreg
 public opsbcreg
@@ -93,6 +100,7 @@ public megablock
 public z80rate
 public z80counter
 public reset_flag
+public sccregs
 
 public slot0
 public slot1
@@ -329,11 +337,21 @@ vdpstatus       db      0
 ; PSG registers
 align 4
 
+psgclocks       dd      0
+psgpos          dd      0
+psgclear        dd      1
 psgselect       db      0
 psgreg          db      16 dup (0)
 psgjoya         db      00111111b
 psgjoyb         db      00111111b
 
+; SCC registers
+
+sccregs         db      16 dup (0)
+sccactive       dd      0
+sccdetected     dd      0
+sccenabled      dd      0
+           
 ; PPI registers
 align 4
 
@@ -533,6 +551,25 @@ readmemw_slow:
 ; eax = block number
 
 megarom0_switchbank:
+                cmp     ecx,9000h
+                jb      megarom0_switchbank_doit
+                cmp     ecx,9FFFh
+                ja      megarom0_switchbank_doit
+
+                cmp     ecx,97FFh
+                ja      megarom0_switchbank_SCC
+
+                and     eax,03Fh
+                cmp     al,03Fh
+                jne     megarom0_switchbank_doit
+
+                ; SCC selection
+                mov     sccactive,1
+                mov     sccdetected,1
+
+                ret
+
+megarom0_switchbank_doit:
                 mov     ebx,eax
                 and     ebx,01Fh ; only 256kb by now
                 mov     dword ptr [offset megablock+esi*4],ebx
@@ -540,6 +577,40 @@ megarom0_switchbank:
                 add     ebx,cart1
                 mov     dword ptr [offset mem+esi*4],ebx
                 mov     dword ptr [offset slot1+esi*8],ebx
+                mov     sccactive,0
+                ret
+
+megarom0_switchbank_SCC:
+                cmp     sccactive,1
+                jne     megarom0_switchbank_doit
+
+                ; SCC write
+
+                cmp     ecx,09880h
+                jb      _ret
+
+                cmp     ecx,09890h
+                jae     _ret
+
+                sub     ecx,09880h
+                mov     byte ptr [offset sccregs+ecx],al
+                
+                mov     ebx,ecx
+                mov     ecx,psgpos
+                add     ebx,80h
+
+                mov     esi,soundbuffer
+                mov     byte ptr [esi+ecx*2],bl
+                mov     [esi+ecx*2+1],al
+
+                mov     esi,timebuffer
+                mov     ebx,clocksleft
+                sub     ebx,ebp
+                add     ebx,psgclocks
+                mov     [esi+ecx*4],ebx
+
+                inc     psgpos
+
                 ret
 
 ; writemem -----------------------------------------------------------
@@ -805,7 +876,10 @@ EMULABEL        nextint,emtype,brtype
                 mov     eax,offset z80counter
                 call    start_counter
                 xor     eax,eax
+
                 mov     ebp,clocksleft
+                call    checkpsg
+                ;add     psgclocks,ebp
                 mov     clocksleft,59659
                 mov     interrupt,0
                 
@@ -838,6 +912,18 @@ EMULABEL        exit,emtype,brtype
                 ret
 
                 endm
+; checkpsg -----------------------------------------------------------
+
+checkpsg:
+                cmp     psgclear,1
+                je      checkpsg_clear
+                add     psgclocks,ebp
+                ret
+
+checkpsg_clear:
+                mov     psgclocks,0
+                mov     psgclear,0
+                ret
 
 ; z80_interrupt ------------------------------------------------------
 ; perform a Z80 interrupt
@@ -847,7 +933,7 @@ z80_interrupt:
                 cmp     imtype,2
                 je      z80_interrupt_im2
 
-                ; IM 1
+                ; IM 0 and IM 1
                 call    emulIM
                 mov     edi,038h
                 ret
@@ -876,6 +962,14 @@ pre_dirty:
                 mov     word ptr [offset dirtyname+30+1*32],0101h
                 mov     word ptr [offset dirtyname+30+2*32],0101h
                 mov     word ptr [offset dirtyname+30+3*32],0101h
+
+                cmp     sccenabled,0
+                je      _ret
+
+                mov     dword ptr [offset dirtyname+27+0*32],01010101h
+                mov     dword ptr [offset dirtyname+27+1*32],01010101h
+                mov     dword ptr [offset dirtyname+27+2*32],01010101h
+                mov     dword ptr [offset dirtyname+27+3*32],01010101h
 
                 ret
 
@@ -1107,8 +1201,12 @@ outemul8E_page2:
                 ret
 
 outemul98:      mov     esi,msxvram
-                mov     ecx,vdpaddresse
-                inc     vdpaddress
+                mov     eax,vdpaddresse
+                mov     ecx,eax
+                inc     eax
+                and     eax,03FFFh
+                mov     vdpaddresse,eax
+                xor     eax,eax
                 cmp     imagetype,0
                 je      outemul98_ret
                 
@@ -1145,11 +1243,30 @@ outemul99b:     and     ebx,00000111b
                 mov     firstscreen,1
                 jmp     eval_base_address
 
-outemulA0:      mov     psgselect,bl
+outemulA0:      
+                and     bl,0Fh
+                mov     psgselect,bl
                 ret
 
 outemulA1:      mov     al,psgselect        
                 mov     [offset psgreg+eax],bl
+                cmp     al,13
+                ja      _ret
+
+                mov     ecx,psgpos
+
+                mov     esi,soundbuffer
+                mov     [esi+ecx*2],al
+                mov     [esi+ecx*2+1],bl
+
+                mov     esi,timebuffer
+                mov     ebx,clocksleft
+                sub     ebx,ebp
+                add     ebx,psgclocks
+                mov     [esi+ecx*4],ebx
+
+                inc     psgpos
+
                 ret
 
 outemulA8:      mov     prim_slotreg,bl
@@ -1205,10 +1322,53 @@ outemulA8:      mov     prim_slotreg,bl
                 mov     memlockE0,ecx
                 ret
 
-outemulAA:      mov     ppic,bl
+outemulAA:      
+                mov     al,bl
+                mov     ppic,bl
                 and     bl,0fh
                 mov     keyboard_line,bl
+
+                mov     ecx,psgpos
+
+                mov     esi,soundbuffer
+                mov     byte ptr [esi+ecx*2],16
+                and     al,80h
+                shr     al,2
+                mov     [esi+ecx*2+1],al
+
+                mov     esi,timebuffer
+                mov     ebx,clocksleft
+                sub     ebx,ebp
+                add     ebx,psgclocks
+                mov     [esi+ecx*4],ebx
+
+                inc     psgpos
+
                 ret
+
+outemulAB:
+                test    bl,BIT_7
+                jnz     _ret
+
+                mov     cl,bl
+                shr     cl,1
+                and     cl,7
+                mov     bh,1
+                shl     bh,cl
+
+                test    bl,BIT_0
+                jz      outemulAB_reset
+
+                mov     bl,ppic
+                or      bl,bh
+                jmp     outemulAA
+
+outemulAB_reset:
+
+                mov     bl,ppic
+                xor     bh,255
+                and     bl,bh
+                jmp     outemulAA
 
 ; --------------------------------------------------------------------
 
@@ -1239,9 +1399,12 @@ inemul8E_page2:
                 ret
 
 inemul98:       mov     ecx,msxvram
-                add     ecx,vdpaddresse
-                mov     bl,[ecx]
-                inc     vdpaddress
+                mov     eax,vdpaddresse
+                mov     bl,[ecx+eax]
+                inc     eax
+                and     eax,03FFFh
+                mov     vdpaddresse,eax
+                xor     eax,eax
                 ret
 
 inemul99:       mov     bl,vdpstatus

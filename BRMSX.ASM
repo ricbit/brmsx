@@ -33,6 +33,8 @@ public filenamelist
 public read_rom
 public vesaheader
 public vesamodeinfo
+public soundbuffer
+public timebuffer
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -42,7 +44,7 @@ extrn mmxfound: dword
 
 DMABUFFERSIZE   equ     800*20
 
-msg00           db      'BrMSX 1.104',13,10
+msg00           db      'BrMSX 1.105',13,10
                 db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
@@ -66,6 +68,13 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
+msg22           db      'BrMSX 1.105',13,10
+                db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
+                db      13,10
+                db      'Official site: http://www.lsi.usp.br/'
+                db      '~ricardo/brmsx.htm',13,10
+                db      'Send bugs, comments and suggestions to '
+                db      'ricardo@lsi.usp.br',13,10,'$'
 msgnocpuid      db      '486 or below $'
 msg386          db      '386 $'
 msg486          db      '486 $'
@@ -98,6 +107,8 @@ filenamelist    dd      ?
 vesaheader      dd      ?
 vesamodeinfo    dd      ?
 diskrom         dd      ?
+soundbuffer     dd      ?
+timebuffer      dd      ?
 diskenabled     dd      0
 
 ; --------------------------------------------------------------------
@@ -277,6 +288,18 @@ _main0:
                 mov     edi,msxram
                 mov     eax,0
                 rep     stosd
+
+                ; alloc 64kb to sound buffer
+                mov     eax,64*1024
+                call     _getmem
+                jc      no_memory
+                mov     soundbuffer,eax
+
+                ; alloc 128kb to time buffer
+                mov     eax,128*1024
+                call     _getmem
+                jc      no_memory
+                mov     timebuffer,eax
 
                 ; alloc always 256kb to cart1                
                 mov     eax,256*1024
@@ -476,6 +499,12 @@ _main_novesa:
                 jne     main_nommx
                 emms
 main_nommx:
+
+                call    settextmode
+
+                ; print end message
+                mov     eax,offset msg22
+                call    printmsg
 
                 cmp     diskenabled,1
                 jne     main_exit_nodisk

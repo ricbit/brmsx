@@ -1,19 +1,19 @@
 #include <io.h>
+#include <malloc.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
 void main (int argc, char **argv) {
   int file;
-  unsigned char buff[32768];
+  unsigned char *buff;
 
-  file=open ("brmsx.sta",O_BINARY|O_RDONLY);
-  read (file,buff,0x4b);
-  read (file,buff,0x8000);
-  read (file,buff,0x2000);
-  read (file,buff,0x1000);
+  buff=(unsigned char *) malloc (4e6);
+  file=open ("aleste2.dsk",O_BINARY|O_RDONLY);
+  read (file,buff,720*1024);
+  read (file,buff,720*1024);
   close (file);
   file=open (argv[1],O_BINARY|O_CREAT|O_WRONLY,S_IRUSR|S_IWUSR);
-  write (file,buff,512);
+  write (file,buff,720*1024);
   close (file);
 }
 

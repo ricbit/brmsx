@@ -76,7 +76,7 @@ set_mouse_range:
                 mov     al,33h
                 int     33h
 
-                ; set the horizontal range from 0 to 192-25
+                ; set the vertical range from 0 to 192-25
                 mov     v86r_ax,8
                 mov     v86r_cx,0
                 mov     v86r_dx,192-25

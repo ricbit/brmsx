@@ -15,6 +15,8 @@ include pentium.inc
 
 extrn dmabuffer: dword
 extrn dmatemp: dword
+extrn timebuffer: dword
+extrn soundbuffer: dword
 
 public init_sound_blaster
 public sound_on
@@ -65,17 +67,21 @@ waitingsynch            dd      0
 
 PSGcounter              db      4*4 dup (0)
 PSGstate                db      4*4 dup (0)
-start_counter           db      4*4 dup (0)
-PSGvolume               db      4*4 dup (0)
-PSGzeroflag             db      4*4 dup (0)
-conv_factor             dd      CONV_FACTOR
-                        dd      CONV_FACTOR
-                        dd      CONV_FACTOR
-                        dd      CONV_FACTOR
+actual_channel          dd      0
+localpos                dd      0
+
+SCCcounter              db      5*4 dup (0)
+SCCstate                db      5*4 dup (0)
+
+ppiclick                db      0
 
 psgregstack             db      (16*(SKIPFACTOR+1)) dup (0)
 PSGreg                  db      16 dup (0)
 psgpointer              dd      0
+
+sccregstack             db      (16*(SKIPFACTOR+1)) dup (0)
+SCCregs                 db      16 dup (0)
+sccpointer              dd      0
 
 sb_default_pic1         db      0
 sb_default_pic2         db      0
@@ -339,8 +345,13 @@ sound_on:
                 cmp     soundenabled,0
                 je      _ret
                 call    init_dma_buffer
+
                 mov     eax,offset psgregstack
                 mov     psgpointer,eax
+
+                mov     eax,offset sccregstack
+                mov     sccpointer,eax
+
                 mov     eax,SKIPFACTOR
                 mov     irqskip,eax
                 mov     waitingsynch,1
@@ -409,374 +420,441 @@ compose_soundstream:
                 je      _ret
 
                 pushad
-                
+
                 mov     esi,offset psgreg
                 mov     edi,psgpointer
                 mov     ecx,16
                 rep     movsb
                 mov     psgpointer,edi
 
+                mov     esi,offset sccregs
+                mov     edi,sccpointer
+                mov     ecx,16
+                rep     movsb
+                mov     sccpointer,edi
+
                 dec     irqskip
                 jnz     compose_soundstream_exit
 
-                mov     eax,offset psgregstack
-                mov     psgpointer,eax
                 mov     irqskip,SKIPFACTOR
+
+                mov     esi,timebuffer
+                mov     ecx,psgpos
+                mov     [esi+ecx*4],0FFFFFFFFh
+
+                mov     localpos,0
+                call    compose_click
+
+                mov     localpos,0
+                mov     actual_channel,0
+                call    compose_channel
                 
-                mov     esi,dmatemp
-                mov     ecx,BUFFERSIZE
-                mov     edx,757+1
-
-compose_soundstream_outer_loop:
+                mov     localpos,0
+                mov     actual_channel,1
+                call    compose_channel
                 
-                push    ecx esi
-                mov     esi,psgpointer
-                mov     edi,offset PSGreg
-                mov     ecx,16/4
-                rep     movsd
-                pop     esi ecx
+                mov     localpos,0
+                mov     actual_channel,2
+                call    compose_channel
                 
-                movzx   ebx,word ptr [offset PSGreg+0]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+0],ebx
+                cmp     sccenabled,0
+                je      compose_soundstream_noscc
 
-                movzx   ebx,word ptr [offset PSGreg+2]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+4],ebx
+                cmp     sccdetected,0
+                je      compose_soundstream_noscc
 
-                movzx   ebx,word ptr [offset PSGreg+4]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+8],ebx
-
-compose_soundstream_loop:
-
-                irp     channel,<0,1,2>
-
-                add     dword ptr [offset PSGcounter+channel*4],CONV_FACTOR
-                mov     eax,dword ptr [offset PSGcounter+channel*4]
-                cmp     eax,dword ptr [offset start_counter+channel*4]
-                jle     compose_soundstream_nextchannel_&channel
-
-                cmp     dword ptr [offset start_counter+channel*4],0
-                je      compose_soundstream_zero_&channel
-
-                mov     eax,dword ptr [offset start_counter+channel*4]
-                sub     dword ptr [offset PSGcounter+channel*4],eax
-
-                cmp     dword ptr [offset PSGstate+channel*4],0
-                je      compose_soundstream_levelzero_&channel
-
-                mov     dword ptr [offset PSGstate+channel*4],0
-                jmp     compose_soundstream_nextchannel_&channel
-
-compose_soundstream_levelzero_&channel:
-
-                movzx    eax,byte ptr [offset PSGreg+8+channel]
-                test     eax,00010000b
-                jnz      compose_soundstream_envelope_&channel
-                and      eax,0Fh
-                add      eax,eax
-                mov      dword ptr [offset PSGstate+channel*4],eax
-                jmp      compose_soundstream_nextchannel_&channel
-
-compose_soundstream_zero_&channel:
-               
-                movzx    eax,byte ptr [offset PSGreg+8+channel]
-                and      eax,0Fh
-                add      eax,eax
-                mov      dword ptr [offset PSGstate+channel*4],eax
-                mov      dword ptr [offset PSGcounter+channel*4],0
-                jmp      compose_soundstream_nextchannel_&channel
-
-compose_soundstream_envelope_&channel:
-                mov      dword ptr [offset PSGstate+channel*4],0
-                mov      dword ptr [offset PSGcounter+channel*4],0
-
-compose_soundstream_nextchannel_&channel:
-
-                endm
-
-compose_soundstream_mix:
-
-                mov     eax,0
+                mov     localpos,0
+                mov     actual_channel,0
+                call    compose_scc
                 
-                test    byte ptr [offset PSGreg+7],BIT_0
-                jnz     compose_soundstream_mix1
-                add     eax,dword ptr [offset PSGstate+0*4]
-
-compose_soundstream_mix1:
+                mov     localpos,0
+                mov     actual_channel,1
+                call    compose_scc
                 
-                test    byte ptr [offset PSGreg+7],BIT_1
-                jnz     compose_soundstream_mix2
-                add     eax,dword ptr [offset PSGstate+1*4]
-
-compose_soundstream_mix2:
+                mov     localpos,0
+                mov     actual_channel,2
+                call    compose_scc
                 
-                test    byte ptr [offset PSGreg+7],BIT_2
-                jnz     compose_soundstream_next       
-                add     eax,dword ptr [offset PSGstate+2*4]
-
-compose_soundstream_next:
-
-                mov     [esi],al
-                inc     esi
+                mov     localpos,0
+                mov     actual_channel,3
+                call    compose_scc
                 
-                dec     edx
-                jz      compose_soundstream_nextint
-                
-                dec     ecx
-                jnz     compose_soundstream_loop
+                mov     localpos,0
+                mov     actual_channel,4
+                call    compose_scc
 
+compose_soundstream_noscc:
+                
                 mov     eax,offset psgregstack
                 mov     psgpointer,eax
 
-compose_soundstream_exit:                
+                mov     eax,offset sccregstack
+                mov     sccpointer,eax
+
+                mov     psgpos,0
+                mov     psgclear,1
+
+compose_soundstream_exit:
 
                 mov     dmaready,1
-                
                 popad
                 ret
 
-compose_soundstream_nextint:
-                dec     ecx
-                add     psgpointer,16
-                mov     edx,757
-                jmp     compose_soundstream_outer_loop
+; compose_click ------------------------------------------------------
+; compose and mix the keyboard click
 
-; compose_soundstream_MMX --------------------------------------------
-; compose the output sound stream (MMX version)
-; based on PSG registers
+compose_click:
 
-compose_soundstream_MMX:
+                mov     ecx,0
+                mov     edi,BUFFERSIZE
+                mov     esi,dmatemp
+                mov     ebp,timebuffer
+                mov     ebp,[ebp]
+                shl     ebp,8
+                mov     al,ppiclick
 
-                pushad
+compose_click_loop:
+                mov     [esi],al
+                inc     esi                
+
+                add     ecx,20159
+                cmp     ecx,ebp
+                jb      compose_click_nextsample
+
+                mov     ebp,localpos
+                add     ebp,ebp
+                add     ebp,soundbuffer
+
+                mov     al,byte ptr [ebp]
+                mov     dl,byte ptr [ebp+1]
+                cmp     al,16
+                jne     compose_channel_notclick
+                mov     ppiclick,dl
+compose_channel_notclick:
+
+                inc     localpos
+
+                mov     ebp,localpos
+                shl     ebp,2
+                add     ebp,timebuffer
+                mov     ebp,dword ptr [ebp]
+                shl     ebp,8
+
+                mov     al,ppiclick
+
+compose_click_nextsample:
+                dec     edi
+                jnz     compose_click_loop
+
+                ret
+
+
+; compose_channel ----------------------------------------------------
+; compose and mix a PSG square channel
+; enter: actual_channel
+
+compose_channel:
                 
-                mov     esi,offset psgreg
-                mov     edi,psgpointer
-                mov     ecx,16
-                rep     movsb
-                mov     psgpointer,edi
-
-                dec     irqskip
-                jnz     compose_soundstream_exit
-
                 mov     eax,offset psgregstack
                 mov     psgpointer,eax
-                mov     irqskip,SKIPFACTOR
-                
-                mov     esi,dmatemp
-                mov     ecx,BUFFERSIZE
-                mov     edx,757+1
 
-compose_soundstream_outer_loop_MMX:
-                
-                push    ecx esi
-                mov     esi,psgpointer
+                mov     esi,psgpointer                     
                 mov     edi,offset PSGreg
                 mov     ecx,16/4
                 rep     movsd
-                pop     esi ecx
-                
-                movzx   ebx,word ptr [offset PSGreg+0]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+0],ebx
 
-                movzx   ebx,word ptr [offset PSGreg+2]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+4],ebx
+                mov     edi,actual_channel
+                mov     edx,dword ptr [offset PSGcounter+edi*4]
+                mov     eax,dword ptr [offset PSGstate+edi*4]
 
-                movzx   ebx,word ptr [offset PSGreg+4]
-                shl     ebx,16
-                mov     dword ptr [offset start_counter+8],ebx
+                mov     ecx,0
+                mov     ebp,timebuffer
+                mov     ebp,[ebp]
+                shl     ebp,8
 
-                ; soundinit MMX
+                mov     edi,BUFFERSIZE
+                mov     esi,dmatemp
 
-                ;movq    mm0,qword ptr [offset PSGcounter+0]
-                movq    
-                db      00000101b
-                dd      offset PSGcounter+0
+compose_channel_outer:
 
-                ;movq    mm4,qword ptr [offset PSGcounter+8]
-                movq    
-                db      00100101b
-                dd      offset PSGcounter+8
+                call    modify_parameters
 
-                ;movq    mm1,qword ptr [offset start_counter+0]
-                movq    
-                db      00001101b
-                dd      offset start_counter+0
-                
-                ;movq    mm5,qword ptr [offset start_counter+8]
-                movq    
-                db      00101101b
-                dd      offset start_counter+8
+compose_channel_loop:                
+                add     edx,CONV_FACTOR
+                cmp     edx,ebx
+                jle     compose_channel_mix
 
-                ;movq    mm3,qword ptr [offset PSGstate+0]
-                movq
-                db      00011101b
-                dd      offset PSGstate+0
+                or      ebx,ebx
+                jz      compose_channel_start0
 
-                ;movq    mm7,qword ptr [offset PSGstate+8]
-                movq
-                db      00111101b
-                dd      offset PSGstate+8
+                sub     edx,ebx
 
-                irp     channel,<0,1,2>
+                or      al,al
+                jz      compose_channel_level
 
-                movzx   eax,byte ptr [offset PSGreg+8+channel]
-                and     eax,0Fh
-                add     eax,eax
-                mov     dword ptr [offset PSGvolume+channel*4],eax
+                mov     al,0
+                jmp     compose_channel_mix
 
-                mov     eax,dword ptr [offset start_counter+channel*4]
-                cmp     eax,0
-                je      compose_soundstream_MMX_zeroflag_&channel
-                mov     eax,0FFFFFFFFh
-compose_soundstream_MMX_zeroflag_&channel:
-                mov     dword ptr [offset PSGzeroflag+channel*4],eax
+compose_channel_level:
+                mov     al,ah
+                jmp     compose_channel_mix
 
-                cmp     dword ptr [offset PSGstate+channel*4],0
-                je      compose_soundstream_MMX_zerocheck_&channel
-                mov     eax,dword ptr [offset PSGvolume+channel*4]
-                mov     dword ptr [offset PSGstate+channel*4],eax
-compose_soundstream_MMX_zerocheck_&channel:
+compose_channel_start0:
 
-                endm
+                mov     al,ah
+                mov     edx,0
+                jmp     compose_channel_mix
 
-compose_soundstream_loop_MMX:
-
-                ; mm0=psgcounter
-                ; mm0=mm0+conv_factor
-                ;paddd   mm0,conv_factor
-                paddd
-                db      00000101b
-                dd      offset conv_factor
-                
-                ;movq    mm2,mm0
-                movq
-                db      11010000b
-                
-                ; mm0>start_counter?
-                ;pcmpgtd mm2,mm1
-                pcmpgtd
-                db      11010001b
-
-                ;pand    mm2,[volume]
-                pand
-                db      00010101b
-                dd      offset PSGvolume
-
-                ; switch psgstate
-                ;pxor    mm3,mm2
-                pxor
-                db      11011010b
-
-                ;movq    mm2,mm0
-                movq
-                db      11010000b
-
-                ;pcmpgtd mm2,mm1
-                pcmpgtd
-                db      11010001b
-
-                ;pand    mm2,[conv_factor]
-                pand
-                db      00010101b
-                dd      offset conv_factor
-                 
-                ;psubd   mm0,mm2
-                psubd
-                db      11000010b
-
-                ;pandd   mm0,[PSGzeroflag]
-                pand
-                db      00000101b
-                dd      offset PSGzeroflag
-
-                ; soundtranslate MMX
-
-                ;movq    qword ptr [offset PSGstate+0],mm3
-                movq_st
-                db      00011101b
-                dd      offset PSGstate
-
-                ;movq    qword ptr [offset PSGstate+8],mm7
-                movq_st
-                db      00111101b
-                dd      offset PSGstate+8
-
-compose_soundstream_mix_MMX:
-
-                mov     eax,0
-                
-                test    byte ptr [offset PSGreg+7],BIT_0
-                jnz     compose_soundstream_mix1_MMX
-                add     eax,dword ptr [offset PSGstate+0*4]
-
-compose_soundstream_mix1_MMX:
-                
-                test    byte ptr [offset PSGreg+7],BIT_1
-                jnz     compose_soundstream_mix2_MMX
-                add     eax,dword ptr [offset PSGstate+1*4]
-
-compose_soundstream_mix2_MMX:
-                
-                test    byte ptr [offset PSGreg+7],BIT_2
-                jnz     compose_soundstream_next_MMX
-                ;add     eax,dword ptr [offset PSGstate+2*4]
-
-compose_soundstream_next_MMX:
-
-                mov     [esi],al
+compose_channel_mix:
+                add     [esi],al
                 inc     esi
-                
-                dec     edx
-                jz      compose_soundstream_nextint_MMX
-                
-                dec     ecx
-                jnz     compose_soundstream_loop_MMX
 
-                mov     eax,offset psgregstack
-                mov     psgpointer,eax
+                add     ecx,20159
+                cmp     ecx,ebp
+                jb      compose_channel_nextsample
 
-compose_soundstream_exit_MMX:
+                mov     ebp,localpos
+                add     ebp,ebp
+                add     ebp,soundbuffer
+                push    eax ecx
+
+                movzx   eax,byte ptr [ebp]
+                mov     cl,byte ptr [ebp+1]
+                cmp     al,15
+                ja      compose_channel_notpsg
+                mov     [offset PSGreg+eax],cl
+compose_channel_notpsg:
+
+                inc     localpos
+
+                mov     ebp,localpos
+                shl     ebp,2
+                add     ebp,timebuffer
+                mov     ebp,dword ptr [ebp]
+                shl     ebp,8
+
+                pop     ecx eax
+
+                call    modify_parameters
+
+compose_channel_nextsample:
+                dec     edi
+                jnz     compose_channel_loop
+
+                mov     edi,actual_channel
+                mov     dword ptr [offset PSGcounter+edi*4],edx
+                mov     dword ptr [offset PSGstate+edi*4],eax
                 
-                popad
                 ret
 
-compose_soundstream_nextint_MMX:
-                dec     ecx
-                add     psgpointer,16
-                mov     edx,757
-                jmp     compose_soundstream_outer_loop_MMX
+; --------------------------------------------------------------------
+                
+modify_parameters:
+                
+                push    edi
+                mov     edi,actual_channel
+                mov     dword ptr [offset PSGcounter+edi*4],edx
+                mov     dword ptr [offset PSGstate+edi*4],eax
+                pop     edi
+                
+                mov     eax,actual_channel
+                
+                ; ebx = start_counter
+                movzx   ebx,word ptr [offset PSGreg+eax*2]
+                shl     ebx,16
+
+                ; edx = psg_counter
+                mov     edx,dword ptr [offset PSGcounter+eax*4]
+
+                ; cl = volume
+                push    ecx
+                mov     cl,byte ptr [offset PSGreg+8+eax]
+                and     cl,01Fh
+                
+                ; al = psg_state
+                mov     eax,dword ptr [offset PSGstate+eax*4]
+
+                ; turn off envelope
+                mov     ch,cl
+                shr     ch,4
+                xor     ch,1
+                shl     ch,7
+                sar     ch,3
+                shr     ch,4
+                and     cl,ch
+
+                ; turn off oscillator if the channel is off
+                mov     ch,byte ptr [offset PSGreg+7]
+
+                push    ecx
+                mov     ah,ch
+                mov     ecx,actual_channel
+                shr     ah,cl
+                pop     ecx
+
+                mov     ch,ah
+
+                mov     ah,cl
+
+                shl     ecx,16+7
+                sar     ecx,31
+
+                xor     ecx,0FFFFFFFFh
+                and     ebx,ecx
+
+                pop     ecx
+
+                ret
+
+; compose_scc --------------------------------------------------------
+; compose and mix a SCC channel
+; enter: actual_channel
+
+compose_scc:
+                
+                mov     eax,offset sccregstack
+                mov     sccpointer,eax
+
+                mov     esi,sccpointer                     
+                mov     edi,offset SCCregs
+                mov     ecx,16/4
+                rep     movsd
+
+                mov     edi,actual_channel
+                mov     edx,dword ptr [offset SCCcounter+edi*4]
+                mov     eax,dword ptr [offset SCCstate+edi*4]
+
+                mov     ecx,0
+                mov     ebp,timebuffer
+                mov     ebp,[ebp]
+                shl     ebp,8
+
+                mov     edi,BUFFERSIZE
+                mov     esi,dmatemp
+
+compose_scc_outer:
+
+                call    modify_parameters_scc
+
+compose_scc_loop:                
+                add     edx,CONV_FACTOR
+                cmp     edx,ebx
+                jle     compose_scc_mix
+
+                or      ebx,ebx
+                jz      compose_scc_start0
+
+                sub     edx,ebx
+
+                or      al,al
+                jz      compose_scc_level
+
+                mov     al,0
+                jmp     compose_scc_mix
+
+compose_scc_level:
+                mov     al,ah
+                jmp     compose_scc_mix
+
+compose_scc_start0:
+
+                mov     al,ah
+                mov     edx,0
+                jmp     compose_scc_mix
+
+compose_scc_mix:
+                add     [esi],al
+                inc     esi
+
+                add     ecx,20159
+                cmp     ecx,ebp
+                jb      compose_scc_nextsample
+
+                mov     ebp,localpos
+                add     ebp,ebp
+                add     ebp,soundbuffer
+                push    eax ecx
+
+                movzx   eax,byte ptr [ebp]
+                mov     cl,byte ptr [ebp+1]
+                cmp     al,80h
+                jb      compose_channel_notscc
+                mov     [offset SCCregs+eax-080h],cl
+compose_channel_notscc:
+
+                inc     localpos
+
+                mov     ebp,localpos
+                shl     ebp,2
+                add     ebp,timebuffer
+                mov     ebp,dword ptr [ebp]
+                shl     ebp,8
+
+                pop     ecx eax
+
+                call    modify_parameters_scc
+
+compose_scc_nextsample:
+                dec     edi
+                jnz     compose_scc_loop
+
+                mov     edi,actual_channel
+                mov     dword ptr [offset SCCcounter+edi*4],edx
+                mov     dword ptr [offset SCCstate+edi*4],eax
+                
+                ret
+
+; --------------------------------------------------------------------
+                
+modify_parameters_scc:
+                
+                push    edi
+                mov     edi,actual_channel
+                mov     dword ptr [offset SCCcounter+edi*4],edx
+                mov     dword ptr [offset SCCstate+edi*4],eax
+                pop     edi
+                
+                mov     eax,actual_channel
+                
+                ; ebx = start_counter
+                movzx   ebx,word ptr [offset SCCregs+eax*2]
+                shl     ebx,16
+
+                ; edx = psg_counter
+                mov     edx,dword ptr [offset SCCcounter+eax*4]
+
+                ; cl = volume
+                push    ecx
+                mov     cl,byte ptr [offset SCCregs+10+eax]
+                and     cl,01Fh
+                
+                ; al = psg_state
+                mov     eax,dword ptr [offset SCCstate+eax*4]
+
+                ; turn off oscillator if the channel is off
+                mov     ch,byte ptr [offset SCCregs+15]
+                xor     ch,255
+
+                push    ecx
+                mov     ah,ch
+                mov     ecx,actual_channel
+                shr     ah,cl
+                pop     ecx
+
+                mov     ch,ah
+
+                mov     ah,cl
+
+                shl     ecx,16+7
+                sar     ecx,31
+
+                xor     ecx,0FFFFFFFFh
+                and     ebx,ecx
+
+                pop     ecx
+
+                ret
 
 code32          ends
                 end
-
-
-                ; mm0=psgcounter
-                ; mm0=mm0+conv_factor
-                paddd   mm0,[conv_factor]
-                
-                movq    mm2,mm0
-                
-                ; mm0>start_counter?
-                pcmpgtd mm2,mm1
-
-                ; mm3=volume
-                pand    mm2,[volume]
-
-                ; switch psgstate
-                pxor    mm3,mm2
-
-                movq    mm2,mm0
-
-                pcmpgtd mm2,mm1
-
-                pand    mm2,[conv_factor]
-
-                psubd   mm0,mm2
-
-                pandd   mm0,[startcounteris0]
-
 

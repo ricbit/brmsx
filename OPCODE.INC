@@ -752,10 +752,13 @@ emul&opcode:
                 mov     iff1,1
                 sub     ebp,4+1
                 cmp     iline,0
-                ;ret;;;
                 je      _ret
+
                 mov     clocksleft,ebp
-                mov     ebp,0
+                ;mov     ebp,59659
+                ;sub     ebp,clocksleft
+                ;add     psgclocks,ebp
+                mov     ebp,1
                 mov     iline,0
                 ret
 

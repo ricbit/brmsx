@@ -23,6 +23,7 @@ include mouse.inc
 include joystick.inc
 
 include debugsrc.inc
+include debugsr2.inc
 include helpsrc.inc
 include srsrc.inc
 include clsrc.inc
@@ -89,6 +90,7 @@ align 4
 
 quitnow         dd      0
 vesa2found      dd      0
+debugtype       dd      1
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -263,6 +265,13 @@ change_sound:
                 mov     eax,sounddetected
                 xor     soundenabled,eax
                 ret
+
+; --------------------------------------------------------------------
+
+change_scc:
+                xor     sccenabled,1
+                ret
+
 ; --------------------------------------------------------------------
 
 change_joystick:
@@ -333,6 +342,10 @@ checkpentium1:
 ; render a debug screen
 
 render_debug:
+
+                cmp     debugtype,2
+                je      render_debug2
+
                 ; copy the template to temp buffer
                 
                 mov     esi,offset debug_screen
@@ -340,178 +353,7 @@ render_debug:
                 mov     ecx,3840/4
                 rep     movsd
 
-; --------------------------------------------------------------------
-                
-                ; print the resolution
-                
-                cmp     videomode,1
-                jae     print_res1
-                mov     eax,offset res320
-                jmp     print_res0
-print_res1:
-                cmp     videomode,2
-                jae     print_res2
-                mov     eax,offset res256
-                jmp     print_res0
-print_res2:
-                mov     eax,offset res512
-print_res0:
-                COORD   15,21
-                call    printmsgd
-                
-; --------------------------------------------------------------------
-
-                ; print the emulation mode
-
-                cmp     emulatemode,0
-                jne     print_mode1
-                mov     eax,offset modenormal
-                jmp     print_mode0
-print_mode1:
-                cmp     emulatemode,1
-                jne     print_mode2
-                mov     eax,offset modefast
-                jmp     print_mode0
-print_mode2:
-                mov     eax,offset modeturbo
-print_mode0:
-                COORD   73,21
-                call    printmsgd
-
-; --------------------------------------------------------------------
-
-                ; print the vsync mode
-
-                cmp     vsyncflag,0
-                jne     print_vsync1
-                mov     eax,offset stateoff
-                jmp     print_vsync_done
-print_vsync1:
-                mov     eax,offset stateon
-print_vsync_done:
-                COORD   30,22
-                call    printmsgd
-
-; --------------------------------------------------------------------
-
-                ; print the sound mode
-
-                cmp     soundenabled,0
-                jne     print_sound1
-                mov     eax,offset stateoff
-                jmp     print_sound_done
-print_sound1:
-                mov     eax,offset stateon
-print_sound_done:
-                COORD   18,22
-                call    printmsgd
-
-; --------------------------------------------------------------------
-
-                ; print the bar graph status
-
-                cmp     bargraphmode,1
-                je      print_bar1
-                mov     eax,offset stateoff
-                jmp     print_bar0
-print_bar1:
-                mov     eax,offset stateon
-print_bar0:
-                COORD   57,21
-                call    printmsgd
-
-; --------------------------------------------------------------------
-
-                ; print the COM port being used
-
-                COORD   57,22
-                cmp     comport,1
-                jne     print_com2
-                mov     eax,offset com1
-                call    printmsgd
-                jmp     print_com_exit
-print_com2:
-                cmp     comport,2
-                jne     print_com3
-                mov     eax,offset com2
-                call    printmsgd
-                jmp     print_com_exit
-print_com3:
-                cmp     comport,3
-                jne     print_com4
-                mov     eax,offset com3
-                call    printmsgd
-                jmp     print_com_exit
-print_com4:
-                mov     eax,offset com4
-                call    printmsgd
-print_com_exit:
-
-; --------------------------------------------------------------------
-
-                ; print the session mode
-
-                COORD   44,22
-                cmp     sessionmode,0
-                jne     print_session1
-                mov     eax,offset sessionsingle
-                call    printmsgd
-                jmp     print_session_exit
-print_session1:
-                cmp     sessionmode,1
-                jne     print_session2
-                mov     eax,offset sessionserver
-                call    printmsgd
-                jmp     print_session_exit
-print_session2:
-                mov     eax,offset sessionclient
-                call    printmsgd
-print_session_exit:
-
-; --------------------------------------------------------------------
-
-                ; print the joystick mode
-
-                COORD   8,22
-                cmp     joyenable,0
-                jne     joystick_mode1
-                mov     eax,offset joyn
-                call    printmsgd
-                jmp     joystick_mode_exit
-joystick_mode1:
-                cmp     joyenable,1
-                jne     joystick_mode2
-                mov     eax,offset joya
-                call    printmsgd
-                jmp     joystick_mode_exit
-joystick_mode2:
-                mov     eax,offset joyb
-                call    printmsgd
-joystick_mode_exit:
-
-; --------------------------------------------------------------------
-
-                ; print the frame skipping factor
-
-                mov     eax,framerate
-                call    convhex4
-                mov     eax,offset tmphex4
-                COORD   40,21
-                call    printmsgd
-
-; --------------------------------------------------------------------
-
-                ; print the image type
-
-                cmp     imagetype,0
-                jne     print_image0
-                mov     eax,offset imagedynamic
-                jmp     print_image1
-print_image0:
-                mov     eax,offset imagestatic
-print_image1:
-                COORD   72,22
-                call    printmsgd
+                call    status_bar
 
 ; --------------------------------------------------------------------
 
@@ -919,6 +761,310 @@ print_mega:
 
                 ret
 
+; --------------------------------------------------------------------
+                
+render_debug2:
+                ; second debug screen
+                ; copy the template to temp buffer
+                
+                mov     esi,offset debug2_screen
+                mov     edi,offset temp_screen
+                mov     ecx,3840/4
+                rep     movsd
+
+                call    status_bar
+
+; --------------------------------------------------------------------
+                
+                ; dump the msx memory (large version)
+
+                irp     i,<0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15>
+                mov     eax,memdump
+                add     eax,i*8
+
+                ; print the address
+                push    eax                
+                call    convhex4
+                COORD   4,3+i
+                mov     eax,offset tmphex4
+                call    printmsgd
+                pop     eax
+
+                ; print the contents in hex format
+                xor     ecx,ecx
+                COORD   9,3+i
+print2_dump1&i:
+                push    eax
+                lea     edi,[eax+ecx]
+                call    fetch
+                call    convhex4
+                mov     eax,offset tmphex2
+                push    edx
+                call    printmsgd
+                pop     edx
+                pop     eax
+                add     edx,3
+                inc     ecx
+                cmp     ecx,8
+                jnz     print2_dump1&i
+                
+                ; print the contents in ascii format
+                xor     ecx,ecx
+                COORD   33,3+i
+print2_dump2&i:
+                push    eax
+                lea     edi,[eax+ecx]
+                call    fetch
+                cmp     al,32
+                jb      print2_dump3&i
+                cmp     al,128
+                jae     print2_dump3&i
+                mov     tabspace,al
+                push    edx
+                mov     eax,offset tabspace
+                call    printmsgd
+                pop     edx
+print2_dump3&i:
+                pop     eax
+                inc     ecx                
+                inc     edx
+                cmp     ecx,8
+                jnz     print2_dump2&i
+
+                endm
+
+; --------------------------------------------------------------------
+
+                ; print the SCC registers
+
+                ; frequency registers
+                irp     i,<0,1,2,3,4>
+
+                mov     ax,word ptr [offset sccregs+i*2]
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   49,3+i
+                call    printmsgd
+
+                endm
+                
+                ; volume registers
+                irp     i,<0,1,2,3,4>
+
+                mov     al,byte ptr [offset sccregs+i+10]
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   49,8+i
+                call    printmsgd
+
+                endm
+
+; --------------------------------------------------------------------
+                
+                ; blit the temp buffer to screen 
+                
+                push    es
+                mov     ax,gs
+                mov     es,ax
+                mov     esi,offset temp_screen
+                mov     edi,0b8000h
+                mov     ecx,80*24*2/4
+                rep     movsd
+                pop     es
+
+                ret
+
+; --------------------------------------------------------------------
+                
+status_bar:
+
+                ; print the resolution
+                
+                cmp     videomode,1
+                jae     print_res1
+                mov     eax,offset res320
+                jmp     print_res0
+print_res1:
+                cmp     videomode,2
+                jae     print_res2
+                mov     eax,offset res256
+                jmp     print_res0
+print_res2:
+                mov     eax,offset res512
+print_res0:
+                COORD   15,21
+                call    printmsgd
+                
+; --------------------------------------------------------------------
+
+                ; print the emulation mode
+
+                cmp     emulatemode,0
+                jne     print_mode1
+                mov     eax,offset modenormal
+                jmp     print_mode0
+print_mode1:
+                cmp     emulatemode,1
+                jne     print_mode2
+                mov     eax,offset modefast
+                jmp     print_mode0
+print_mode2:
+                mov     eax,offset modeturbo
+print_mode0:
+                COORD   73,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the vsync mode
+
+                cmp     vsyncflag,0
+                jne     print_vsync1
+                mov     eax,offset stateoff
+                jmp     print_vsync_done
+print_vsync1:
+                mov     eax,offset stateon
+print_vsync_done:
+                COORD   30,22
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the sound mode
+
+                cmp     soundenabled,0
+                jne     print_sound1
+                mov     eax,offset stateoff
+                jmp     print_sound_done
+print_sound1:
+                mov     eax,offset stateon
+print_sound_done:
+                COORD   18,22
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the bar graph status
+
+                cmp     bargraphmode,1
+                je      print_bar1
+                mov     eax,offset stateoff
+                jmp     print_bar0
+print_bar1:
+                mov     eax,offset stateon
+print_bar0:
+                COORD   57,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the COM port being used
+
+                COORD   57,22
+                cmp     comport,1
+                jne     print_com2
+                mov     eax,offset com1
+                call    printmsgd
+                jmp     print_com_exit
+print_com2:
+                cmp     comport,2
+                jne     print_com3
+                mov     eax,offset com2
+                call    printmsgd
+                jmp     print_com_exit
+print_com3:
+                cmp     comport,3
+                jne     print_com4
+                mov     eax,offset com3
+                call    printmsgd
+                jmp     print_com_exit
+print_com4:
+                mov     eax,offset com4
+                call    printmsgd
+print_com_exit:
+
+; --------------------------------------------------------------------
+
+                ; print the session mode
+
+                COORD   44,22
+                cmp     sessionmode,0
+                jne     print_session1
+                mov     eax,offset sessionsingle
+                call    printmsgd
+                jmp     print_session_exit
+print_session1:
+                cmp     sessionmode,1
+                jne     print_session2
+                mov     eax,offset sessionserver
+                call    printmsgd
+                jmp     print_session_exit
+print_session2:
+                mov     eax,offset sessionclient
+                call    printmsgd
+print_session_exit:
+
+; --------------------------------------------------------------------
+
+                ; print the joystick mode
+
+                COORD   8,22
+                cmp     joyenable,0
+                jne     joystick_mode1
+                mov     eax,offset joyn
+                call    printmsgd
+                jmp     joystick_mode_exit
+joystick_mode1:
+                cmp     joyenable,1
+                jne     joystick_mode2
+                mov     eax,offset joya
+                call    printmsgd
+                jmp     joystick_mode_exit
+joystick_mode2:
+                mov     eax,offset joyb
+                call    printmsgd
+joystick_mode_exit:
+
+; --------------------------------------------------------------------
+
+                ; print the frame skipping factor
+
+                mov     eax,framerate
+                call    convhex4
+                mov     eax,offset tmphex4
+                COORD   40,21
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the image type
+
+                cmp     imagetype,0
+                jne     print_image0
+                mov     eax,offset imagedynamic
+                jmp     print_image1
+print_image0:
+                mov     eax,offset imagestatic
+print_image1:
+                COORD   72,22
+                call    printmsgd
+
+; --------------------------------------------------------------------
+
+                ; print the SCC status
+
+                cmp     sccenabled,0
+                jne     print_scc0
+                mov     eax,offset imagedynamic
+                jmp     print_scc1
+print_scc0:
+                mov     eax,offset imagestatic
+print_scc1:
+                COORD   72,23
+                call    printmsgd
+
+                ret
+
 ; init_compiler ------------------------------------------------------
 ; initialize the luts for the compile pipeline
 
@@ -964,6 +1110,8 @@ debug_loop:
                 je      command_0
                 cmp     al,'M'
                 je      command_m
+                cmp     al,'X'
+                je      command_x
                 cmp     al,'S'
                 je      command_s
                 cmp     al,'B'
@@ -1012,8 +1160,34 @@ debug_loop:
 
 command_extended:
                 call    crlf
-                cmp     ah,59
+                cmp     ah,59 ;F1
                 je      command_help
+                cmp     ah,73 ;page up
+                je      command_pgup
+                cmp     ah,81 ;page down
+                je      command_pgdown
+                jmp     debug_loop
+
+command_pgup:
+                cmp     debugtype,1
+                jne     command_pgup_2
+                sub     memdump,32
+                and     memdump,0FFFFh
+                jmp     debug_loop
+command_pgup_2:
+                sub     memdump,16*8
+                and     memdump,0FFFFh
+                jmp     debug_loop
+
+command_pgdown:
+                cmp     debugtype,1
+                jne     command_pgdown_2
+                add     memdump,32
+                and     memdump,0FFFFh
+                jmp     debug_loop
+command_pgdown_2:
+                add     memdump,16*8
+                and     memdump,0FFFFh
                 jmp     debug_loop
 
 command_e:
@@ -1046,6 +1220,10 @@ command_r:
                 call    UART_receive_idstring
                 mov     eax,offset modenormal
                 call    writemessage
+                jmp     debug_loop
+
+command_x:
+                call    change_scc
                 jmp     debug_loop
 
 command_help:
@@ -1213,64 +1391,11 @@ command_k_print:
                 jmp     debug_loop
 
 command_1:
-                call    checkpentium
-                jc      debug_loop
-                call    setgraphmode
-                call    clear
-                rdtsc
-                push    eax
-                cli     
-                call    render_screen1
-                sti
-                call    blit
-                pop     ebx
-                rdtsc
-                sub     eax,ebx
-                push    eax
-                call    getchar
-                call    settextmode
-                pop     eax
-                push    eax
-                shr     eax,16
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                pop     eax
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                call    crlf
+                mov     debugtype,1
                 jmp     debug_loop
 
 command_2:
-                call    checkpentium
-                jc      debug_loop
-                call    setgraphmode
-                call    clear
-                call    set_border_color
-                rdtsc
-                push    eax
-                cli     
-                call    render_screen2
-                sti
-                call    blit
-                pop     ebx
-                rdtsc
-                sub     eax,ebx
-                push    eax
-                call    getchar
-                call    settextmode
-                pop     eax
-                push    eax
-                shr     eax,16
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                pop     eax
-                call    convhex4
-                mov     eax,offset tmphex4
-                call    writemessage
-                call    crlf
+                mov     debugtype,2
                 jmp     debug_loop
 
 command_t:

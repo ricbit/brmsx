@@ -1,10 +1,12 @@
 - fix border color in 256 mode
 - add video cache for screen 0
-- improve video cache in screen 2
+- improve video cache in screen 2 (is it worth?)
+- add sprites 8x8
+- add sprite zoom
+- add sprite collision detection
+- add sprite ocultation
 - improve gui
 - finish the compiler
 - noise/envelope in sound
-- add clock-perfect sound sync
-- optimize sound composing functions
 - add low-level and high-level disk functions
 - add true-disk emulation

@@ -111,3 +111,9 @@ extrn LDI_table: byte
 extrn imtype: dword
 extrn iline: dword
 extrn clocksleft: dword
+extrn psgpos: dword
+extrn psgclocks: dword
+extrn psgclear: dword
+extrn sccregs: byte
+extrn sccdetected: dword
+extrn sccenabled: dword

@@ -244,25 +244,36 @@ draw_update0:
 
 draw_psggraph:
 
-                movzx   eax,byte ptr [offset psgreg+8]
+                irp     i,<0,1,2>
+                
+                movzx   eax,byte ptr [offset psgreg+8+i]
                 and     eax,0Fh
-                mov     edi,30*8
+                mov     edi,30*8+i*4
                 call    draw_psggraph_channel
 
-                movzx   eax,byte ptr [offset psgreg+9]
-                and     eax,0Fh
-                mov     edi,30*8+4
-                call    draw_psggraph_channel
-
-                movzx   eax,byte ptr [offset psgreg+10]
-                and     eax,0Fh
-                mov     edi,30*8+8
-                call    draw_psggraph_channel
+                endm
 
                 mov     word ptr [offset dirtyname+30+0*32],0101h
                 mov     word ptr [offset dirtyname+30+1*32],0101h
                 mov     word ptr [offset dirtyname+30+2*32],0101h
                 mov     word ptr [offset dirtyname+30+3*32],0101h
+
+                cmp     sccenabled,0
+                je      _ret
+
+                irp     i,<0,1,2,3,4>
+
+                movzx   eax,byte ptr [offset sccregs+10+i]
+                and     eax,0Fh
+                mov     edi,27*8+i*4
+                call    draw_psggraph_channel
+                
+                endm
+
+                mov     dword ptr [offset dirtyname+27+0*32],01010101h
+                mov     dword ptr [offset dirtyname+27+1*32],01010101h
+                mov     dword ptr [offset dirtyname+27+2*32],01010101h
+                mov     dword ptr [offset dirtyname+27+3*32],01010101h
 
                 ret
 
@@ -279,8 +290,6 @@ draw_psggraph_channel_loop:
                 mov     [edi+1],bl
                 mov     [edi+2],bl
                 mov     [edi+3],bl
-                ;mov     byte ptr [edi+1],08h
-                ;mov     word ptr [edi+2],0808h
                 cmp     ecx,1
                 je      draw_psggraph_channel_next
                 mov     byte ptr [edi+1+256],01h

@@ -1,7 +1,7 @@
 OBJECTS = pmode.o brmsx.o debug.o patch.o \
 	  compiler.o compcb.o comped.o \
 	  io.o saveload.o gui.o blit.o psg.o \
-	  serial.o mouse.o pentium.o vesa.o joystick.o \
+	  serial.o mouse.o pentium.o vesa.o joystick.o winsock.o \
 	  z80.o z80sing.o z80cb.o z80dd.o z80ed.o z80fd.o \
 	  print.o printcb.o printdd.o printfd.o
 TASM = tasm

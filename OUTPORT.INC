@@ -342,7 +342,7 @@ outportxx:
 	; AA
  dd outemulAA
 	; AB
- dd outemulXX
+ dd outemulAB
 	; AC
  dd outemulXX
 	; AD

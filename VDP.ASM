@@ -1624,8 +1624,8 @@ dirty_screen1_nothing:
                 ret
 
 dirty_screen1_name:
-                cmp     [eax+esi],bl
-                je      dirty_screen1_nothing
+                cmp     [ecx+esi],bl
+                je      _ret
                 mov     eax,ecx
                 sub     ecx,nametable
                 mov     [eax+esi],bl
@@ -1648,6 +1648,8 @@ dirty_screen1_color:
                 shl     ecx,3
                 mov     [eax+esi],bl
                 mov     ebx,01010101h
+                ; there is no problem because the two upper
+                ; dirty pattern tables aren't used in scr1
                 mov     dword ptr [offset dirtypattern+ecx],ebx
                 mov     dword ptr [offset dirtypattern+ecx+4],ebx
                 xor     eax,eax
@@ -1661,7 +1663,6 @@ dirty_screen1_sprattr:
                 jne     dirty_screen1_sprattr2
                 mov     firstscreen,1
                 mov     [ecx+esi],bl
-                mov     eax,0
                 ret
 dirty_screen1_sprattr2:
                 mov     eax,ecx
