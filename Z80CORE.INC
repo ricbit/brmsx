@@ -6,3 +6,5 @@ extrn fetchcallback: near
 extrn comp_position: dword
 extrn slot_change: near
 extrn emumode: dword
+extrn intcount: dword
+extrn index_mark: dword

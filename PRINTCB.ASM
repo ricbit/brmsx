@@ -14,6 +14,7 @@ include io.inc
 include psetCB.inc
 include psetED.inc
 include print.inc
+include symdeb.inc
 
 extrn prinXX: near
 extrn isize: dword

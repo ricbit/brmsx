@@ -18,6 +18,8 @@ extrn vesamodeinfo: dword
 
 public init_vesa
 public search_vesa_mode
+public search_vesa_mode_400
+public search_vesa_mode_512_15
 public set_vesa_mode
 public vesalinearbuffer
 public set_vesa_bank
@@ -27,7 +29,9 @@ public set_vesa_bank
 align 4
 
 vesalinearbuffer        dd      0
-vesamodenumber          dd      0
+vesamodenumber512       dd      0
+vesamodenumber400       dd      0
+vesamodenumber512_15    dd      0
 vesaselector            dw      0
 
 ; --------------------------------------------------------------------
@@ -143,12 +147,12 @@ search_vesa_mode_loop:
                 jne     search_vesa_mode_next
 
                 ; found!!
-                mov     ebx,dword ptr [eax+40]
-                sub     ebx,_code32a
-                mov     vesalinearbuffer,ebx
+                ;mov     ebx,dword ptr [eax+40]
+                ;sub     ebx,_code32a
+                ;mov     vesalinearbuffer,ebx
 
                 movzx   ebx,word ptr [ecx]
-                mov     vesamodenumber,ebx
+                mov     vesamodenumber512,ebx
                
                 or      eax,eax
                 ret
@@ -161,14 +165,220 @@ search_vesa_mode_ret:
                 stc
                 ret
 
+; search_vesa_mode_400 -----------------------------------------------
+; looks for mode 400x300x8 linear
+
+search_vesa_mode_400:
+                ; evaluate linear address of mode list
+                mov     eax,vesaheader
+                movzx   ebx,word ptr [eax+14]
+                movzx   ecx,word ptr [eax+16]
+                shl     ecx,4
+                add     ecx,ebx
+                sub     ecx,_code32a
+
+search_vesa_mode_loop_400:
+                movzx   eax,word ptr [ecx]
+                cmp     eax,0FFFFh
+                je      search_vesa_mode_ret_400
+                
+                ; set the mode number
+                mov     v86r_cx,ax
+
+                ; convert vesamodeinfo to real mode pointer
+                mov     eax,vesamodeinfo
+                add     eax,_code32a
+                mov     ebx,eax
+                shr     ebx,4
+                mov     v86r_es,bx
+                and     eax,15
+                mov     v86r_di,ax
+
+                ; call VESA driver
+                mov     v86r_ax,04F01h
+                mov     al,10h
+                int     33h
+
+                mov     eax,vesamodeinfo
+
+                ; test for color mode
+                test    word ptr [eax],BIT_3
+                jz      search_vesa_mode_next_400
+                
+                ; test for graphics mode
+                test    word ptr [eax],BIT_4
+                jz      search_vesa_mode_next_400
+                
+                ; test for linear frame buffer
+                test    word ptr [eax],BIT_7
+                jz      search_vesa_mode_next_400
+
+                ; X resolution of 400
+                movzx   ebx,word ptr [eax+18]
+                cmp     ebx,400
+                jne     search_vesa_mode_next_400
+
+                ; Y resolution of 300
+                movzx   ebx,word ptr [eax+20]
+                cmp     ebx,300
+                jne     search_vesa_mode_next_400
+
+                ; number of planes: 1
+                movzx   ebx,byte ptr [eax+24]
+                cmp     ebx,1
+                jne     search_vesa_mode_next_400
+
+                ; bits per pixel: 8
+                movzx   ebx,byte ptr [eax+25]
+                cmp     ebx,8
+                jne     search_vesa_mode_next_400
+
+                ; memory model: packed
+                movzx   ebx,byte ptr [eax+27]
+                cmp     ebx,4
+                jne     search_vesa_mode_next_400
+
+                ; found!!
+                mov     ebx,dword ptr [eax+40]
+                mov     vesalinearbuffer,ebx
+
+                movzx   ebx,word ptr [ecx]
+                mov     vesamodenumber400,ebx
+               
+                or      eax,eax
+                ret
+                
+search_vesa_mode_next_400:
+                add     ecx,2
+                jmp     search_vesa_mode_loop_400
+
+search_vesa_mode_ret_400:
+                stc
+                ret
+
+; search_vesa_mode ---------------------------------------------------
+; looks for mode 512x384x15 linear
+
+search_vesa_mode_512_15:
+                ; evaluate linear address of mode list
+                mov     eax,vesaheader
+                movzx   ebx,word ptr [eax+14]
+                movzx   ecx,word ptr [eax+16]
+                shl     ecx,4
+                add     ecx,ebx
+                sub     ecx,_code32a
+
+search_vesa_mode_loop_512_15:
+                movzx   eax,word ptr [ecx]
+                cmp     eax,0FFFFh
+                je      search_vesa_mode_ret_512_15
+                
+                ; set the mode number
+                mov     v86r_cx,ax
+
+                ; convert vesamodeinfo to real mode pointer
+                mov     eax,vesamodeinfo
+                add     eax,_code32a
+                mov     ebx,eax
+                shr     ebx,4
+                mov     v86r_es,bx
+                and     eax,15
+                mov     v86r_di,ax
+
+                ; call VESA driver
+                mov     v86r_ax,04F01h
+                mov     al,10h
+                int     33h
+
+                mov     eax,vesamodeinfo
+
+                ; test for color mode
+                test    word ptr [eax],BIT_3
+                jz      search_vesa_mode_next_512_15
+                
+                ; test for graphics mode
+                test    word ptr [eax],BIT_4
+                jz      search_vesa_mode_next_512_15
+                
+                ; test for linear frame buffer
+                test    word ptr [eax],BIT_7
+                jz      search_vesa_mode_next_512_15
+
+                ; X resolution of 512
+                movzx   ebx,word ptr [eax+18]
+                cmp     ebx,512
+                jne     search_vesa_mode_next_512_15
+
+                ; Y resolution of 384
+                movzx   ebx,word ptr [eax+20]
+                cmp     ebx,384
+                jne     search_vesa_mode_next_512_15
+
+                ; number of planes: 1
+                movzx   ebx,byte ptr [eax+24]
+                cmp     ebx,1
+                jne     search_vesa_mode_next_512_15
+
+                ; bits per pixel: 15
+                movzx   ebx,byte ptr [eax+25]
+                cmp     ebx,15
+                jne     search_vesa_mode_next_512_15
+
+                ; memory model: direct color
+                movzx   ebx,byte ptr [eax+27]
+                cmp     ebx,6
+                jne     search_vesa_mode_next_512_15
+
+                ; found!!
+                ;mov     ebx,dword ptr [eax+40]
+                ;sub     ebx,_code32a
+                ;mov     vesalinearbuffer,ebx
+
+                movzx   ebx,word ptr [ecx]
+                mov     vesamodenumber512_15,ebx
+               
+                or      eax,eax
+                ret
+                
+search_vesa_mode_next_512_15:
+                add     ecx,2
+                jmp     search_vesa_mode_loop_512_15
+
+search_vesa_mode_ret_512_15:
+                stc
+                ret
+
 ; set_vesa_mode ------------------------------------------------------
 ; set the chosen vesa mode
+; enter eax=512 or 400
 
 set_vesa_mode:
+                cmp     videomode,1
+                je      set_vesa_mode_400
+
+                cmp     videomode,4
+                je      set_vesa_mode_512_15
+
+                cmp     videomode,6
+                je      set_vesa_mode_512_15
+
+                mov     ebx,vesamodenumber512
+                jmp     set_vesa_mode_now
+
+set_vesa_mode_400:
+                mov     ebx,vesamodenumber400
+                jmp     set_vesa_mode_now
+
+set_vesa_mode_512_15:
+                mov     ebx,vesamodenumber512_15
+
+set_vesa_mode_now:
                 ; set the mode
                 mov     v86r_ax,04F02h
-                mov     ebx,vesamodenumber
+                ;;
+                ;mov     ebx,vesamodenumber
                 ;or      ebx,(1 SHL 14)
+                ;;
                 mov     v86r_bx,bx
                 mov     al,10h
                 int     33h
@@ -178,14 +388,23 @@ set_vesa_mode:
 
                 mov     eax,i
                 call    set_vesa_bank
-                mov     eax,01010101h
+                mov     eax,0
                 mov     edi,0a0000h
                 sub     edi,_code32a
                 mov     ecx,65536/4
                 rep     stosd
-
                 endm
 
+
+                ; set larger area
+
+                ;mov     v86r_ax,4F06h
+                ;mov     v86r_bx,0
+                ;mov     v86r_cx,1024
+                ;
+                ;mov     al,10h
+                ;int     33h
+                
                 ret
 
 ; set_vesa_bank ------------------------------------------------------

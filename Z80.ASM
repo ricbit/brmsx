@@ -73,6 +73,8 @@ public autospeed
 public autorun
 public mappermask
 public TC
+public inemul98_timing
+public inemul98
 
 public fetch
 public fetch1
@@ -170,6 +172,10 @@ public regeafl
 public regebcl
 public regedel
 public regehll
+public regafl
+public regbcl
+public regdel
+public reghll
 public regesp
 public regeix
 public regeiy
@@ -209,6 +215,7 @@ public CPL_table
 public DAA_table
 public DAA_select_table
 public LDI_table
+public mapper_banks
 
 ; DATA ---------------------------------------------------------------
 
@@ -349,11 +356,17 @@ megadump:
                 dd      0
                 dd      0
 
+mapper_banks:
+                db      3
+                db      2
+                db      1
+                db      0
+
 megarom_callback:
                 dd      _ret                    ; pure RAM
                 dd      _ret                    ; pure ROM
                 dd      callback_megarom0       ; generic
-                dd      _ret
+                dd      callback_megarom1       ; MSX-DOS 2 cartridge
                 dd      callback_megarom2       ; konami with SCC
                 dd      callback_megarom3       ; konami without SCC
                 dd      callback_megarom4       ; ascii 8kb
@@ -386,6 +399,7 @@ ramslot         dd      offset slot2
 cart2slot       dd      offset slot3
 megamask        dd      01Fh
 mappermask      dd      07h
+timingclock     dd      0
 allram          db      0AAh
 rmask           db      0
 regi            db      0
@@ -509,6 +523,9 @@ regehll         equ     dword ptr [offset reghll]
 vdpaddressh     equ     byte ptr [offset vdpaddress+1]
 vdpaddressl     equ     byte ptr [offset vdpaddress+0]
 vdpaddresse     equ     dword ptr [offset vdpaddress]
+
+IMAGE_STATIC    EQU 0
+IMAGE_DYNAMIC   EQU 1
 
 ; fetch --------------------------------------------------------------
 ; fetch a byte from Z80 memory
@@ -707,6 +724,56 @@ megarom0_switchbank_SCC_write:
                 mov     al,07Fh
                 call    sound_buffer
 
+                ret
+
+; callback_megarom1 --------------------------------------------------
+; MSX-DOS 2 cartridge (16kb)
+; addresses:  6000h block 4000h-7FFFh
+
+callback_megarom1:
+                
+                mov     esi,ecx
+                cmp     esi,6000h
+                jne     _ret
+                mov     esi,2
+
+                ; at this point esi=logical page number                
+                ; remember: the pair push ebx/pop ecx is correct
+
+                mov     ebx,eax
+                and     ebx,megamask 
+                push    ebx
+                shl     ebx,14
+                call    retrieve_slot_info
+                add     ebx,ecx
+                pop     ecx
+                
+                add     ecx,ecx
+                mov     dword ptr [eax+esi*8],ebx
+                mov     dword ptr [offset megablock+esi*4],ecx
+                add     ebx,2000h
+                inc     ecx
+                mov     dword ptr [eax+esi*8+8],ebx
+                mov     dword ptr [offset megablock+esi*4+4],ecx
+                
+                mov     ecx,esi
+                push    ebx
+                movzx   ebx,prim_slotreg
+                shr     ebx,cl
+                and     ebx,3
+                ;
+                movzx   ecx,prim_slotreg
+                shr     ecx,2
+                and     ecx,3
+                ;
+                mov     eax,0
+                cmp     ebx,ecx
+                pop     ebx
+                jne     _ret
+                sub     ebx,2000h
+                mov     dword ptr [offset mem+esi*4],ebx
+                add     ebx,2000h
+                mov     dword ptr [offset mem+esi*4+4],ebx
                 ret
 
 ; callback_megarom2 --------------------------------------------------
@@ -1795,6 +1862,7 @@ print:
 ; device       first byte   meaning    second byte   meaning
 ;   PSG          00-0F      register      00-FF       value
 ;  click           16          -          00/20       value
+; cassete          17          -          00/20       value
 ;   SCC          80-8F      reg+80h       00-FF       value
 ;   SCC            7E      waveform(1)    00-7F    RAM position
 ;   SCC            7F      waveform(2)    00-FF       value
@@ -1877,27 +1945,47 @@ outemul8E_page2:
 
 ; --------------------------------------------------------------------
 
-outemul98:      
-                mov     vdpcond,0
-                mov     esi,msxvram
+OUTEMUL98       macro   cache
+                local   outemul98_ret
+                
                 mov     eax,vdpaddresse
+                mov     vdpcond,0
                 mov     ecx,eax
+                mov     esi,msxvram
                 inc     eax
                 and     eax,03FFFh
                 mov     vdpaddresse,eax
-                xor     eax,eax
-                cmp     imagetype,0
-                je      outemul98_ret
                 
+                if      cache EQ IMAGE_DYNAMIC
+
+                cmp     [ecx+esi],bl
+                je      outemul98_ret
+
                 mov     eax,ecx
                 shr     eax,6
                 and     eax,0FFh
                 mov     al,[offset vrammapping+eax]
                 jmp     [offset screenselect+eax*4]
-                
+
 outemul98_ret:
+                xor     eax,eax
+                ret
+
+                else
+                
+                xor     eax,eax
                 mov     [ecx+esi],bl
                 ret
+
+                endif
+
+                endm
+
+outemul98:      
+                OUTEMUL98 IMAGE_DYNAMIC
+
+outemul98_static:      
+                OUTEMUL98 IMAGE_STATIC
 
 ; --------------------------------------------------------------------
 
@@ -2065,16 +2153,18 @@ outemulAA:
                 shr     al,2
                 xchg    al,bl
                 cmp     bl,keyclick
-                je      _ret
+                je      outemulAA_cassete
                 mov     keyclick,bl
                 call    sound_buffer
 
+outemulAA_cassete:
                 ; Cassete output
-                ;mov     bl,ppic
-                ;and     bl,020h
-                ;mov     al,17
-                ;jmp     sound_buffer
-                ret
+                mov     bl,ppic
+                and     bl,020h
+                mov     al,17
+                jmp     sound_buffer
+
+                ;ret
 
 ; --------------------------------------------------------------------
 
@@ -2116,6 +2206,7 @@ MAPPER          macro   page
                 jne     hidden_mapper
 
                 and     ebx,mappermask
+                mov     byte ptr [offset mapper_banks+page],bl
                 shl     ebx,14
                 add     ebx,msxram
                 mov     esi,ramslot
@@ -2128,6 +2219,7 @@ MAPPER          macro   page
 
 hidden_mapper:
                 and     ebx,mappermask
+                mov     byte ptr [offset mapper_banks+page],bl
                 shl     ebx,14
                 add     ebx,msxram
                 mov     esi,ramslot
@@ -2183,7 +2275,8 @@ inemul8E_page2:
 
 ; --------------------------------------------------------------------
 
-inemul98:       mov     ecx,msxvram
+inemul98:       
+                mov     ecx,msxvram
                 mov     esi,vdpaddresse
                 mov     bl,vdplookahead
                 mov     bh,[ecx+esi]
@@ -2192,6 +2285,39 @@ inemul98:       mov     ecx,msxvram
                 mov     vdpaddresse,esi
                 mov     vdplookahead,bh
                 mov     vdpcond,0
+                ret
+
+inemul98_timing:
+                mov     ecx,msxvram
+                mov     esi,vdpaddresse
+                mov     bl,vdplookahead
+                mov     bh,[ecx+esi]
+                inc     esi
+                and     esi,03FFFh
+                mov     vdpaddresse,esi
+                mov     vdplookahead,bh
+                mov     vdpcond,0
+
+                test    byte ptr [offset vdpregs+1],BIT_6
+                jz      inemul98_ret
+
+                mov     esi,TC 
+                sub     esi,ebp
+                add     esi,psgclocks
+                mov     ecx,esi
+                sub     ecx,timingclock
+                mov     timingclock,esi 
+                cmp     ecx,50
+                jae     _ret
+
+                xor     bl,byte ptr [offset rcounter]
+                jmp     _ret
+
+inemul98_ret:
+                mov     esi,TC 
+                sub     esi,ebp
+                add     esi,psgclocks
+                mov     timingclock,esi
                 ret
 
 ; --------------------------------------------------------------------
@@ -2234,6 +2360,30 @@ inemulA8:       mov     bl,prim_slotreg
 
 inemulA9:       movzx   ecx,keyboard_line
                 mov     bl,byte ptr [offset keymatrix+ecx]
+                ret
+
+; --------------------------------------------------------------------
+
+inemulFC:       
+                mov     bl,byte ptr [offset mapper_banks+0]
+                ret
+
+; --------------------------------------------------------------------
+
+inemulFD:       
+                mov     bl,byte ptr [offset mapper_banks+1]
+                ret
+
+; --------------------------------------------------------------------
+
+inemulFE:       
+                mov     bl,byte ptr [offset mapper_banks+2]
+                ret
+
+; --------------------------------------------------------------------
+
+inemulFF:       
+                mov     bl,byte ptr [offset mapper_banks+3]
                 ret
 
 ; --------------------------------------------------------------------

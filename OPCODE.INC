@@ -740,15 +740,16 @@ emul&opcode:
 OPDJNZ          macro   opcode
 
 emul&opcode:
-                FETCH1  opcode
-                add     edi,2
                 dec     regb
                 jz      emul&opcode&a
-                movsx   ebx,al
+                ;FETCH1  opcode
+                ;movsx   ebx,al
+                FETCH1SX opcode
                 sub     ebp,13+1
-                add     edi,ebx
+                lea     edi,[edi+ebx+2]
                 ret
 emul&opcode&a:        
+                add     edi,2
                 sub     ebp,8+1
                 ret
 
@@ -1187,8 +1188,9 @@ JRCC            macro   opcode,jcc,flagtype
 emul&opcode:    
                 test    dl,flagtype
                 jcc     emul&opcode&a    
-                FETCH1  opcode
-                movsx   ebx,al
+                ;FETCH1  opcode
+                ;movsx   ebx,al
+                FETCH1SX opcode
                 sub     ebp,12+1
                 lea     edi,[edi+ebx+2]
                 ret

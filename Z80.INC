@@ -65,6 +65,10 @@ extrn regeafl: dword
 extrn regebcl: dword
 extrn regedel: dword
 extrn regehll: dword
+extrn regafl: word
+extrn regbcl: word
+extrn regdel: word
+extrn reghll: word
 extrn regesp: dword
 extrn regepc: dword
 extrn regeix: dword
@@ -149,3 +153,6 @@ extrn fmreg: byte
 extrn fmenabled: dword
 extrn mappermask: dword
 extrn TC: dword
+extrn inemul98_timing: dword
+extrn inemul98: dword
+extrn mapper_banks: byte

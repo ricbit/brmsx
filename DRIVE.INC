@@ -18,3 +18,4 @@ extrn driveD4: byte
 
 extrn portenabled: dword
 extrn shiftfactor: byte
+extrn spin_irqs: dword

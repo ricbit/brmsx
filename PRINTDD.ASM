@@ -14,6 +14,7 @@ include io.inc
 include psetDD.inc
 include psetDDCB.inc
 include print.inc
+include symdeb.inc
 
 extrn prinXX: near
 extrn prinDDCB: near

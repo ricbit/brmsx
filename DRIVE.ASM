@@ -11,6 +11,7 @@ code32  segment para public use32
 include z80.inc
 include bit.inc
 include pmode.inc
+include z80core.inc
 
 public outemulD0
 public outemulD1
@@ -32,6 +33,7 @@ public driveD4
 
 public portenabled
 public shiftfactor
+public spin_irqs
 
 extrn diskimage: dword
 extrn disksize: dword
@@ -52,6 +54,7 @@ drive_status    db      0
 status_type     db      0
 shiftfactor     db      1
 timeout         dd      0
+spin_irqs       dd      12
 
 current_track   db      0
 current_sector  db      0
@@ -298,7 +301,28 @@ inemulD0:
 
                 ; drive motor is on
                 ; index mark is spinning
-                xor     drive_status,BIT_1
+                cmp     index_mark,0
+                je      inemulD0_no_index
+
+                push    eax edx ecx
+                mov     eax,intcount
+                mov     edx,0
+                mov     ecx,spin_irqs
+                div     ecx
+                cmp     edx,0
+                je      inemulD0_index
+                pop     ecx edx eax
+                mov     index_mark,0
+                jmp     inemulD0_no_index
+
+inemulD0_index:
+                pop     ecx edx eax
+                mov     index_mark,0
+                or      drive_status,BIT_1
+                jmp     inemulD0_stopped
+
+inemulD0_no_index:
+                and     drive_status,NBIT_1
 inemulD0_stopped:
                 mov     bl,drive_status
                 cmp     timeout,0

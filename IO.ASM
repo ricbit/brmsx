@@ -86,6 +86,9 @@ public adjust_clock
 public oldmode
 public fastforward 
 public speaq
+public sg1000_high_palette
+public gui_palette_high
+public border_changed
 
 ; DATA ---------------------------------------------------------------
 
@@ -143,6 +146,7 @@ bargraphmode    dd      0
 oldmode         dd      0
 fastforward     dd      0
 forwardlock     dd      0
+border_changed  dd      0
 
 msg00           db      13,10,'$'
 
@@ -383,6 +387,9 @@ setgraphmode:
                 cmp     videomode,2
                 je      setgraphmode_vesa
 
+                cmp     videomode,6
+                je      setgraphmode_vesa_512_15
+
                 mov     v86r_ax,13h
                 mov     al,10h
                 int     33h
@@ -426,6 +433,12 @@ setgraphmode_vesa:
                 
                 call    set_mouse_range
 
+                ret
+
+setgraphmode_vesa_512_15:
+                call    set_vesa_mode
+                call    set_mouse_range
+                mov     direct_color,1
                 ret
 
 setgraph_256x192:
@@ -488,6 +501,8 @@ ret
 ; set color 0 of VGA as VDP border color
 
 set_border_color:
+                mov     border_changed,1
+                
                 cmp     videomode,2
                 je      set_border_color_512x384
                 

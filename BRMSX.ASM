@@ -23,6 +23,7 @@ include drive.inc
 include serial.inc
 include z80core.inc
 include mount.inc
+include symdeb.inc
 
 public _main
 public msxram
@@ -50,6 +51,10 @@ public rommapper
 public rommappera
 public cart_sram
 public mountdir_name
+public redbuffer
+public bluebuffer
+public symbolic_debugger
+public prn_name
 
 extrn detect_cpu: near
 extrn pentiumfound: dword
@@ -61,8 +66,8 @@ DMABUFFERSIZE   equ     800*20
 
 include guess.inc
 
-msg00           db      'BrMSX 1.155',13,10
-                db      'Copyright (C) 1997,98 by Ricardo Bittencourt'
+msg00           db      'BrMSX 1.161',13,10
+                db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10,10,'$'
 msg01           db      'Not enough memory',13,10,'$'
 msg02           db      'Error in ROM file',13,10,'$'
@@ -85,8 +90,8 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.155',13,10
-                db      'Copyright (C) 1997,1998 by Ricardo Bittencourt'
+msg22           db      'BrMSX 1.161',13,10
+                db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
                 db      '~ricardo/brmsx.htm',13,10
@@ -107,6 +112,13 @@ msg34           db      'This game is unknown, using MegaROM Mapper #0',13,10
                 db      'Please contact the author at ricardo@lsi.usp.br'
                 db      13,10,'$'
 msg35           db      'Disk image invalid or not found',13,10,'$'
+msg36           db      'VESA2 512x384x15 not found',13,10,'$'
+msg37           db      13,10,'This ROM is a bad dump.',13,10
+                db      'Please download SMSFIX to fix it.',13,10
+                db      'You can get SMSFIX at the BrMSX home page:',13,10
+                db      'http://www.lsi.usp.br/~ricardo/brmsx.htm',13,10,'$'
+msg38           db      'VESA2 not found',13,10,'$'
+msg39           db      'DISK2.ROM invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -121,6 +133,7 @@ help_message    db      'Usage: BRMSX [-options] '
                 db      '-romb <n>      select MegaROM Mapper for '
                 db      'cartridge B',13,10
                 db      '               0=Generic MegaROM with SCC',13,10
+                db      '               1=MSX-DOS 2',13,10
                 db      '               2=Konami with SCC',13,10
                 db      '               3=Konami without SCC',13,10
                 db      '               4=ASCII 8kb',13,10
@@ -141,10 +154,13 @@ help_message2   db      13
                 db      '4=1Mb 5=2Mb 6=4Mb',13,10
                 db      '-korean        enable korean memory layout '
                 db      '(require korean MSX.ROM/MSXHAN.ROM)',13,10
-                db      '-mmx           MMX video engine ('
-                db      'requires MMX processor)',13,10
-                db      '-res <mode>    resolution (0=320x200 1=256x200 '
-                db      '2=512x384 3=256x192)',13,10
+                db      '-res <mode>    select screen resolution',13,10 
+                db      '               0=320x200x8  default',13,10
+                db      '               1=256x200x8  large screen',13,10
+                db      '               2=512x384x8  TV emulation '
+                db      '(interpolation+scanlines)',13,10
+                db      '               3=256x192x8  square pixels',13,10
+                db      '               6=512x384x15 Parrot engine',13,10
                 db      '-vsync         enable vertical retrace '
                 db      'synchronization',13,10
                 db      '-green         enable green monitor emulation',13,10
@@ -153,7 +169,9 @@ help_message2   db      13
                 db      '-allspr        disable 5th sprite ocultation',13,10
                 db      '-nosprcol      disable sprite collision '
                 db      'detection',13,10
+                db      '-vdptiming     enable emulation of VDP timing',13,10
                 db      '-nocache       disable video cache',13,10
+                db      '-nommx         disable MMX optimizations',13,10
                 db      '-cpugraph      enable CPU performance graph',13,10
                 db      '-psggraph      enable PSG graph',13,10
                 db      '-nosound       disable the sound engine',13,10
@@ -163,6 +181,8 @@ help_message2   db      13
                 db      '-sr <n>        select the sample rate '
                 db      '(default is 45455)',13,10
                 db      '-speaker       sound through the PC speaker',13,10
+                db      'Press enter to continue.$'
+help_message3   db      13
                 db      '-speaq <n>     select quality for PC speaker sound'
                 db      ' (range is 1 to 9)',13,10
                 db      '-diska <file>  use <file> as drive A',13,10
@@ -170,10 +190,10 @@ help_message2   db      13
                 db      'emulation (default)',13,10
                 db      '-diskhigh      high-level, patch-based disk '
                 db      'emulation',13,10
+                db      '-mount <dir>   mount the directory <dir> as '
+                db      'drive A:',13,10
                 db      '-tape <file>   use <file> as cassete image',13,10
                 db      '-joy           enable joystick emulation',13,10
-                db      'Press enter to continue.$'
-help_message3   db      13
                 db      '-joysens <n>   adjust joystick sensibility '
                 db      '(range is 0 to 7, default is 3)',13,10
                 db      '-snespad       enable SNES pad connected in '
@@ -205,6 +225,7 @@ msgMMX          db      '(MMX)$'
 msgpoint        db      '.$'
 rom_name        db      'MSX.ROM',0
 disk_rom_name   db      'DISK.ROM',0
+disk2_rom_name  db      'DISK2.ROM',0
 msxhan_name     db      'MSXHAN.ROM',0
 blasterenv      db      'BLASTER',0
 addrstr         db      3 dup (0)
@@ -223,8 +244,9 @@ drivea_name     db      128 dup (0)
 tape_name       db      128 dup (0)
 sramname        db      128 dup (0)
 mountdir_name   db      128 dup (0)
+prn_name        db      128 dup (0)
                  
-switch_mmx       db      '-mmx',0
+switch_nommx     db      '-nommx',0
 switch_scc       db      '-scc',0
 switch_psgg      db      '-psggraph',0
 switch_cpug      db      '-cpugraph',0
@@ -271,9 +293,12 @@ switch_speaq     db      '-speaq',0
 switch_sr        db      '-sr',0
 switch_ifreq     db      '-ifreq',0
 switch_snespad   db      '-snespad',0
+switch_vdptiming db      '-vdptiming',0
+switch_dos2      db      '-dos2',0
+switch_prn       db      '-prn',0
 
 switch_table:
-                dd      offset switch_mmx
+                dd      offset switch_nommx
                 dd      offset switch_scc
                 dd      offset switch_psgg
                 dd      offset switch_cpug
@@ -320,11 +345,14 @@ switch_table:
                 dd      offset switch_sr
                 dd      offset switch_ifreq
                 dd      offset switch_snespad
+                dd      offset switch_vdptiming
+                dd      offset switch_dos2
+                dd      offset switch_prn
 
-switch_total    dd      47
+switch_total    dd      50
 
 switch_callback: 
-                dd      offset callback_mmx
+                dd      offset callback_nommx
                 dd      offset callback_scc
                 dd      offset callback_psgg
                 dd      offset callback_cpug
@@ -371,6 +399,9 @@ switch_callback:
                 dd      offset callback_sr
                 dd      offset callback_ifreq
                 dd      offset callback_snespad
+                dd      offset callback_vdptiming
+                dd      offset callback_dos2
+                dd      offset callback_prn
 
 cart1table:
                 dd      128*1024
@@ -431,28 +462,34 @@ tapeimage       dd      ?
 msxhan          dd      ?
 codetable       dd      ?
 cart_sram       dd      ?
+redbuffer       dd      ?
+bluebuffer      dd      ?
 
-diskenabled     dd      0
-cpugraphok      dd      0
-nosound         dd      0
-nomouse         dd      0
-novesa          dd      0
-noenter         dd      0
-filesize        dd      0
-nopentium       dd      0
-korean          dd      0
-disksize        dd      0
-guess           dd      1
-rommappera      dd      2
-rommapperb      dd      2
-rommapper       dd      2
-firsttime       dd      1
-cart1size       dd      512*1024
-mappersize      dd      128*1024
+diskenabled        dd      0
+cpugraphok         dd      0
+nosound            dd      0
+nomouse            dd      0
+novesa             dd      0
+noenter            dd      0
+filesize           dd      0
+nopentium          dd      0
+korean             dd      0
+disksize           dd      0
+guess              dd      1
+rommappera         dd      2
+rommapperb         dd      2
+rommapper          dd      2
+firsttime          dd      1
+nommx              dd      0
+dos2enabled        dd      0
+symbolic_debugger  dd      0
+cart1size          dd      512*1024
+mappersize         dd      128*1024
 
 ; --------------------------------------------------------------------
 
-_main:          sti
+_main:          
+                sti
 
                 ; print startup message
                 mov     eax,offset msg00
@@ -515,8 +552,13 @@ _main_686:
 _main_cpuexit:
                 cmp     mmxfound,1
                 jne     _main_cpu_nommx
+
                 mov     eax,offset msgMMX
                 call    printmsg
+                mov     enginetype,2
+                cmp     nommx,1
+                jne     _main_cpu_nommx
+                mov     enginetype,0
 
 _main_cpu_nommx:
                 call    crlf
@@ -627,6 +669,29 @@ _main_idlerom:
                 mov     ecx,32768/4
                 rep     movsd
                 
+                ; allocate 2*64kb to red buffer
+                mov     eax,2*65536
+                call    _getmem
+                jc      no_memory
+                mov     redbuffer,eax
+
+                mov     edi,redbuffer
+                mov     eax,0
+                mov     ecx,2*65536/4
+                rep     stosd
+
+                ; allocate 64kb to blue buffer
+                mov     eax,65536*2
+                call    _getmem
+                jc      no_memory
+                mov     bluebuffer,eax
+
+                mov     edi,bluebuffer
+                mov     eax,0
+                mov     ecx,2*65536/4
+                rep     stosd
+
+
                 ; allocate 16kb to msx vram
                 mov     eax,16384
                 call    _getmem
@@ -752,6 +817,10 @@ main_has_cart1:
                 mov     rommappera,ecx
                 jc      error_in_rom                
 
+                mov     esi,cart1
+                call    check_bad_dump
+                jnz     error_bad_dump
+
                 ; load sram from disk if needed
                 call    load_sram
 
@@ -813,6 +882,9 @@ main_nocart2:
                 jc      no_memory
                 mov     filenamelist,eax
 
+                ; check for symbolic debugging
+                call    install_symdeb
+
                 ; check for disk drive emulation
                 cmp     diskenabled,0
                 je      _main_nodrive
@@ -832,34 +904,8 @@ main_nocart2:
                 ; load disk image from disk
                 call    load_disk_image
                 jc      invalid_disk_image
-                
-                ; allocate 16kb for disk.rom
-                mov     eax,16*1024
-                call    _getmem
-                jc      no_memory
-                mov     diskrom,eax
 
-                ; read disk.rom from disk
-                mov     edx,offset disk_rom_name
-                call    open_file
-                jc      disk_rom_error
-                call    read_size_file
-                cmp     eax,04000h
-                jne     disk_rom_error
-                mov     edx,transf_buffer
-                mov     ecx,16*1024
-                call    read_file
-                call    close_file
-                mov     esi,transf_buffer
-                mov     edi,diskrom
-                mov     ecx,16384/4
-                rep     movsd
-
-                mov     eax,diskrom
-                mov     edi,cart2slot
-                mov     dword ptr [edi+16],eax
-                add     eax,2000h
-                mov     dword ptr [edi+16+8],eax
+                call    read_disk_rom
 
                 cmp     portenabled,1
                 je      _main_noport
@@ -1060,20 +1106,38 @@ _main_nosound:
                 mov     eax,vesaheader
                 mov     eax,[eax+4]
                 cmp     ax,0200h
-                jb      vesa2_512x384_not_found
+                jb      vesa2_not_found
 
                 ; search for mode 512x384x8 linear
                 call    search_vesa_mode
                 jc      vesa2_512x384_not_found
 
-                mov     vesa2found,1
+                or      vesa2found,1
+
+
+_main_novesa_512:
+
+                ; search for mode 512x384x15 linear
+                call    search_vesa_mode_512_15
+                jc      vesa2_512x384x15_not_found
+
+                or      vesa2found,4
+_main_novesa_512_15:
+
+
 
 _main_novesa:
-
                 cmp     videomode,2
+                jne     _main_nores2
+                test    vesa2found,1
+                jnz     _main_notrouble
+                mov     videomode,0
+
+_main_nores2:
+                cmp     videomode,6
                 jne     _main_notrouble
-                cmp     vesa2found,1
-                je      _main_notrouble
+                test    vesa2found,4
+                jnz     _main_notrouble
                 mov     videomode,0
 
 _main_notrouble:
@@ -1144,6 +1208,11 @@ error_in_rom:
                 call    printmsg
                 jmp     _exit
 
+error_bad_dump:
+                mov     eax,offset msg37
+                call    printmsg
+                jmp     _exit
+
 soundblaster_failed:
                 mov     eax,offset msg11
                 call    printmsg
@@ -1164,8 +1233,18 @@ no_vesa:
                 call    printmsg
                 jmp     _main_novesa
 
+vesa2_not_found:
+                mov     eax,offset msg38
+                call    printmsg
+                jmp     _main_novesa
+
 vesa2_512x384_not_found:
                 mov     eax,offset msg21
+                call    printmsg
+                jmp     _main_novesa_512_15
+
+vesa2_512x384x15_not_found:
+                mov     eax,offset msg36
                 call    printmsg
                 jmp     _main_novesa
 
@@ -1176,6 +1255,11 @@ msx_rom_error:
 
 disk_rom_error:
                 mov     eax,offset msg27
+                call    printmsg
+                jmp     _exit
+
+disk2_rom_error:
+                mov     eax,offset msg39
                 call    printmsg
                 jmp     _exit
 
@@ -1453,8 +1537,8 @@ parse_command_line_switch_found:
 
 ; callbacks ----------------------------------------------------------
 
-callback_mmx:
-                mov     enginetype,2
+callback_nommx:
+                mov     nommx,1
                 ret
 
 callback_scc:
@@ -1551,6 +1635,8 @@ callback_res_second:
                 je      callback_res_512x384
                 cmp     bl,'3'
                 je      callback_res_256x192
+                cmp     bl,'6'
+                je      callback_res_512x384_parrot
                 mov     videomode,0
                 ret
 
@@ -1564,6 +1650,10 @@ callback_res_512x384:
 
 callback_res_256x192:
                 mov     videomode,3
+                ret
+
+callback_res_512x384_parrot:
+                mov     videomode,6
                 ret
 
 callback_disklow:
@@ -1715,8 +1805,6 @@ callback_roma_second:
                 mov     al,byte ptr [offset emptyspace]
                 sub     al,'0'
 
-                cmp     al,1
-                je      _ret
                 cmp     al,8
                 ja      _ret
 
@@ -1910,11 +1998,39 @@ callback_ifreq_set:
                 mov     edx,0
                 div     ebx
                 mov     TC,eax
+                mov     ebx,5
+                mov     eax,_verticalrate
+                mov     edx,0
+                div     ebx
+                mov     spin_irqs,eax
                 ret
 
 callback_snespad:
                 mov     snespad,1
                 mov     joyenable,1
+                ret
+
+callback_vdptiming:
+                mov     eax,offset inemul98_timing
+                mov     dword ptr [offset inportxx+098h*4],eax
+                ret
+
+callback_dos2:
+                mov     dos2enabled,1
+                ret
+
+callback_prn:
+                mov     secondarg,1
+                mov     eax,offset callback_prn_second
+                mov     second_callback,eax
+                ret
+
+callback_prn_second:
+                mov     edi,offset prn_name
+                mov     esi,offset emptyspace
+                mov     ecx,128/4
+                rep     movsd
+                mov     symbolic_debugger,1
                 ret
 
 ; read_rom -----------------------------------------------------------
@@ -2525,6 +2641,105 @@ load_disk_image_loop:
 
 load_disk_image_error:
                 stc
+                ret
+
+; check_bad_dump -----------------------------------------------------
+; check if the game is a bad dump
+; by searching for duplicates 
+
+check_bad_dump:
+                ;mov     esi,cart1
+                mov     ecx,filesize
+                and     ecx,0FFFFFC00h
+                shr     ecx,1
+                lea     edi,[esi+ecx]
+
+check_bad_dump_loop:
+                push    ecx
+                repz    cmpsb
+                pop     ecx
+                jnz     check_bad_dump_exit
+
+                shr     ecx,1
+                mov     esi,cart1
+                lea     edi,[esi+ecx]
+                jmp     check_bad_dump_loop
+
+check_bad_dump_exit:
+                add     ecx,ecx
+                mov     eax,filesize
+                and     eax,0FFFFFC00h
+                cmp     eax,ecx
+                ret
+                ;;;
+
+                je      _ret
+
+                push    ecx
+
+                mov     eax,offset msg33
+                call    printmsg
+
+                mov     eax,filesize
+                and     eax,0FFFFFC00h
+                shr     eax,10
+                call    printdecimal
+                
+                mov     eax,offset msg34
+                call    printmsg
+
+                pop     ecx
+                push    ecx
+
+                mov     eax,ecx
+                shr     eax,10
+                call    printdecimal
+                
+                mov     eax,offset msg35
+                call    printmsg
+
+                pop     ecx
+                mov     filesize,ecx
+
+                ret
+
+; --------------------------------------------------------------------
+                
+read_disk_rom:
+                ; allocate 16kb for disk.rom
+                mov     eax,16*1024
+                call    _getmem
+                jc      no_memory
+                mov     diskrom,eax
+
+                ; read disk.rom from disk
+                mov     edx,offset disk_rom_name
+                call    open_file
+                jc      disk_rom_error
+                call    read_size_file
+                cmp     eax,04000h
+                jne     disk_rom_error
+                mov     edx,transf_buffer
+                mov     ecx,16*1024
+                call    read_file
+                call    close_file
+                mov     esi,transf_buffer
+                mov     edi,diskrom
+                mov     ecx,16384/4
+                rep     movsd
+
+                mov     eax,diskrom
+                mov     edi,cart2slot
+                mov     dword ptr [edi+16],eax
+                add     eax,2000h
+                mov     dword ptr [edi+16+8],eax
+
+                cmp     dos2enabled,1
+                jne     _ret
+
+                mov     edi,msxrom
+                mov     byte ptr [edi+02Dh],1
+
                 ret
 
 ; --------------------------------------------------------------------

@@ -34,6 +34,8 @@ public fetchcallback
 public comp_position
 public slot_change
 public emumode
+public intcount
+public index_mark
 
 ; DATA ---------------------------------------------------------------
 
@@ -49,6 +51,8 @@ dirtycode:
 
 comp_position   dd      0
 emumode         dd      0
+intcount        dd      0
+index_mark      dd      0
 
 ; --------------------------------------------------------------------
 
@@ -171,9 +175,12 @@ EMULABEL        turbo_skip,emtype,brtype
                 mov     eax,offset z80counter
                 call    start_counter
                 xor     eax,eax
+                
+                inc     intcount
+                mov     index_mark,1
+                
                 ;;;
                 add     ebp,TC
-                ;mov     ebp,TC
                 ;;;
                 call    checkpsg
                 mov     interrupt,0
@@ -199,8 +206,9 @@ EMULABEL        turbo_skip,emtype,brtype
                 test    byte ptr [vdpregs+1],00100000b
                 JUMP    jz,vdpdisabled,emtype,brtype
 
-                test    vdpstatus,BIT_7
-                JUMP    jnz,loop,emtype,brtype
+                ; ???
+                ;test    vdpstatus,BIT_7
+                ;JUMP    jnz,loop,emtype,brtype
                 
                 call    set_vdp_interrupt
                 

@@ -504,10 +504,10 @@ inportxx:
 	; FB
  dd inemulXX
 	; FC
- dd inemulXX
+ dd inemulFC
 	; FD
- dd inemulXX
+ dd inemulFD
 	; FE
- dd inemulXX
+ dd inemulFE
 	; FF
- dd inemulXX
+ dd inemulFF

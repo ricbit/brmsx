@@ -40,6 +40,26 @@ emul_continue:
 
                 endm
 
+; -------------------------------------------------------------------- 
+
+FETCH1SX        macro   opcode
+                local   emul_fetch
+                local   emul_continue
+
+                cmp     ebx,01FFFh
+                jne     emul_fetch 
+
+                call    fetch1
+                jmp     emul_continue 
+
+emul_fetch:
+
+                movsx   ebx,byte ptr [esi+ebx+1]
+
+emul_continue:
+
+                endm
+
 ; FETCHWMACRO --------------------------------------------------------
 ; fetch a word from Z80 memory (MACRO VERSION)
 ; in, edi: address

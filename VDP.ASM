@@ -48,6 +48,7 @@ public all_sprites
 public no_collision
 public render_col
 public sprite_collision
+public direct_color
 
 ; DATA ---------------------------------------------------------------
 
@@ -93,17 +94,18 @@ all_sprites     dd      0
 no_collision    dd      0
 y_factor        dd      0
 x_factor        dd      0
+direct_color    dd      0
 
 scr2inc         dd      offset scr2undoc_table+3*12
 scr2inc_color   dd      offset scr2undoc_table+3*12
 scr2offset      dd      0
 vrammapping     db      256 dup (0)
-screenselect    dd      ? ; nothing
-                dd      ? ; name table
-                dd      ? ; pattern table
-                dd      ? ; color table
-                dd      ? ; sprite attribute table
-                dd      ? ; sprite image table
+screenselect    dd      dirty_screen0_nothing ; nothing
+                dd      dirty_screen0_nothing ; name table
+                dd      dirty_screen0_nothing ; pattern table
+                dd      dirty_screen0_nothing ; color table
+                dd      dirty_screen0_nothing ; sprite attribute table
+                dd      dirty_screen0_nothing ; sprite image table
 dirtyname       db      32*24 dup (0)
 dirtypattern    db      256*3 dup (0)
 dirtysprite     db      256 dup (0)
@@ -2415,8 +2417,6 @@ dirty_screen2_nothing:
                 ret
 
 dirty_screen2_name:
-                cmp     [ecx+esi],bl
-                je      dirty_screen2_nothing
                 mov     eax,ecx
                 sub     ecx,nametable
                 mov     [eax+esi],bl
@@ -2427,19 +2427,19 @@ dirty_screen2_name:
 dirty_screen2_pattern:
                 mov     eax,ecx
                 sub     ecx,patterntable
-                shr     ecx,3
                 mov     [eax+esi],bl
-                mov     byte ptr [offset dirtypattern+ecx],1
+                shr     ecx,3
                 xor     eax,eax
+                mov     byte ptr [offset dirtypattern+ecx],1
                 ret
 
 dirty_screen2_color:
                 mov     eax,ecx
                 sub     ecx,colortable
-                shr     ecx,3
                 mov     [eax+esi],bl
-                mov     byte ptr [offset dirtypattern+ecx],1
+                shr     ecx,3
                 xor     eax,eax
+                mov     byte ptr [offset dirtypattern+ecx],1
                 ret
 
 dirty_screen2_sprattr:                
@@ -2470,10 +2470,10 @@ dirty_screen2_sprattr2:
 dirty_screen2_sprpatt:
                 mov     eax,ecx
                 sub     ecx,sprpatttable
-                shr     ecx,5
                 mov     [eax+esi],bl
-                mov     byte ptr [offset dirtysprite+ecx],1
+                shr     ecx,5
                 xor     eax,eax
+                mov     byte ptr [offset dirtysprite+ecx],1
                 ret
 
 ; --------------------------------------------------------------------
@@ -2484,8 +2484,6 @@ dirty_screen1_nothing:
                 ret
 
 dirty_screen1_name:
-                cmp     [ecx+esi],bl
-                je      _ret
                 mov     eax,ecx
                 sub     ecx,nametable
                 mov     [eax+esi],bl

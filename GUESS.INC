@@ -1,4 +1,8 @@
 guess_table:
+        dd      08E150C70h
+        dd      2+1
+        dd      offset name_msxdos2
+
         dd      045DBFB63h
         dd      0+2
         dd      offset name_dragon_quest_1_msx1
@@ -163,9 +167,19 @@ guess_table:
         dd      5+2
         dd      offset name_romancia
 
+        dd      0B5D23D76h
+        dd      3+2
+        dd      offset name_nemesis_1_original
+
         dd      0
 
 ; name table
+
+name_msxdos2:
+        db      'MSX-DOS 2$'
+
+name_nemesis_1_original:
+        db      'Nemesis$'
 
 name_dragon_quest_1_msx1:
         db      'Dragon Quest 1 (MSX1 version)$'

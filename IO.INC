@@ -59,3 +59,6 @@ extrn adjust_clock: near
 extrn oldmode: dword
 extrn fastforward: dword
 extrn speaq: dword
+extrn sg1000_high_palette: byte
+extrn gui_palette_high: byte
+extrn border_changed: dword

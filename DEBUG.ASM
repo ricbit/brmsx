@@ -125,6 +125,9 @@ startdebugger   dd      0
 firstone        dd      0
 nextbp          dd      0
 disasm_address  dd      0
+disasm_down     dd      0
+
+debug_reg       dw      0
 
 ; COORD --------------------------------------------------------------
 ; convert coordinates from ASCII.EXE system to 
@@ -296,16 +299,7 @@ changemode:
 
 changevideomode:
                 add     videomode,1
-                cmp     videomode,2
-                je      changevideomode_vesa2
-                cmp     videomode,4
-                jne     _ret
-                mov     videomode,0
-                ret
-changevideomode_vesa2:
-                cmp     vesa2found,0
-                jne     _ret
-                mov     videomode,3
+                and     videomode,7
                 ret
 
 ; --------------------------------------------------------------------
@@ -673,6 +667,10 @@ print_dis1:
                 add     ebp,regepc
                 and     ebp,0FFFFh
                 mov     nextbp,ebp
+                mov     ebp,isize
+                add     ebp,disasm_address
+                and     ebp,0FFFFh
+                mov     disasm_down,ebp
 print_dis_skip:
 
                 inc     ecx
@@ -1455,6 +1453,20 @@ print_dump1:
                 endm
 
 ; --------------------------------------------------------------------
+
+                ; print the mapper registers
+
+                irp     i,<0,1,2,3>
+                
+                mov     al,byte ptr [offset mapper_banks+i]
+                call    convhex4
+                mov     eax,offset tmphex2
+                COORD   64,3+i
+                call    printmsgd
+                
+                endm
+                
+; --------------------------------------------------------------------
                 
                 jmp     blit_screen
 
@@ -1557,6 +1569,10 @@ command_extended:
                 je      command_t
                 cmp     ah,66 ;F8
                 je      command_stepover
+                cmp     ah,72
+                je      command_up
+                cmp     ah,80
+                je      command_down
                 cmp     ah,73 ;page up
                 je      command_pgup
                 cmp     ah,81 ;page down
@@ -1688,7 +1704,130 @@ command_z:
 ; --------------------------------------------------------------------
 
 command_r:
-                call    save_histogram
+                COORD   14,23
+                call    set_cursor_position
+                call    getchar
+                call    toupper
+                call    printasc
+                mov     byte ptr [offset debug_reg+1],al
+                call    getchar
+                call    toupper
+                call    printasc
+                mov     byte ptr [offset debug_reg],al
+                COORD   17,23
+                call    set_cursor_position
+
+                cmp     debug_reg,'AF'
+                je      command_r_af
+                
+                cmp     debug_reg,'BC'
+                je      command_r_bc
+                
+                cmp     debug_reg,'DE'
+                je      command_r_de
+                
+                cmp     debug_reg,'HL'
+                je      command_r_hl
+                
+                cmp     debug_reg,'IX'
+                je      command_r_ix
+                
+                cmp     debug_reg,'IY'
+                je      command_r_iy
+                
+                cmp     debug_reg,'PC'
+                je      command_r_pc
+                
+                cmp     debug_reg,'SP'
+                je      command_r_sp
+                
+                cmp     debug_reg,'AX'
+                je      command_r_ax
+                
+                cmp     debug_reg,'BX'
+                je      command_r_bx
+                
+                cmp     debug_reg,'DX'
+                je      command_r_dx
+                
+                cmp     debug_reg,'HX'
+                je      command_r_hx
+                
+                jmp     debug_loop
+
+
+command_r_af:
+                call    gethex4
+                mov     regaf,ax
+                jmp     debug_loop
+
+command_r_bc:
+                call    gethex4
+                mov     regbc,ax
+                jmp     debug_loop
+
+command_r_de:
+                call    gethex4
+                mov     regde,ax
+                jmp     debug_loop
+
+command_r_hl:
+                call    gethex4
+                mov     reghl,ax
+                jmp     debug_loop
+
+command_r_ix:
+                call    gethex4
+                mov     regix,ax
+                jmp     debug_loop
+
+command_r_iy:
+                call    gethex4
+                mov     regiy,ax
+                jmp     debug_loop
+
+command_r_pc:
+                call    gethex4
+                mov     regpc,ax
+                jmp     debug_loop
+
+command_r_sp:
+                call    gethex4
+                mov     regsp,ax
+                jmp     debug_loop
+
+command_r_ax:
+                call    gethex4
+                mov     regafl,ax
+                jmp     debug_loop
+
+command_r_bx:
+                call    gethex4
+                mov     regbcl,ax
+                jmp     debug_loop
+
+command_r_dx:
+                call    gethex4
+                mov     regdel,ax
+                jmp     debug_loop
+
+command_r_hx:
+                call    gethex4
+                mov     reghll,ax
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_up:
+                dec     disasm_address
+                and     disasm_address,0FFFFh
+                jmp     debug_loop
+
+; --------------------------------------------------------------------
+
+command_down:
+                mov     eax,disasm_down
+                mov     disasm_address,eax
                 jmp     debug_loop
 
 ; --------------------------------------------------------------------
