@@ -93,7 +93,7 @@ msg18           db      ', DMA $'
 msg19           db      'VESA not found',13,10,'$'
 msg20           db      'VESA version: $'
 msg21           db      'VESA2 512x384 not found',13,10,'$'
-msg22           db      'BrMSX 1.161',13,10
+msg22           db      'BrMSX 1.162',13,10
                 db      'Copyright (C) 1997-1999 by Ricardo Bittencourt'
                 db      13,10
                 db      'Official site: http://www.lsi.usp.br/'
@@ -122,6 +122,8 @@ msg37           db      13,10,'This ROM is a bad dump.',13,10
                 db      'http://www.lsi.usp.br/~ricardo/brmsx.htm',13,10,'$'
 msg38           db      'VESA2 not found',13,10,'$'
 msg39           db      'DISK2.ROM invalid or not found',13,10,'$'
+msg40           db      'MSX2.ROM invalid or not found',13,10,'$'
+msg41           db      'MSX2EXT.ROM invalid or not found',13,10,'$'
 help_message    db      'Usage: BRMSX [-options] '
                 db      '[cartA.rom] [cartB.rom]' 
                 db      13,10,10,'Options:',13,10
@@ -223,19 +225,22 @@ help_message3   db      13
                 db      'start',13,10
                 db      '-help          show this help page',13,10
                 db      '$'
-msgnocpuid      db      '486 or below $'
-msg386          db      '386 $'
-msg486          db      '486 $'
-msg586          db      'Pentium $'
-msg686          db      'Pentium Pro or better $'
-msgMMX          db      '(MMX)$'
-msgpoint        db      '.$'
-rom_name        db      'MSX.ROM',0
-disk_rom_name   db      'DISK.ROM',0
-disk2_rom_name  db      'DISK2.ROM',0
-msxhan_name     db      'MSXHAN.ROM',0
-blasterenv      db      'BLASTER',0
-addrstr         db      3 dup (0)
+
+msgnocpuid       db      '486 or below $'
+msg386           db      '386 $'
+msg486           db      '486 $'
+msg586           db      'Pentium $'
+msg686           db      'Pentium Pro or better $'
+msgMMX           db      '(MMX)$'
+msgpoint         db      '.$'
+rom_name         db      'MSX.ROM',0
+disk_rom_name    db      'DISK.ROM',0
+disk2_rom_name   db      'DISK2.ROM',0
+msxhan_name      db      'MSXHAN.ROM',0
+msx2_rom_name    db      'MSX2.ROM',0
+msx2ext_rom_name db      'MSX2EXT.ROM',0
+blasterenv       db      'BLASTER',0
+addrstr          db      3 dup (0)
 
 emptyspace      db      128 dup (0)
 argnumber       dd      0
@@ -452,6 +457,7 @@ msxvram         dd      ?
 blitbuffer      dd      ?
 collisionfield  dd      ?
 msxrom          dd      ?
+msxextrom       dd      ?
 cart1           dd      ?
 cart2           dd      ?
 transf_buffer   dd      ?
@@ -1250,6 +1256,16 @@ vesa2_512x384x15_not_found:
 
 msx_rom_error:
                 mov     eax,offset msg26
+                call    printmsg
+                jmp     _exit
+
+msx2_rom_error:
+                mov     eax,offset msg40
+                call    printmsg
+                jmp     _exit
+
+msx2ext_rom_error:
+                mov     eax,offset msg41
                 call    printmsg
                 jmp     _exit
 
@@ -2817,7 +2833,7 @@ read_msx_rom:
 
 read_msx_rom_msx2:
 
-                ; allocate 32kb to msx rom
+                ; allocate 32kb to msx2 rom
                 mov     eax,32768
                 call    _getmem
                 jc      no_memory
@@ -2828,13 +2844,13 @@ read_msx_rom_msx2:
                 add     eax,2000h
                 endm
 
-                ; read msx rom 1 from disk
-                mov     edx,offset rom_name
+                ; read msx2 rom from disk
+                mov     edx,offset msx2_rom_name
                 call    open_file
-                jc      msx_rom_error
+                jc      msx2_rom_error
                 call    read_size_file
                 cmp     eax,08000h
-                jne     msx_rom_error
+                jne     msx2_rom_error
                 mov     edx,transf_buffer
                 mov     ecx,32768
                 call    read_file
@@ -2880,32 +2896,45 @@ read_msx_rom_msx2:
                 mov     dword ptr [offset mem+7*4],eax
                 mov     dword ptr [offset memlock+7*4],2+9
                 
-                ; allocate 16kb to antartic adventure
+                ; allocate 16kb to msx2ext rom
                 mov     eax,16384
                 call    _getmem
                 jc      no_memory
-                mov     antartic,eax
+                mov     msxextrom,eax
+
+                ; place msx2ext in slot 0.1 (page 0)
                 irp     i,<0,1>
-                mov     dword ptr [offset extended_slot_0+8*4*2+2*8+i*8],eax
+                mov     dword ptr [offset extended_slot_0+8*4*2+i*8],eax
                 add     eax,2000h
                 endm
 
-                ; read msx rom 1 from disk
-                mov     edx,offset antartic_name
+                ; read msx2ext rom from disk
+                mov     edx,offset msx2ext_rom_name
                 call    open_file
+                jc      msx2ext_rom_error
+                call    read_size_file
+                cmp     eax,04000h
+                jne     msx2ext_rom_error
                 mov     edx,transf_buffer
                 mov     ecx,16384
                 call    read_file
                 call    close_file
-                mov     edi,antartic
+                mov     edi,msxextrom
                 mov     esi,transf_buffer
                 mov     ecx,16384/4
                 rep     movsd
 
-                ret
+                ; set the new VDP I/O ports
+                mov     eax,offset outemul98_msx2
+                mov     dword ptr [offset outportxx+098h*4],eax
+                
+                mov     eax,offset outemul99_msx2
+                mov     dword ptr [offset outportxx+099h*4],eax
 
-antartic        dd      0
-antartic_name   db      'antartic.rom',0
+                mov     eax,offset inemul99_msx2
+                mov     dword ptr [offset inportxx+099h*4],eax
+               
+                ret
 
 ; --------------------------------------------------------------------
 

@@ -76,6 +76,9 @@ public mappermask
 public TC
 public inemul98_timing
 public inemul98
+public outemul98_msx2
+public outemul99_msx2
+public inemul99_msx2
 
 public fetch
 public fetch1
@@ -450,12 +453,12 @@ align 4
 vdpcond         dd      0
 vdpaddress      dw      0
                 dw      0
-vdpregs         db      8 dup (0)
 vsyncflag       dd      0
 vdpaccess       dd      0
 vdptemp         db      0
-vdpstatus       db      0
 vdplookahead    db      0
+vdpregs         db      64 dup (0)
+vdpstatus       db      0,0,080h,0,0,0,0,0
 
 ; PSG registers
 align 4
@@ -504,6 +507,15 @@ keymatrix       db      16 dup (0ffh)
 align 4
 
 histogr         dd      256 dup (0)
+
+align 4
+
+rtc_value       db      0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0
+                db      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+                db      0,0,0,0,0,0,15,4,4,0,0,0,0,0,0,0
+                db      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+rtc_register    db      0
+rtc_mode        db      0
 
 align 4
 
@@ -2163,6 +2175,117 @@ outemul99_irqexit:
                 ret
 
 ; --------------------------------------------------------------------
+; VDP write value
+; MSX2 version
+
+outemul98_msx2:
+                mov     eax,vdpaddresse
+                mov     vdpcond,0
+                mov     ecx,eax
+                mov     esi,msxvram
+                inc     eax
+                and     eax,03FFFh
+                mov     vdpaddresse,eax
+                
+                xor     eax,eax
+                mov     [ecx+esi],bl
+                ret
+
+; --------------------------------------------------------------------
+; VDP register select
+; MSX2 version
+
+outemul99_msx2:      
+                cmp     vdpcond,0
+                jne     outemul99a_msx2
+                mov     vdpcond,1
+                mov     vdptemp,bl
+                ret
+
+outemul99a_msx2:     
+                mov     vdpcond,0
+                test    bl,10000000b
+                jnz     outemul99b_msx2
+                cmp     bl,01000000b
+                jb      outemul99_read_msx2
+                and     bl,00111111b
+                mov     vdpaddressh,bl
+                mov     bl,vdptemp
+                mov     vdpaddressl,bl
+                mov     vdpaccess,1
+                ret
+
+outemul99_read_msx2:
+                and     bl,00111111b
+                mov     vdpaddressh,bl
+                mov     bl,vdptemp
+                mov     vdpaddressl,bl
+                mov     ecx,vdpaddresse
+                mov     esi,msxvram
+                mov     bl,[esi+ecx]
+                mov     vdplookahead,bl
+                inc     ecx
+                and     ecx,03FFFh
+                mov     vdpaddresse,ecx
+                mov     vdpaccess,0
+                ret
+
+outemul99b_msx2:     
+                ; write directly to a VDP register
+                and     ebx,00111111b
+                mov     al,vdptemp
+                mov     cl,byte ptr [offset vdpregs+ebx]
+                cmp     cl,al
+                je      _ret
+                mov     byte ptr [offset vdpregs+ebx],al
+                cmp     bl,7
+                je      set_border_color
+                cmp     bl,1
+                je      outemul99_checkirq_msx2
+outemul99_update_msx2:
+                mov     firstscreen,1
+                jmp     eval_base_address
+
+outemul99_checkirq_msx2:
+                cmp     iline,0
+                je      outemul99_turnedoff_msx2
+
+                ; at this point iline=1
+                ; if bit 5 goes to zero, then iline must drop to zero also
+                test    al,BIT_5
+                jnz     outemul99_irqexit_msx2
+                
+                mov     iline,0
+                jmp     outemul99_irqexit_msx2
+
+outemul99_turnedoff_msx2:
+                ; at this point iline=0
+                ; if bit 5 goes to 1, and bit 7 is also 1
+                ; this irq will happen NOW, unless iff1=0
+                test    al,BIT_5
+                jz      outemul99_irqexit_msx2
+
+                test    vdpstatus,BIT_7
+                jz      outemul99_irqexit_msx2
+
+                mov     iline,1
+                cmp     iff1,1
+                jne     outemul99_irqexit_msx2
+
+                mov     clocksleft,ebp
+                mov     fakeirq,1
+                mov     ebp,0
+
+outemul99_irqexit_msx2:
+                xor     cl,al
+                cmp     cl,BIT_5
+                jne     outemul99_update_msx2
+
+                xor     eax,eax
+                ret
+
+; --------------------------------------------------------------------
+; PSG select register
 
 outemulA0:      
                 and     bl,0Fh
@@ -2170,6 +2293,7 @@ outemulA0:
                 ret
 
 ; --------------------------------------------------------------------
+; PSG write value
 
 outemulA1:      mov     al,psgselect        
                 mov     [offset psgreg+eax],bl
@@ -2196,6 +2320,7 @@ outemulA1_kana:
                 ret
 
 ; --------------------------------------------------------------------
+; PPI select primary slot register
 
 outemulA8:      
                 movzx   esi,prim_slotreg
@@ -2221,6 +2346,7 @@ outemulA8:
                 ret
 
 ; --------------------------------------------------------------------
+; PPI select keyboard line / various I/O
 
 outemulAA:      
                 mov     al,bl
@@ -2256,6 +2382,7 @@ outemulAA_cassete:
                 ;ret
 
 ; --------------------------------------------------------------------
+; PPI indirect set/reset bit
 
 outemulAB:
                 test    bl,BIT_7
@@ -2280,6 +2407,34 @@ outemulAB_reset:
                 xor     bh,255
                 and     bl,bh
                 jmp     outemulAA
+
+; --------------------------------------------------------------------
+; RTC select register
+
+outemulB4:
+                and     bl,0Fh
+                mov     rtc_register,bl
+                ret
+
+; --------------------------------------------------------------------
+; RTC write value
+
+outemulB5:
+                cmp     rtc_register,13
+                je      outemulB5_select_mode
+                ja      _ret
+                
+                movzx   ecx,rtc_mode
+                and     ecx,3
+                shl     ecx,4
+                movzx   eax,rtc_register
+                lea     ecx,[ecx+eax+offset rtc_value]
+                mov     byte ptr [ecx],bl
+                ret
+
+outemulB5_select_mode:
+                mov     rtc_mode,bl
+                ret
 
 ; --------------------------------------------------------------------
 
@@ -2418,6 +2573,35 @@ inemul99:       mov     bl,vdpstatus
                 ret
 
 ; --------------------------------------------------------------------
+; VDP read status register
+; MSX2 version
+
+inemul99_msx2:       
+                cmp     byte ptr [offset vdpregs+15],2
+                je      inemul99_msx2_reg2
+
+                cmp     byte ptr [offset vdpregs+15],0
+                jne     inemul99_msx2_generic
+
+                mov     bl,vdpstatus
+                and     vdpstatus,00111111b
+                mov     vdpcond,0
+                mov     iline,0
+                ret
+
+inemul99_msx2_reg2:
+                mov     bl,byte ptr [offset vdpstatus+2]
+                xor     bl,060h
+                mov     byte ptr [offset vdpstatus+2],bl
+                ret
+
+inemul99_msx2_generic:
+                movzx   ecx,byte ptr [offset vdpregs+15]
+                add     ecx,offset vdpregs
+                mov     bl,byte ptr [ecx]
+                ret
+
+; --------------------------------------------------------------------
 
 inemulAA:
                 mov     bl,ppic
@@ -2441,14 +2625,36 @@ inemulA2b:
                 ret
 
 ; --------------------------------------------------------------------
+; PPI read primary slot register
 
 inemulA8:       mov     bl,prim_slotreg
                 ret
 
 ; --------------------------------------------------------------------
+; PPI read keyboard line
 
 inemulA9:       movzx   ecx,keyboard_line
                 mov     bl,byte ptr [offset keymatrix+ecx]
+                ret
+
+; --------------------------------------------------------------------
+; RTC read value
+
+inemulB5:
+                cmp     rtc_register,13
+                je      inemulB5_select_mode
+                ja      _ret
+
+                movzx   ecx,rtc_mode
+                and     ecx,3
+                shl     ecx,4
+                movzx   eax,rtc_register
+                lea     ecx,[ecx+eax+offset rtc_value]
+                mov     bl,byte ptr [ecx]
+                ret
+
+inemulB5_select_mode:
+                mov     bl,rtc_mode
                 ret
 
 ; --------------------------------------------------------------------

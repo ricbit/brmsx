@@ -2058,6 +2058,7 @@ eval_base_address_begin:
 
 ; --------------------------------------------------------------------
 
+eval_screen2:
                 ; M3 set - screen 2
 
                 mov     actualscreen,2
@@ -2204,6 +2205,7 @@ eval_base_address_scr1:
 
 ; --------------------------------------------------------------------
 
+eval_screen1:
                 ; M3,M2,M1 reset - screen 1
 
                 mov     actualscreen,1

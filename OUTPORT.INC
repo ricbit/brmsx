@@ -360,9 +360,9 @@ outportxx:
 	; B3
  dd outemulXX
 	; B4
- dd outemulXX
+ dd outemulB4
 	; B5
- dd outemulXX
+ dd outemulB5
 	; B6
  dd outemulXX
 	; B7
